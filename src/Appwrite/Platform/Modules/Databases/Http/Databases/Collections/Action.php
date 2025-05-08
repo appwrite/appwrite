@@ -5,12 +5,6 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 use Appwrite\Extend\Exception;
 use Utopia\Platform\Action as UtopiaAction;
 
-/**
- * Abstract base action for Collection and Table database routes.
- *
- * Provides shared utilities to determine API type, response model,
- * SDK group, and context-specific exceptions.
- */
 abstract class Action extends UtopiaAction
 {
     /**
@@ -39,8 +33,6 @@ abstract class Action extends UtopiaAction
 
     /**
      * Get the current API context.
-     *
-     * @throws \Exception if context has not been set.
      */
     final protected function getContext(): string
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Indexes;
+namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
@@ -14,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
@@ -27,23 +26,31 @@ class Delete extends Action
         return 'deleteIndex';
     }
 
+    /**
+     * 1. `SDKResponse` uses `UtopiaResponse::MODEL_NONE`.
+     * 2. But we later need the actual return type for events queue below!
+     */
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_INDEX;
+    }
+
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes/:key')
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->desc('Delete index')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].update')
+            ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
-            // TODO: audits table or collections, check the context type if possible
-            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'indexes',
-                name: 'deleteIndex',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/delete-index.md',
                 auth: [AuthType::KEY],
                 responses: [
@@ -55,7 +62,7 @@ class Delete extends Action
                 contentType: ContentType::NONE
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('key', '', new Key(), 'Index Key.')
             ->inject('response')
             ->inject('dbForProject')
@@ -64,23 +71,24 @@ class Delete extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $databaseId, string $tableId, string $key, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
-        if ($table->isEmpty()) {
-            throw new Exception(Exception::TABLE_NOT_FOUND);
+        if ($collection->isEmpty()) {
+            // table or collection.
+            throw new Exception($this->getGrantParentNotFoundException());
         }
 
-        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
+        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
         if (empty($index->getId())) {
-            throw new Exception(Exception::INDEX_NOT_FOUND);
+            throw new Exception($this->getNotFoundException());
         }
 
         // Only update status if removing available index
@@ -88,21 +96,29 @@ class Delete extends Action
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_INDEX)
-            ->setDatabase($db)
-            ->setTable($table)
-            ->setRow($index);
+            ->setDatabase($db);
+
+        if ($this->isCollectionsAPI()) {
+            $queueForDatabase
+                ->setCollection($collection)
+                ->setDocument($index);
+        } else {
+            $queueForDatabase
+                ->setTable($collection)
+                ->setRow($index);
+        }
 
         $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('tableId', $table->getId())
-            ->setParam('indexId', $index->getId())
-            ->setContext('table', $table)
             ->setContext('database', $db)
-            ->setPayload($response->output($index, UtopiaResponse::MODEL_INDEX));
+            ->setParam('databaseId', $databaseId)
+            ->setParam($this->getEventsParamKey(), $index->getId())
+            ->setPayload($response->output($index, $this->getResponseModel()))
+            ->setParam($this->getGrandParentEventsParamKey(), $collection->getId())
+            ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
 
         $response->noContent();
     }

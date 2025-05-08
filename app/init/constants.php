@@ -271,7 +271,9 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const DATABASE_ROWS_CONTEXT = 'row';
 const DATABASE_TABLES_CONTEXT = 'table';
 const DATABASE_COLUMNS_CONTEXT = 'column';
+const DATABASE_INDEX_CONTEXT = 'index';
 
 const DATABASE_DOCUMENTS_CONTEXT = 'document';
 const DATABASE_ATTRIBUTES_CONTEXT = 'attribute';
 const DATABASE_COLLECTIONS_CONTEXT = 'collection';
+const DATABASE_COLUMN_INDEX_CONTEXT = 'columnIndex';

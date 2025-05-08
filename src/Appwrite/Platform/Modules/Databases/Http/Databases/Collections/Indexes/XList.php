@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Indexes;
+namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -16,7 +16,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
@@ -29,38 +28,43 @@ class XList extends Action
         return 'listIndexes';
     }
 
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_INDEX_LIST;
+    }
+
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes')
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->desc('List indexes')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'indexes',
-                name: 'listIndexes',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/list-indexes.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_INDEX_LIST,
+                        model: $this->getResponseModel(),
                     )
                 ],
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $databaseId, string $tableId, array $queries, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject): void
     {
         /** @var Document $database */
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -69,10 +73,11 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
-        if ($table->isEmpty()) {
-            throw new Exception(Exception::TABLE_NOT_FOUND);
+        if ($collection->isEmpty()) {
+            // table or collection.
+            throw new Exception($this->getGrantParentNotFoundException());
         }
 
         $queries = Query::parseQueries($queries);
@@ -80,7 +85,7 @@ class XList extends Action
         \array_push(
             $queries,
             Query::equal('databaseId', [$databaseId]),
-            Query::equal('collectionId', [$tableId]),
+            Query::equal('collectionId', [$collectionId]),
         );
 
         /**
@@ -99,7 +104,7 @@ class XList extends Action
 
             $indexId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
-                Query::equal('collectionInternalId', [$table->getInternalId()]),
+                Query::equal('collectionInternalId', [$collection->getInternalId()]),
                 Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$indexId]),
                 Query::limit(1)
@@ -117,12 +122,15 @@ class XList extends Action
             $total = $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT);
             $indexes = $dbForProject->find('indexes', $queries);
         } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
+            $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
+            $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
+            $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         }
 
         $response->dynamic(new Document([
             'total' => $total,
             'indexes' => $indexes,
-        ]), UtopiaResponse::MODEL_INDEX_LIST);
+        ]), $this->getResponseModel());
     }
 }

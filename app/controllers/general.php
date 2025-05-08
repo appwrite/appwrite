@@ -1216,7 +1216,13 @@ App::error()
                 );
                 break;
             case 'Utopia\Database\Exception\Dependency':
-                $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, null, previous: $error);
+                $error = new AppwriteException(
+                    $isTablesAPI
+                        ? AppwriteException::COLUMN_INDEX_DEPENDENCY
+                        : AppwriteException::INDEX_DEPENDENCY,
+                    null,
+                    previous: $error
+                );
                 break;
         }
 

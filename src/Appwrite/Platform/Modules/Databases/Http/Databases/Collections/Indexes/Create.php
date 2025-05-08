@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Indexes;
+namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
@@ -19,7 +19,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -34,38 +33,42 @@ class Create extends Action
         return 'createIndex';
     }
 
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_INDEX;
+    }
+
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes')
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->desc('Create index')
             ->groups(['api', 'database'])
-            ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].create')
+            ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'index.create')
-            // TODO: audits table or collections, check the context type if possible, move into another module.
-            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'tables',
-                name: 'createIndex',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/create-index.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_INDEX,
+                        model: $this->getResponseModel(),
                     )
                 ],
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('key', null, new Key(), 'Index Key.')
             ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
-            ->param('columns', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of columns to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' columns are allowed, each 32 characters long.')
+            ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -74,7 +77,7 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -82,27 +85,28 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
-        if ($table->isEmpty()) {
-            throw new Exception(Exception::TABLE_NOT_FOUND);
+        if ($collection->isEmpty()) {
+            // table or collection.
+            throw new Exception($this->getGrantParentNotFoundException());
         }
 
         $count = $dbForProject->count('indexes', [
-            Query::equal('collectionInternalId', [$table->getInternalId()]),
+            Query::equal('collectionInternalId', [$collection->getInternalId()]),
             Query::equal('databaseInternalId', [$db->getInternalId()])
         ], 61);
 
         $limit = $dbForProject->getLimitForIndexes();
 
         if ($count >= $limit) {
-            throw new Exception(Exception::INDEX_LIMIT_EXCEEDED, 'Index limit exceeded');
+            throw new Exception($this->getLimitException(), 'Index limit exceeded');
         }
 
         // Convert Document[] to array of attribute metadata
-        $oldColumns = \array_map(fn ($a) => $a->getArrayCopy(), $table->getAttribute('attributes'));
+        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
 
-        $oldColumns[] = [
+        $oldAttributes[] = [
             'key' => '$id',
             'type' => Database::VAR_STRING,
             'status' => 'available',
@@ -112,7 +116,7 @@ class Create extends Action
             'size' => Database::LENGTH_KEY
         ];
 
-        $oldColumns[] = [
+        $oldAttributes[] = [
             'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
             'status' => 'available',
@@ -123,7 +127,7 @@ class Create extends Action
             'size' => 0
         ];
 
-        $oldColumns[] = [
+        $oldAttributes[] = [
             'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
             'status' => 'available',
@@ -137,25 +141,27 @@ class Create extends Action
         // lengths hidden by default
         $lengths = [];
 
-        foreach ($columns as $i => $column) {
+        $contextType = $this->getParentContext();
+        foreach ($attributes as $i => $attribute) {
             // find attribute metadata in collection document
-            $columnIndex = \array_search($column, array_column($oldColumns, 'key'));
+            $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
-            if ($columnIndex === false) {
-                throw new Exception(Exception::COLUMN_UNKNOWN, 'Unknown column: ' . $column . '. Verify the column name or create the column.');
+            if ($attributeIndex === false) {
+                throw new Exception($this->getParentUnknownException(), "Unknown $contextType: " . $attribute . ". Verify the $contextType name or create the $contextType.");
             }
 
-            $columnStatus = $oldColumns[$columnIndex]['status'];
-            $columnType = $oldColumns[$columnIndex]['type'];
-            $columnArray = $oldColumns[$columnIndex]['array'] ?? false;
+            $columnStatus = $oldAttributes[$attributeIndex]['status'];
+            $columnType = $oldAttributes[$attributeIndex]['type'];
+            $columnArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($columnType === Database::VAR_RELATIONSHIP) {
-                throw new Exception(Exception::COLUMN_TYPE_INVALID, 'Cannot create an index for a relationship column: ' . $oldColumns[$columnIndex]['key']);
+                throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
             }
 
             // ensure attribute is available
             if ($columnStatus !== 'available') {
-                throw new Exception(Exception::COLUMN_NOT_AVAILABLE, 'Column not available: ' . $oldColumns[$columnIndex]['key']);
+                $contextType = ucfirst($contextType);
+                throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
             }
 
             $lengths[$i] = null;
@@ -167,51 +173,59 @@ class Create extends Action
         }
 
         $index = new Document([
-            '$id' => ID::custom($db->getInternalId() . '_' . $table->getInternalId() . '_' . $key),
+            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
             'key' => $key,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $databaseId,
-            'collectionInternalId' => $table->getInternalId(),
-            'collectionId' => $tableId,
+            'collectionInternalId' => $collection->getInternalId(),
+            'collectionId' => $collectionId,
             'type' => $type,
-            'attributes' => $columns,
+            'attributes' => $attributes,
             'lengths' => $lengths,
             'orders' => $orders,
         ]);
 
         $validator = new IndexValidator(
-            $table->getAttribute('attributes'),
+            $collection->getAttribute('attributes'),
             $dbForProject->getAdapter()->getMaxIndexLength(),
             $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
         if (!$validator->isValid($index)) {
-            throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
+            throw new Exception($this->getInvalidTypeException(), $validator->getDescription());
         }
 
         try {
             $index = $dbForProject->createDocument('indexes', $index);
         } catch (DuplicateException) {
-            throw new Exception(Exception::INDEX_ALREADY_EXISTS);
+            throw new Exception($this->getDuplicateException());
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_CREATE_INDEX)
-            ->setDatabase($db)
-            ->setTable($table)
-            ->setRow($index);
+            ->setDatabase($db);
+
+        if ($this->isCollectionsAPI()) {
+            $queueForDatabase
+                ->setCollection($collection)
+                ->setDocument($index);
+        } else {
+            $queueForDatabase
+                ->setTable($collection)
+                ->setRow($index);
+        }
 
         $queueForEvents
+            ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
-            ->setParam('tableId', $table->getId())
-            ->setParam('indexId', $index->getId())
-            ->setContext('table', $table)
-            ->setContext('database', $db);
+            ->setParam($this->getEventsParamKey(), $index->getId())
+            ->setParam($this->getGrandParentEventsParamKey(), $collection->getId())
+            ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($index, UtopiaResponse::MODEL_INDEX);
+            ->dynamic($index, $this->getResponseModel());
     }
 }

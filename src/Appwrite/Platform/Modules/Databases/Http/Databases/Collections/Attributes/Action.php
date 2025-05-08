@@ -42,7 +42,7 @@ abstract class Action extends UtopiaAction
     final protected function setContext(string $context): void
     {
         if (!\in_array($context, [DATABASE_COLUMNS_CONTEXT, DATABASE_ATTRIBUTES_CONTEXT], true)) {
-            throw new \InvalidArgumentException("Invalid context '{$context}'. Use `DATABASE_COLUMNS_CONTEXT` or `DATABASE_ATTRIBUTES_CONTEXT`");
+            throw new \InvalidArgumentException("Invalid context '$context'. Use `DATABASE_COLUMNS_CONTEXT` or `DATABASE_ATTRIBUTES_CONTEXT`");
         }
 
         $this->context = $context;
@@ -110,6 +110,16 @@ abstract class Action extends UtopiaAction
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_NOT_FOUND
             : Exception::COLUMN_NOT_FOUND;
+    }
+
+    /**
+     * Get the appropriate not found exception.
+     */
+    final protected function getIndexDependencyException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::INDEX_DEPENDENCY
+            : Exception::COLUMN_INDEX_DEPENDENCY;
     }
 
     /**
@@ -275,7 +285,7 @@ abstract class Action extends UtopiaAction
 
         if (!empty($format)) {
             if (!Structure::hasFormat($format, $type)) {
-                throw new Exception($this->getFormatUnsupportedException(), "Format {$format} not available for {$type} columns.");
+                throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }
 

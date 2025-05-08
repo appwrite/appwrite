@@ -253,6 +253,13 @@ class Exception extends \Exception
     public const INDEX_INVALID                     = 'index_invalid';
     public const INDEX_DEPENDENCY                  = 'index_dependency';
 
+    /** Column Indexes */
+    public const COLUMN_INDEX_NOT_FOUND            = 'column_index_not_found';
+    public const COLUMN_INDEX_LIMIT_EXCEEDED       = 'column_index_limit_exceeded';
+    public const COLUMN_INDEX_ALREADY_EXISTS       = 'column_index_already_exists';
+    public const COLUMN_INDEX_INVALID              = 'column_index_invalid';
+    public const COLUMN_INDEX_DEPENDENCY           = 'column_index_dependency';
+
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
     public const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';

@@ -903,6 +903,33 @@ return [
         'code' => 409,
     ],
 
+    /** Column Indexes, same as Indexes but with different type */
+    Exception::COLUMN_INDEX_NOT_FOUND => [
+        'name' => Exception::COLUMN_INDEX_NOT_FOUND,
+        'description' => 'Index with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::COLUMN_INDEX_LIMIT_EXCEEDED => [
+        'name' => Exception::COLUMN_INDEX_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of indexes has been reached.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_INDEX_ALREADY_EXISTS => [
+        'name' => Exception::COLUMN_INDEX_ALREADY_EXISTS,
+        'description' => 'Index with the requested key already exists. Try again with a different key.',
+        'code' => 409,
+    ],
+    Exception::COLUMN_INDEX_INVALID => [
+        'name' => Exception::COLUMN_INDEX_INVALID,
+        'description' => 'Index invalid.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_INDEX_DEPENDENCY => [
+        'name' => Exception::COLUMN_INDEX_DEPENDENCY,
+        'description' => 'Column cannot be renamed or deleted. Please remove the associated index first.',
+        'code' => 409,
+    ],
+
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [
         'name' => Exception::PROJECT_NOT_FOUND,

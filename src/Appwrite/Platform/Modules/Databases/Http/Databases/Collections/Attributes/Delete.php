@@ -91,7 +91,7 @@ class Delete extends Action
             $dbForProject->getAdapter()->getSupportForCastIndexArray(),
         );
         if (!$validator->isValid($attribute)) {
-            throw new Exception(Exception::INDEX_DEPENDENCY);
+            throw new Exception($this->getIndexDependencyException());
         }
 
         if ($attribute->getAttribute('status') === 'available') {
