@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases;
+namespace Tests\E2E\Services\Databases\Collections;
 
 use Tests\E2E\Client;
 

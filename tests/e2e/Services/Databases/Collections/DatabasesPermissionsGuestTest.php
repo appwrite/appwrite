@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases;
+namespace Tests\E2E\Services\Databases\Collections;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -32,7 +32,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $databaseId = $database['body']['$id'];
         $publicMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'tableId' => ID::unique(),
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -42,7 +42,7 @@ class DatabasesPermissionsGuestTest extends Scope
             ],
         ]);
         $privateMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'tableId' => ID::unique(),
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [],
             'documentSecurity' => true,
@@ -94,14 +94,14 @@ class DatabasesPermissionsGuestTest extends Scope
         $databaseId = $data['databaseId'];
 
         $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $publicCollectionId . '/documents', $this->getServerHeader(), [
-            'rowId' => ID::unique(),
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
             'permissions' => $permissions,
         ]);
         $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
-            'rowId' => ID::unique(),
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -124,11 +124,11 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         $this->assertEquals(1, $publicDocuments['body']['total']);
-        $this->assertEquals($permissions, $publicDocuments['body']['rows'][0]['$permissions']);
+        $this->assertEquals($permissions, $publicDocuments['body']['documents'][0]['$permissions']);
 
         if (\in_array(Permission::read(Role::any()), $permissions)) {
             $this->assertEquals(1, $privateDocuments['body']['total']);
-            $this->assertEquals($permissions, $privateDocuments['body']['rows'][0]['$permissions']);
+            $this->assertEquals($permissions, $privateDocuments['body']['documents'][0]['$permissions']);
         } else {
             $this->assertEquals(0, $privateDocuments['body']['total']);
         }
@@ -152,7 +152,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'rowId' => ID::unique(),
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ]
@@ -165,7 +165,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'rowId' => ID::unique(),
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -175,7 +175,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         // Create a document in private collection with API key so we can test that update and delete are also not allowed
         $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
-            'rowId' => ID::unique(),
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -241,7 +241,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $databaseId = $database['body']['$id'];
         $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'tableId' => ID::unique(),
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -263,7 +263,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'rowId' => ID::unique(),
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Thor: Ragnarok',
             ],
