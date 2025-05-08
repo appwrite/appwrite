@@ -77,6 +77,14 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the SDK namespace for the current action.
+     */
+    final protected function getSdkNamespace(): string
+    {
+        return $this->isCollectionsAPI() ? 'collections' : 'tables';
+    }
+
+    /**
      * Get the correct parent param key (e.g. `tableId` or `collectionId`)
      */
     final protected function getParentEventsParamKey(): string

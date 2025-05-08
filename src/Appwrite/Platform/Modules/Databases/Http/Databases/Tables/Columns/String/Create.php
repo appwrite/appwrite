@@ -48,7 +48,7 @@ class Create extends StringCreate
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: 'databases',
+                namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-string-attribute.md',

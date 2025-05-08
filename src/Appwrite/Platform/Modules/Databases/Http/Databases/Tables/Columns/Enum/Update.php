@@ -48,7 +48,7 @@ class Update extends EnumUpdate
             ->label('audits.event', 'column.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: 'databases',
+                namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-enum-attribute.md',
