@@ -93,14 +93,19 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
 $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
     $value = 1;
 
-    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-        $value = -1;
-    }
-
-    if ($event === Database::EVENT_DOCUMENTS_DELETE) {
-        $value = -1 * $document->getAttribute('modified', 0);
-    } elseif ($event === Database::EVENT_DOCUMENTS_CREATE) {
-        $value = $document->getAttribute('modified', 0);
+    switch ($event) {
+        case Database::EVENT_DOCUMENT_DELETE:
+            $value = -1;
+            break;
+        case Database::EVENT_DOCUMENTS_DELETE:
+            $value = -1 * $document->getAttribute('modified', 0);
+            break;
+        case Database::EVENT_DOCUMENTS_CREATE:
+            $value = $document->getAttribute('modified', 0);
+            break;
+        case Database::EVENT_DOCUMENTS_UPSERT:
+            $value = $document->getAttribute('created', 0);
+            break;
     }
 
     switch (true) {
