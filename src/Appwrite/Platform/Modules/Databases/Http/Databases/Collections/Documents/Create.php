@@ -197,9 +197,9 @@ class Create extends Action
                     $relations = [$related];
                 }
 
-                $relatedTableId = $relationship->getAttribute('relatedCollection');
-                $relatedTable = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
                 foreach ($relations as &$relation) {
@@ -213,7 +213,7 @@ class Create extends Action
                     }
                     if ($relation instanceof Document) {
                         $current = Authorization::skip(
-                            fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedTable->getInternalId(), $relation->getId())
+                            fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
                         );
 
                         if ($current->isEmpty()) {
@@ -225,11 +225,11 @@ class Create extends Action
                         } else {
                             $relation->removeAttribute('$collectionId');
                             $relation->removeAttribute('$databaseId');
-                            $relation->setAttribute('$collection', $relatedTable->getId());
+                            $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
 
-                        $checkPermissions($relatedTable, $relation, $type);
+                        $checkPermissions($relatedCollection, $relation, $type);
                     }
                 }
 

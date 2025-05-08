@@ -62,14 +62,14 @@ class XList extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $databaseId, string $tableId, array $queries, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }

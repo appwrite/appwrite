@@ -308,8 +308,8 @@ abstract class Action extends UtopiaAction
 
         if ($type === Database::VAR_RELATIONSHIP) {
             $options['side'] = Database::RELATION_SIDE_PARENT;
-            $relatedTable = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
-            if ($relatedTable->isEmpty()) {
+            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
+            if ($relatedCollection->isEmpty()) {
                 $parent = $this->isCollectionsAPI() ? 'collection' : 'table';
                 throw new Exception($this->getParentNotFoundException(), "The related $parent was not found.");
             }
@@ -359,12 +359,12 @@ abstract class Action extends UtopiaAction
 
             try {
                 $twoWayAttribute = new Document([
-                    '$id' => ID::custom($db->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $twoWayKey),
+                    '$id' => ID::custom($db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $twoWayKey),
                     'key' => $twoWayKey,
                     'databaseInternalId' => $db->getInternalId(),
                     'databaseId' => $db->getId(),
-                    'collectionInternalId' => $relatedTable->getInternalId(),
-                    'collectionId' => $relatedTable->getId(),
+                    'collectionInternalId' => $relatedCollection->getInternalId(),
+                    'collectionId' => $relatedCollection->getId(),
                     'type' => $type,
                     'status' => 'processing', // processing, available, failed, deleting, stuck
                     'size' => $size,
@@ -378,7 +378,7 @@ abstract class Action extends UtopiaAction
                     'options' => $options,
                 ]);
 
-                $dbForProject->checkAttribute($relatedTable, $twoWayAttribute);
+                $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -387,13 +387,13 @@ abstract class Action extends UtopiaAction
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
                 throw new Exception($this->getLimitException());
             } catch (Throwable $e) {
-                $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedTable->getId());
-                $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedTable->getInternalId());
+                $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+                $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
                 throw $e;
             }
 
-            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedTable->getId());
-            $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedTable->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
         }
 
         $queueForDatabase
@@ -447,11 +447,11 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute('type') !== $type) {
+        if ($attribute->getAttribute(('type') !== $type)) {
             throw new Exception($this->getTypeInvalidException());
         }
 
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('filter') !== $filter) {
+        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
             throw new Exception($this->getTypeInvalidException());
         }
 
