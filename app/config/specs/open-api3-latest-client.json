@@ -2646,10 +2646,7 @@
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-email.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
-                    "rate-key": [
-                        "url:{url},email:{param-email}",
-                        "url:{url},ip:{ip}"
-                    ],
+                    "rate-key": "url:{url},email:{param-email}",
                     "scope": "sessions.write",
                     "platforms": [
                         "server",
@@ -4430,7 +4427,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4462,51 +4459,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "methods": [
-                        {
-                            "name": "createDocument",
-                            "parameters": [
-                                "databaseId",
-                                "collectionId",
-                                "documentId",
-                                "data",
-                                "permissions"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "collectionId",
-                                "documentId",
-                                "data"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/components\/schemas\/document"
-                                }
-                            ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
-                        },
-                        {
-                            "name": "createDocuments",
-                            "parameters": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/components\/schemas\/documentList"
-                                }
-                            ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n"
-                        }
-                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4563,16 +4515,12 @@
                                         "items": {
                                             "type": "string"
                                         }
-                                    },
-                                    "documents": {
-                                        "type": "array",
-                                        "description": "Array of documents data as JSON objects.",
-                                        "x-example": null,
-                                        "items": {
-                                            "type": "object"
-                                        }
                                     }
-                                }
+                                },
+                                "required": [
+                                    "documentId",
+                                    "data"
+                                ]
                             }
                         }
                     }
@@ -4796,7 +4744,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 115,
+                    "weight": 113,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4880,7 +4828,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 308,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4966,7 +4914,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 307,
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5081,7 +5029,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 309,
+                    "weight": 306,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5155,7 +5103,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 333,
+                    "weight": 330,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5207,7 +5155,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 332,
+                    "weight": 329,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5259,7 +5207,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 120,
+                    "weight": 117,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5311,7 +5259,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 121,
+                    "weight": 118,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5363,7 +5311,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 125,
+                    "weight": 122,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5415,7 +5363,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 122,
+                    "weight": 119,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5467,7 +5415,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 123,
+                    "weight": 120,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5519,7 +5467,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 124,
+                    "weight": 121,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5571,7 +5519,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 126,
+                    "weight": 123,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5623,7 +5571,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 127,
+                    "weight": 124,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5675,7 +5623,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 378,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5758,7 +5706,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 382,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5833,7 +5781,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 210,
+                    "weight": 207,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5919,7 +5867,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 209,
+                    "weight": 206,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -6017,7 +5965,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 211,
+                    "weight": 208,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6089,7 +6037,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 216,
+                    "weight": 213,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6178,7 +6126,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 217,
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6245,7 +6193,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 213,
+                    "weight": 210,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6312,7 +6260,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 212,
+                    "weight": 209,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6529,7 +6477,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 214,
+                    "weight": 211,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6603,7 +6551,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 221,
+                    "weight": 218,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6679,7 +6627,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 220,
+                    "weight": 217,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6764,7 +6712,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 222,
+                    "weight": 219,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6826,7 +6774,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 224,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6900,7 +6848,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 226,
+                    "weight": 223,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6964,7 +6912,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 228,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7050,7 +6998,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 227,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7161,7 +7109,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 229,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7233,7 +7181,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 230,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7320,7 +7268,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 232,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7394,7 +7342,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 231,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7492,7 +7440,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 223,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7553,7 +7501,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 225,
+                    "weight": 222,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7616,67 +7564,85 @@
     "tags": [
         {
             "name": "account",
-            "description": "The Account service allows you to authenticate and manage a user account."
+            "description": "The Account service allows you to authenticate and manage a user account.",
+            "x-globalAttributes": []
         },
         {
             "name": "avatars",
-            "description": "The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars."
+            "description": "The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.",
+            "x-globalAttributes": []
         },
         {
             "name": "databases",
-            "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
+            "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents",
+            "x-globalAttributes": [
+                "databaseId"
+            ]
         },
         {
             "name": "locale",
-            "description": "The Locale service allows you to customize your app based on your users' location."
+            "description": "The Locale service allows you to customize your app based on your users' location.",
+            "x-globalAttributes": []
         },
         {
             "name": "health",
-            "description": "The Health service allows you to both validate and monitor your Appwrite server's health."
+            "description": "The Health service allows you to both validate and monitor your Appwrite server's health.",
+            "x-globalAttributes": []
         },
         {
             "name": "projects",
-            "description": "The Project service allows you to manage all the projects in your Appwrite server."
+            "description": "The Project service allows you to manage all the projects in your Appwrite server.",
+            "x-globalAttributes": []
         },
         {
             "name": "project",
-            "description": "The Project service allows you to manage all the projects in your Appwrite server."
+            "description": "The Project service allows you to manage all the projects in your Appwrite server.",
+            "x-globalAttributes": []
         },
         {
             "name": "storage",
-            "description": "The Storage service allows you to manage your project files."
+            "description": "The Storage service allows you to manage your project files.",
+            "x-globalAttributes": []
         },
         {
             "name": "teams",
-            "description": "The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources"
+            "description": "The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources",
+            "x-globalAttributes": []
         },
         {
             "name": "users",
-            "description": "The Users service allows you to manage your project users."
+            "description": "The Users service allows you to manage your project users.",
+            "x-globalAttributes": []
         },
         {
             "name": "functions",
-            "description": "The Functions Service allows you view, create and manage your Cloud Functions."
+            "description": "The Functions Service allows you view, create and manage your Cloud Functions.",
+            "x-globalAttributes": []
         },
         {
             "name": "proxy",
-            "description": "The Proxy Service allows you to configure actions for your domains beyond DNS configuration."
+            "description": "The Proxy Service allows you to configure actions for your domains beyond DNS configuration.",
+            "x-globalAttributes": []
         },
         {
             "name": "graphql",
-            "description": "The GraphQL API allows you to query and mutate your Appwrite server using GraphQL."
+            "description": "The GraphQL API allows you to query and mutate your Appwrite server using GraphQL.",
+            "x-globalAttributes": []
         },
         {
             "name": "console",
-            "description": "The Console service allows you to interact with console relevant informations."
+            "description": "The Console service allows you to interact with console relevant informations.",
+            "x-globalAttributes": []
         },
         {
             "name": "migrations",
-            "description": "The Migrations service allows you to migrate third-party data to your Appwrite project."
+            "description": "The Migrations service allows you to migrate third-party data to your Appwrite project.",
+            "x-globalAttributes": []
         },
         {
             "name": "messaging",
-            "description": "The Messaging service allows you to send messages to any provider type (SMTP, push notification, SMS, etc.)."
+            "description": "The Messaging service allows you to send messages to any provider type (SMTP, push notification, SMS, etc.).",
+            "x-globalAttributes": []
         }
     ],
     "components": {

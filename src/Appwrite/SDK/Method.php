@@ -21,14 +21,16 @@ class Method
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
-     * @param ContentType $contentType
-     * @param MethodType|null $type
+     * @param ContentType $responseType
+     * @param MethodType|null $methodType
      * @param bool $deprecated
      * @param array|bool $hide
      * @param bool $packaging
-     * @param ContentType $requestType
-     * @param array<Parameter> $parameters
+     * @param string $requestType
+     * @param array $parameters
      * @param array $additionalParameters
+     *
+     * @throws \Exception
      */
     public function __construct(
         protected string $namespace,
@@ -42,7 +44,7 @@ class Method
         protected bool $deprecated = false,
         protected array|bool $hide = false,
         protected bool $packaging = false,
-        protected ContentType $requestType = ContentType::JSON,
+        protected string $requestType = 'application/json',
         protected array $parameters = [],
         protected array $additionalParameters = []
     ) {
@@ -51,6 +53,7 @@ class Method
         $this->validateDesc($description);
 
         foreach ($responses as $response) {
+            /** @var SDKResponse $response */
             $this->validateResponseModel($response->getModel());
             $this->validateNoContent($response);
         }
@@ -188,14 +191,11 @@ class Method
         return $this->packaging;
     }
 
-    public function getRequestType(): ContentType
+    public function getRequestType(): string
     {
         return $this->requestType;
     }
 
-    /**
-     * @return array<Parameter>
-     */
     public function getParameters(): array
     {
         return $this->parameters;
@@ -274,7 +274,7 @@ class Method
         return $this;
     }
 
-    public function setRequestType(ContentType $requestType): self
+    public function setRequestType(string $requestType): self
     {
         $this->requestType = $requestType;
         return $this;
