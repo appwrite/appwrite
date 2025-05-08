@@ -4199,6 +4199,20 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(3, $response['body']['documents']);
 
+        // TEST SUCCESS - $id is auto-assigned if not included in bulk documents
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    'number' => 1,
+                ]
+            ],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         // TEST FAIL - Can't use data and document together
         $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
             'content-type' => 'application/json',
@@ -4233,13 +4247,14 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // TEST FAIL - Can't miss $id in bulk documents
+        // TEST FAIL - Can't include invalid ID in bulk documents
         $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'documents' => [
                 [
+                    '$id' => '$invalid',
                     'number' => 1,
                 ]
             ],
@@ -4278,13 +4293,38 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        // TEST FAIL - Can't include invalid permissions in nested documents
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    '$permissions' => ['invalid'],
+                    'number' => 1,
+                ],
+            ],
+        ]);
+
         // TEST FAIL - Can't bulk create in a collection with relationships
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Bulk Related',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], $this->getHeaders()), [
-            'relatedCollectionId' => ID::unique(),
+            'relatedCollectionId' => $collection2['body']['$id'],
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -4309,7 +4349,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    public function testBulkUpdates(): void
+    public function testBulkUpdate(): void
     {
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -4540,13 +4580,23 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(10, $documents['body']['total']);
 
         // TEST: Fail - Can't bulk update in a collection with relationships
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Bulk Related',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], $this->getHeaders()), [
-            'relatedCollectionId' => ID::unique(),
+            'relatedCollectionId' => $collection2['body']['$id'],
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -4573,7 +4623,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    public function testBulkUpserts(): void
+    public function testBulkUpsert(): void
     {
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -4723,13 +4773,23 @@ class DatabasesCustomServerTest extends Scope
         ], $response['body']['documents'][1]['$permissions']);
 
         // TEST: Fail - Can't bulk upsert in a collection with relationships
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Bulk Related',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], $this->getHeaders()), [
-            'relatedCollectionId' => ID::unique(),
+            'relatedCollectionId' => $collection2['body']['$id'],
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -4756,7 +4816,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    public function testBulkDeletes(): void
+    public function testBulkDelete(): void
     {
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -5054,13 +5114,23 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(0, $documents['body']['total']);
 
         // TEST: Fail - Can't bulk delete in a collection with relationships
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Bulk Related',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], $this->getHeaders()), [
-            'relatedCollectionId' => ID::unique(),
+            'relatedCollectionId' => $collection2['body']['$id'],
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',

@@ -3265,7 +3265,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $isBulk = true;
-
         if (!empty($data)) {
             // Single document provided, convert to single item array
             // But remember that it was single to respond with a single document
@@ -3307,8 +3306,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 Database::PERMISSION_DELETE,
             ];
 
+            // If bulk, we need to validate permissions explicitly per document
             if ($isBulk) {
                 $permissions = $document['$permissions'] ?? null;
+                if (!empty($permissions)) {
+                    $validator = new Permissions();
+                    if (!$validator->isValid($permissions)) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                    }
+                }
             }
 
             $permissions = Permission::aggregate($permissions, $allowedPermissions);
@@ -3434,17 +3440,19 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
-            $sourceId = $isBulk ? $document['$id'] : $documentId;
+            $sourceId = $isBulk
+                ? ($document['$id'] ?? ID::unique())
+                : $documentId;
 
-            // For bulk operations, ensure $id is provided.
-            if ($isBulk && empty($sourceId)) {
-                throw new Exception(
-                    Exception::DOCUMENT_INVALID_STRUCTURE,
-                    '$id must be set in each document when creating bulk documents'
-                );
+            // If bulk, we need to validate ID explicitly
+            if ($isBulk) {
+                $validator = new CustomId();
+                if (!$validator->isValid($sourceId)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                }
             }
 
-            // Assign a unique id if needed, otherwise use the provided id.
+            // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
             $document = new Document($document);
             $setPermissions($document, $permissions);
@@ -4254,17 +4262,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!\is_null($permissions)) {
-            $data['$permissions'] = $permissions;
+        if ($data['$permissions']) {
+            $validator = new Permissions();
+            if (!$validator->isValid($data['$permissions'])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+            }
         }
-
-        $partialDocument = new Document($data);
 
         $documents = [];
 
         $modified = $dbForProject->updateDocuments(
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-            $partialDocument,
+            new Document($data),
             $queries,
             onNext: function (Document $document) use ($plan, &$documents) {
                 if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
