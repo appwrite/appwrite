@@ -365,7 +365,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $test2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
@@ -381,7 +381,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $tables = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables', array_merge([
@@ -586,7 +586,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
@@ -665,7 +665,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $actors['headers']['status-code']);
@@ -775,7 +775,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $actors['headers']['status-code']);
@@ -1058,7 +1058,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -1251,7 +1251,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Collection1',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [],
         ]);
 
@@ -1262,7 +1262,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Collection2',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [],
         ]);
 
@@ -1326,7 +1326,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -1392,7 +1392,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -3632,7 +3632,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'tableId' => 'collection1',
             'name' => 'level1',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -3648,7 +3648,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'tableId' => 'collection2',
             'name' => 'level2',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),

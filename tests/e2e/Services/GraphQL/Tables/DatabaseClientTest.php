@@ -1,11 +1,12 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL;
+namespace Tests\E2E\Services\GraphQL\Tables;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Services\GraphQL\Base;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -45,17 +46,17 @@ class DatabaseClientTest extends Scope
     /**
      * @depends testCreateDatabase
      */
-    public function testCreateCollection($database): array
+    public function testCreateTable($database): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::$CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'collectionId' => 'actors',
+                'tableId' => 'actors',
                 'name' => 'Actors',
-                'documentSecurity' => false,
+                'rowSecurity' => false,
                 'permissions' => [
                     Permission::read(Role::any()),
                     Permission::create(Role::users()),
@@ -65,66 +66,66 @@ class DatabaseClientTest extends Scope
             ]
         ];
 
-        $collection = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $table = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $this->assertIsArray($collection['body']['data']);
-        $this->assertArrayNotHasKey('errors', $collection['body']);
-        $collection = $collection['body']['data']['databasesCreateCollection'];
-        $this->assertEquals('Actors', $collection['name']);
+        $this->assertIsArray($table['body']['data']);
+        $this->assertArrayNotHasKey('errors', $table['body']);
+        $table = $table['body']['data']['databasesCreateTable'];
+        $this->assertEquals('Actors', $table['name']);
 
         return [
+            'table' => $table,
             'database' => $database,
-            'collection' => $collection,
         ];
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      */
-    public function testCreateStringAttribute($data): array
+    public function testCreateStringColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'tableId' => $data['table']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $column = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $this->assertArrayNotHasKey('errors', $attribute['body']);
-        $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['collectionsCreateStringAttribute']);
+        $this->assertArrayNotHasKey('errors', $column['body']);
+        $this->assertIsArray($column['body']['data']);
+        $this->assertIsArray($column['body']['data']['tablesCreateStringColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      */
-    public function testCreateIntegerAttribute($data): array
+    public function testCreateIntegerColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INTEGER_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'tableId' => $data['table']['_id'],
                 'key' => 'age',
                 'min' => 18,
                 'max' => 150,
@@ -132,35 +133,35 @@ class DatabaseClientTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $column = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $this->assertArrayNotHasKey('errors', $attribute['body']);
-        $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['collectionsCreateIntegerAttribute']);
+        $this->assertArrayNotHasKey('errors', $column['body']);
+        $this->assertIsArray($column['body']['data']);
+        $this->assertIsArray($column['body']['data']['tablesCreateIntegerColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateStringAttribute
-     * @depends testCreateIntegerAttribute
+     * @depends testCreateStringColumn
+     * @depends testCreateIntegerColumn
      */
-    public function testCreateDocument($data): array
+    public function testCreateRow($data): array
     {
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::$CREATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
+                'tableId' => $data['table']['_id'],
+                'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'age' => 35,
@@ -173,133 +174,133 @@ class DatabaseClientTest extends Scope
             ]
         ];
 
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertArrayNotHasKey('errors', $document['body']);
-        $this->assertIsArray($document['body']['data']);
+        $this->assertArrayNotHasKey('errors', $row['body']);
+        $this->assertIsArray($row['body']['data']);
 
-        $document = $document['body']['data']['collectionsCreateDocument'];
-        $this->assertIsArray($document);
+        $row = $row['body']['data']['tablesCreateRow'];
+        $this->assertIsArray($row);
 
         return [
             'database' => $data['database'],
-            'collection' => $data['collection'],
-            'document' => $document,
+            'table' => $data['table'],
+            'row' => $row,
         ];
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws \Exception
      */
-    public function testGetDocuments($data): void
+    public function testGetRows($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENTS);
+        $query = $this->getQuery(self::$GET_ROWS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'tableId' => $data['table']['_id'],
             ]
         ];
 
-        $documents = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+        $rows = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertArrayNotHasKey('errors', $documents['body']);
-        $this->assertIsArray($documents['body']['data']);
-        $this->assertIsArray($documents['body']['data']['collectionsListDocuments']);
+        $this->assertArrayNotHasKey('errors', $rows['body']);
+        $this->assertIsArray($rows['body']['data']);
+        $this->assertIsArray($rows['body']['data']['tablesListRows']);
     }
 
     /**
-     * @depends testCreateDocument
+     * @depends testCreateRow
      * @throws \Exception
      */
     public function testGetDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $query = $this->getQuery(self::$GET_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'tableId' => $data['table']['_id'],
+                'rowId' => $data['row']['_id'],
             ]
         ];
 
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertArrayNotHasKey('errors', $document['body']);
-        $this->assertIsArray($document['body']['data']);
-        $this->assertIsArray($document['body']['data']['collectionsGetDocument']);
+        $this->assertArrayNotHasKey('errors', $row['body']);
+        $this->assertIsArray($row['body']['data']);
+        $this->assertIsArray($row['body']['data']['tablesGetRow']);
     }
 
     /**
-     * @depends testCreateDocument
+     * @depends testCreateRow
      * @throws \Exception
      */
-    public function testUpdateDocument($data): void
+    public function testUpdateRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DOCUMENT);
+        $query = $this->getQuery(self::$UPDATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'tableId' => $data['table']['_id'],
+                'rowId' => $data['row']['_id'],
                 'data' => [
-                    'name' => 'New Document Name',
+                    'name' => 'New Row Name',
                 ],
             ]
         ];
 
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertArrayNotHasKey('errors', $document['body']);
-        $this->assertIsArray($document['body']['data']);
-        $document = $document['body']['data']['collectionsUpdateDocument'];
-        $this->assertIsArray($document);
+        $this->assertArrayNotHasKey('errors', $row['body']);
+        $this->assertIsArray($row['body']['data']);
+        $row = $row['body']['data']['tablesUpdateRow'];
+        $this->assertIsArray($row);
 
-        $this->assertStringContainsString('New Document Name', $document['data']);
+        $this->assertStringContainsString('New Row Name', $row['data']);
     }
 
     /**
-     * @depends testCreateDocument
+     * @depends testCreateRow
      * @throws \Exception
      */
-    public function testDeleteDocument($data): void
+    public function testDeleteRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $query = $this->getQuery(self::$DELETE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'tableId' => $data['table']['_id'],
+                'rowId' => $data['row']['_id'],
             ]
         ];
 
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsNotArray($document['body']);
-        $this->assertEquals(204, $document['headers']['status-code']);
+        $this->assertIsNotArray($row['body']);
+        $this->assertEquals(204, $row['headers']['status-code']);
     }
 }

@@ -45,7 +45,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $publicCollection = ['id' => $publicMovies['body']['$id']];
@@ -246,7 +246,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'permissions' => [
                 Permission::create(Role::any()),
             ],
-            'documentSecurity' => true
+            'rowSecurity' => true
         ]);
 
         $moviesId = $movies['body']['$id'];

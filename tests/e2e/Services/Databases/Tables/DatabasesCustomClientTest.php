@@ -42,7 +42,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Movies',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::write(Role::user($this->getUser()['$id'])),
             ],
@@ -141,7 +141,7 @@ class DatabasesCustomClientTest extends Scope
             'tableId' => ID::custom('permissionCheck'),
             'name' => 'permissionCheck',
             'permissions' => [],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -249,7 +249,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::unique(),
             'name' => 'level1',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -266,7 +266,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::unique(),
             'name' => 'level2',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -337,7 +337,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::unique(),
             'name' => 'c1',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -353,7 +353,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::unique(),
             'name' => 'c2',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -497,7 +497,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection1'),
             'name' => ID::custom('collection1'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
@@ -513,7 +513,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection2'),
             'name' => ID::custom('collection2'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::read(Role::user($userId)),
             ]
@@ -526,7 +526,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection3'),
             'name' => ID::custom('collection3'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
@@ -541,7 +541,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection4'),
             'name' => ID::custom('collection4'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::read(Role::user($userId)),
             ]
@@ -554,7 +554,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection5'),
             'name' => ID::custom('collection5'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
@@ -741,7 +741,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection3'),
             'name' => ID::custom('collection3'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
@@ -816,7 +816,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection3'),
             'name' => ID::custom('collection3'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
@@ -832,7 +832,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'tableId' => ID::custom('collection2'),
             'name' => ID::custom('collection2'),
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::update(Role::user($userId)),

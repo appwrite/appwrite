@@ -133,7 +133,7 @@ class DatabasesPermissionsMemberTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $public['headers']['status-code']);
         $this->collections = ['public' => $public['body']['$id']];
@@ -154,7 +154,7 @@ class DatabasesPermissionsMemberTest extends Scope
                 Permission::update(Role::users()),
                 Permission::delete(Role::users()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
         $this->collections['private'] = $private['body']['$id'];
@@ -170,7 +170,7 @@ class DatabasesPermissionsMemberTest extends Scope
             'tableId' => ID::unique(),
             'name' => 'Document Only Movies',
             'permissions' => [],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
         $this->collections['doconly'] = $doconly['body']['$id'];

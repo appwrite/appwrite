@@ -13,12 +13,21 @@ trait Base
     public static string $GET_DATABASE = 'get_database';
     public static string $UPDATE_DATABASE = 'update_database';
     public static string $DELETE_DATABASE = 'delete_database';
+
     // Collections
     public static string $CREATE_COLLECTION = 'create_collection';
     public static string $GET_COLLECTION = 'get_collection';
     public static string $GET_COLLECTIONS = 'list_collections';
     public static string $UPDATE_COLLECTION = 'update_collection';
     public static string $DELETE_COLLECTION = 'delete_collection';
+
+    // Tables
+    public static string $CREATE_TABLE = 'create_table';
+    public static string $GET_TABLE = 'get_table';
+    public static string $GET_TABLES = 'list_tables';
+    public static string $UPDATE_TABLE = 'update_tables';
+    public static string $DELETE_TABLE = 'delete_tables';
+
     // Attributes
     public static string $CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
     public static string $CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
@@ -45,17 +54,59 @@ trait Base
     public static string $GET_ATTRIBUTES = 'get_attributes';
     public static string $GET_ATTRIBUTE = 'get_attribute';
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
-    // Indexes
+
+    // Columns
+    public static string $CREATE_STRING_COLUMN = 'create_string_column';
+    public static string $CREATE_INTEGER_COLUMN = 'create_integer_column';
+    public static string $CREATE_FLOAT_COLUMN = 'create_float_column';
+    public static string $CREATE_BOOLEAN_COLUMN = 'create_boolean_column';
+    public static string $CREATE_URL_COLUMN = 'create_url_column';
+    public static string $CREATE_EMAIL_COLUMN = 'create_email_column';
+    public static string $CREATE_IP_COLUMN = 'create_ip_column';
+    public static string $CREATE_ENUM_COLUMN = 'create_enum_column';
+    public static string $CREATE_DATETIME_COLUMN = 'create_datetime_column';
+
+    public static string $CREATE_RELATIONSHIP_COLUMN = 'create_relationship_column';
+    public static string $UPDATE_STRING_COLUMN = 'update_string_column';
+    public static string $UPDATE_INTEGER_COLUMN = 'update_integer_column';
+    public static string $UPDATE_FLOAT_COLUMN = 'update_float_column';
+    public static string $UPDATE_BOOLEAN_COLUMN = 'update_boolean_column';
+    public static string $UPDATE_URL_COLUMN = 'update_url_column';
+    public static string $UPDATE_EMAIL_COLUMN = 'update_email_column';
+    public static string $UPDATE_IP_COLUMN = 'update_ip_column';
+    public static string $UPDATE_ENUM_COLUMN = 'update_enum_column';
+    public static string $UPDATE_DATETIME_COLUMN = 'update_datetime_column';
+
+    public static string $UPDATE_RELATIONSHIP_COLUMN = 'update_relationship_column';
+    public static string $GET_COLUMNS = 'get_columns';
+    public static string $GET_COLUMN = 'get_column';
+    public static string $DELETE_COLUMN = 'delete_column';
+
+    // Collection Indexes
     public static string $CREATE_INDEX = 'create_index';
     public static string $GET_INDEXES = 'get_indexes';
     public static string $GET_INDEX = 'get_index';
     public static string $DELETE_INDEX = 'delete_index';
+
+    // Column Indexes
+    public static string $CREATE_COLUMN_INDEX = 'create_index';
+    public static string $GET_COLUMN_INDEXES = 'get_indexes';
+    public static string $GET_COLUMN_INDEX = 'get_index';
+    public static string $DELETE_COLUMN_INDEX = 'delete_index';
+
     // Documents
     public static string $CREATE_DOCUMENT = 'create_document_rest';
     public static string $GET_DOCUMENTS = 'list_documents';
     public static string $GET_DOCUMENT = 'get_document';
     public static string $UPDATE_DOCUMENT = 'update_document';
     public static string $DELETE_DOCUMENT = 'delete_document';
+
+    // Rows
+    public static string $CREATE_ROW = 'create_row_rest';
+    public static string $GET_ROWS = 'list_rows';
+    public static string $GET_ROW = 'get_row';
+    public static string $UPDATE_ROW = 'update_row';
+    public static string $DELETE_ROW = 'delete_row';
 
     // Custom Entities
     public static string $CREATE_CUSTOM_ENTITY = 'create_custom_entity';
@@ -257,7 +308,7 @@ trait Base
     // Complex queries
     public static string $COMPLEX_QUERY = 'complex_query';
 
-    // Fragments
+    // Attribute Fragments
     public static string $FRAGMENT_ATTRIBUTES = '
         fragment attributeProperties on Attributes {
             ... on AttributeString {
@@ -323,6 +374,81 @@ trait Base
                 elements
             }
             ... on AttributeDatetime {
+                key
+                required
+                array
+                status
+                default
+            }
+        }
+    ';
+
+    // Column Fragments
+    public static string $FRAGMENT_COLUMNS = '
+        fragment columnProperties on Columns {
+            ... on ColumnString {
+                key
+                required
+                array
+                status
+                default
+                size
+            }
+            ... on ColumnInteger {
+                key
+                required
+                array
+                status
+                intDefault: default
+                intMin: min
+                intMax: max
+            }
+            ... on ColumnFloat {
+                key
+                required
+                array
+                status
+                floatDefault: default
+                floatMin: min
+                floatMax: max
+            }
+            ... on ColumnBoolean {
+                key
+                required
+                array
+                status
+                boolDefault: default
+            }
+            ... on ColumnUrl {
+                key
+                required
+                array
+                status
+                default
+            }
+            ... on ColumnEmail {
+                key
+                required
+                array
+                status
+                default
+            }
+            ... on ColumnIp {
+                key
+                required
+                array
+                status
+                default
+            }
+            ... on ColumnEnum {
+                key
+                required
+                array
+                status
+                default
+                elements
+            }
+            ... on ColumnDatetime {
                 key
                 required
                 array
@@ -435,6 +561,51 @@ trait Base
             case self::$DELETE_COLLECTION:
                 return 'mutation deleteCollection($databaseId: String!, $collectionId: String!){
                     databasesDeleteCollection(databaseId: $databaseId, collectionId: $collectionId) {
+                        status
+                    }
+                }';
+            case self::$GET_TABLE:
+                return 'query getTable($databaseId: String!, $tableId: String!) {
+                    databasesGetTable(databaseId: $databaseId, tableId: $tableId) {
+                        _id
+                        _permissions
+                        rowSecurity
+                        name
+                    }
+                }';
+            case self::$GET_TABLES:
+                return 'query listTables($databaseId: String!) {
+                    databasesListTables(databaseId: $databaseId) {
+                        total
+                        tables {
+                            _id
+                            _permissions
+                            rowSecurity
+                            name
+                        }
+                    }
+                }';
+            case self::$CREATE_TABLE:
+                return 'mutation createTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!]!) {
+                    databasesCreateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions) {
+                        _id
+                        _permissions
+                        rowSecurity
+                        name
+                    }
+                }';
+            case self::$UPDATE_TABLE:
+                return 'mutation updateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!], $enabled: Boolean) {
+                    databasesUpdateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions, enabled: $enabled) {
+                        _id
+                        _permissions
+                        rowSecurity
+                        name
+                    }
+                }';
+            case self::$DELETE_TABLE:
+                return 'mutation deleteTable($databaseId: String!, $tableId: String!) {
+                    databasesDeleteTable(databaseId: $databaseId, tableId: $tableId) {
                         status
                     }
                 }';
@@ -614,6 +785,182 @@ trait Base
                             onDelete
                         }
                     }';
+            case self::$CREATE_STRING_COLUMN:
+                return 'mutation createStringColumn($databaseId: String!, $tableId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
+                    tablesCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, size: $size, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_INTEGER_COLUMN:
+                return 'mutation createIntegerColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
+                    tablesCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        min
+                        max
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_FLOAT_COLUMN:
+                return 'mutation createFloatColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
+                    tablesCreateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        min
+                        max
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_BOOLEAN_COLUMN:
+                return 'mutation createBooleanColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
+                    tablesCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_URL_COLUMN:
+                return 'mutation createUrlColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    tablesCreateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_EMAIL_COLUMN:
+                return 'mutation createEmailColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    tablesCreateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_IP_COLUMN:
+                return 'mutation createIpColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    tablesCreateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_ENUM_COLUMN:
+                return 'mutation createEnumColumn($databaseId: String!, $tableId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
+                    tablesCreateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
+                        key
+                        elements
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_DATETIME_COLUMN:
+                return 'mutation createDatetimeColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    tablesCreateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$CREATE_RELATIONSHIP_COLUMN:
+                return 'mutation createRelationshipColumn($databaseId: String!, $tableId: String!, $relatedTableId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
+                    tablesCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
+                        relatedTable
+                        relationType
+                        twoWay
+                        key
+                        twoWayKey
+                        onDelete
+                    }
+                }';
+            case self::$UPDATE_STRING_COLUMN:
+                return 'mutation updateStringColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
+                    tablesUpdateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                        required
+                        default
+                    }
+                }';
+            case self::$UPDATE_INTEGER_COLUMN:
+                return 'mutation updateIntegerColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
+                    tablesUpdateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, min: $min, max: $max, default: $default) {
+                        required
+                        min
+                        max
+                        default
+                    }
+                }';
+            case self::$UPDATE_FLOAT_COLUMN:
+                return 'mutation updateFloatColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
+                    tablesUpdateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default) {
+                        required
+                        min
+                        max
+                        default
+                    }
+                }';
+            case self::$UPDATE_BOOLEAN_COLUMN:
+                return 'mutation updateBooleanColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: Boolean){
+                    tablesUpdateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                        required
+                        default
+                    }
+                }';
+            case self::$UPDATE_URL_COLUMN:
+                return 'mutation updateUrlColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
+                    tablesUpdateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                        required
+                        default
+                    }
+                }';
+            case self::$UPDATE_EMAIL_COLUMN:
+                return 'mutation updateEmailColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
+                    tablesUpdateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                        required
+                        default
+                    }
+                }';
+            case self::$UPDATE_IP_COLUMN:
+                return 'mutation updateIpColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
+                    tablesUpdateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                        required
+                        default
+                    }
+                }';
+            case self::$UPDATE_ENUM_COLUMN:
+                return 'mutation updateEnumColumn($databaseId: String!, $tableId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
+                    tablesUpdateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default) {
+                        elements
+                        required
+                        default
+                    }
+                }';
+            case self::$UPDATE_DATETIME_COLUMN:
+                return 'mutation updateDatetimeColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
+                    tablesUpdateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                        required
+                        default
+                    }
+                }';
+            case self::$UPDATE_RELATIONSHIP_COLUMN:
+                return 'mutation updateRelationshipColumn($databaseId: String!, $tableId: String!, $key: String!, $onDelete: String){
+                    tablesUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
+                        relatedTable
+                        relationType
+                        twoWay
+                        key
+                        twoWayKey
+                        onDelete
+                    }
+                }';
             case self::$CREATE_INDEX:
                 return 'mutation createIndex($databaseId: String!, $collectionId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
                     collectionsCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
@@ -647,6 +994,39 @@ trait Base
                         status
                     }
                 }';
+            case self::$CREATE_COLUMN_INDEX:
+                return 'mutation createIndex($databaseId: String!, $tableId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
+                    tablesCreateIndex(databaseId: $databaseId, tableId: $tableId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
+                        key
+                        type
+                        status
+                    }
+                }';
+            case self::$GET_COLUMN_INDEXES:
+                return 'query listIndexes($databaseId: String!, $tableId: String!) {
+                    tablesListIndexes(databaseId: $databaseId, tableId: $tableId) {
+                        total
+                        indexes {
+                            key
+                            type
+                            status
+                        }
+                    }
+                }';
+            case self::$GET_COLUMN_INDEX:
+                return 'query getIndex($databaseId: String!, $tableId: String!, $key: String!) {
+                    tablesGetIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                        key
+                        type
+                        status
+                    }
+                }';
+            case self::$DELETE_COLUMN_INDEX:
+                return 'mutation deleteIndex($databaseId: String!, $tableId: String!, $key: String!) {
+                    tablesDeleteIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                        status
+                    }
+                }';
             case self::$GET_ATTRIBUTES:
                 return 'query listAttributes($databaseId: String!, $collectionId: String!) {
                     collectionsListAttributes(databaseId: $databaseId, collectionId: $collectionId) {
@@ -668,6 +1048,28 @@ trait Base
                         status
                     }
                 }';
+            case self::$GET_COLUMNS:
+                return 'query listColumns($databaseId: String!, $tableId: String!) {
+                    tablesListColumns(databaseId: $databaseId, tableId: $tableId) {
+                        total
+                        columns {
+                            ...columnProperties
+                        }
+                    }
+                }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
+            case self::$GET_COLUMN:
+                return 'query getColumn($databaseId: String!, $tableId: String!, $key: String!) {
+                    tablesGetColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                        ...columnProperties
+                    }
+                }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
+            case self::$DELETE_COLUMN:
+                return 'mutation deleteColumn($databaseId: String!, $tableId: String!, $key: String!) {
+                    tablesDeleteColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                        status
+                    }
+                }';
+
             case self::$GET_DOCUMENT:
                 return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!) {
                     collectionsGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
@@ -694,6 +1096,35 @@ trait Base
                     collectionsCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
                         _collectionId
+                        _permissions
+                    }
+                }';
+            case self::$GET_ROW:
+                return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!) {
+                    tablesGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                        _id
+                        _tableId
+                        _permissions
+                        data
+                    }
+                }';
+            case self::$GET_ROWS:
+                return 'query listRows($databaseId: String!, $tableId: String!) {
+                    tablesListRows(databaseId: $databaseId, tableId: $tableId) {
+                        total
+                        rows {
+                            _id
+                            _tableId
+                            _permissions
+                            data
+                        }
+                    }
+                }';
+            case self::$CREATE_ROW:
+                return 'mutation createRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]) {
+                    tablesCreateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                        _id
+                        _tableId
                         _permissions
                     }
                 }';
@@ -770,7 +1201,20 @@ trait Base
                         status
                     }
                 }';
-
+            case self::$UPDATE_ROW:
+                return 'mutation updateRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]) {
+                    tablesUpdateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                        _id
+                        _tableId
+                        data
+                    }
+                }';
+            case self::$DELETE_ROW:
+                return 'mutation deleteRow($databaseId: String!, $tableId: String!, $rowId: String!) {
+                    tablesDeleteRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                        status
+                    }
+                }';
             case self::$GET_USER:
                 return 'query getUser($userId : String!) {
                     usersGet(userId : $userId) {

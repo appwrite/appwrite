@@ -52,7 +52,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Movies',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -68,7 +68,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Actors',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -136,7 +136,7 @@ trait DatabasesBase
         ]), [
             'name' => 'Movies',
             'enabled' => false,
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -182,7 +182,7 @@ trait DatabasesBase
         ]), [
             'name' => 'Movies',
             'enabled' => true,
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -418,7 +418,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'patch',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -489,7 +489,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Players',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -542,7 +542,7 @@ trait DatabasesBase
             'tableId' => ID::unique(),
             'name' => 'Response Models',
             // 'permissions' missing on purpose to make sure it's optional
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -2479,7 +2479,7 @@ trait DatabasesBase
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -3146,7 +3146,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'enforceCollectionAndDocumentPermissions',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::read(Role::user($user)),
                 Permission::create(Role::user($user)),
@@ -3157,7 +3157,7 @@ trait DatabasesBase
 
         $this->assertEquals(201, $table['headers']['status-code']);
         $this->assertEquals($table['body']['name'], 'enforceCollectionAndDocumentPermissions');
-        $this->assertEquals($table['body']['documentSecurity'], true);
+        $this->assertEquals($table['body']['rowSecurity'], true);
 
         $tableId = $table['body']['$id'];
 
@@ -3349,7 +3349,7 @@ trait DatabasesBase
 
         $this->assertEquals(201, $table['headers']['status-code']);
         $this->assertEquals($table['body']['name'], 'enforceCollectionPermissions');
-        $this->assertEquals($table['body']['documentSecurity'], false);
+        $this->assertEquals($table['body']['rowSecurity'], false);
 
         $tableId = $table['body']['$id'];
 
@@ -3500,7 +3500,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'name' => $table['body']['name'],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $rowsUser2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $tableId . '/rows', [
@@ -3698,7 +3698,7 @@ trait DatabasesBase
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $movies['headers']['status-code']);
@@ -3854,7 +3854,7 @@ trait DatabasesBase
                 Permission::delete(Role::user($this->getUser()['$id'])),
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $person['headers']['status-code']);
@@ -3871,7 +3871,7 @@ trait DatabasesBase
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $library['headers']['status-code']);
@@ -4238,7 +4238,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Albums',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4264,7 +4264,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Artists',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4382,7 +4382,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Sports',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4408,7 +4408,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Players',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4642,7 +4642,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'USA Presidents',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -4765,7 +4765,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Collection1',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4779,7 +4779,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Collection2',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4861,7 +4861,7 @@ trait DatabasesBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Slow Queries',
-            'documentSecurity' => true,
+            'rowSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],

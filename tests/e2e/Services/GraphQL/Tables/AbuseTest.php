@@ -1,11 +1,12 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL;
+namespace Tests\E2E\Services\GraphQL\Tables;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Services\GraphQL\Base;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -30,9 +31,9 @@ class AbuseTest extends Scope
     {
         $data = $this->createCollection();
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $tableId = $data['tableId'];
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::$CREATE_ROW);
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
@@ -40,8 +41,8 @@ class AbuseTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'documentId' => ID::unique(),
+                    'tableId' => $tableId,
+                    'rowId' => ID::unique(),
                     'data' => [
                         'name' => 'John Doe',
                     ],
@@ -73,22 +74,22 @@ class AbuseTest extends Scope
                 'password' => 'password',
                 'databaseId' => 'database',
                 'databaseName' => 'database',
-                'collectionId' => 'collection',
-                'collectionName' => 'collection',
+                'tableId' => 'table',
+                'collectionName' => 'table',
                 'collectionPermissions' => [
                     Permission::read(Role::users()),
                     Permission::create(Role::users()),
                     Permission::update(Role::users()),
                     Permission::delete(Role::users()),
                 ],
-                'documentSecurity' => false,
+                'rowSecurity' => false,
             ],
         ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders(false)), $graphQLPayload);
+        ], $this->getHeaders()), $graphQLPayload);
 
         $max = System::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
 
@@ -113,7 +114,7 @@ class AbuseTest extends Scope
         $this->assertEquals('Too many queries.', $response['body']['message']);
     }
 
-    private function createCollection()
+    private function createCollection(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DATABASE);
@@ -133,14 +134,14 @@ class AbuseTest extends Scope
 
         $databaseId = $response['body']['data']['databasesCreate']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::$CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $databaseId,
-                'collectionId' => 'actors',
+                'tableId' => 'actors',
                 'name' => 'Actors',
-                'documentSecurity' => false,
+                'rowSecurity' => false,
                 'permissions' => [
                     Permission::read(Role::any()),
                     Permission::write(Role::any()),
@@ -154,14 +155,14 @@ class AbuseTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $collectionId = $response['body']['data']['databasesCreateCollection']['_id'];
+        $tableId = $response['body']['data']['databasesCreateTable']['_id'];
 
         $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $databaseId,
-                'collectionId' => $collectionId,
+                'tableId' => $tableId,
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -178,7 +179,7 @@ class AbuseTest extends Scope
 
         return [
             'databaseId' => $databaseId,
-            'collectionId' => $collectionId,
+            'tableId' => $tableId,
         ];
     }
 }

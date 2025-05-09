@@ -54,9 +54,9 @@ class Table extends Model
                 'default' => true,
                 'example' => false,
             ])
-            ->addRule('documentSecurity', [
+            ->addRule('rowSecurity', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether document-level permissions are enabled. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'description' => 'Whether row-level permissions are enabled. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
                 'example' => true,
             ])
@@ -125,9 +125,13 @@ class Table extends Model
             $document->setAttribute('relatedTable', $related);
         }
 
+        $documentSecurity = $document->getAttribute('documentSecurity');
+        $document->setAttribute('rowSecurity', $documentSecurity);
+
         // remove anyways as they are already copied above.
         $document
             ->removeAttribute('attributes')
+            ->removeAttribute('documentSecurity')
             ->removeAttribute('relatedCollection');
 
         return $document;

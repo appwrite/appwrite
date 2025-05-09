@@ -1,12 +1,13 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL;
+namespace Tests\E2E\Services\GraphQL\Collections;
 
 use Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Services\GraphQL\Base;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;

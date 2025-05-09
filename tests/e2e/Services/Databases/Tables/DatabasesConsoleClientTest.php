@@ -46,7 +46,7 @@ class DatabasesConsoleClientTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         $this->assertEquals(201, $movies['headers']['status-code']);
@@ -77,7 +77,7 @@ class DatabasesConsoleClientTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
 
         /**
