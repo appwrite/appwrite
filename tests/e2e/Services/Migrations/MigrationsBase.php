@@ -445,7 +445,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'tableId' => ID::unique(),
+            'collectionId' => ID::unique(),
             'name' => 'Test Collection',
         ]);
 
@@ -536,7 +536,7 @@ trait MigrationsBase
 
         return [
             'databaseId' => $databaseId,
-            'tableId' => $collectionId,
+            'collectionId' => $collectionId,
         ];
     }
 
@@ -546,14 +546,14 @@ trait MigrationsBase
     public function testAppwriteMigrationDatabasesDocument(array $data): void
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['tableId'];
+        $collectionId = $data['collectionId'];
 
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'rowId' => ID::unique(),
+            'documentId' => ID::unique(),
             'data' => [
                 'name' => 'Test Document',
             ]
@@ -927,7 +927,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test collection',
-            'tableId' => ID::unique(),
+            'collectionId' => ID::unique(),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1131,7 +1131,7 @@ trait MigrationsBase
 
         return [
             'databaseId' => $databaseId,
-            'tableId' => $collectionId,
+            'collectionId' => $collectionId,
             'migrationId' => $migration['body']['$id'],
         ];
     }
@@ -1142,7 +1142,7 @@ trait MigrationsBase
     public function testImportSuccessful(array $response): void
     {
         $databaseId = $response['databaseId'];
-        $collectionId = $response['tableId'];
+        $collectionId = $response['collectionId'];
         $migrationId = $response['migrationId'];
 
         $documentsCountInCSV = 100;
@@ -1176,7 +1176,7 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertIsArray($documents['body']['rows']);
+        $this->assertIsArray($documents['body']['documents']);
         $this->assertIsNumeric($documents['body']['total']);
         $this->assertEquals($documentsCountInCSV, $documents['body']['total']);
     }

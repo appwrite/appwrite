@@ -35,7 +35,7 @@ class MessagingTest extends TestCase
                 Role::team(ID::custom('def'))->toString(),
                 Role::team(ID::custom('def'), 'guest')->toString(),
             ],
-            ['files' => 0, 'rows' => 0, 'rows.789' => 0, 'account.123' => 0]
+            ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
         );
 
         $event = [
@@ -115,13 +115,13 @@ class MessagingTest extends TestCase
         $this->assertEmpty($receivers);
 
         $event['roles'] = [Role::any()->toString()];
-        $event['data']['channels'] = ['rows.123'];
+        $event['data']['channels'] = ['documents.123'];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['data']['channels'] = ['rows.789'];
+        $event['data']['channels'] = ['documents.789'];
 
         $receivers = $realtime->getSubscribers($event);
 
@@ -153,8 +153,8 @@ class MessagingTest extends TestCase
 
         $channels = [
             0 => 'files',
-            1 => 'rows',
-            2 => 'rows.789',
+            1 => 'documents',
+            2 => 'documents.789',
             3 => 'account',
             4 => 'account.456'
         ];
@@ -162,8 +162,8 @@ class MessagingTest extends TestCase
         $channels = Realtime::convertChannels($channels, $user->getId());
         $this->assertCount(4, $channels);
         $this->assertArrayHasKey('files', $channels);
-        $this->assertArrayHasKey('rows', $channels);
-        $this->assertArrayHasKey('rows.789', $channels);
+        $this->assertArrayHasKey('documents', $channels);
+        $this->assertArrayHasKey('documents.789', $channels);
         $this->assertArrayHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
     }
@@ -190,8 +190,8 @@ class MessagingTest extends TestCase
         ]);
         $channels = [
             0 => 'files',
-            1 => 'rows',
-            2 => 'rows.789',
+            1 => 'documents',
+            2 => 'documents.789',
             3 => 'account',
             4 => 'account.456'
         ];
@@ -200,8 +200,8 @@ class MessagingTest extends TestCase
 
         $this->assertCount(5, $channels);
         $this->assertArrayHasKey('files', $channels);
-        $this->assertArrayHasKey('rows', $channels);
-        $this->assertArrayHasKey('rows.789', $channels);
+        $this->assertArrayHasKey('documents', $channels);
+        $this->assertArrayHasKey('documents.789', $channels);
         $this->assertArrayHasKey('account.123', $channels);
         $this->assertArrayHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
@@ -213,10 +213,10 @@ class MessagingTest extends TestCase
          * Test Collection Level Permissions
          */
         $result = Realtime::fromPayload(
-            event: 'databases.database_id.tables.collection_id.rows.document_id.create',
+            event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
                 '$id' => ID::custom('test'),
-                '$collection' => ID::custom('table'),
+                '$collection' => ID::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::team('123abc')),
                     Permission::update(Role::team('123abc')),
@@ -226,8 +226,8 @@ class MessagingTest extends TestCase
             database: new Document([
                 '$id' => ID::custom('database'),
             ]),
-            table: new Document([
-                '$id' => ID::custom('table'),
+            collection: new Document([
+                '$id' => ID::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -243,10 +243,10 @@ class MessagingTest extends TestCase
          * Test Document Level Permissions
          */
         $result = Realtime::fromPayload(
-            event: 'databases.database_id.tables.collection_id.rows.document_id.create',
+            event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
                 '$id' => ID::custom('test'),
-                '$collection' => ID::custom('table'),
+                '$collection' => ID::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -256,8 +256,8 @@ class MessagingTest extends TestCase
             database: new Document([
                 '$id' => ID::custom('database'),
             ]),
-            table: new Document([
-                '$id' => ID::custom('table'),
+            collection: new Document([
+                '$id' => ID::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::team('123abc')),
                     Permission::update(Role::team('123abc')),
