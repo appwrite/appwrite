@@ -30,9 +30,9 @@ class AbuseTest extends Scope
     {
         $data = $this->createCollection();
         $databaseId = $data['databaseId'];
-        $collectionId = $data['tableId'];
+        $collectionId = $data['collectionId'];
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ROW);
+        $query = $this->getQuery(self::$CREATE_DOCUMENT);
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
@@ -40,8 +40,8 @@ class AbuseTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'databaseId' => $databaseId,
-                    'tableId' => $collectionId,
-                    'rowId' => ID::unique(),
+                    'collectionId' => $collectionId,
+                    'documentId' => ID::unique(),
                     'data' => [
                         'name' => 'John Doe',
                     ],
@@ -73,7 +73,7 @@ class AbuseTest extends Scope
                 'password' => 'password',
                 'databaseId' => 'database',
                 'databaseName' => 'database',
-                'tableId' => 'collection',
+                'collectionId' => 'collection',
                 'collectionName' => 'collection',
                 'collectionPermissions' => [
                     Permission::read(Role::users()),
@@ -133,12 +133,12 @@ class AbuseTest extends Scope
 
         $databaseId = $response['body']['data']['databasesCreate']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_TABLE);
+        $query = $this->getQuery(self::$CREATE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $databaseId,
-                'tableId' => 'actors',
+                'collectionId' => 'actors',
                 'name' => 'Actors',
                 'documentSecurity' => false,
                 'permissions' => [
@@ -156,12 +156,12 @@ class AbuseTest extends Scope
 
         $collectionId = $response['body']['data']['databasesCreateCollection']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
+        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $databaseId,
-                'tableId' => $collectionId,
+                'collectionId' => $collectionId,
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -178,7 +178,7 @@ class AbuseTest extends Scope
 
         return [
             'databaseId' => $databaseId,
-            'tableId' => $collectionId,
+            'collectionId' => $collectionId,
         ];
     }
 }
