@@ -151,6 +151,16 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the appropriate index invalid exception.
+     */
+    final protected function getInvalidIndexException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::INDEX_INVALID
+            : Exception::COLUMN_INDEX_INVALID;
+    }
+
+    /**
      * Get the correct default unsupported message.
      */
     final protected function getDefaultUnsupportedException(): string
@@ -480,7 +490,7 @@ abstract class Action extends UtopiaAction
                 $max ??= $attribute->getAttribute('formatOptions')['max'];
 
                 if ($min > $max) {
-                    throw new Exception($this->getTypeInvalidException(), 'Minimum value must be lesser than maximum value');
+                    throw new Exception($this->getInvalidValueException(), 'Minimum value must be lesser than maximum value');
                 }
 
                 if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
@@ -506,17 +516,17 @@ abstract class Action extends UtopiaAction
                 break;
             case APP_DATABASE_ATTRIBUTE_ENUM:
                 if (empty($elements)) {
-                    throw new Exception($this->getTypeInvalidException(), 'Enum elements must not be empty');
+                    throw new Exception($this->getInvalidValueException(), 'Enum elements must not be empty');
                 }
 
                 foreach ($elements as $element) {
                     if (\strlen($element) === 0) {
-                        throw new Exception($this->getTypeInvalidException(), 'Each enum element must not be empty');
+                        throw new Exception($this->getInvalidValueException(), 'Each enum element must not be empty');
                     }
                 }
 
                 if (!is_null($default) && !in_array($default, $elements)) {
-                    throw new Exception($this->getTypeInvalidException(), 'Default value not found in elements');
+                    throw new Exception($this->getInvalidValueException(), 'Default value not found in elements');
                 }
 
                 $options = [
@@ -575,7 +585,7 @@ abstract class Action extends UtopiaAction
             } catch (LimitException) {
                 throw new Exception($this->getLimitException());
             } catch (IndexException $e) {
-                throw new Exception(Exception::INDEX_INVALID, $e->getMessage());
+                throw new Exception($this->getInvalidIndexException(), $e->getMessage());
             }
         }
 
