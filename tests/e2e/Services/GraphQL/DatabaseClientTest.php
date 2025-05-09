@@ -108,7 +108,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databasesCreateStringAttribute']);
+        $this->assertIsArray($attribute['body']['data']['collectionsCreateStringAttribute']);
 
         return $data;
     }
@@ -140,7 +140,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databasesCreateIntegerAttribute']);
+        $this->assertIsArray($attribute['body']['data']['collectionsCreateIntegerAttribute']);
 
         return $data;
     }
@@ -181,7 +181,7 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
 
-        $document = $document['body']['data']['databasesCreateDocument'];
+        $document = $document['body']['data']['collectionsCreateDocument'];
         $this->assertIsArray($document);
 
         return [
@@ -214,7 +214,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $documents['body']);
         $this->assertIsArray($documents['body']['data']);
-        $this->assertIsArray($documents['body']['data']['databasesListDocuments']);
+        $this->assertIsArray($documents['body']['data']['collectionsListDocuments']);
     }
 
     /**
@@ -241,7 +241,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
-        $this->assertIsArray($document['body']['data']['databasesGetDocument']);
+        $this->assertIsArray($document['body']['data']['collectionsGetDocument']);
     }
 
     /**
@@ -271,7 +271,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
-        $document = $document['body']['data']['databasesUpdateDocument'];
+        $document = $document['body']['data']['collectionsUpdateDocument'];
         $this->assertIsArray($document);
 
         $this->assertStringContainsString('New Document Name', $document['data']);

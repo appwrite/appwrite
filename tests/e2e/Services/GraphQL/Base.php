@@ -440,7 +440,7 @@ trait Base
                 }';
             case self::$CREATE_STRING_ATTRIBUTE:
                 return 'mutation createStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
-                    databasesCreateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, size: $size, required: $required, default: $default, array: $array) {
+                    collectionsCreateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, size: $size, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -449,7 +449,7 @@ trait Base
                 }';
             case self::$CREATE_INTEGER_ATTRIBUTE:
                 return 'mutation createIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
-                    databasesCreateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                    collectionsCreateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -460,7 +460,7 @@ trait Base
                 }';
             case self::$CREATE_FLOAT_ATTRIBUTE:
                 return 'mutation createFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
-                    databasesCreateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                    collectionsCreateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -471,7 +471,7 @@ trait Base
                 }';
             case self::$CREATE_BOOLEAN_ATTRIBUTE:
                 return 'mutation createBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
-                    databasesCreateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                    collectionsCreateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -480,7 +480,7 @@ trait Base
                 }';
             case self::$CREATE_URL_ATTRIBUTE:
                 return 'mutation createUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    databasesCreateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                    collectionsCreateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -489,7 +489,7 @@ trait Base
                 }';
             case self::$CREATE_EMAIL_ATTRIBUTE:
                 return 'mutation createEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    databasesCreateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                    collectionsCreateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -498,7 +498,7 @@ trait Base
                 }';
             case self::$CREATE_IP_ATTRIBUTE:
                 return 'mutation createIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    databasesCreateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                    collectionsCreateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -507,7 +507,7 @@ trait Base
                 }';
             case self::$CREATE_ENUM_ATTRIBUTE:
                 return 'mutation createEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
-                    databasesCreateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
+                    collectionsCreateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
                         key
                         elements
                         required
@@ -517,7 +517,7 @@ trait Base
                 }';
             case self::$CREATE_DATETIME_ATTRIBUTE:
                 return 'mutation createDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    databasesCreateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                    collectionsCreateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -526,7 +526,7 @@ trait Base
                 }';
             case self::$CREATE_RELATIONSHIP_ATTRIBUTE:
                 return 'mutation createRelationshipAttribute($databaseId: String!, $collectionId: String!, $relatedCollectionId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
-                    databasesCreateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, relatedCollectionId: $relatedCollectionId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
+                    collectionsCreateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, relatedCollectionId: $relatedCollectionId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
                         relatedCollection
                         relationType
                         twoWay
@@ -537,14 +537,14 @@ trait Base
                 }';
             case self::$UPDATE_STRING_ATTRIBUTE:
                 return 'mutation updateStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
-                        databasesUpdateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                        collectionsUpdateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
             case self::$UPDATE_INTEGER_ATTRIBUTE:
                 return 'mutation updateIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
-                        databasesUpdateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, min: $min, max: $max, default: $default) {
+                        collectionsUpdateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, min: $min, max: $max, default: $default) {
                             required
                             min
                             max
@@ -553,7 +553,7 @@ trait Base
                     }';
             case self::$UPDATE_FLOAT_ATTRIBUTE:
                 return 'mutation updateFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
-                        databasesUpdateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default) {
+                        collectionsUpdateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default) {
                             required
                             min
                             max
@@ -562,35 +562,35 @@ trait Base
                     }';
             case self::$UPDATE_BOOLEAN_ATTRIBUTE:
                 return 'mutation updateBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean){
-                        databasesUpdateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                        collectionsUpdateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
             case self::$UPDATE_URL_ATTRIBUTE:
                 return 'mutation updateUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
-                        databasesUpdateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                        collectionsUpdateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
             case self::$UPDATE_EMAIL_ATTRIBUTE:
                 return 'mutation updateEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
-                        databasesUpdateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                        collectionsUpdateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
             case self::$UPDATE_IP_ATTRIBUTE:
                 return 'mutation updateIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
-                        databasesUpdateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                        collectionsUpdateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
             case self::$UPDATE_ENUM_ATTRIBUTE:
                 return 'mutation updateEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
-                        databasesUpdateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default) {
+                        collectionsUpdateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default) {
                             elements
                             required
                             default
@@ -598,14 +598,14 @@ trait Base
                     }';
             case self::$UPDATE_DATETIME_ATTRIBUTE:
                 return 'mutation updateDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
-                        databasesUpdateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                        collectionsUpdateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
             case self::$UPDATE_RELATIONSHIP_ATTRIBUTE:
                 return 'mutation updateRelationshipAttribute($databaseId: String!, $collectionId: String!, $key: String!, $onDelete: String){
-                        databasesUpdateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, onDelete: $onDelete) {
+                        collectionsUpdateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, onDelete: $onDelete) {
                             relatedCollection
                             relationType
                             twoWay
@@ -616,7 +616,7 @@ trait Base
                     }';
             case self::$CREATE_INDEX:
                 return 'mutation createIndex($databaseId: String!, $collectionId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
-                    databasesCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
+                    collectionsCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
                         key
                         type
                         status
@@ -624,7 +624,7 @@ trait Base
                 }';
             case self::$GET_INDEXES:
                 return 'query listIndexes($databaseId: String!, $collectionId: String!) {
-                    databasesListIndexes(databaseId: $databaseId, collectionId: $collectionId) {
+                    collectionsListIndexes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         indexes {
                             key
@@ -635,7 +635,7 @@ trait Base
                 }';
             case self::$GET_INDEX:
                 return 'query getIndex($databaseId: String!, $collectionId: String!, $key: String!) {
-                    databasesGetIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                    collectionsGetIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         key
                         type
                         status
@@ -643,13 +643,13 @@ trait Base
                 }';
             case self::$DELETE_INDEX:
                 return 'mutation deleteIndex($databaseId: String!, $collectionId: String!, $key: String!) {
-                    databasesDeleteIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                    collectionsDeleteIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         status
                     }
                 }';
             case self::$GET_ATTRIBUTES:
                 return 'query listAttributes($databaseId: String!, $collectionId: String!) {
-                    databasesListAttributes(databaseId: $databaseId, collectionId: $collectionId) {
+                    collectionsListAttributes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         attributes {
                             ...attributeProperties
@@ -658,19 +658,19 @@ trait Base
                 }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
             case self::$GET_ATTRIBUTE:
                 return 'query getAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
-                    databasesGetAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                    collectionsGetAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         ...attributeProperties
                     }
                 }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
             case self::$DELETE_ATTRIBUTE:
                 return 'mutation deleteAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
-                    databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                    collectionsDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         status
                     }
                 }';
             case self::$GET_DOCUMENT:
                 return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!) {
-                    databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
+                    collectionsGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
                         _id
                         _collectionId
                         _permissions
@@ -679,7 +679,7 @@ trait Base
                 }';
             case self::$GET_DOCUMENTS:
                 return 'query listDocuments($databaseId: String!, $collectionId: String!){
-                    databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId) {
+                    collectionsListDocuments(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         documents {
                             _id
@@ -691,7 +691,7 @@ trait Base
                 }';
             case self::$CREATE_DOCUMENT:
                 return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
-                    databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
+                    collectionsCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
                         _collectionId
                         _permissions
@@ -758,7 +758,7 @@ trait Base
                     }';
             case self::$UPDATE_DOCUMENT:
                 return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
-                    databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
+                    collectionsUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
                         _collectionId
                         data
@@ -766,7 +766,7 @@ trait Base
                 }';
             case self::$DELETE_DOCUMENT:
                 return 'mutation deleteDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
-                    databasesDeleteDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
+                    collectionsDeleteDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
                         status
                     }
                 }';
