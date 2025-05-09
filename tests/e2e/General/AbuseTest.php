@@ -26,15 +26,113 @@ class AbuseTest extends Scope
         }
     }
 
-    public function testAbuseCreateDocument()
+    public function testAbuseCreateDocumentCollectionsAPI()
     {
-        $data = $this->createCollection();
+        $data = $this->createCollectionOrTable();
         $databaseId = $data['databaseId'];
-        $collectionId = $data['tableId'];
+        $collectionId = $data['collectionId'];
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'title' => 'The Hulk ' . $i,
+                ],
+            ]);
+
+            if ($i < $max) {
+                $this->assertEquals(201, $response['headers']['status-code']);
+            } else {
+                $this->assertEquals(429, $response['headers']['status-code']);
+            }
+        }
+    }
+
+    public function testAbuseUpdateDocumentCollectionsAPI()
+    {
+        $data = $this->createCollectionOrTable();
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+        $max = 120;
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'The Hulk',
+            ],
+        ]);
+
+        $documentId = $document['body']['$id'];
+
+        for ($i = 0; $i <= $max + 1; $i++) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'data' => [
+                    'title' => 'The Hulk ' . $i,
+                ],
+            ]);
+
+            if ($i < $max) {
+                $this->assertEquals(200, $response['headers']['status-code']);
+            } else {
+                $this->assertEquals(429, $response['headers']['status-code']);
+            }
+        }
+    }
+
+    public function testAbuseDeleteDocumentCollectionsAPI()
+    {
+        $data = $this->createCollectionOrTable();
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+        $max = 60;
+
+        for ($i = 0; $i <= $max + 1; $i++) {
+            $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'title' => 'The Hulk',
+                ],
+            ]);
+
+            $documentId = $document['body']['$id'];
+
+            $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]);
+
+            if ($i < $max) {
+                $this->assertEquals(204, $response['headers']['status-code']);
+            } else {
+                $this->assertEquals(429, $response['headers']['status-code']);
+            }
+        }
+    }
+
+    public function testAbuseCreateDocumentTablesAPI()
+    {
+        $data = $this->createCollectionOrTable(false);
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+        $max = 120;
+
+        for ($i = 0; $i <= $max + 1; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
@@ -52,14 +150,14 @@ class AbuseTest extends Scope
         }
     }
 
-    public function testAbuseUpdateDocument()
+    public function testAbuseUpdateDocumentTablesAPI()
     {
-        $data = $this->createCollection();
+        $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
-        $collectionId = $data['tableId'];
+        $collectionId = $data['collectionId'];
         $max = 120;
 
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -90,15 +188,15 @@ class AbuseTest extends Scope
         }
     }
 
-    public function testAbuseDeleteDocument()
+    public function testAbuseDeleteDocumentTablesAPI()
     {
-        $data = $this->createCollection();
+        $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
-        $collectionId = $data['tableId'];
+        $collectionId = $data['collectionId'];
         $max = 60;
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -111,7 +209,7 @@ class AbuseTest extends Scope
 
             $documentId = $document['body']['$id'];
 
-            $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+            $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $documentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ]);
@@ -211,7 +309,7 @@ class AbuseTest extends Scope
         }
     }
 
-    private function createCollection(): array
+    private function createCollectionOrTable(bool $isCollection = true): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -227,12 +325,16 @@ class AbuseTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+        $endpoint = $isCollection ? 'collections' : 'tables';
+        $idParam = $isCollection ? 'collectionId' : 'tableId';
+        $attributePath = $isCollection ? 'attributes' : 'columns';
+
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . "/$endpoint", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'tableId' => ID::unique(),
+            $idParam => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -244,7 +346,7 @@ class AbuseTest extends Scope
 
         $collectionId = $movies['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . "/$endpoint/" . $collectionId . "/$attributePath/string", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -258,7 +360,7 @@ class AbuseTest extends Scope
 
         return [
             'databaseId' => $databaseId,
-            'tableId' => $collectionId,
+            'collectionId' => $collectionId,
         ];
     }
 
