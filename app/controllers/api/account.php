@@ -1213,7 +1213,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
         }
 
         $oAuthProviders = Config::getParam('oAuthProviders');
-        if (!\class_exists($oAuthProviders[$provider]['class'])) {
+        $className = $oAuthProviders[$provider]['class'];
+        if (!\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
