@@ -253,7 +253,6 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $table, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->setAttribute('$databaseId', $database->getId());
