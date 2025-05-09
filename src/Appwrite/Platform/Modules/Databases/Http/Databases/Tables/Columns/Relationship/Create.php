@@ -80,7 +80,7 @@ class Create extends RelationshipCreate
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->callback(function (string $databaseId, string $tableId, string $relatedTableId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $relatedTableId, $type, $twoWayKey, $key, $twoWayKey, $onDelete, $response, $dbForProject, $queueForDatabase, $queueForEvents);
+                parent::action($databaseId, $tableId, $relatedTableId, $type, $twoWay, $key, $twoWayKey, $onDelete, $response, $dbForProject, $queueForDatabase, $queueForEvents);
             });
     }
 }
