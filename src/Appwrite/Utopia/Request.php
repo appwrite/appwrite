@@ -3,8 +3,10 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Auth\Auth;
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
+use Utopia\CLI\Console;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
@@ -39,14 +41,14 @@ class Request extends UtopiaRequest
             $params = [];
 
             foreach ($methods as $method) {
-                /** @var \Appwrite\SDK\Method $method */
+                /** @var Method $method */
                 if (empty($method)) {
                     $endpointIdentifier = 'unknown.unknown';
+                    Console::info('No SDK method found for route: ' . self::getRoute()->getPath());
                 } else {
                     $endpointIdentifier = $method->getNamespace() . '.' . $method->getMethodName();
+                    $params += $method->getParameters();
                 }
-
-                $params += $method->getParameters();
             }
 
             if (!empty($params)) {
@@ -56,7 +58,10 @@ class Request extends UtopiaRequest
             }
 
             foreach ($this->getFilters() as $filter) {
-                $parameters = $filter->parse($parameters, $endpointIdentifier);
+                $parameters = $filter->parse(
+                    $parameters,
+                    $endpointIdentifier ?? ''
+                );
             }
         }
 
