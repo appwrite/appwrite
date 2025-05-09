@@ -1212,9 +1212,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
 
-        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-
-        if (!\class_exists($className)) {
+        $oAuthProviders = Config::getParam('oAuthProviders');
+        if (!\class_exists($oAuthProviders[$provider]['class'])) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
