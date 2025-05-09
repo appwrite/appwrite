@@ -85,22 +85,6 @@ abstract class Action extends UtopiaAction
     }
 
     /**
-     * Get the correct parent param key (e.g. `tableId` or `collectionId`)
-     */
-    final protected function getParentEventsParamKey(): string
-    {
-        return $this->isCollectionsAPI() ? 'collectionId' : 'tableId';
-    }
-
-    /**
-     * Get the correct param key (e.g. `attributeId` or `columnId`)
-     */
-    final protected function getEventsParamKey(): string
-    {
-        return $this->getContext() . 'Id';
-    }
-
-    /**
      * Get the appropriate parent level not found exception.
      */
     final protected function getParentNotFoundException(): string
@@ -423,9 +407,10 @@ abstract class Action extends UtopiaAction
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
-            ->setParam($this->getEventsParamKey(), $attribute->getId())
-            // tableId or columnId
-            ->setParam($this->getParentEventsParamKey(), $collection->getId())
+            ->setParam('attributeId', $attribute->getId())
+            ->setParam('columnId', $attribute->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setParam('collectionId', $collection->getId())
             ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
@@ -623,9 +608,10 @@ abstract class Action extends UtopiaAction
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
-            ->setParam($this->getEventsParamKey(), $attribute->getId())
-            // tableId or columnId
-            ->setParam($this->getParentEventsParamKey(), $collection->getId())
+            ->setParam('attributeId', $attribute->getId())
+            ->setParam('columnId', $attribute->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setParam('collectionId', $collection->getId())
             ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
 
         return $attribute;

@@ -50,22 +50,6 @@ abstract class Action extends UtopiaAction
     }
 
     /**
-     * Get the correct grand parent param key (e.g. `tableId` or `collectionId`)
-     */
-    final protected function getGrandParentEventsParamKey(): string
-    {
-        return $this->isCollectionsAPI() ? 'collectionId' : 'tableId';
-    }
-
-    /**
-     * Get the key used in event parameters.
-     */
-    final protected function getEventsParamKey(): string
-    {
-        return 'indexId';
-    }
-
-    /**
      * Determine if the current action is for the Collections API.
      */
     final protected function isCollectionsAPI(): bool

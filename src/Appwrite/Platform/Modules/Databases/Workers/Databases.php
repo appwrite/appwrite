@@ -115,10 +115,8 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-        $events = [
-            "databases.[databaseId].tables.[tableId].columns.[columnId].update",
-            "databases.[databaseId].collections.[collectionId].attributes.[attributeId].update",
-        ];
+        $event = "databases.[databaseId].collections.[collectionId].attributes.[attributeId].update";
+
         /**
          * TODO @christyjacob4 verify if this is still the case
          * Fetch attribute from the database, since with Resque float values are loosing information.
@@ -207,7 +205,7 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $events, $queueForRealtime, $attribute);
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
 
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
@@ -241,10 +239,7 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-        $events = [
-            'databases.[databaseId].tables.[tableId].columns.[columnId].delete',
-            'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete',
-        ];
+        $event = 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete';
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
@@ -317,7 +312,7 @@ class Databases extends Action
 
                 throw $e;
             } finally {
-                $this->trigger($database, $collection, $project, $events, $queueForRealtime, $attribute);
+                $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
             }
 
             // The underlying database removes/rebuilds indexes when attribute is removed
@@ -404,10 +399,7 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-        $events = [
-            'databases.[databaseId].tables.[tableId].indexes.[indexId].update',
-            'databases.[databaseId].collections.[collectionId].indexes.[indexId].update',
-        ];
+        $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update';
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key', '');
         $type = $index->getAttribute('type', '');
@@ -434,7 +426,7 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $events, $queueForRealtime, null, $index);
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
         }
     }
@@ -464,10 +456,7 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-        $events = [
-            'databases.[databaseId].tables.[tableId].indexes.[indexId].delete',
-            'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete',
-        ];
+        $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete';
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -493,7 +482,7 @@ class Databases extends Action
             throw $e;
 
         } finally {
-            $this->trigger($database, $collection, $project, $events, $queueForRealtime, null, $index);
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
         }
     }
@@ -516,7 +505,6 @@ class Databases extends Action
     /**
      * @param Document $database
      * @param Document $collection
-     * @param Document $project
      * @param Database $dbForProject
      * @return void
      * @throws Authorization
@@ -601,7 +589,7 @@ class Databases extends Action
      * @param Document $database
      * @param Document $collection
      * @param Document $project
-     * @param string[] $events
+     * @param string $event
      * @param Realtime $queueForRealtime
      * @param Document|null $attribute
      * @param Document|null $index
@@ -612,35 +600,31 @@ class Databases extends Action
         Document      $database,
         Document      $collection,
         Document      $project,
-        array         $events,
+        string         $event,
         Realtime      $queueForRealtime,
         Document|null $attribute = null,
         Document|null $index = null,
     ): void {
-        // table and collection
-        foreach ($events as $event) {
+        $queueForRealtime
+            ->setProject($project)
+            ->setSubscribers(['console'])
+            ->setEvent($event)
+            ->setParam('databaseId', $database->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setParam('collectionId', $collection->getId());
+
+        if (! empty($attribute)) {
             $queueForRealtime
-                ->setProject($project)
-                ->setSubscribers(['console'])
-                ->setEvent($event)
-                ->setParam('tableId', $collection->getId())
-                ->setParam('collectionId', $collection->getId())
-                ->setParam('databaseId', $database->getId());
-
-            if (! empty($attribute)) {
-                $queueForRealtime
-                    ->setParam('columnId', $attribute->getId())
-                    ->setParam('attributeId', $attribute->getId())
-                    ->setPayload($attribute->getArrayCopy());
-            }
-
-            if (! empty($index)) {
-                $queueForRealtime
-                    ->setParam('indexId', $index->getId())
-                    ->setPayload($index->getArrayCopy());
-            }
-
-            $queueForRealtime->trigger();
+                ->setParam('columnId', $attribute->getId())
+                ->setParam('attributeId', $attribute->getId())
+                ->setPayload($attribute->getArrayCopy());
         }
+        if (! empty($index)) {
+            $queueForRealtime
+                ->setParam('indexId', $index->getId())
+                ->setPayload($index->getArrayCopy());
+        }
+
+        $queueForRealtime->trigger();
     }
 }

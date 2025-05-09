@@ -252,12 +252,12 @@ class Realtime extends Adapter
      * @param Document $payload
      * @param Document|null $project
      * @param Document|null $database
-     * @param Document|null $table
+     * @param Document|null $collection
      * @param Document|null $bucket
      * @return array
      * @throws \Exception
      */
-    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $table = null, Document $bucket = null): array
+    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $collection = null, Document $bucket = null): array
     {
         $channels = [];
         $roles = [];
@@ -308,7 +308,7 @@ class Realtime extends Adapter
                     if ($database->isEmpty()) {
                         throw new \Exception('Database needs to be passed to Realtime for Document/Row events in the Database.');
                     }
-                    if ($table->isEmpty()) {
+                    if ($collection->isEmpty()) {
                         throw new \Exception('Collection or the Table needs to be passed to Realtime for Document/Row events in the Database.');
                     }
 
@@ -322,9 +322,9 @@ class Realtime extends Adapter
                     $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
                     $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
 
-                    $roles = $table->getAttribute('documentSecurity', false)
-                        ? \array_merge($table->getRead(), $payload->getRead())
-                        : $table->getRead();
+                    $roles = $collection->getAttribute('documentSecurity', false)
+                        ? \array_merge($collection->getRead(), $payload->getRead())
+                        : $collection->getRead();
                 }
                 break;
             case 'buckets':

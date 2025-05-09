@@ -310,9 +310,11 @@ class Create extends Action
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setContext('database', $database)
-            ->setParam($this->getEventsParamKey(), $document->getId())
+            ->setParam('rowId', $document->getId())
+            ->setParam('documentId', $document->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setParam('collectionId', $collection->getId())
             ->setPayload($response->getPayload(), sensitive: $relationships)
-            ->setParam($this->getParentEventsParamKey(), $collection->getId())
             ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
     }
 }

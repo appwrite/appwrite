@@ -73,21 +73,46 @@ class Realtime extends Event
         }
 
         $allEvents = Event::generateEvents($this->getEvent(), $this->getParams());
+        $firstEvent = $allEvents[0]; // most verbose event pattern
+
+        // generate and merge all collection and tables api events.
+        if (str_contains($this->getEvent(), 'databases.') && str_contains($firstEvent, 'collections')) {
+            $tableEventMap = [
+                'collections' => 'tables', 'attributes' => 'columns',
+                'attributeId' => 'columnId', 'documents' => 'rows', 'documentId' => 'rowId',
+            ];
+
+            // replace params!
+            $tableEvent = str_replace(
+                array_keys($tableEventMap),
+                array_values($tableEventMap),
+                $this->getEvent()
+            );
+
+            // generate new events
+            $tableEvents = Event::generateEvents($tableEvent, $this->getParams());
+
+            // merge all of the api events
+            $allEvents = array_merge($allEvents, $tableEvents);
+
+            // remove duplicates
+            $allEvents = array_values(array_unique($allEvents));
+        }
+
         $payload = new Document($this->getPayload());
 
         $db = $this->getContext('database');
         $bucket = $this->getContext('bucket');
 
-        // can be Tables API or Collections API, generated channels include both!
+        // Can be Tables API or Collections API; generated channels include both!
         $tableOrCollection = $this->getContext('table') ?? $this->getContext('collection');
 
         $target = RealtimeAdapter::fromPayload(
-            // Pass first, most verbose event pattern
-            event: $allEvents[0],
+            event: $firstEvent,
             payload: $payload,
             project: $this->getProject(),
             database: $db,
-            table: $tableOrCollection,
+            collection: $tableOrCollection,
             bucket: $bucket,
         );
 

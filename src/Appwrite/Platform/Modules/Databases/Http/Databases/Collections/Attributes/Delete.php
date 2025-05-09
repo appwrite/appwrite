@@ -146,9 +146,10 @@ class Delete extends Action
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
             ->setPayload($response->output($attribute, $model))
-            ->setParam($this->getEventsParamKey(), $attribute->getId())
-            // tableId or columnId
-            ->setParam($this->getParentEventsParamKey(), $collection->getId())
+            ->setParam('attributeId', $attribute->getId())
+            ->setParam('columnId', $attribute->getId())
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $collection->getId())
             // set proper context
             ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
 

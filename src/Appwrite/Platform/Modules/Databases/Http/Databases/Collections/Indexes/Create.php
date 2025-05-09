@@ -220,8 +220,9 @@ class Create extends Action
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
-            ->setParam($this->getEventsParamKey(), $index->getId())
-            ->setParam($this->getGrandParentEventsParamKey(), $collection->getId())
+            ->setParam('indexId', $index->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setParam('collectionId', $collection->getId())
             ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
 
         $response

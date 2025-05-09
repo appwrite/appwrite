@@ -68,22 +68,6 @@ abstract class Action extends UtopiaAction
     }
 
     /**
-     * Get the correct parent param key (e.g. `tableId` or `collectionId`)
-     */
-    final protected function getParentEventsParamKey(): string
-    {
-        return $this->isCollectionsAPI() ? 'collectionId' : 'tableId';
-    }
-
-    /**
-     * Get the correct param key (e.g. `documentId` or `rowId`)
-     */
-    final protected function getEventsParamKey(): string
-    {
-        return $this->getContext() . 'Id';
-    }
-
-    /**
      * Get the appropriate parent level not found exception.
      */
     final protected function getParentNotFoundException(): string
