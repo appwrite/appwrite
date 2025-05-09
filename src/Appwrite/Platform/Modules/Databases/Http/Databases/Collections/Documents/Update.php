@@ -287,7 +287,7 @@ class Update extends Action
         $response->dynamic($document, $this->getResponseModel());
 
         $relationships = \array_map(
-            fn ($row) => $document->getAttribute('key'),
+            fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
