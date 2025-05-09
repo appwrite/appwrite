@@ -2,14 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\String;
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Create as StringCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -72,8 +69,6 @@ class Create extends StringCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $size, $required, $default, $array, $encrypt, $response, $dbForProject, $queueForDatabase, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

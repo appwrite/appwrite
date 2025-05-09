@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Datetime;
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Datetime\Create as DatetimeCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -68,8 +66,6 @@ class Create extends DatetimeCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $required, $default, $array, $response, $dbForProject, $queueForDatabase, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

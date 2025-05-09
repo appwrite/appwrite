@@ -2,15 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Email;
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Email\Create as EmailCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -68,8 +65,6 @@ class Create extends EmailCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $required, $default, $array, $response, $dbForProject, $queueForDatabase, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

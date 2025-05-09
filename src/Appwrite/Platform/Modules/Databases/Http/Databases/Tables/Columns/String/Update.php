@@ -2,14 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\String;
 
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Update as StringUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -72,8 +70,6 @@ class Update extends StringUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, ?int $size, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $required, $default, $size, $newKey, $response, $dbForProject, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

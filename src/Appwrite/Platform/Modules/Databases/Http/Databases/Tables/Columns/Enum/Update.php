@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Enum;
 
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Enum\Update as EnumUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -71,8 +70,6 @@ class Update extends EnumUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, array $elements, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $elements, $required, $default, $newKey, $response, $dbForProject, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

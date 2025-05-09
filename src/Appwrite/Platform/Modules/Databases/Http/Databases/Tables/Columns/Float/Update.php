@@ -2,14 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Float;
 
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Float\Update as FloatUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -71,8 +69,6 @@ class Update extends FloatUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $required, $min, $max, $default, $newKey, $response, $dbForProject, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

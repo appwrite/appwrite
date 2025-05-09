@@ -2,14 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows;
 
-use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Get as DocumentGet;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -62,8 +60,6 @@ class Get extends DocumentGet
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
-            ->callback(function (string $databaseId, string $tableId, string $rowId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
-                parent::action($databaseId, $tableId, $rowId, $queries, $response, $dbForProject, $queueForStatsUsage);
-            });
+            ->callback([$this, 'action']);
     }
 }

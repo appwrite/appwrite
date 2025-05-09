@@ -9,7 +9,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -58,8 +57,6 @@ class XList extends IndexXList
             ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback(function (string $databaseId, string $tableId, array $queries, UtopiaResponse $response, Database $dbForProject) {
-                parent::action($databaseId, $tableId, $queries, $response, $dbForProject);
-            });
+            ->callback([$this, 'action']);
     }
 }

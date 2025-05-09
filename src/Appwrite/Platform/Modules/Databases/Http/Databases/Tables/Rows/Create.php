@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows;
 
-use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as DocumentCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -76,8 +73,6 @@ class Create extends DocumentCreate
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback(function (string $databaseId, string $rowId, string $tableId, string|array $data, ?array $permissions, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
-                parent::action($databaseId, $rowId, $tableId, $databaseId, $permissions, $response, $dbForProject, $user, $queueForEvents, $queueForStatsUsage);
-            });
+            ->callback([$this, 'action']);
     }
 }

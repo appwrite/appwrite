@@ -2,14 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Integer;
 
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Integer\Update as IntegerUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -71,8 +69,6 @@ class Update extends IntegerUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $required, $min, $max, $default, $newKey, $response, $dbForProject, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

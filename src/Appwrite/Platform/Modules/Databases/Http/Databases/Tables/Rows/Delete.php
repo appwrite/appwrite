@@ -2,15 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows;
 
-use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Delete as DocumentDelete;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -74,8 +71,6 @@ class Delete extends DocumentDelete
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback(function (string $databaseId, string $tableId, string $rowId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
-                parent::action($databaseId, $tableId, $rowId, $requestTimestamp, $response, $dbForProject, $queueForEvents, $queueForStatsUsage);
-            });
+            ->callback([$this, 'action']);
     }
 }

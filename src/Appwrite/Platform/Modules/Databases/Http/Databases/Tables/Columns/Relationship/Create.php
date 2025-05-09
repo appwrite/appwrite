@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Relationship;
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship\Create as RelationshipCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -79,8 +77,6 @@ class Create extends RelationshipCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $relatedTableId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $relatedTableId, $type, $twoWay, $key, $twoWayKey, $onDelete, $response, $dbForProject, $queueForDatabase, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

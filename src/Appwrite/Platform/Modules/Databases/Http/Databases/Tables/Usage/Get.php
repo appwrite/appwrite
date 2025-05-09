@@ -8,7 +8,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -58,8 +57,6 @@ class Get extends CollectionUsageGet
             ->param('tableId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback(function (string $databaseId, string $range, string $tableId, UtopiaResponse $response, Database $dbForProject) {
-                parent::action($databaseId, $range, $tableId, $response, $dbForProject);
-            });
+            ->callback([$this, 'action']);
     }
 }

@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Indexes;
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Create as IndexCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -38,10 +36,10 @@ class Create extends IndexCreate
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/databases/:databaseId/tables/:tables/indexes')
+            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes')
             ->desc('Create index')
             ->groups(['api', 'database'])
-            ->label('event', 'databases.[databaseId].tables.[tables].indexes.[indexId].create')
+            ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].create')
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'index.create')
@@ -70,8 +68,6 @@ class Create extends IndexCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback(function (string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-                parent::action($databaseId, $tableId, $key, $type, $columns, $orders, $response, $dbForProject, $queueForDatabase, $queueForEvents);
-            });
+            ->callback([$this, 'action']);
     }
 }

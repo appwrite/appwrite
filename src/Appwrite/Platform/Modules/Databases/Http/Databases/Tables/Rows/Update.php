@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows;
 
-use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Update as DocumentUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -72,8 +70,6 @@ class Update extends DocumentUpdate
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback(function (string $databaseId, string $tableId, string $rowId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
-                parent::action($databaseId, $tableId, $rowId, $data, $permissions, $requestTimestamp, $response, $dbForProject, $queueForEvents, $queueForStatsUsage);
-            });
+            ->callback([$this, 'action']);
     }
 }

@@ -8,7 +8,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -58,8 +57,6 @@ class Get extends IndexGet
             ->param('key', null, new Key(), 'Index Key.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback(function (string $databaseId, string $tableId, string $key, UtopiaResponse $response, Database $dbForProject) {
-                parent::action($databaseId, $tableId, $key, $response, $dbForProject);
-            });
+            ->callback([$this, 'action']);
     }
 }

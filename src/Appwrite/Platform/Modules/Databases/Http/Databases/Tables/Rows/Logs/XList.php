@@ -7,14 +7,10 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Response as UtopiaResponse;
-use MaxMind\Db\Reader;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
@@ -60,8 +56,6 @@ class XList extends DocumentLogXList
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
-            ->callback(function (string $databaseId, string $tableId, string $rowId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb) {
-                parent::action($databaseId, $tableId, $rowId, $queries, $response, $dbForProject, $locale, $geodb);
-            });
+            ->callback([$this, 'action']);
     }
 }
