@@ -1,6 +1,5 @@
 <?php
 
-// TODO: @itznotabug, @jake - do we change the scopes as well with the terminology changes?
 return [ // List of publicly visible scopes
     'sessions.write' => [
         'description' => 'Access to create, update, and delete user sessions',
