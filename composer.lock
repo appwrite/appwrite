@@ -3301,16 +3301,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.13.0",
+            "version": "0.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "dee01dec33a211644d60f6cfa56b1b8176d3fae3"
+                "reference": "97220cb3b3822b166ee016d1646e2ae2815dc540"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/dee01dec33a211644d60f6cfa56b1b8176d3fae3",
-                "reference": "dee01dec33a211644d60f6cfa56b1b8176d3fae3",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/97220cb3b3822b166ee016d1646e2ae2815dc540",
+                "reference": "97220cb3b3822b166ee016d1646e2ae2815dc540",
                 "shasum": ""
             },
             "require": {
@@ -3347,9 +3347,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.13.0"
+                "source": "https://github.com/utopia-php/cache/tree/0.13.1"
             },
-            "time": "2025-04-17T04:20:26+00:00"
+            "time": "2025-05-09T14:43:52+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -3499,16 +3499,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.68.0",
+            "version": "0.68.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f9c2b6b4e7a17f0890d3fb6238b03dae6b2670ad"
+                "reference": "72b2e2c0b875028f7d9dd755f6d4524b693c6507"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f9c2b6b4e7a17f0890d3fb6238b03dae6b2670ad",
-                "reference": "f9c2b6b4e7a17f0890d3fb6238b03dae6b2670ad",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/72b2e2c0b875028f7d9dd755f6d4524b693c6507",
+                "reference": "72b2e2c0b875028f7d9dd755f6d4524b693c6507",
                 "shasum": ""
             },
             "require": {
@@ -3549,9 +3549,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.68.0"
+                "source": "https://github.com/utopia-php/database/tree/0.68.1"
             },
-            "time": "2025-05-08T12:01:20+00:00"
+            "time": "2025-05-09T10:08:53+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4595,16 +4595,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "629e53640b108eab43c7cc9ab375efade8622d43"
+                "reference": "77004ba9f66a0ab6eb840a85b2af332fca8f6bd9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/629e53640b108eab43c7cc9ab375efade8622d43",
-                "reference": "629e53640b108eab43c7cc9ab375efade8622d43",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/77004ba9f66a0ab6eb840a85b2af332fca8f6bd9",
+                "reference": "77004ba9f66a0ab6eb840a85b2af332fca8f6bd9",
                 "shasum": ""
             },
             "require": {
@@ -4638,9 +4638,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/0.3.0"
+                "source": "https://github.com/utopia-php/websocket/tree/0.3.1"
             },
-            "time": "2025-03-28T01:11:13+00:00"
+            "time": "2025-05-09T12:57:42+00:00"
         },
         {
             "name": "webmozart/assert",
