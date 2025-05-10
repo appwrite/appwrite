@@ -152,4 +152,12 @@ abstract class Action extends UtopiaAction
             ? Exception::ATTRIBUTE_NOT_AVAILABLE
             : Exception::COLUMN_NOT_AVAILABLE;
     }
+
+    /**
+     * Get the correct collections context for Events queue.
+     */
+    final protected function getCollectionsEventsContext(): string
+    {
+        return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
 }

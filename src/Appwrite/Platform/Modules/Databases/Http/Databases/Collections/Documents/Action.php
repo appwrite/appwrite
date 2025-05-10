@@ -127,4 +127,12 @@ abstract class Action extends UtopiaAction
             ? Exception::DOCUMENT_MISSING_PAYLOAD
             : Exception::ROW_MISSING_PAYLOAD;
     }
+
+    /**
+     * Get the correct collections context for Events queue.
+     */
+    final protected function getCollectionsEventsContext(): string
+    {
+        return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
 }

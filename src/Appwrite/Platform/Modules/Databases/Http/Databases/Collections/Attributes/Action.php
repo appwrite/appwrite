@@ -205,6 +205,14 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the correct collections context for Events queue.
+     */
+    final protected function getCollectionsEventsContext(): string
+    {
+        return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
+
+    /**
      *  Get the proper column/attribute type based on set context.
      */
     final protected function getCorrectModel(string $type, string $format): string
@@ -407,11 +415,11 @@ abstract class Action extends UtopiaAction
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $collection->getId())
             ->setParam('attributeId', $attribute->getId())
             ->setParam('columnId', $attribute->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setParam('collectionId', $collection->getId())
-            ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
+            ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
@@ -608,11 +616,11 @@ abstract class Action extends UtopiaAction
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $collection->getId())
             ->setParam('attributeId', $attribute->getId())
             ->setParam('columnId', $attribute->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setParam('collectionId', $collection->getId())
-            ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
+            ->setContext($this->getCollectionsEventsContext(), $collection);
 
         return $attribute;
     }

@@ -145,13 +145,12 @@ class Delete extends Action
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
-            ->setPayload($response->output($attribute, $model))
-            ->setParam('attributeId', $attribute->getId())
-            ->setParam('columnId', $attribute->getId())
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
-            // set proper context
-            ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
+            ->setParam('attributeId', $attribute->getId())
+            ->setParam('columnId', $attribute->getId())
+            ->setPayload($response->output($attribute, $model))
+            ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $response->noContent();
     }

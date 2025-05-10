@@ -221,9 +221,9 @@ class Create extends Action
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
             ->setParam('indexId', $index->getId())
-            ->setParam('tableId', $collection->getId())
             ->setParam('collectionId', $collection->getId())
-            ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
+            ->setParam('tableId', $collection->getId())
+            ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

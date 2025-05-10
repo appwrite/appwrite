@@ -118,8 +118,8 @@ class Delete extends Action
             ->setParam('indexId', $index->getId())
             ->setParam('tableId', $collection->getId())
             ->setParam('collectionId', $collection->getId())
-            ->setPayload($response->output($index, $this->getResponseModel()))
-            ->setContext($this->isCollectionsAPI() ? 'collection' : 'table', $collection);
+            ->setContext($this->getCollectionsEventsContext(), $collection)
+            ->setPayload($response->output($index, $this->getResponseModel()));
 
         $response->noContent();
     }
