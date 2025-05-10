@@ -16,7 +16,7 @@ class DatabasesConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    public function testCreateCollection(): array
+    public function testCreateTable(): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -50,10 +50,10 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $movies['headers']['status-code']);
-        $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertEquals('Movies', $movies['body']['name']);
 
         /**
-         * Test when database is disabled but can still create collections
+         * Test when database is disabled but can still create tables
          */
         $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, array_merge([
             'content-type' => 'application/json',
@@ -81,7 +81,7 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         /**
-         * Test when collection is disabled but can still modify collections
+         * Test when table is disabled but can still modify tables
          */
         $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tables/' . $movies['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -92,20 +92,20 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $tvShows['headers']['status-code']);
-        $this->assertEquals($tvShows['body']['name'], 'TvShows');
+        $this->assertEquals('TvShows', $tvShows['body']['name']);
 
         return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId, 'tvShowsId' => $tvShows['body']['$id']];
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @param array $data
      * @throws \Exception
      */
-    public function testListCollection(array $data)
+    public function testListTable(array $data)
     {
         /**
-         * Test when database is disabled but can still call list collections
+         * Test when database is disabled but can still call list tables
          */
         $databaseId = $data['databaseId'];
 
@@ -119,17 +119,17 @@ class DatabasesConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @param array $data
      * @throws \Exception
      */
-    public function testGetCollection(array $data)
+    public function testGetTable(array $data)
     {
         $databaseId = $data['databaseId'];
         $moviesCollectionId = $data['moviesId'];
 
         /**
-         * Test when database and collection are disabled but can still call get collection
+         * Test when database and table are disabled but can still call get table
          */
         $table = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $moviesCollectionId, array_merge([
             'content-type' => 'application/json',
@@ -143,18 +143,18 @@ class DatabasesConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @param array $data
      * @throws \Exception
      * @throws \Exception
      */
-    public function testUpdateCollection(array $data)
+    public function testUpdateTable(array $data)
     {
         $databaseId = $data['databaseId'];
         $moviesCollectionId = $data['moviesId'];
 
         /**
-         * Test When database and collection are disabled but can still call update collection
+         * Test When database and table are disabled but can still call update table
          */
         $table = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tables/' . $moviesCollectionId, array_merge([
             'content-type' => 'application/json',
@@ -171,18 +171,18 @@ class DatabasesConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @param array $data
      * @throws \Exception
      * @throws \Exception
      */
-    public function testDeleteCollection(array $data)
+    public function testDeleteTable(array $data)
     {
         $databaseId = $data['databaseId'];
         $tvShowsId = $data['tvShowsId'];
 
         /**
-         * Test when database and collection are disabled but can still call delete collection
+         * Test when database and table are disabled but can still call delete table
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $tvShowsId, array_merge([
             'content-type' => 'application/json',
@@ -190,11 +190,11 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEquals($response['body'], "");
+        $this->assertEquals("", $response['body']);
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      */
     public function testGetDatabaseUsage(array $data)
     {
@@ -226,7 +226,7 @@ class DatabasesConsoleClientTest extends Scope
 
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(15, count($response['body']));
+        $this->assertCount(15, $response['body']);
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsNumeric($response['body']['rowsTotal']);
         $this->assertIsNumeric($response['body']['tablesTotal']);
@@ -236,9 +236,9 @@ class DatabasesConsoleClientTest extends Scope
 
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      */
-    public function testGetCollectionUsage(array $data)
+    public function testGetTableUsage(array $data)
     {
         $databaseId = $data['databaseId'];
         /**
@@ -280,10 +280,10 @@ class DatabasesConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws \Utopia\Database\Exception\Query
      */
-    public function testGetCollectionLogs(array $data)
+    public function testGetTableLogs(array $data)
     {
         $databaseId = $data['databaseId'];
         /**
