@@ -157,7 +157,7 @@ class AbuseTest extends Scope
         $collectionId = $data['collectionId'];
         $max = 120;
 
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
+        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -168,10 +168,10 @@ class AbuseTest extends Scope
             ],
         ]);
 
-        $documentId = $document['body']['$id'];
+        $rowId = $row['body']['$id'];
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+            $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $rowId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
