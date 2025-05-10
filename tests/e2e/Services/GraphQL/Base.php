@@ -82,17 +82,17 @@ trait Base
     public static string $GET_COLUMN = 'get_column';
     public static string $DELETE_COLUMN = 'delete_column';
 
-    // Collection Indexes
-    public static string $CREATE_INDEX = 'create_index';
-    public static string $GET_INDEXES = 'get_indexes';
-    public static string $GET_INDEX = 'get_index';
-    public static string $DELETE_INDEX = 'delete_index';
+    // Attribute Indexes
+    public static string $CREATE_INDEX = 'create_attribute_index';
+    public static string $GET_INDEXES = 'get_attribute_indexes';
+    public static string $GET_INDEX = 'get_attribute_index';
+    public static string $DELETE_INDEX = 'delete_attribute_index';
 
     // Column Indexes
-    public static string $CREATE_COLUMN_INDEX = 'create_index';
-    public static string $GET_COLUMN_INDEXES = 'get_indexes';
-    public static string $GET_COLUMN_INDEX = 'get_index';
-    public static string $DELETE_COLUMN_INDEX = 'delete_index';
+    public static string $CREATE_COLUMN_INDEX = 'create_column_index';
+    public static string $GET_COLUMN_INDEXES = 'get_column_indexes';
+    public static string $GET_COLUMN_INDEX = 'get_column_index';
+    public static string $DELETE_COLUMN_INDEX = 'delete_column_index';
 
     // Documents
     public static string $CREATE_DOCUMENT = 'create_document_rest';
@@ -995,8 +995,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_COLUMN_INDEX:
-                return 'mutation createIndex($databaseId: String!, $tableId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
-                    tablesCreateIndex(databaseId: $databaseId, tableId: $tableId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
+                return 'mutation createIndex($databaseId: String!, $tableId: String!, $key: String!, $type: String!, $columns: [String!]!, $orders: [String!]){
+                    tablesCreateIndex(databaseId: $databaseId, tableId: $tableId, key: $key, type: $type, columns: $columns, orders: $orders) {
                         key
                         type
                         status
