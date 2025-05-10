@@ -47,10 +47,10 @@ class DatabaseServerTest extends Scope
     /**
      * @depends testCreateDatabase
      */
-    public function testCreateCollection($database): array
+    public function testCreateTable($database): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::$CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -74,7 +74,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table['body']['data']);
         $this->assertArrayNotHasKey('errors', $table['body']);
-        $table = $table['body']['data']['databasesCreateCollection'];
+        $table = $table['body']['data']['databasesCreateTable'];
         $this->assertEquals('Actors', $table['name']);
 
         $gqlPayload = [
@@ -100,24 +100,24 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table2['body']['data']);
         $this->assertArrayNotHasKey('errors', $table2['body']);
-        $table2 = $table2['body']['data']['databasesCreateCollection'];
+        $table2 = $table2['body']['data']['databasesCreateTable'];
         $this->assertEquals('Movies', $table2['name']);
 
         return [
             'database' => $database,
             'table' => $table,
-            'collection2' => $table2,
+            'table2' => $table2,
         ];
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateStringAttribute($data): array
+    public function testCreateStringColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -136,22 +136,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateStringAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateStringColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateStringAttribute
+     * @depends testCreateStringColumn
      * @throws Exception
      */
-    public function testUpdateStringAttribute($data): array
+    public function testUpdateStringColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -169,22 +169,22 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateStringAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateStringAttribute']['required']);
-        $this->assertEquals('Default Value', $column['body']['data']['collectionsUpdateStringAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateStringColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateStringColumn']['required']);
+        $this->assertEquals('Default Value', $column['body']['data']['tablesUpdateStringColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateIntegerAttribute($data): array
+    public function testCreateIntegerColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INTEGER_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -204,22 +204,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateIntegerAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateIntegerColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateIntegerAttribute
+     * @depends testCreateIntegerColumn
      * @throws Exception
      */
-    public function testUpdateIntegerAttribute($data): array
+    public function testUpdateIntegerColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_INTEGER_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -239,24 +239,24 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateIntegerAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateIntegerAttribute']['required']);
-        $this->assertEquals(12, $column['body']['data']['collectionsUpdateIntegerAttribute']['min']);
-        $this->assertEquals(160, $column['body']['data']['collectionsUpdateIntegerAttribute']['max']);
-        $this->assertEquals(50, $column['body']['data']['collectionsUpdateIntegerAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateIntegerColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateIntegerColumn']['required']);
+        $this->assertEquals(12, $column['body']['data']['tablesUpdateIntegerColumn']['min']);
+        $this->assertEquals(160, $column['body']['data']['tablesUpdateIntegerColumn']['max']);
+        $this->assertEquals(50, $column['body']['data']['tablesUpdateIntegerColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateBooleanAttribute($data): array
+    public function testCreateBooleanColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_BOOLEAN_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_BOOLEAN_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -274,22 +274,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateBooleanAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateBooleanColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateBooleanAttribute
+     * @depends testCreateBooleanColumn
      * @throws Exception
      */
-    public function testUpdateBooleanAttribute($data): array
+    public function testUpdateBooleanColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_BOOLEAN_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_BOOLEAN_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -307,22 +307,22 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateBooleanAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateBooleanAttribute']['required']);
-        $this->assertTrue($column['body']['data']['collectionsUpdateBooleanAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateBooleanColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateBooleanColumn']['required']);
+        $this->assertTrue($column['body']['data']['tablesUpdateBooleanColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateFloatAttribute($data): array
+    public function testCreateFloatColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_FLOAT_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_FLOAT_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -343,22 +343,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateFloatAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateFloatColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateFloatAttribute
+     * @depends testCreateFloatColumn
      * @throws Exception
      */
-    public function testUpdateFloatAttribute($data): array
+    public function testUpdateFloatColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_FLOAT_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_FLOAT_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -378,24 +378,24 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateFloatAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateFloatAttribute']['required']);
-        $this->assertEquals(100.0, $column['body']['data']['collectionsUpdateFloatAttribute']['min']);
-        $this->assertEquals(1000000.0, $column['body']['data']['collectionsUpdateFloatAttribute']['max']);
-        $this->assertEquals(2500.0, $column['body']['data']['collectionsUpdateFloatAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateFloatColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateFloatColumn']['required']);
+        $this->assertEquals(100.0, $column['body']['data']['tablesUpdateFloatColumn']['min']);
+        $this->assertEquals(1000000.0, $column['body']['data']['tablesUpdateFloatColumn']['max']);
+        $this->assertEquals(2500.0, $column['body']['data']['tablesUpdateFloatColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateEmailAttribute($data): array
+    public function testCreateEmailColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_EMAIL_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_EMAIL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -413,22 +413,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateEmailAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateEmailColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateEmailAttribute
+     * @depends testCreateEmailColumn
      * @throws Exception
      */
-    public function testUpdateEmailAttribute($data): array
+    public function testUpdateEmailColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_EMAIL_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_EMAIL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -446,22 +446,22 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateEmailAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateEmailAttribute']['required']);
-        $this->assertEquals('torsten@appwrite.io', $column['body']['data']['collectionsUpdateEmailAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateEmailColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateEmailColumn']['required']);
+        $this->assertEquals('torsten@appwrite.io', $column['body']['data']['tablesUpdateEmailColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateEnumAttribute($data): array
+    public function testCreateEnumColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ENUM_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_ENUM_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -484,23 +484,23 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateEnumAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateEnumColumn']);
 
         return $data;
     }
 
 
     /**
-     * @depends testCreateEnumAttribute
+     * @depends testCreateEnumColumn
      * @throws Exception
      */
-    public function testUpdateEnumAttribute($data): array
+    public function testUpdateEnumColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ENUM_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_ENUM_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -523,24 +523,24 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateEnumAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateEnumAttribute']['required']);
-        $this->assertEquals('tech', $column['body']['data']['collectionsUpdateEnumAttribute']['default']);
-        $this->assertContains('tech', $column['body']['data']['collectionsUpdateEnumAttribute']['elements']);
-        $this->assertNotContains('guest', $column['body']['data']['collectionsUpdateEnumAttribute']['elements']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateEnumColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateEnumColumn']['required']);
+        $this->assertEquals('tech', $column['body']['data']['tablesUpdateEnumColumn']['default']);
+        $this->assertContains('tech', $column['body']['data']['tablesUpdateEnumColumn']['elements']);
+        $this->assertNotContains('guest', $column['body']['data']['tablesUpdateEnumColumn']['elements']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateDatetimeAttribute($data): array
+    public function testCreateDatetimeColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATETIME_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_DATETIME_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -558,22 +558,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateDatetimeAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateDatetimeColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateDatetimeAttribute
+     * @depends testCreateDatetimeColumn
      * @throws Exception
      */
-    public function testUpdateDatetimeAttribute($data): array
+    public function testUpdateDatetimeColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DATETIME_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_DATETIME_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -591,27 +591,27 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateDatetimeAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateDatetimeAttribute']['required']);
-        $this->assertEquals('2000-01-01T00:00:00Z', $column['body']['data']['collectionsUpdateDatetimeAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateDatetimeColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateDatetimeColumn']['required']);
+        $this->assertEquals('2000-01-01T00:00:00Z', $column['body']['data']['tablesUpdateDatetimeColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      */
-    public function testCreateRelationshipAttribute(array $data): array
+    public function testCreateRelationshipColumn(array $data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_RELATIONSHIP_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'tableId' => $data['collection2']['_id'],          // Movies
-                'relatedCollectionId' => $data['table']['_id'],    // Actors
+                'tableId' => $data['table2']['_id'],          // Movies
+                'relatedTableId' => $data['table']['_id'],    // Actors
                 'type' => Database::RELATION_ONE_TO_MANY,
                 'twoWay' => true,
                 'key' => 'actors',
@@ -626,25 +626,25 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateRelationshipAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateRelationshipColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateRelationshipAttribute
+     * @depends testCreateRelationshipColumn
      */
-    public function testUpdateRelationshipAttribute(array $data): array
+    public function testUpdateRelationshipColumn(array $data): array
     {
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_RELATIONSHIP_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'tableId' => $data['collection2']['_id'],
+                'tableId' => $data['table2']['_id'],
                 'key' => 'actors',
                 'onDelete' => Database::RELATION_MUTATE_CASCADE,
             ]
@@ -657,19 +657,19 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateRelationshipAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateRelationshipColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateIPAttribute($data): array
+    public function testCreateIPColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_IP_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_IP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -688,22 +688,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateIpAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateIpColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateIPAttribute
+     * @depends testCreateIPColumn
      * @throws Exception
      */
-    public function testUpdateIPAttribute($data): array
+    public function testUpdateIPColumn($data): array
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(3);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_IP_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_IP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -721,22 +721,22 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateIpAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateIpAttribute']['required']);
-        $this->assertEquals('127.0.0.1', $column['body']['data']['collectionsUpdateIpAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateIpColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateIpColumn']['required']);
+        $this->assertEquals('127.0.0.1', $column['body']['data']['tablesUpdateIpColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testCreateURLAttribute($data): array
+    public function testCreateURLColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_URL_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_URL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -755,22 +755,22 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsCreateUrlAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesCreateUrlColumn']);
 
         return $data;
     }
 
     /**
-     * @depends testCreateURLAttribute
+     * @depends testCreateURLColumn
      * @throws Exception
      */
-    public function testUpdateURLAttribute($data): void
+    public function testUpdateURLColumn($data): void
     {
-        // Wait for attributes to be available
+        // Wait for columns to be available
         sleep(3);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_URL_ATTRIBUTE);
+        $query = $this->getQuery(self::$UPDATE_URL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -788,21 +788,21 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsUpdateUrlAttribute']);
-        $this->assertFalse($column['body']['data']['collectionsUpdateUrlAttribute']['required']);
-        $this->assertEquals('https://cloud.appwrite.io', $column['body']['data']['collectionsUpdateUrlAttribute']['default']);
+        $this->assertIsArray($column['body']['data']['tablesUpdateUrlColumn']);
+        $this->assertFalse($column['body']['data']['tablesUpdateUrlColumn']['required']);
+        $this->assertEquals('https://cloud.appwrite.io', $column['body']['data']['tablesUpdateUrlColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
     }
 
     /**
-     * @depends testUpdateStringAttribute
-     * @depends testUpdateIntegerAttribute
+     * @depends testUpdateStringColumn
+     * @depends testUpdateIntegerColumn
      * @throws Exception
      */
     public function testCreateIndex($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INDEX);
+        $query = $this->getQuery(self::$CREATE_COLUMN_INDEX);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -810,7 +810,7 @@ class DatabaseServerTest extends Scope
                 'tableId' => $data['table']['_id'],
                 'key' => 'index',
                 'type' => 'key',
-                'attributes' => [
+                'columns' => [
                     'name',
                     'age',
                 ],
@@ -824,26 +824,26 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
-        $this->assertIsArray($index['body']['data']['collectionsCreateIndex']);
+        $this->assertIsArray($index['body']['data']['tablesCreateIndex']);
 
         return [
             'database' => $data['database'],
             'table' => $data['table'],
-            'index' => $index['body']['data']['collectionsCreateIndex'],
+            'index' => $index['body']['data']['tablesCreateIndex'],
         ];
     }
 
     /**
-     * @depends testUpdateStringAttribute
-     * @depends testUpdateIntegerAttribute
-     * @depends testUpdateBooleanAttribute
-     * @depends testUpdateEnumAttribute
+     * @depends testUpdateStringColumn
+     * @depends testUpdateIntegerColumn
+     * @depends testUpdateBooleanColumn
+     * @depends testUpdateEnumColumn
      * @throws Exception
      */
-    public function testCreateDocument($data): array
+    public function testCreateRow($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::$CREATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -875,7 +875,7 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
 
-        $row = $row['body']['data']['collectionsCreateDocument'];
+        $row = $row['body']['data']['tablesCreateRow'];
         $this->assertIsArray($row);
 
         return [
@@ -886,13 +886,13 @@ class DatabaseServerTest extends Scope
     }
 
     //    /**
-    //     * @depends testCreateStringAttribute
-    //     * @depends testCreateIntegerAttribute
-    //     * @depends testCreateBooleanAttribute
-    //     * @depends testCreateFloatAttribute
-    //     * @depends testCreateEmailAttribute
-    //     * @depends testCreateEnumAttribute
-    //     * @depends testCreateDatetimeAttribute
+    //     * @depends testCreateStringColumn
+    //     * @depends testCreateIntegerColumn
+    //     * @depends testCreateBooleanColumn
+    //     * @depends testCreateFloatColumn
+    //     * @depends testCreateEmailColumn
+    //     * @depends testCreateEnumColumn
+    //     * @depends testCreateDatetimeColumn
     //     * @throws Exception
     //     */
     //    public function testCreateCustomEntity(): array
@@ -969,13 +969,13 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testGetCollections($data): void
+    public function testGetTables($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLLECTIONS);
+        $query = $this->getQuery(self::$GET_TABLES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -990,17 +990,17 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $tables['body']);
         $this->assertIsArray($tables['body']['data']);
-        $this->assertIsArray($tables['body']['data']['databasesListCollections']);
+        $this->assertIsArray($tables['body']['data']['databasesListTables']);
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testGetCollection($data): void
+    public function testGetTable($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLLECTION);
+        $query = $this->getQuery(self::$GET_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1016,18 +1016,18 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['databasesGetCollection']);
+        $this->assertIsArray($table['body']['data']['databasesGetTable']);
     }
 
     /**
-     * @depends testUpdateStringAttribute
-     * @depends testUpdateIntegerAttribute
+     * @depends testUpdateStringColumn
+     * @depends testUpdateIntegerColumn
      * @throws Exception
      */
-    public function testGetAttributes($data): void
+    public function testGetColumns($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ATTRIBUTES);
+        $query = $this->getQuery(self::$GET_COLUMNS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1043,17 +1043,17 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $columns['body']);
         $this->assertIsArray($columns['body']['data']);
-        $this->assertIsArray($columns['body']['data']['collectionsListAttributes']);
+        $this->assertIsArray($columns['body']['data']['tablesListColumns']);
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testGetAttribute($data): void
+    public function testGetColumn($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ATTRIBUTE);
+        $query = $this->getQuery(self::$GET_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1070,7 +1070,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['collectionsGetAttribute']);
+        $this->assertIsArray($column['body']['data']['tablesGetColumn']);
     }
 
     /**
@@ -1080,7 +1080,7 @@ class DatabaseServerTest extends Scope
     public function testGetIndexes($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_INDEXES);
+        $query = $this->getQuery(self::$GET_COLUMN_INDEXES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1096,7 +1096,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $indices['body']);
         $this->assertIsArray($indices['body']['data']);
-        $this->assertIsArray($indices['body']['data']['collectionsListIndexes']);
+        $this->assertIsArray($indices['body']['data']['tablesListIndexes']);
     }
 
     /**
@@ -1106,7 +1106,7 @@ class DatabaseServerTest extends Scope
     public function testGetIndex($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_INDEX);
+        $query = $this->getQuery(self::$GET_COLUMN_INDEX);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1123,17 +1123,17 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
-        $this->assertIsArray($index['body']['data']['collectionsGetIndex']);
+        $this->assertIsArray($index['body']['data']['tablesGetIndex']);
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testGetDocuments($data): void
+    public function testGetRows($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENTS);
+        $query = $this->getQuery(self::$GET_ROWS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1149,17 +1149,17 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $rows['body']);
         $this->assertIsArray($rows['body']['data']);
-        $this->assertIsArray($rows['body']['data']['collectionsListDocuments']);
+        $this->assertIsArray($rows['body']['data']['tablesListRows']);
     }
 
     /**
-     * @depends testCreateDocument
+     * @depends testCreateRow
      * @throws Exception
      */
-    public function testGetDocument($data): void
+    public function testGetRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $query = $this->getQuery(self::$GET_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1176,7 +1176,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $this->assertIsArray($row['body']['data']['collectionsGetDocument']);
+        $this->assertIsArray($row['body']['data']['tablesGetRow']);
     }
 
     //    /**
@@ -1253,19 +1253,19 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testUpdateCollection($data)
+    public function testUpdateTable($data)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_COLLECTION);
+        $query = $this->getQuery(self::$UPDATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'tableId' => $data['table']['_id'],
-                'name' => 'New Collection Name',
+                'name' => 'New Table Name',
                 'rowSecurity' => false,
             ]
         ];
@@ -1277,17 +1277,17 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['databasesUpdateCollection']);
+        $this->assertIsArray($table['body']['data']['databasesUpdateTable']);
     }
 
     /**
-     * @depends testCreateDocument
+     * @depends testCreateRow
      * @throws Exception
      */
-    public function testUpdateDocument($data): void
+    public function testUpdateRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DOCUMENT);
+        $query = $this->getQuery(self::$UPDATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1295,7 +1295,7 @@ class DatabaseServerTest extends Scope
                 'tableId' => $data['table']['_id'],
                 'rowId' => $data['row']['_id'],
                 'data' => [
-                    'name' => 'New Document Name',
+                    'name' => 'New Row Name',
                 ],
             ]
         ];
@@ -1307,9 +1307,9 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $row = $row['body']['data']['collectionsUpdateDocument'];
+        $row = $row['body']['data']['tablesUpdateRow'];
         $this->assertIsArray($row);
-        $this->assertStringContainsString('New Document Name', $row['data']);
+        $this->assertStringContainsString('New Row Name', $row['data']);
     }
 
     //    /**
@@ -1341,13 +1341,13 @@ class DatabaseServerTest extends Scope
     //    }
 
     /**
-     * @depends testCreateDocument
+     * @depends testCreateRow
      * @throws Exception
      */
-    public function testDeleteDocument($data): void
+    public function testDeleteRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $query = $this->getQuery(self::$DELETE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1391,13 +1391,13 @@ class DatabaseServerTest extends Scope
     //    }
 
     /**
-     * @depends testUpdateStringAttribute
+     * @depends testUpdateStringColumn
      * @throws Exception
      */
-    public function testDeleteAttribute($data): void
+    public function testDeleteColumn($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_ATTRIBUTE);
+        $query = $this->getQuery(self::$DELETE_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1417,13 +1417,13 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
+     * @depends testCreateTable
      * @throws Exception
      */
-    public function testDeleteCollection($data)
+    public function testDeleteTable($data)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_COLLECTION);
+        $query = $this->getQuery(self::$DELETE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
