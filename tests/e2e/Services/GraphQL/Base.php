@@ -25,8 +25,8 @@ trait Base
     public static string $CREATE_TABLE = 'create_table';
     public static string $GET_TABLE = 'get_table';
     public static string $GET_TABLES = 'list_tables';
-    public static string $UPDATE_TABLE = 'update_tables';
-    public static string $DELETE_TABLE = 'delete_tables';
+    public static string $UPDATE_TABLE = 'update_table';
+    public static string $DELETE_TABLE = 'delete_table';
 
     // Attributes
     public static string $CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
