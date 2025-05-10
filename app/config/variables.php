@@ -1030,9 +1030,18 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_DELAY',
-                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'description' => 'Deprecated with 1.6.2 use _APP_MAINTENANCE_START_TIME instead to run the maintenance at a specific time per day.',
                 'introduction' => '1.5.0',
                 'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_START_TIME',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'introduction' => '1.6.2',
+                'default' => '00:00',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
