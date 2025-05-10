@@ -82,7 +82,7 @@ class Delete extends Action
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw new Exception($this->getGrantParentNotFoundException());
+            throw new Exception($this->getGrandParentNotFoundException());
         }
 
         $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);

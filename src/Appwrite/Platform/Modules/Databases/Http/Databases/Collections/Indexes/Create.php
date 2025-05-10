@@ -89,7 +89,7 @@ class Create extends Action
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw new Exception($this->getGrantParentNotFoundException());
+            throw new Exception($this->getGrandParentNotFoundException());
         }
 
         $count = $dbForProject->count('indexes', [

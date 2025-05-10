@@ -71,7 +71,7 @@ class Get extends Action
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw new Exception($this->getGrantParentNotFoundException());
+            throw new Exception($this->getGrandParentNotFoundException());
         }
 
         $index = $collection->find('key', $key, 'indexes');

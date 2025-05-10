@@ -86,7 +86,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate grandparent level not found exception.
      */
-    final protected function getGrantParentNotFoundException(): string
+    final protected function getGrandParentNotFoundException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::COLLECTION_NOT_FOUND

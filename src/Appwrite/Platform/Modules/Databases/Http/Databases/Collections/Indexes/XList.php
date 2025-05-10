@@ -77,7 +77,7 @@ class XList extends Action
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw new Exception($this->getGrantParentNotFoundException());
+            throw new Exception($this->getGrandParentNotFoundException());
         }
 
         $queries = Query::parseQueries($queries);
