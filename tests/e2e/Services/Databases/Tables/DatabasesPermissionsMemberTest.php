@@ -136,9 +136,9 @@ class DatabasesPermissionsMemberTest extends Scope
             'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $public['headers']['status-code']);
-        $this->collections = ['public' => $public['body']['$id']];
+        $this->tables = ['public' => $public['body']['$id']];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $this->collections['public'] . '/columns/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $this->tables['public'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -157,9 +157,9 @@ class DatabasesPermissionsMemberTest extends Scope
             'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
-        $this->collections['private'] = $private['body']['$id'];
+        $this->tables['private'] = $private['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $this->collections['private'] . '/columns/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $this->tables['private'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -173,9 +173,9 @@ class DatabasesPermissionsMemberTest extends Scope
             'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
-        $this->collections['doconly'] = $doconly['body']['$id'];
+        $this->tables['doconly'] = $doconly['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $this->collections['doconly'] . '/columns/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $this->tables['doconly'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -186,7 +186,7 @@ class DatabasesPermissionsMemberTest extends Scope
 
         return [
             'users' => $this->users,
-            'tables' => $this->collections,
+            'tables' => $this->tables,
             'databaseId' => $databaseId
         ];
     }
