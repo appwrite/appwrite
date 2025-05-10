@@ -29,7 +29,7 @@ class AbuseTest extends Scope
 
     public function testRateLimitEnforced()
     {
-        $data = $this->createCollection();
+        $data = $this->createTable();
         $databaseId = $data['databaseId'];
         $tableId = $data['tableId'];
         $projectId = $this->getProject()['$id'];
@@ -114,7 +114,7 @@ class AbuseTest extends Scope
         $this->assertEquals('Too many queries.', $response['body']['message']);
     }
 
-    private function createCollection(): array
+    private function createTable(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DATABASE);
