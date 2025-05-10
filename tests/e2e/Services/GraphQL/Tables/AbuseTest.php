@@ -65,7 +65,7 @@ class AbuseTest extends Scope
     public function testComplexQueryBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$COMPLEX_QUERY);
+        $query = $this->getQuery(self::$COMPLEX_QUERY_TABLE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -75,8 +75,8 @@ class AbuseTest extends Scope
                 'databaseId' => 'database',
                 'databaseName' => 'database',
                 'tableId' => 'table',
-                'collectionName' => 'table',
-                'collectionPermissions' => [
+                'tableName' => 'table',
+                'tablePermissions' => [
                     Permission::read(Role::users()),
                     Permission::create(Role::users()),
                     Permission::update(Role::users()),
@@ -157,7 +157,7 @@ class AbuseTest extends Scope
 
         $tableId = $response['body']['data']['databasesCreateTable']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

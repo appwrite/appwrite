@@ -65,7 +65,7 @@ class AbuseTest extends Scope
     public function testComplexQueryBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$COMPLEX_QUERY);
+        $query = $this->getQuery(self::$COMPLEX_QUERY_COLLECTION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

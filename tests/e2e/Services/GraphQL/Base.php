@@ -306,7 +306,8 @@ trait Base
     public static string $UPDATE_PUSH_NOTIFICATION = 'update_push_notification';
 
     // Complex queries
-    public static string $COMPLEX_QUERY = 'complex_query';
+    public static string $COMPLEX_QUERY_TABLE = 'complex_query_table';
+    public static string $COMPLEX_QUERY_COLLECTION = 'complex_query_collection';
 
     // Attribute Fragments
     public static string $FRAGMENT_ATTRIBUTES = '
@@ -2689,7 +2690,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$COMPLEX_QUERY:
+            case self::$COMPLEX_QUERY_COLLECTION:
                 return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $documentSecurity: Boolean!, $collectionPermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
                         _id
@@ -2700,7 +2701,7 @@ trait Base
                         _createdAt
                         _updatedAt
                         _permissions
-                        _databaseId
+                        databaseId
                         name
                         documentSecurity
                         attributes {
@@ -2712,7 +2713,7 @@ trait Base
                             status
                         }
                     }
-                    databasesCreateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "name", size: 255, required: true) {
+                    collectionsCreateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "name", size: 255, required: true) {
                         key
                         type
                         status
@@ -2721,7 +2722,7 @@ trait Base
                         default
                         array
                     }
-                    databasesCreateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "age", min: 0, max: 150, required: true) {
+                    collectionsCreateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "age", min: 0, max: 150, required: true) {
                         key
                         type
                         status
@@ -2731,7 +2732,7 @@ trait Base
                         default
                         array
                     }
-                    databasesCreateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "alive", required: false, default: true) {
+                    collectionsCreateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "alive", required: false, default: true) {
                         key
                         type
                         status
@@ -2932,6 +2933,249 @@ trait Base
                         }
                     }
                 }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
+            case self::$COMPLEX_QUERY_TABLE:
+                return 'mutation complex($databaseId: String!, $databaseName: String!, $tableId: String!, $tableName: String!, $rowSecurity: Boolean!, $tablePermissions: [String!]!) {
+                    databasesCreate(databaseId: $databaseId, name: $databaseName) {
+                        _id
+                        name
+                    }
+                    databasesCreateTable(databaseId: $databaseId, tableId: $tableId, name: $tableName, rowSecurity: $rowSecurity, permissions: $tablePermissions) {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        _permissions
+                        databaseId
+                        name
+                        rowSecurity
+                        columns {
+                            ...columnProperties
+                        }
+                        indexes {
+                            key
+                            type
+                            status
+                        }
+                    }
+                    tablesCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: "name", size: 255, required: true) {
+                        key
+                        type
+                        status
+                        size
+                        required
+                        default
+                        array
+                    }
+                    tablesCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: "age", min: 0, max: 150, required: true) {
+                        key
+                        type
+                        status
+                        required
+                        min
+                        max
+                        default
+                        array
+                    }
+                    tablesCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: "alive", required: false, default: true) {
+                        key
+                        type
+                        status
+                        required
+                        default
+                        array
+                    }
+                    user1: usersCreate(userId: "unique()", email: "test1@appwrite.io", password: "password", name: "Tester 1") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user2: usersCreate(userId: "unique()", email: "test2@appwrite.io", password: "password", name: "Tester 2") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user3: usersCreate(userId: "unique()", email: "test3@appwrite.io", password: "password", name: "Tester 3") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user4: usersCreate(userId: "unique()", email: "test4@appwrite.io", password: "password", name: "Tester 4") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user5: usersCreate(userId: "unique()", email: "test5@appwrite.io", password: "password", name: "Tester 5") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user6: usersCreate(userId: "unique()", email: "test6@appwrite.io", password: "password", name: "Tester 6") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user7: usersCreate(userId: "unique()", email: "test7@appwrite.io", password: "password", name: "Tester 7") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user8: usersCreate(userId: "unique()", email: "test8@appwrite.io", password: "password", name: "Tester 8") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user9: usersCreate(userId: "unique()", email: "test9@appwrite.io", password: "password", name: "Tester 9") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user10: usersCreate(userId: "unique()", email: "test10@appwrite.io", password: "password", name: "Tester 10") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user11: usersCreate(userId: "unique()", email: "test11@appwrite.io", password: "password", name: "Tester 11") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user12: usersCreate(userId: "unique()", email: "test12@appwrite.io", password: "password", name: "Tester 5") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
         }
 
         throw new \InvalidArgumentException('Invalid query type');
