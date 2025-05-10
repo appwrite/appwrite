@@ -72,32 +72,11 @@ class Realtime extends Event
             return false;
         }
 
-        $allEvents = Event::generateEvents($this->getEvent(), $this->getParams());
-        $firstEvent = $allEvents[0]; // most verbose event pattern
+        $events = Event::generateEvents($this->getEvent(), $this->getParams());
+        $firstEvent = $events[0]; // most verbose event pattern
 
         // generate and merge all collection and tables api events.
-        if (str_contains($this->getEvent(), 'databases.') && str_contains($firstEvent, 'collections')) {
-            $tableEventMap = [
-                'collections' => 'tables', 'attributes' => 'columns',
-                'attributeId' => 'columnId', 'documents' => 'rows', 'documentId' => 'rowId',
-            ];
-
-            // replace params!
-            $tableEvent = str_replace(
-                array_keys($tableEventMap),
-                array_values($tableEventMap),
-                $this->getEvent()
-            );
-
-            // generate new events
-            $tableEvents = Event::generateEvents($tableEvent, $this->getParams());
-
-            // merge all of the api events
-            $allEvents = array_merge($allEvents, $tableEvents);
-
-            // remove duplicates
-            $allEvents = array_values(array_unique($allEvents));
-        }
+        $events = $this->mirrorCollectionEvents($firstEvent, $events);
 
         $payload = new Document($this->getPayload());
 
@@ -124,7 +103,7 @@ class Realtime extends Event
             $this->realtime->send(
                 projectId: $projectId,
                 payload: $this->getRealtimePayload(),
-                events: $allEvents,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -135,5 +114,46 @@ class Realtime extends Event
         }
 
         return true;
+    }
+
+    /**
+     * Adds `table` events for `collection` events.
+     *
+     * Example:
+     *
+     * `databases.*.collections.*.documents.*.update` →\
+     * `[databases.*.collections.*.documents.*.update, databases.*.tables.*.rows.*.update]`
+     */
+    private function mirrorCollectionEvents(string $firstEvent, array $events): array
+    {
+        $tableEventMap = [
+            'documents'    => 'rows',
+            'collections'  => 'tables',
+            'attributes'   => 'columns',
+        ];
+
+        if (
+            str_contains($this->getEvent(), 'databases.') &&
+            str_contains($firstEvent, 'collections')
+        ) {
+            $pairedEvents = [];
+
+            foreach ($events as $event) {
+                $pairedEvents[] = $event;
+
+                if (str_contains($event, 'collections')) {
+                    $tableSideEvent = str_replace(
+                        array_keys($tableEventMap),
+                        array_values($tableEventMap),
+                        $event
+                    );
+                    $pairedEvents[] = $tableSideEvent;
+                }
+            }
+
+            $events = $pairedEvents;
+        }
+
+        return $events;
     }
 }
