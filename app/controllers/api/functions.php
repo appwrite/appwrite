@@ -37,6 +37,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -150,6 +151,7 @@ App::post('/v1/functions')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'create',
         description: '/docs/references/functions/create-function.md',
         auth: [AuthType::KEY],
@@ -184,8 +186,8 @@ App::post('/v1/functions')
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+        System::getEnv('_APP_FUNCTIONS_CPUS', 0),
+        System::getEnv('_APP_FUNCTIONS_MEMORY', 0)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -431,6 +433,7 @@ App::get('/v1/functions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'list',
         description: '/docs/references/functions/list-functions.md',
         auth: [AuthType::KEY],
@@ -483,10 +486,15 @@ App::get('/v1/functions')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $functions = $dbForProject->find('functions', $queries);
+            $total = $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'functions' => $dbForProject->find('functions', $queries),
-            'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
+            'functions' => $functions,
+            'total' => $total,
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
@@ -497,6 +505,7 @@ App::get('/v1/functions/runtimes')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'runtimes',
         name: 'listRuntimes',
         description: '/docs/references/functions/list-runtimes.md',
         auth: [AuthType::KEY],
@@ -536,6 +545,7 @@ App::get('/v1/functions/specifications')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'runtimes',
         name: 'listSpecifications',
         description: '/docs/references/functions/list-specifications.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -559,8 +569,12 @@ App::get('/v1/functions/specifications')
                 $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
             }
 
+            $maxCpus = System::getEnv('_APP_FUNCTIONS_CPUS', 0);
+            $maxMemory = System::getEnv('_APP_FUNCTIONS_MEMORY', 0);
+
             // Only add specs that are within the limits set by environment variables
-            if ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
+            // Treat 0 as no limit
+            if ((empty($maxCpus) || $spec['cpus'] <= $maxCpus) && (empty($maxMemory) || $spec['memory'] <= $maxMemory)) {
                 $runtimeSpecs[] = $spec;
             }
         }
@@ -578,6 +592,7 @@ App::get('/v1/functions/:functionId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'get',
         description: '/docs/references/functions/get-function.md',
         auth: [AuthType::KEY],
@@ -608,6 +623,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: null,
         name: 'getFunctionUsage',
         description: '/docs/references/functions/get-function-usage.md',
         auth: [AuthType::ADMIN],
@@ -719,6 +735,7 @@ App::get('/v1/functions/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/functions/get-functions-usage.md',
         auth: [AuthType::ADMIN],
@@ -828,6 +845,7 @@ App::put('/v1/functions/:functionId')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'update',
         description: '/docs/references/functions/update-function.md',
         auth: [AuthType::KEY],
@@ -858,8 +876,8 @@ App::put('/v1/functions/:functionId')
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+        System::getEnv('_APP_FUNCTIONS_CPUS', 0),
+        System::getEnv('_APP_FUNCTIONS_MEMORY', 0)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -869,7 +887,8 @@ App::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForPlatform')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
+    ->inject('executor')
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github, Executor $executor) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -972,7 +991,6 @@ App::put('/v1/functions/:functionId')
 
         // Enforce Cold Start if spec limits change.
         if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             try {
                 $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
             } catch (\Throwable $th) {
@@ -1028,11 +1046,12 @@ App::put('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
-    ->desc('Download deployment')
+    ->desc('Get deployment download')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'getDeploymentDownload',
         description: '/docs/references/functions/get-deployment-download.md',
         auth: [AuthType::KEY, AuthType::JWT],
@@ -1129,6 +1148,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'updateDeployment',
         description: '/docs/references/functions/update-function-deployment.md',
         auth: [AuthType::KEY],
@@ -1197,6 +1217,7 @@ App::delete('/v1/functions/:functionId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'delete',
         description: '/docs/references/functions/delete-function.md',
         auth: [AuthType::KEY],
@@ -1252,6 +1273,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'createDeployment',
         description: '/docs/references/functions/create-deployment.md',
         auth: [AuthType::KEY],
@@ -1263,7 +1285,7 @@ App::post('/v1/functions/:functionId/deployments')
         ],
         type: MethodType::UPLOAD,
         packaging: true,
-        requestType: 'multipart/form-data',
+        requestType: ContentType::MULTIPART,
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
@@ -1474,6 +1496,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'listDeployments',
         description: '/docs/references/functions/list-deployments.md',
         auth: [AuthType::KEY],
@@ -1537,9 +1560,12 @@ App::get('/v1/functions/:functionId/deployments')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('deployments', $queries);
-        $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForProject->find('deployments', $queries);
+            $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
@@ -1563,6 +1589,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'getDeployment',
         description: '/docs/references/functions/get-deployment.md',
         auth: [AuthType::KEY],
@@ -1615,6 +1642,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'deleteDeployment',
         description: '/docs/references/functions/delete-deployment.md',
         auth: [AuthType::KEY],
@@ -1680,7 +1708,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->alias('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
-    ->desc('Rebuild deployment')
+    ->desc('Create deployment build')
     ->label('scope', 'functions.write')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
@@ -1688,6 +1716,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'createBuild',
         description: '/docs/references/functions/create-build.md',
         auth: [AuthType::KEY],
@@ -1763,6 +1792,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'updateDeploymentBuild',
         description: '/docs/references/functions/update-deployment-build.md',
         auth: [AuthType::KEY],
@@ -1779,7 +1809,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents) {
+    ->inject('executor')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Executor $executor) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1834,7 +1865,6 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
         $dbForProject->purgeCachedDocument('deployments', $deployment->getId());
 
         try {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
         } catch (\Throwable $th) {
             // Don't throw if the deployment doesn't exist
@@ -1858,6 +1888,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('event', 'functions.[functionId].executions.[executionId].create')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'createExecution',
         description: '/docs/references/functions/create-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1868,7 +1899,6 @@ App::post('/v1/functions/:functionId/executions')
             )
         ],
         contentType: ContentType::MULTIPART,
-        requestType: 'application/json',
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
@@ -1886,8 +1916,9 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
+    ->inject('executor')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -2160,7 +2191,6 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
@@ -2226,15 +2256,6 @@ App::post('/v1/functions/:functionId/executions')
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('logs', '');
-            $execution->setAttribute('errors', '');
-        }
-
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
             $headers[] = ['name' => $key, 'value' => $value];
@@ -2266,6 +2287,7 @@ App::get('/v1/functions/:functionId/executions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'listExecutions',
         description: '/docs/references/functions/list-executions.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2331,19 +2353,11 @@ App::get('/v1/functions/:functionId/executions')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('executions', $queries);
-        $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $results = array_map(function ($execution) {
-                $execution->setAttribute('logs', '');
-                $execution->setAttribute('errors', '');
-                return $execution;
-            }, $results);
+        try {
+            $results = $dbForProject->find('executions', $queries);
+            $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
         $response->dynamic(new Document([
@@ -2359,6 +2373,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'getExecution',
         description: '/docs/references/functions/get-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2394,14 +2409,6 @@ App::get('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('logs', '');
-            $execution->setAttribute('errors', '');
-        }
-
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
@@ -2415,6 +2422,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'deleteExecution',
         description: '/docs/references/functions/delete-execution.md',
         auth: [AuthType::KEY],
@@ -2492,6 +2500,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'createVariable',
         description: '/docs/references/functions/create-variable.md',
         auth: [AuthType::KEY],
@@ -2562,6 +2571,7 @@ App::get('/v1/functions/:functionId/variables')
         'sdk',
         new Method(
             namespace: 'functions',
+            group: 'variables',
             name: 'listVariables',
             description: '/docs/references/functions/list-variables.md',
             auth: [AuthType::KEY],
@@ -2598,6 +2608,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         'sdk',
         new Method(
             namespace: 'functions',
+            group: 'variables',
             name: 'getVariable',
             description: '/docs/references/functions/get-variable.md',
             auth: [AuthType::KEY],
@@ -2646,6 +2657,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'updateVariable',
         description: '/docs/references/functions/update-variable.md',
         auth: [AuthType::KEY],
@@ -2713,6 +2725,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'deleteVariable',
         description: '/docs/references/functions/delete-variable.md',
         auth: [AuthType::KEY],
@@ -2767,6 +2780,7 @@ App::get('/v1/functions/templates')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'templates',
         name: 'listTemplates',
         description: '/docs/references/functions/list-templates.md',
         auth: [AuthType::ADMIN],
@@ -2810,6 +2824,7 @@ App::get('/v1/functions/templates/:templateId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'templates',
         name: 'getTemplate',
         description: '/docs/references/functions/get-template.md',
         auth: [AuthType::ADMIN],

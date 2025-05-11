@@ -11,6 +11,8 @@ class StatsUsage extends Event
     protected array $reduce = [];
     protected array $disabled = [];
 
+    protected bool $critical = false;
+
     public function __construct(protected Publisher $publisher)
     {
         parent::__construct($publisher);

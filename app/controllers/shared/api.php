@@ -92,8 +92,20 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
 
 $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
     $value = 1;
-    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-        $value = -1;
+
+    switch ($event) {
+        case Database::EVENT_DOCUMENT_DELETE:
+            $value = -1;
+            break;
+        case Database::EVENT_DOCUMENTS_DELETE:
+            $value = -1 * $document->getAttribute('modified', 0);
+            break;
+        case Database::EVENT_DOCUMENTS_CREATE:
+            $value = $document->getAttribute('modified', 0);
+            break;
+        case Database::EVENT_DOCUMENTS_UPSERT:
+            $value = $document->getAttribute('created', 0);
+            break;
     }
 
     switch (true) {
@@ -238,34 +250,36 @@ App::init()
                     subject: 'keys'
                 );
 
-                if ($dbKey) {
-                    $accessedAt = $dbKey->getAttribute('accessedAt', '');
+                if (!$dbKey) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
 
-                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                        $dbKey->setAttribute('accessedAt', DateTime::now());
+                $accessedAt = $dbKey->getAttribute('accessedAt', '');
+
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+                    $dbKey->setAttribute('accessedAt', DateTime::now());
+                    $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
+                    $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                }
+
+                $sdkValidator = new WhiteList($servers, true);
+                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+
+                if ($sdkValidator->isValid($sdk)) {
+                    $sdks = $dbKey->getAttribute('sdks', []);
+
+                    if (!in_array($sdk, $sdks)) {
+                        $sdks[] = $sdk;
+                        $dbKey->setAttribute('sdks', $sdks);
+
+                        /** Update access time as well */
+                        $dbKey->setAttribute('accessedAt', Datetime::now());
                         $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
                         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
-
-                    $sdkValidator = new WhiteList($servers, true);
-                    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-
-                    if ($sdkValidator->isValid($sdk)) {
-                        $sdks = $dbKey->getAttribute('sdks', []);
-
-                        if (!in_array($sdk, $sdks)) {
-                            $sdks[] = $sdk;
-                            $dbKey->setAttribute('sdks', $sdks);
-
-                            /** Update access time as well */
-                            $dbKey->setAttribute('accessedAt', Datetime::now());
-                            $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-                        }
-                    }
-
-                    $queueForAudits->setUser($user);
                 }
+
+                $queueForAudits->setUser($user);
             }
         } // Admin User Authentication
         elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
@@ -326,6 +340,8 @@ App::init()
          */
         $method = $route->getLabel('sdk', false);
 
+        // Take the first method if there's more than one,
+        // namespace can not differ between methods on the same route
         if (\is_array($method)) {
             $method = $method[0];
         }
@@ -509,6 +525,9 @@ App::init()
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
                 $project,
                 $document,
@@ -534,7 +553,7 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
-                $parts = explode('/', $cacheLog->getAttribute('resourceType'));
+                $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
                 if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {

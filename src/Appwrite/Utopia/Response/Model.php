@@ -90,7 +90,8 @@ abstract class Model
             'required' => true,
             'array' => false,
             'description' => '',
-            'example' => ''
+            'example' => '',
+            'sensitive' => false
         ], $options);
 
         return $this;

@@ -80,6 +80,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CUSTOM_DOMAIN_DENY_LIST',
+                'description' => 'List of reserved or prohibited domains when configuring custom domains.',
+                'introduction' => '',
+                'default' => 'example.com,test.com,app.example.com',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_FUNCTIONS',
                 'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
                 'introduction' => '',
@@ -791,7 +800,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty or 0, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -800,7 +809,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY',
-                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
+                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty or 0, memory limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -1021,9 +1030,18 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_DELAY',
-                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'description' => 'Deprecated with 1.6.2 use _APP_MAINTENANCE_START_TIME instead to run the maintenance at a specific time per day.',
                 'introduction' => '1.5.0',
                 'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_START_TIME',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'introduction' => '1.6.2',
+                'default' => '00:00',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

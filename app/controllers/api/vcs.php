@@ -19,6 +19,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -269,12 +270,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 };
 
 App::get('/v1/vcs/github/authorize')
-    ->desc('Install GitHub app')
+    ->desc('Create GitHub app installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'createGitHubInstallation',
         description: '/docs/references/vcs/create-github-installation.md',
         auth: [AuthType::ADMIN],
@@ -318,7 +320,7 @@ App::get('/v1/vcs/github/authorize')
     });
 
 App::get('/v1/vcs/github/callback')
-    ->desc('Capture installation and authorization from GitHub app')
+    ->desc('Get installation and authorization from GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -456,6 +458,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'getRepositoryContents',
         description: '/docs/references/vcs/get-repository-contents.md',
         auth: [AuthType::ADMIN],
@@ -517,11 +520,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
-    ->desc('Detect runtime settings from source code')
+    ->desc('Create runtime settings detection')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'createRepositoryDetection',
         description: '/docs/references/vcs/create-repository-detection.md',
         auth: [AuthType::ADMIN],
@@ -599,6 +603,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'listRepositories',
         description: '/docs/references/vcs/list-repositories.md',
         auth: [AuthType::ADMIN],
@@ -699,6 +704,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'createRepository',
         description: '/docs/references/vcs/create-repository.md',
         auth: [AuthType::ADMIN],
@@ -811,6 +817,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'getRepository',
         description: '/docs/references/vcs/get-repository.md',
         auth: [AuthType::ADMIN],
@@ -865,6 +872,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'listRepositoryBranches',
         description: '/docs/references/vcs/list-repository-branches.md',
         auth: [AuthType::ADMIN],
@@ -1058,6 +1066,7 @@ App::get('/v1/vcs/installations')
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'listInstallations',
         description: '/docs/references/vcs/list-installations.md',
         auth: [AuthType::ADMIN],
@@ -1113,9 +1122,12 @@ App::get('/v1/vcs/installations')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForPlatform->find('installations', $queries);
-        $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForPlatform->find('installations', $queries);
+            $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'installations' => $results,
@@ -1129,6 +1141,7 @@ App::get('/v1/vcs/installations/:installationId')
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'getInstallation',
         description: '/docs/references/vcs/get-installation.md',
         auth: [AuthType::ADMIN],
@@ -1163,6 +1176,7 @@ App::delete('/v1/vcs/installations/:installationId')
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'deleteInstallation',
         description: '/docs/references/vcs/delete-installation.md',
         auth: [AuthType::ADMIN],
@@ -1198,11 +1212,12 @@ App::delete('/v1/vcs/installations/:installationId')
     });
 
 App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
-    ->desc('Authorize external deployment')
+    ->desc('Update external deployment (authorize)')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'updateExternalDeployments',
         description: '/docs/references/vcs/update-external-deployments.md',
         auth: [AuthType::ADMIN],

@@ -9,7 +9,7 @@ import (
 func main() {
     client := client.NewClient()
 
-    client.SetEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
     client.SetKey("<YOUR_API_KEY>") // Your secret API key
 
@@ -20,8 +20,8 @@ func main() {
         "",
         false,
         0,
-        0,
-        0,
+        databases.WithUpdateIntegerAttributeMin(0),
+        databases.WithUpdateIntegerAttributeMax(0),
         databases.WithUpdateIntegerAttributeNewKey(""),
     )
 
