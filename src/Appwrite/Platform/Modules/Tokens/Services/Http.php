@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Storage\Services;
+namespace Appwrite\Platform\Modules\Tokens\Services;
 
-use Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files\Create as CreateFileToken;
-use Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files\XList as ListFileTokens;
-use Appwrite\Platform\Modules\Storage\Http\Tokens\Delete as DeleteToken;
-use Appwrite\Platform\Modules\Storage\Http\Tokens\Get as GetToken;
-use Appwrite\Platform\Modules\Storage\Http\Tokens\JWT\Get as GetTokenJWT;
-use Appwrite\Platform\Modules\Storage\Http\Tokens\Update as UpdateToken;
+use Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files\Create as CreateFileToken;
+use Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files\XList as ListFileTokens;
+use Appwrite\Platform\Modules\Tokens\Http\Tokens\Delete as DeleteToken;
+use Appwrite\Platform\Modules\Tokens\Http\Tokens\Get as GetToken;
+use Appwrite\Platform\Modules\Tokens\Http\Tokens\JWT\Get as GetTokenJWT;
+use Appwrite\Platform\Modules\Tokens\Http\Tokens\Update as UpdateToken;
 use Utopia\Platform\Service;
 
 class Http extends Service

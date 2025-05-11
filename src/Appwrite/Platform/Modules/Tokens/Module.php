@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Storage;
+namespace Appwrite\Platform\Modules\Tokens;
 
-use Appwrite\Platform\Modules\Storage\Services\Http;
+use Appwrite\Platform\Modules\Tokens\Services\Http;
 use Utopia\Platform;
 
 class Module extends Platform\Module
