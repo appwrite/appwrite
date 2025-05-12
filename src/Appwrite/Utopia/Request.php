@@ -36,6 +36,11 @@ class Request extends UtopiaRequest
 
         $methods = self::getRoute()->getLabel('sdk', null);
         $methods = \is_array($methods) ? $methods : [$methods];
+
+        if (empty($methods)) {
+            return $parameters;
+        }
+
         $matched = null;
 
         foreach ($methods as $method) {
@@ -45,7 +50,7 @@ class Request extends UtopiaRequest
             }
 
             // Find the method that matches the parameters passed
-            $methodParamNames = \array_map(fn($param) => $param->getName(), $method->getParameters());
+            $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
             $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
 
             // No params defined, or all params are valid
@@ -60,13 +65,8 @@ class Request extends UtopiaRequest
             : 'unknown.unknown';
 
         // Filter params to valid keys
-        if ($matched !== null) {
-            $definedNames = \array_map(fn($param) => $param->getName(), $matched->getParameters());
-
-            // If matched method has explicit params, remove all other params
-            if (!empty($definedNames)) {
-                $parameters = \array_intersect_key($parameters, \array_flip($definedNames));
-            }
+        if ($matched !== null && !empty($methodParamNames)) {
+            $parameters = \array_intersect_key($parameters, \array_flip($methodParamNames));
         }
 
         // Apply filters
