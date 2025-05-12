@@ -80,13 +80,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
     if ($rule->isEmpty()) {
 
-        var_dump([
-             '$host' => $host,
-             '$appDomainFunctions' => $appDomainFunctions,
-             '$appDomainSites'  => $appDomainSites,
-            ]
-        );
-
         $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
         $appDomainFunctions = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         $appDomainSites = System::getEnv('_APP_DOMAIN_SITES', '');
@@ -97,6 +90,14 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         if ($host === $appDomainFunctions || $host === $appDomainSites) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
         }
+
+        var_dump([
+                '$host' => $host,
+                '$previewHostname' => $previewHostname,
+                '$appDomainFunctions' => $appDomainFunctions,
+                '$appDomainSites'  => $appDomainSites,
+            ]
+         );
 
         if (\str_ends_with($host, $appDomainFunctions) || \str_ends_with($host, $appDomainSites)) {
             $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
