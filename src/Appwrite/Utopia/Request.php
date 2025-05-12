@@ -35,14 +35,20 @@ class Request extends UtopiaRequest
         }
 
         $methods = self::getRoute()->getLabel('sdk', null);
-        $methods = \is_array($methods) ? $methods : [$methods];
 
         if (empty($methods)) {
             return $parameters;
         }
 
-        $matched = null;
+        if (!\is_array($methods)) {
+            $id = $methods->getNamespace() . '.' . $methods->getMethodName();
+            foreach ($this->getFilters() as $filter) {
+                $parameters = $filter->parse($parameters, $id);
+            }
+            return $parameters;
+        }
 
+        $matched = null;
         foreach ($methods as $method) {
             /** @var Method|null $method */
             if ($method === null) {
@@ -60,7 +66,7 @@ class Request extends UtopiaRequest
             }
         }
 
-        $endpointIdentifier = $matched !== null
+        $id = $matched !== null
             ? $matched->getNamespace() . '.' . $matched->getMethodName()
             : 'unknown.unknown';
 
@@ -71,7 +77,7 @@ class Request extends UtopiaRequest
 
         // Apply filters
         foreach ($this->getFilters() as $filter) {
-            $parameters = $filter->parse($parameters, $endpointIdentifier);
+            $parameters = $filter->parse($parameters, $id);
         }
 
         return $parameters;
