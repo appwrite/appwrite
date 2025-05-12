@@ -230,7 +230,7 @@ class Realtime extends Adapter
 
         foreach ($channels as $key => $value) {
             switch (true) {
-                case strpos($key, 'account.') === 0:
+                case str_starts_with($key, 'account.'):
                     unset($channels[$key]);
                     break;
 
@@ -273,6 +273,7 @@ class Realtime extends Adapter
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'rules':
+            case 'migrations':
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
@@ -297,19 +298,26 @@ class Realtime extends Adapter
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
-                if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
+                $resource = $parts[4] ?? '';
+                if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
-                } elseif (($parts[4] ?? '') === 'documents') {
+                } elseif (in_array($resource, ['rows', 'documents'])) {
                     if ($database->isEmpty()) {
-                        throw new \Exception('Database needs to be passed to Realtime for Document events in the Database.');
+                        throw new \Exception('Database needs to be passed to Realtime for Document/Row events in the Database.');
                     }
                     if ($collection->isEmpty()) {
-                        throw new \Exception('Collection needs to be passed to Realtime for Document events in the Database.');
+                        throw new \Exception('Collection or the Table needs to be passed to Realtime for Document/Row events in the Database.');
                     }
 
+                    // 1.7.x - Tables API
+                    $channels[] = 'rows';
+                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
+                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
+
+                    // 1.6.x - Collections API
                     $channels[] = 'documents';
                     $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
                     $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
@@ -334,7 +342,6 @@ class Realtime extends Adapter
                 }
 
                 break;
-
             case 'functions':
                 if ($parts[2] === 'executions') {
                     if (!empty($payload->getRead())) {
@@ -353,7 +360,6 @@ class Realtime extends Adapter
                 }
 
                 break;
-
             case 'sites':
                 if ($parts[2] === 'deployments') {
                     $channels[] = 'console';
@@ -362,12 +368,6 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
-                break;
-            case 'migrations':
-                $channels[] = 'console';
-                $channels[] = 'projects.' . $project->getId();
-                $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 
