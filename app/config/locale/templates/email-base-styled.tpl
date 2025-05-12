@@ -126,7 +126,7 @@
                     <td>
                         <img
                             height="32px"
-                            src="https://cloud.appwrite.io/images/mails/logo.png"
+                            src="{{logoUrl}}"
                         />
                     </td>
                 </tr>

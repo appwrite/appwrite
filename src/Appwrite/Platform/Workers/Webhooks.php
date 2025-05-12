@@ -37,6 +37,7 @@ class Webhooks extends Action
             ->inject('queueForMails')
             ->inject('queueForStatsUsage')
             ->inject('log')
+            ->inject('plan')
             ->callback([$this, 'action']);
     }
 
@@ -45,11 +46,13 @@ class Webhooks extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
+     * @param StatsUsage $queueForStatsUsage
      * @param Log $log
+     * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, Log $log, array $plan): void
     {
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
@@ -68,7 +71,7 @@ class Webhooks extends Action
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage);
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage, $plan);
             }
         }
 
@@ -85,9 +88,10 @@ class Webhooks extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
+     * @param array $plan
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, array $plan): void
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return;
@@ -163,7 +167,7 @@ class Webhooks extends Action
 
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
-                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForMails);
+                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForMails, $plan);
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
@@ -198,9 +202,10 @@ class Webhooks extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
+     * @param array $plan
      * @return void
      */
-    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Mail $queueForMails): void
+    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Mail $queueForMails, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
@@ -224,6 +229,7 @@ class Webhooks extends Action
         $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
         $template->setParam('{{path}}', "/console/project-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
+        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
 
         // TODO: Use setbodyTemplate once #7307 is merged
         $subject = 'Webhook deliveries have been paused';

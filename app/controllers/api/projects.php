@@ -2139,7 +2139,8 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->inject('response')
     ->inject('dbForPlatform')
     ->inject('queueForMails')
-    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Mail $queueForMails) {
+    ->inject('plan')
+    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Mail $queueForMails, array $plan) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -2152,7 +2153,8 @@ App::post('/v1/projects/:projectId/smtp/tests')
         $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
-            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})");
+            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})")
+            ->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
 
         foreach ($emails as $email) {
             $queueForMails

@@ -54,6 +54,7 @@ class Certificates extends Action
             ->inject('queueForRealtime')
             ->inject('log')
             ->inject('certificates')
+            ->inject('plan')
             ->callback([$this, 'action']);
     }
 
@@ -80,7 +81,8 @@ class Certificates extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime,
         Log $log,
-        CertificatesAdapter $certificates
+        CertificatesAdapter $certificates,
+        array $plan
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -94,7 +96,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck);
+        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan);
     }
 
     /**
@@ -106,6 +108,7 @@ class Certificates extends Action
      * @param Realtime $queueForRealtime
      * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
+     * @param array $plan
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -120,7 +123,8 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Log $log,
         CertificatesAdapter $certificates,
-        bool $skipRenewCheck = false
+        bool $skipRenewCheck = false,
+        array $plan = []
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -202,7 +206,7 @@ class Certificates extends Action
             $certificate->setAttribute('renewDate', DateTime::now());
 
             // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails);
+            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails, $plan);
 
             throw $e;
         } finally {
@@ -342,10 +346,11 @@ class Certificates extends Action
      * @param string $errorMessage Verbose error message
      * @param int $attempt How many times it failed already
      * @param Mail $queueForMails
+     * @param array $plan
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails, array $plan): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -357,6 +362,7 @@ class Certificates extends Action
         $template->setParam('{{domain}}', $domain);
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
+        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
         $body = $template->render();
 
         $emailVariables = [
