@@ -79,6 +79,14 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_DOMAIN', '');
 
     if ($rule->isEmpty()) {
+
+        var_dump([
+             '$host' => $host,
+             '$appDomainFunctions' => $appDomainFunctions,
+             '$appDomainSites'  => $appDomainSites,
+            ]
+        );
+
         $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
         $appDomainFunctions = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         $appDomainSites = System::getEnv('_APP_DOMAIN_SITES', '');
