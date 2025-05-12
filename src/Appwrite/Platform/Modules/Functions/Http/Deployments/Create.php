@@ -236,7 +236,6 @@ class Create extends Action
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
-                    'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type
@@ -276,7 +275,6 @@ class Create extends Action
                     'totalSize' => $fileSize,
                     'sourceChunksTotal' => $chunks,
                     'sourceChunksUploaded' => $chunksUploaded,
-                    'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type
