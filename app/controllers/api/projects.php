@@ -2154,7 +2154,12 @@ App::post('/v1/projects/:projectId/smtp/tests')
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
             ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})")
-            ->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
+            ->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL)
+            ->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER)
+            ->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD)
+            ->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE)
+            ->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL)
+            ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
 
         foreach ($emails as $email) {
             $queueForMails

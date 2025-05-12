@@ -362,7 +362,14 @@ class Certificates extends Action
         $template->setParam('{{domain}}', $domain);
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
+
         $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
+        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
+        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
+        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
+        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
+        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
+
         $body = $template->render();
 
         $emailVariables = [

@@ -164,7 +164,7 @@
                 <tr>
                     <td style="padding-left: 4px; padding-right: 4px">
                         <a
-                            href="https://twitter.com/appwrite"
+                            href="{{twitterUrl}}"
                             class="social-icon"
                             title="Twitter"
                         >
@@ -173,7 +173,7 @@
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
                         <a
-                            href="https://appwrite.io/discord"
+                            href="{{discordUrl}}"
                             class="social-icon"
                         >
                             <img src="https://cloud.appwrite.io/images/mails/discord.png" height="24" width="24" />
@@ -181,7 +181,7 @@
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
                         <a
-                            href="https://github.com/appwrite/appwrite"
+                            href="{{githubUrl}}"
                             class="social-icon"
                         >
                             <img src="https://cloud.appwrite.io/images/mails/github.png" height="24" width="24" />
@@ -191,11 +191,11 @@
             </table>
             <table style="width: auto; margin: 0 auto; margin-top: 60px">
                 <tr>
-                    <td><a href="https://appwrite.io/terms">Terms</a></td>
+                    <td><a href="{{termsUrl}}">Terms</a></td>
                     <td style="color: #e8e9f0">
                         <div style="margin: 0 8px">|</div>
                     </td>
-                    <td><a href="https://appwrite.io/privacy">Privacy</a></td>
+                    <td><a href="{{privacyUrl}}">Privacy</a></td>
                 </tr>
             </table>
             <p style="text-align: center" align="center">
