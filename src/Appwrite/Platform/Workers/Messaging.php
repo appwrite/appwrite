@@ -457,9 +457,8 @@ class Messaging extends Action
                 $credentials['useDLT'] ?? true
             ),
             'inforu' => new Inforu(
-                $credentials['username'] ?? '',
                 $credentials['apiKey'] ?? '',
-                $credentials['sender'] ?? '',
+                $credentials['senderId'] ?? '',
             ),
             default => null
         };
@@ -787,9 +786,8 @@ class Messaging extends Action
                     'useDLT' => $dsn->getParam('useDLT'),
                 ],
                 'inforu' => [
-                    'username' => $user,
                     'apiKey' => $password,
-                    'sender' => $dsn->getParam('sender', $from),
+                    'senderId' => $dsn->getParam('senderId', $from),
                 ],
                 default => null
             },
