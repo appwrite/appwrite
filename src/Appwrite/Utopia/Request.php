@@ -70,11 +70,6 @@ class Request extends UtopiaRequest
             ? $matched->getNamespace() . '.' . $matched->getMethodName()
             : 'unknown.unknown';
 
-        // Filter params to valid keys
-        if ($matched !== null && !empty($methodParamNames)) {
-            $parameters = \array_intersect_key($parameters, \array_flip($methodParamNames));
-        }
-
         // Apply filters
         foreach ($this->getFilters() as $filter) {
             $parameters = $filter->parse($parameters, $id);
