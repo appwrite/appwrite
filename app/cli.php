@@ -26,6 +26,9 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
+
+use function Swoole\Coroutine\run;
 
 // Overwriting runtimes to be architecture agnostic for CLI
 Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
@@ -200,7 +203,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
-CLI::setResource('queueForStatsUsage', function (Connection $publisher) {
+CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
@@ -264,6 +267,8 @@ CLI::setResource('logError', function (Registry $register) {
 
 CLI::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
+CLI::setResource('telemetry', fn () => new NoTelemetry());
+
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
 
@@ -293,4 +298,4 @@ $cli
 
 $cli->shutdown()->action(fn () => Timer::clearAll());
 
-$cli->run();
+run($cli->run(...));
