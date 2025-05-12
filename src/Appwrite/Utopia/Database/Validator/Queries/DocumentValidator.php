@@ -2,9 +2,9 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
+use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\IndexedQueries;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Filter;
@@ -12,55 +12,42 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
 use Utopia\Database\Validator\Query\Select;
-use Utopia\Validator;
 
-class DocumentValidator extends Validator
+class DocumentValidator extends IndexedQueries
 {
-    protected Validator $additionalValidator;
-    protected int $length;
-
-    public function __construct(Validator $additionalValidator, int $length)
-    {
-        $this->additionalValidator = $additionalValidator;
-        $this->length = $length;
-    }
-
-    public function getDescription(): string
-    {
-        return 'Validates document queries and checks if they conform to the required rules, along with additional validation rules.';
-    }
-
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    public function getType(): string
-    {
-        return 'DocumentValidator';
-    }
-
-    public function isValid(mixed $values): bool
-    {
-        if (!\is_array($values)) {
-            return false;
-        }
-        var_dump("Documents validator");
-        var_dump($values);
-        $queries = Query::parseQueries($values);
-        foreach ($values as $element) {
-            if (!$this->additionalValidator->isValid($element)) {
-                return false;
-            }
-        }
-
-
+    /**
+     * Expression constructor
+     *
+     * @param array<mixed> $attributes
+     * @param array<mixed> $indexes
+     * @throws Exception
+     */
+    public function __construct(
+        array $attributes,
+        array $indexes,
+        int $maxValuesCount = 100,
+        \DateTime $minAllowedDate = new \DateTime('0000-01-01'),
+        \DateTime $maxAllowedDate = new \DateTime('9999-12-31'),
+    ) {
         $attributes[] = new Document([
-            '$id' => '$internalId',
-            'key' => '$internalId',
+            '$id' => '$id',
+            'key' => '$id',
             'type' => Database::VAR_STRING,
             'array' => false,
         ]);
+        $attributes[] = new Document([
+            '$id' => '$createdAt',
+            'key' => '$createdAt',
+            'type' => Database::VAR_DATETIME,
+            'array' => false,
+        ]);
+        $attributes[] = new Document([
+            '$id' => '$updatedAt',
+            'key' => '$updatedAt',
+            'type' => Database::VAR_DATETIME,
+            'array' => false,
+        ]);
+
 
         $validators = [
             new Limit(),
@@ -68,24 +55,14 @@ class DocumentValidator extends Validator
             new Cursor(),
             new Filter(
                 $attributes,
-                $this->length,
-                new \DateTime('0000-01-01'),
-                new \DateTime('9999-12-31')
+                $maxValuesCount,
+                $minAllowedDate,
+                $maxAllowedDate,
             ),
             new Order($attributes),
             new Select($attributes),
         ];
 
-        $indexedQueries = new IndexedQueries(
-            $attributes,
-            [],
-            $validators
-        );
-        // the queries should not contain internalId
-        if ($indexedQueries->isValid($queries)) {
-            return false;
-        }
-
-        return true;
+        parent::__construct($attributes, $indexes, $validators);
     }
 }
