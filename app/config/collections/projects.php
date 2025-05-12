@@ -1803,9 +1803,9 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_resourceId_resourceType__id'),
+                '$id' => ID::custom('_key_resourceId_resourceType'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['resourceId', 'resourceType', '_id'],
+                'attributes' => ['resourceId', 'resourceType'],
                 'lengths' => [],
                 'orders' => [],
             ],
