@@ -681,10 +681,12 @@ class FunctionsCustomServerTest extends Scope
          */
         $dateValidator = new DatetimeValidator();
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $data['functionId'] . '/deployments/' . $data['deploymentId'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $data['functionId'] . '/deployment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'deploymentId' => $data['deploymentId'],
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
