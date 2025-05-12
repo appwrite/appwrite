@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Auth\Auth;
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
@@ -29,35 +30,48 @@ class Request extends UtopiaRequest
     {
         $parameters = parent::getParams();
 
-        if ($this->hasFilters() && self::hasRoute()) {
-            $methods = self::getRoute()->getLabel('sdk', null);
+        if (!$this->hasFilters() || !self::hasRoute()) {
+            return $parameters;
+        }
 
-            if (!\is_array($methods)) {
-                $methods = [$methods];
+        $methods = self::getRoute()->getLabel('sdk', null);
+        $methods = \is_array($methods) ? $methods : [$methods];
+        $matched = null;
+
+        foreach ($methods as $method) {
+            /** @var Method|null $method */
+            if ($method === null) {
+                continue;
             }
 
-            $params = [];
+            // Find the method that matches the parameters passed
+            $methodParamNames = \array_map(fn($param) => $param->getName(), $method->getParameters());
+            $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
 
-            foreach ($methods as $method) {
-                /** @var \Appwrite\SDK\Method $method */
-                if (empty($method)) {
-                    $endpointIdentifier = 'unknown.unknown';
-                } else {
-                    $endpointIdentifier = $method->getNamespace() . '.' . $method->getMethodName();
-                }
-
-                $params += $method->getParameters();
+            // No params defined, or all params are valid
+            if (empty($methodParamNames) || empty($invalidParams)) {
+                $matched = $method;
+                break;
             }
+        }
 
-            if (!empty($params)) {
-                $parameters = array_filter($parameters, function ($key) use ($params) {
-                    return array_key_exists($key, $params);
-                }, \ARRAY_FILTER_USE_KEY);
-            }
+        $endpointIdentifier = $matched !== null
+            ? $matched->getNamespace() . '.' . $matched->getMethodName()
+            : 'unknown.unknown';
 
-            foreach ($this->getFilters() as $filter) {
-                $parameters = $filter->parse($parameters, $endpointIdentifier);
+        // Filter params to valid keys
+        if ($matched !== null) {
+            $definedNames = \array_map(fn($param) => $param->getName(), $matched->getParameters());
+
+            // If matched method has explicit params, remove all other params
+            if (!empty($definedNames)) {
+                $parameters = \array_intersect_key($parameters, \array_flip($definedNames));
             }
+        }
+
+        // Apply filters
+        foreach ($this->getFilters() as $filter) {
+            $parameters = $filter->parse($parameters, $endpointIdentifier);
         }
 
         return $parameters;
