@@ -25,13 +25,6 @@ class ResourceToken extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('$permissions', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Token permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
-                'default' => '',
-                'example' => ['read("any")'],
-                'array' => true,
-            ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Resource ID.',
