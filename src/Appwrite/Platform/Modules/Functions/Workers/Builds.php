@@ -263,7 +263,7 @@ class Builds extends Action
 
         $deploymentId = $deployment->getId();
 
-        $deployment->setAttribute('buildStartAt', $startTime);
+        $deployment->setAttribute('buildStartedAt', $startTime);
         $deployment->setAttribute('status', 'processing');
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -794,8 +794,8 @@ class Builds extends Action
             $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
 
             /** Update the build document */
-            $deployment->setAttribute('buildStartAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
-            $deployment->setAttribute('buildEndAt', $endTime);
+            $deployment->setAttribute('buildStartedAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
+            $deployment->setAttribute('buildEndedAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
@@ -1163,7 +1163,7 @@ class Builds extends Action
 
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
-            $deployment->setAttribute('buildEndAt', $endTime);
+            $deployment->setAttribute('buildEndedAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
             $deployment->setAttribute('buildLogs', $message);

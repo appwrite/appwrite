@@ -616,9 +616,9 @@ class RealtimeConsoleClientTest extends Scope
 
             $this->assertEquals('building', $response['data']['payload']['status']);
 
-            if (!empty($response['data']['payload']['buildEndAt'])) {
-                $this->assertNotEmpty($response['data']['payload']['buildEndAt']);
-                $this->assertNotEmpty($response['data']['payload']['buildStartAt']);
+            if (!empty($response['data']['payload']['buildEndedAt'])) {
+                $this->assertNotEmpty($response['data']['payload']['buildEndedAt']);
+                $this->assertNotEmpty($response['data']['payload']['buildStartedAt']);
                 $this->assertNotEmpty($response['data']['payload']['buildDuration']);
                 $this->assertNotEmpty($response['data']['payload']['buildPath']);
                 $this->assertNotEmpty($response['data']['payload']['buildSize']);

@@ -16,7 +16,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
 
 class XList extends Action
 {
@@ -52,13 +51,12 @@ class XList extends Action
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('queries', [], new DevKeys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', DevKeys::ALLOWED_ATTRIBUTES), true)
-            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $projectId, ?array $queries, ?string $search, Response $response, Database $dbForPlatform)
+    public function action(string $projectId, ?array $queries, Response $response, Database $dbForPlatform)
     {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -71,10 +69,6 @@ class XList extends Action
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
         }
 
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
