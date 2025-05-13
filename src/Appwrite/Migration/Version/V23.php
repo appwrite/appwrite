@@ -577,6 +577,7 @@ class V23 extends Migration
                         'metadata',
                         'chunksTotal',
                         'chunksUploaded',
+                        'search'
                     ];
                     foreach ($attributesToDelete as $attribute) {
                         try {
@@ -588,7 +589,8 @@ class V23 extends Migration
 
                     $indexesToDelete = [
                         '_key_buildId',
-                        '_key_size'
+                        '_key_size',
+                        '_key_search'
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
