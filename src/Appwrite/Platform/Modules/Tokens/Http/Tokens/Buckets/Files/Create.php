@@ -71,7 +71,7 @@ class Create extends Action
         ->callback([$this, 'action']);
     }
 
-    public function action(string $bucketId, string $fileId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents)
+    public function action(string $bucketId, string $fileId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents): void
     {
 
         /**

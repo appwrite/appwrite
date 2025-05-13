@@ -499,6 +499,11 @@ return [
         'description' => 'The requested file token has expired.',
         'code' => 401,
     ],
+    Exception::TOKEN_RESOURCE_INVALID => [
+        'name' => Exception::TOKEN_RESOURCE_INVALID,
+        'description' => 'The resource for the token is invalid.',
+        'code' => 400,
+    ],
 
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [

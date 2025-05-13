@@ -925,31 +925,46 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
 
         $token = Authorization::skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
 
-        if ($token->isEmpty() || $token->getAttribute('secret') !== $secret) {
+        if ($token->isEmpty()) {
             return new Document([]);
         }
 
-        if ($token->getAttribute('resourceType') === TOKENS_RESOURCE_TYPE_FILES) {
-            $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
-            $ids = explode(':', $token->getAttribute('resourceId'));
+        $expiry = $token->getAttribute('expire');
 
-            if (count($internalIds) !== 2 || count($ids) !== 2) {
+        if ($expiry !== null) {
+            $now = new \DateTime();
+            $expiryDate = new \DateTime($expiry);
+
+            if ($expiryDate < $now) {
                 return new Document([]);
             }
-
-            $accessedAt = $token->getAttribute('accessedAt', 0);
-            if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), - APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
-                $token->setAttribute('accessedAt', DatabaseDateTime::now());
-                Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
-            }
-
-            return new Document([
-                'bucketId' => $ids[0],
-                'fileId' => $ids[1],
-                'bucketInternalId' => $internalIds[0],
-                'fileInternalId' => $internalIds[1],
-            ]);
         }
+
+        return match ($token->getAttribute('resourceType')) {
+            TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject) {
+                $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
+                $ids = explode(':', $token->getAttribute('resourceId'));
+
+                if (count($internalIds) !== 2 || count($ids) !== 2) {
+                    return new Document([]);
+                }
+
+                $accessedAt = $token->getAttribute('accessedAt', 0);
+                if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), - APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
+                    $token->setAttribute('accessedAt', DatabaseDateTime::now());
+                    Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
+                }
+
+                return new Document([
+                    'bucketId' => $ids[0],
+                    'fileId' => $ids[1],
+                    'bucketInternalId' => $internalIds[0],
+                    'fileInternalId' => $internalIds[1],
+                ]);
+            })(),
+
+            default => throw new Exception(Exception::TOKEN_RESOURCE_INVALID),
+        };
     }
     return new Document([]);
 }, ['project', 'dbForProject', 'request']);
