@@ -1422,9 +1422,40 @@ trait DatabasesBase
         return $data;
     }
 
+
     /**
-     * @depends testCreateIndexes
+     * @depends testCreateAttributes
      */
+    public function testGetIndexByKeyWithLengths(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['moviesId'];
+
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthTestIndex',
+            'type' => 'key',
+            'attributes' => ['title','description'],
+            'lengths' => [128,200]
+        ]);
+
+        $this->assertEquals(202, $create['headers']['status-code']);
+
+        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthTestIndex", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+        $this->assertEquals(200, $index['headers']['status-code']);
+        $this->assertEquals('lengthTestIndex', $index['body']['key']);
+        $this->assertEquals([128,200], $index['body']['lengths']);
+    }
+    /**
+        * @depends testCreateIndexes
+        */
     public function testListIndexes(array $data): void
     {
         $databaseId = $data['databaseId'];

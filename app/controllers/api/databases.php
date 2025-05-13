@@ -2812,12 +2812,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->param('key', null, new Key(), 'Index Key.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
+    ->param('lengths', [], new ArrayList(new Integer(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional:true)
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $lengths, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2877,9 +2878,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'size' => 0
         ];
 
-        // lengths hidden by default
-        $lengths = [];
-
         foreach ($attributes as $i => $attribute) {
             // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -2901,10 +2899,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
-            $lengths[$i] = null;
-
+            $lengths[$i] = array_key_exists($i, $lengths) ? $lengths[$i] : null;
             if ($attributeArray === true) {
-                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                if ($lengths[$i] === null) {
+                    $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                }
                 $orders[$i] = null;
             }
         }
