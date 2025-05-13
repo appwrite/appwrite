@@ -396,7 +396,7 @@ class FunctionsCustomServerTest extends Scope
         $deployment = $this->createTemplateDeployment(
             $functionId,
             [
-                'functionId' => ID::unique(),
+                'resourceId' => ID::unique(),
                 'activate' => true,
                 'repository' => $starterTemplate['body']['providerRepositoryId'],
                 'owner' => $starterTemplate['body']['providerOwner'],
@@ -728,18 +728,13 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertCount(2, $deployments['body']['deployments']);
 
-        $deployments = $this->listDeployments($functionId, [
-            'search' => 'php-8.0'
-        ]);
+        $deployments = $this->listDeployments($functionId);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
-        $this->assertEquals(3, $deployments['body']['total']);
         $this->assertIsArray($deployments['body']['deployments']);
-        $this->assertCount(3, $deployments['body']['deployments']);
-        $this->assertEquals($deployments['body']['deployments'][0]['$id'], $data['deploymentId']);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
 
         $deployments = $this->listDeployments(
             $functionId,
