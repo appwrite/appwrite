@@ -1,59 +1,28 @@
 <?php
 
-namespace Appwrite\Specification\Format;
+namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
-use Appwrite\Specification\Format;
+use Appwrite\SDK\Response;
+use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Route;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
 class Swagger2 extends Format
 {
     public function getName(): string
     {
         return 'Swagger 2';
-    }
-
-    protected function getNestedModels(Model $model, array &$usedModels): void
-    {
-        foreach ($model->getRules() as $rule) {
-            if (!in_array($model->getType(), $usedModels)) {
-                continue;
-            }
-
-            if (\is_array($rule['type'])) {
-                foreach ($rule['type'] as $ruleType) {
-                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
-                        $usedModels[] = $ruleType;
-
-                        foreach ($this->models as $m) {
-                            if ($m->getType() === $ruleType) {
-                                $this->getNestedModels($m, $usedModels);
-                                continue;
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
-                    $usedModels[] = $rule['type'];
-
-                    foreach ($this->models as $m) {
-                        if ($m->getType() === $rule['type']) {
-                            $this->getNestedModels($m, $usedModels);
-                            continue;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public function parse(): array
@@ -118,11 +87,12 @@ class Swagger2 extends Format
         $usedModels = [];
 
         foreach ($this->routes as $route) {
-            /** @var \Utopia\Route $route */
+            /** @var Route $route */
             $url = \str_replace('/v1', '', $route->getPath());
+
             $scope = $route->getLabel('scope', '');
 
-            /** @var \Appwrite\SDK\Method $sdk */
+            /** @var Method $sdk */
             $sdk = $route->getLabel('sdk', false);
 
             if (empty($sdk)) {
@@ -130,16 +100,14 @@ class Swagger2 extends Format
             }
 
             $additionalMethods = null;
-            if (is_array($sdk)) {
-                $mainSdk = array_shift($sdk);
+            if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
-
-                $sdk = $mainSdk;
+                $sdk = $sdk[0];
             }
 
             $consumes = [];
             if (strtoupper($route->getMethod()) !== 'GET' && strtoupper($route->getMethod()) !== 'HEAD') {
-                $consumes = [$sdk->getRequestType()];
+                $consumes = [$sdk->getRequestType()->value];
             }
 
             $method = $sdk->getMethodName() ?? \uniqid();
@@ -158,10 +126,8 @@ class Swagger2 extends Format
                     case AuthType::SESSION:
                         $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                         break;
-                    case AuthType::KEY:
-                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                        break;
                     case AuthType::JWT:
+                    case AuthType::KEY:
                         $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
                     case AuthType::ADMIN:
@@ -211,41 +177,49 @@ class Swagger2 extends Format
             }
 
             if (!empty($additionalMethods)) {
-                $temp['x-appwrite']['additional-methods'] = [];
+                $temp['x-appwrite']['methods'] = [];
                 foreach ($additionalMethods as $method) {
-                    /** @var \Appwrite\SDK\Method $method */
+                    /** @var Method $method */
+                    $desc = $method->getDescriptionFilePath();
+
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
-                        'description' => $method->getDescription(),
+                        'description' => ($desc) ? \file_get_contents($desc) : '',
                     ];
 
-                    foreach ($method->getParameters() as $name => $param) {
-                        $additionalMethod['parameters'][] = $name;
+                    foreach ($method->getParameters() as $parameter) {
+                        $additionalMethod['parameters'][] = $parameter->getName();
 
-                        if (!$param['optional']) {
-                            $additionalMethod['required'][] = $name;
+                        if (!$parameter->getOptional()) {
+                            $additionalMethod['required'][] = $parameter->getName();
                         }
                     }
 
                     foreach ($method->getResponses() as $response) {
-                        /** @var \Appwrite\SDK\Response $response */
-                        $additionalMethod['responses'][] = [
-                            'code' => $response->getCode(),
-                            'model' => '#/definitions/' . $response->getModel()
-                        ];
+                        /** @var Response $response */
+                        if (\is_array($response->getModel())) {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
+                            ];
+                        } else {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => '#/definitions/' . $response->getModel()
+                            ];
+                        }
                     }
 
-                    $temp['x-appwrite']['additional-methods'][] = $additionalMethod;
+                    $temp['x-appwrite']['methods'][] = $additionalMethod;
                 }
             }
 
             // Handle Responses
-
             foreach ($sdk->getResponses() as $response) {
-                /** @var \Appwrite\SDK\Response $response */
+                /** @var Response $response */
                 $model = $response->getModel();
 
                 foreach ($this->models as $value) {
@@ -340,7 +314,9 @@ class Swagger2 extends Format
 
             foreach ($parameters as $name => $param) { // Set params
                 /** @var Validator $validator */
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
+                $validator = (\is_callable($param['validator']))
+                    ? ($param['validator'])(...$this->app->getResources($param['injections']))
+                    : $param['validator'];
 
                 $node = [
                     'name' => $name,
@@ -485,7 +461,7 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         break;
                     case 'Utopia\Validator\WhiteList':
-                        /** @var \Utopia\Validator\WhiteList $validator */
+                        /** @var WhiteList $validator */
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
 

@@ -14,7 +14,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -89,8 +88,8 @@ class Create extends Base
             ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
-                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
-                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
             ->inject('response')
             ->inject('dbForProject')
@@ -131,7 +130,7 @@ class Create extends Base
         // Temporary abuse check
         $abuseCheck = function () use ($project, $timelimit, $response) {
             $abuseKey = "projectId:{projectId},url:{url}";
-            $abuseLimit = App::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
+            $abuseLimit = System::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
             $abuseTime = 86400; // 1 day
 
             $timeLimit = $timelimit($abuseKey, $abuseLimit, $abuseTime);

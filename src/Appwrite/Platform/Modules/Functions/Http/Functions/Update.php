@@ -14,7 +14,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -93,8 +92,8 @@ class Update extends Base
             ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
-                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
-                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')

@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
@@ -68,7 +69,7 @@ class Create extends Action
                         model: Response::MODEL_DEPLOYMENT,
                     )
                 ],
-                requestType: 'multipart/form-data',
+                requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))

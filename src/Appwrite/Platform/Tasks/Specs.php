@@ -3,9 +3,10 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\SDK\AuthType;
-use Appwrite\Specification\Format\OpenAPI3;
-use Appwrite\Specification\Format\Swagger2;
-use Appwrite\Specification\Specification;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Specification\Format\OpenAPI3;
+use Appwrite\SDK\Specification\Format\Swagger2;
+use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
 use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
@@ -19,7 +20,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
-use Utopia\Registry\Registry;
 use Utopia\Request as UtopiaRequest;
 use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
@@ -49,11 +49,10 @@ class Specs extends Action
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->inject('register')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
-    public function action(string $version, string $mode, Registry $register): void
+    public function action(string $version, string $mode): void
     {
         $appRoutes = App::getRoutes();
         $response = $this->getResponse();
@@ -194,7 +193,7 @@ class Specs extends Action
                     }
 
                     foreach ($sdks as $sdk) {
-                        /** @var \Appwrite\SDK\Method $sdks */
+                        /** @var Method $sdk */
 
                         $hide = $sdk->isHidden();
                         if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
@@ -262,7 +261,6 @@ class Specs extends Action
                 $services[] = [
                     'name' => $service['key'] ?? '',
                     'description' => $service['subtitle'] ?? '',
-                    'x-globalAttributes' => $service['globalAttributes'] ?? [],
                 ];
             }
 
@@ -274,7 +272,15 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [
+                new App('UTC'),
+                $services,
+                $routes,
+                $models,
+                $keys[$platform],
+                $authCounts[$platform] ?? 0
+            ];
+
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),

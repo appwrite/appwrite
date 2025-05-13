@@ -59,12 +59,16 @@ class XList extends Base
         foreach ($allSpecs as $spec) {
             $spec['enabled'] = true;
 
-            if (array_key_exists('specifications', $plan)) {
-                $spec['enabled'] = in_array($spec['slug'], $plan['specifications']);
+            if (array_key_exists('runtimeSpecifications', $plan)) {
+                $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
             }
 
+            $maxCpus = System::getEnv('_APP_FUNCTIONS_CPUS', 0);
+            $maxMemory = System::getEnv('_APP_FUNCTIONS_MEMORY', 0);
+
             // Only add specs that are within the limits set by environment variables
-            if ($spec['cpus'] <= System::getEnv('_APP_COMPUTE_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_COMPUTE_MEMORY', 512)) {
+            // Treat 0 as no limit
+            if ((empty($maxCpus) || $spec['cpus'] <= $maxCpus) && (empty($maxMemory) || $spec['memory'] <= $maxMemory)) {
                 $specs[] = $spec;
             }
         }
