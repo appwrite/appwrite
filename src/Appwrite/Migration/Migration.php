@@ -3,7 +3,6 @@
 namespace Appwrite\Migration;
 
 use Exception;
-use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -12,8 +11,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
-
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 abstract class Migration
 {
@@ -119,10 +116,6 @@ abstract class Migration
                 '$id' => ID::custom('audit'),
                 '$collection' => Database::METADATA
             ],
-            'abuse' => [
-                '$id' => ID::custom('abuse'),
-                '$collection' => Database::METADATA
-            ]
         ], $projectCollections);
     }
 
@@ -179,25 +172,23 @@ abstract class Migration
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
             foreach ($this->documentsIterator($collection['$id']) as $document) {
-                go(function (Document $document, callable $callback) {
-                    if (empty($document->getId()) || empty($document->getCollection())) {
-                        return;
-                    }
+                if (empty($document->getId()) || empty($document->getCollection())) {
+                    continue;
+                }
 
-                    $old = $document->getArrayCopy();
-                    $new = call_user_func($callback, $document);
+                $old = $document->getArrayCopy();
+                $new = call_user_func($callback, $document);
 
-                    if (is_null($new) || $new->getArrayCopy() == $old) {
-                        return;
-                    }
+                if (is_null($new) || $new->getArrayCopy() == $old) {
+                    continue;
+                }
 
-                    try {
-                        $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
-                    } catch (\Throwable $th) {
-                        Console::error('Failed to update document: ' . $th->getMessage());
-                        return;
-                    }
-                }, $document, $callback);
+                try {
+                    $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                } catch (\Throwable $th) {
+                    Console::error('Failed to update document: ' . $th->getMessage());
+                    continue;
+                }
             }
         }
     }
