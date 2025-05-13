@@ -962,7 +962,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
                 ]);
             })(),
 
-            default => throw new Exception(Exception::TOKEN_RESOURCE_INVALID),
+            default => throw new Exception(Exception::TOKEN_RESOURCE_TYPE_INVALID),
         };
     }
     return new Document([]);
