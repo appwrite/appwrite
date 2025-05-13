@@ -2083,7 +2083,7 @@ return [
             [
                 '$id' => ID::custom('_key_function_internal_id'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['functionInternalId'],
+                'attributes' => ['resourceInternalId'],
                 'lengths' => [],
                 'orders' => [],
             ],
