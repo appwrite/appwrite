@@ -2,14 +2,14 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\Messaging\Adapter as MessagingAdapter;
-use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Messaging\Adapter;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Pools\Pool;
 
-class Realtime extends MessagingAdapter
+class Realtime extends Adapter
 {
     /**
      * Connection Tree
@@ -132,12 +132,11 @@ class Realtime extends MessagingAdapter
      * Sends an event to the Realtime Server
      * @param string $projectId
      * @param array $payload
-     * @param array $events
+     * @param string $event
      * @param array $channels
      * @param array $roles
      * @param array $options
      * @return void
-     * @throws \Exception
      */
     public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
@@ -159,7 +158,9 @@ class Realtime extends MessagingAdapter
                 'timestamp' => DateTime::formatTz(DateTime::now()),
                 'payload' => $payload
             ]
-        ]));
+        ];
+
+        $this->pubsubPool->use(fn (\Appwrite\PubSub\Adapter $pubsub) => $pubsub->publish('realtime', json_encode($message)));
     }
 
     /**
@@ -174,9 +175,8 @@ class Realtime extends MessagingAdapter
      *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions
      *
      * @param array $event
-     * @return int[]|string[]
      */
-    public function getSubscribers(array $event): array
+    public function getSubscribers(array $event)
     {
 
         $receivers = [];
@@ -230,7 +230,7 @@ class Realtime extends MessagingAdapter
 
         foreach ($channels as $key => $value) {
             switch (true) {
-                case \str_starts_with($key, 'account.'):
+                case strpos($key, 'account.') === 0:
                     unset($channels[$key]);
                     break;
 
@@ -272,7 +272,6 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
-            case 'migrations':
             case 'rules':
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
@@ -353,6 +352,12 @@ class Realtime extends MessagingAdapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
+                break;
+            case 'migrations':
+                $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 

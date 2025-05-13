@@ -41,7 +41,9 @@ class ScheduleMessages extends ScheduleBase
             }
 
             \go(function () use ($schedule, $pools, $dbForPlatform) {
-                $queueForMessaging = new Messaging($this->publisher);
+                $queue = $pools->get('publisher')->pop();
+                $connection = $queue->getResource();
+                $queueForMessaging = new Messaging($connection);
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
@@ -56,6 +58,8 @@ class ScheduleMessages extends ScheduleBase
                     $schedule['$id'],
                 );
 
+                $queue->reclaim();
+                $this->recordEnqueueDelay($schedule['schedule']);
                 unset($this->schedules[$schedule['$internalId']]);
             });
         }

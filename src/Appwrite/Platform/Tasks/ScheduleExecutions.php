@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
+use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
 
@@ -28,6 +29,9 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
+        $queue = $pools->get('publisher')->pop();
+        $connection = $queue->getResource();
+        $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
@@ -55,10 +59,8 @@ class ScheduleExecutions extends ScheduleBase
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($schedule, $delay, $data, $pools) {
-                \Co::sleep($delay);
-
-                $queueForFunctions = new Func($this->publisher);
+            \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
+                Co::sleep($delay);
 
                 $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
@@ -72,6 +74,8 @@ class ScheduleExecutions extends ScheduleBase
                     ->setProject($schedule['project'])
                     ->setUserId($data['userId'] ?? '')
                     ->trigger();
+
+                $this->recordEnqueueDelay($schedule['schedule']);
             });
 
             $dbForPlatform->deleteDocument(
@@ -81,5 +85,7 @@ class ScheduleExecutions extends ScheduleBase
 
             unset($this->schedules[$schedule['$internalId']]);
         }
+
+        $queue->reclaim();
     }
 }

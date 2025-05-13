@@ -15,6 +15,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Adapter\AppSignal;
@@ -215,13 +216,13 @@ $register->set('pools', function () {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                            PDO::ATTR_TIMEOUT => 3, // Seconds
-                            PDO::ATTR_PERSISTENT => false,
-                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                            PDO::ATTR_EMULATE_PREPARES => true,
-                            PDO::ATTR_STRINGIFY_FETCHES => true
-                        ]);
+                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                            \PDO::ATTR_TIMEOUT => 3, // Seconds
+                            \PDO::ATTR_PERSISTENT => false,
+                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                            \PDO::ATTR_EMULATE_PREPARES => true,
+                            \PDO::ATTR_STRINGIFY_FETCHES => true
+                        ));
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
