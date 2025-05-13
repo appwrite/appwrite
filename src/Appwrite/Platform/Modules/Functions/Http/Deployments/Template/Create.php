@@ -147,7 +147,6 @@ class Create extends Base
             'entrypoint' => $function->getAttribute('entrypoint', ''),
             'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'manual',
-            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
             'activate' => $activate,
         ]));
 
