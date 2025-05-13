@@ -120,7 +120,6 @@ class Create extends Action
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
-            'search' => implode(' ', [$deploymentId]),
             'screenshotLight' => '',
             'screenshotDark' => '',
             'buildStartedAt' => null,
@@ -162,7 +161,6 @@ class Create extends Action
                 'deploymentResourceInternalId' => $site->getInternalId(),
                 'status' => 'verified',
                 'certificateId' => '',
-                'search' => implode(' ', [$ruleId, $domain]),
                 'owner' => 'Appwrite',
                 'region' => $project->getAttribute('region')
             ]))
