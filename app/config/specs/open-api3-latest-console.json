@@ -38045,34 +38045,45 @@
                         "description": "Token creation date in ISO 8601 format.",
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
+                    "$permissions": {
+                        "type": "array",
+                        "description": "Token permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                        "items": {
+                            "type": "string"
+                        },
+                        "x-example": [
+                            "read(\"any\")"
+                        ]
+                    },
                     "resourceId": {
                         "type": "string",
                         "description": "Resource ID.",
                         "x-example": "5e5ea5c168bb8:5e5ea5c168bb8"
                     },
-                    "resourceInternalId": {
-                        "type": "string",
-                        "description": "File ID.",
-                        "x-example": "1:1"
-                    },
                     "resourceType": {
                         "type": "string",
                         "description": "Resource type.",
-                        "x-example": "file"
+                        "x-example": "files"
                     },
                     "expire": {
                         "type": "string",
                         "description": "Token expiration date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "accessedAt": {
+                        "type": "string",
+                        "description": "Most recent access date in ISO 8601 format. This attribute is only updated again after 24 hours.",
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     }
                 },
                 "required": [
                     "$id",
                     "$createdAt",
+                    "$permissions",
                     "resourceId",
-                    "resourceInternalId",
                     "resourceType",
-                    "expire"
+                    "expire",
+                    "accessedAt"
                 ]
             },
             "team": {

@@ -9,6 +9,8 @@ use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -2291,6 +2293,8 @@ App::delete('/v1/users/:userId')
         $clone = clone $user;
 
         $dbForProject->deleteDocument('users', $userId);
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getInternalId()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getInternalId()]));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)

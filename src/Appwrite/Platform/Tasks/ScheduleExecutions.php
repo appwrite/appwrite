@@ -74,6 +74,8 @@ class ScheduleExecutions extends ScheduleBase
                     ->setProject($schedule['project'])
                     ->setUserId($data['userId'] ?? '')
                     ->trigger();
+
+                $this->recordEnqueueDelay($schedule['schedule']);
             });
 
             $dbForPlatform->deleteDocument(

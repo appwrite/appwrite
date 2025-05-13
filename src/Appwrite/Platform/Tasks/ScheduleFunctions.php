@@ -95,6 +95,8 @@ class ScheduleFunctions extends ScheduleBase
                         ->setPath('/')
                         ->setProject($schedule['project'])
                         ->trigger();
+
+                    $this->recordEnqueueDelay($schedule['schedule']);
                 }
 
                 $queue->reclaim();
