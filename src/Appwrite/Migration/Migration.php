@@ -9,6 +9,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\PDO;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
@@ -38,9 +39,9 @@ abstract class Migration
     protected Database $consoleDB;
 
     /**
-     * @var \PDO
+     * @var PDO
      */
-    protected \PDO $pdo;
+    protected PDO $pdo;
 
     /**
      * @var array
@@ -147,10 +148,10 @@ abstract class Migration
     /**
      * Set PDO for Migration.
      *
-     * @param \PDO $pdo
+     * @param PDO $pdo
      * @return \Appwrite\Migration\Migration
      */
-    public function setPDO(\PDO $pdo): self
+    public function setPDO(PDO $pdo): self
     {
         $this->pdo = $pdo;
 

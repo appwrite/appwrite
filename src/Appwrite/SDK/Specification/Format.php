@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Specification;
+namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
 use Utopia\App;
@@ -12,12 +12,12 @@ abstract class Format
     protected App $app;
 
     /**
-     * @var Route[]
+     * @var array<Route>
      */
     protected array $routes;
 
     /**
-     * @var Model[]
+     * @var array<Model>
      */
     protected array $models;
 
@@ -486,5 +486,25 @@ abstract class Format
                 break;
         }
         return $values;
+    }
+
+    protected function getNestedModels(Model $model, array &$usedModels): void
+    {
+        foreach ($model->getRules() as $rule) {
+            if (!in_array($model->getType(), $usedModels)) {
+                continue;
+            }
+            $types = (array)$rule['type'];
+            foreach ($types as $ruleType) {
+                if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    $usedModels[] = $ruleType;
+                    foreach ($this->models as $m) {
+                        if ($m->getType() === $ruleType) {
+                            $this->getNestedModels($m, $usedModels);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
