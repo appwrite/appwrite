@@ -76,7 +76,7 @@ class ResourceToken extends Model
             $expiryDate = new \DateTime($expire);
 
             // set 1 min if expired, we check for expiry later on route hooks for validation!
-            $maxAge = min(360, $expiryDate->getTimestamp() - $now->getTimestamp());
+            $maxAge = min(60, $expiryDate->getTimestamp() - $now->getTimestamp());
         }
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 10);
