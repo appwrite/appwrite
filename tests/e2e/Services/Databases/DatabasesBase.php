@@ -1424,13 +1424,14 @@ trait DatabasesBase
 
 
     /**
-     * @depends testCreateAttributes
-     */
+ * @depends testCreateAttributes
+ */
     public function testGetIndexByKeyWithLengths(array $data): void
     {
         $databaseId = $data['databaseId'];
         $collectionId = $data['moviesId'];
 
+        // Test case for valid lengths
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1441,9 +1442,9 @@ trait DatabasesBase
             'attributes' => ['title','description'],
             'lengths' => [128,200]
         ]);
-
         $this->assertEquals(202, $create['headers']['status-code']);
 
+        // Fetch index and check correct lengths
         $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthTestIndex", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1451,7 +1452,66 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $index['headers']['status-code']);
         $this->assertEquals('lengthTestIndex', $index['body']['key']);
-        $this->assertEquals([128,200], $index['body']['lengths']);
+        $this->assertEquals([128, 200], $index['body']['lengths']);
+
+        // Test case for lengths array overriding
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthOverrideTestIndex',
+            'type' => 'key',
+            'attributes' => ['title', 'description'],
+            'lengths' => [null, 255]
+        ]);
+        $this->assertEquals(202, $create['headers']['status-code']);
+        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+        $this->assertEquals([null, 255], $index['body']['lengths']);
+
+        // Test case for count of lengths greater than attributes (should throw 400)
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthCountExceededIndex',
+            'type' => 'key',
+            'attributes' => ['title'],
+            'lengths' => [128, 128]
+        ]);
+        $this->assertEquals(400, $create['headers']['status-code']);
+
+        // Test case for lengths exceeding total of 768
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthTooLargeIndex',
+            'type' => 'key',
+            'attributes' => ['title','description','tagline','actors'],
+            'lengths' => [256,256,256,20]
+        ]);
+
+        $this->assertEquals(400, $create['headers']['status-code']);
+
+        // Test case for negative length values
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'negativeLengthIndex',
+            'type' => 'key',
+            'attributes' => ['title'],
+            'lengths' => [-1]
+        ]);
+        $this->assertEquals(400, $create['headers']['status-code']);
     }
     /**
         * @depends testCreateIndexes
