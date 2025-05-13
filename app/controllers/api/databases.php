@@ -2832,10 +2832,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        if (count($lengths) > count($attributes)) {
-            throw new Exception(Exception::INDEX_LENGTHS_INVALID);
-        }
-
         $count = $dbForProject->count('indexes', [
             Query::equal('collectionInternalId', [$collection->getInternalId()]),
             Query::equal('databaseInternalId', [$db->getInternalId()])
@@ -2882,11 +2878,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'size' => 0
         ];
 
-        $totalIndexLength = array_sum($lengths);
-        if ($totalIndexLength > 768) {
-            throw new Exception(Exception::INDEX_LIMIT_EXCEEDED, 'Index total length crossing 768');
-        }
-
         foreach ($attributes as $i => $attribute) {
             // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -2906,10 +2897,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             // ensure attribute is available
             if ($attributeStatus !== 'available') {
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
-            }
-
-            if ($lengths[$i] < 0) {
-                throw new Exception(Exception::INDEX_INVALID, 'Negative index provided for ' . $oldAttributes[$attributeIndex]['key']);
             }
 
             $lengths[$i] ??= null;
