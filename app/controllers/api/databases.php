@@ -2901,9 +2901,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             $lengths[$i] ??= null;
             if ($attributeArray === true) {
-                if ($lengths[$i] === null) {
-                    $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
-                }
+                $lengths[$i] ??= Database::ARRAY_INDEX_LENGTH;
                 $orders[$i] = null;
             }
         }
