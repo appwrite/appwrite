@@ -202,10 +202,8 @@ abstract class ScheduleBase extends Action
         Console::success("{$total} resources were loaded in " . $duration . " seconds");
     }
 
-    protected function recordEnqueueDelay(string $expectedExecutionSchedule): void
+    protected function recordEnqueueDelay(\DateTime $expectedExecutionSchedule): void
     {
-        $now = strtotime('now');
-        $scheduledAt = strtotime($expectedExecutionSchedule);
-        $this->enqueueDelayTelemetry->record($now - $scheduledAt, ['resourceType' => static::getSupportedResource()]);
+        $this->enqueueDelayTelemetry->record(time() - $expectedExecutionSchedule->getTimestamp(), ['resourceType' => static::getSupportedResource()]);
     }
 }
