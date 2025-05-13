@@ -91,13 +91,18 @@ abstract class ScheduleBase extends Action
         });
 
         while (true) {
-            $this->enqueueResources($pools, $dbForPlatform, $getProjectDB);
-            $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
-            sleep(static::ENQUEUE_TIMER);
+            try {
+                go(fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB));
+                $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
+                sleep(static::ENQUEUE_TIMER);
+            } catch (\Throwable $th) {
+                Console::error('Failed to enqueue resources: ' . $th->getMessage());
+            }
+
         }
     }
 
-    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, ?string &$lastSyncUpdate): void
+    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
