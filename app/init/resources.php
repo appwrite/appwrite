@@ -918,8 +918,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
         }
 
         $tokenId = $payload['tokenId'] ?? '';
-        $secret = $payload['secret'] ?? '';
-        if (empty($tokenId) || empty($secret)) {
+        if (empty($tokenId)) {
             return new Document([]);
         }
 
