@@ -46,7 +46,13 @@ class ScheduleFunctions extends ScheduleBase
         $delayedExecutions = []; // Group executions with same delay to share one coroutine
 
         foreach ($this->schedules as $key => $schedule) {
-            $cron = new CronExpression($schedule['schedule']);
+            try {
+                $cron = new CronExpression($schedule['schedule']);
+            } catch (\InvalidArgumentException) {
+                // ignore invalid cron expressions
+                continue;
+            }
+
             $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
