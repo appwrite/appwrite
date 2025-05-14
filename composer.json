@@ -59,7 +59,7 @@
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.6.*",
-        "utopia-php/messaging": "0.17.x",
+        "utopia-php/messaging": "0.17.*",
         "utopia-php/migration": "0.9.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.7.*",
