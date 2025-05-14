@@ -786,7 +786,7 @@ class Messaging extends Action
                     'useDLT' => $dsn->getParam('useDLT'),
                 ],
                 'inforu' => [
-                    'senderId' => $dsn->getParam('senderId', $from),
+                    'senderId' => $user,
                     'apiKey' => $password,
                 ],
                 default => null
