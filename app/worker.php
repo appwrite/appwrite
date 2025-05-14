@@ -363,6 +363,10 @@ Server::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
+Server::setResource('plan', function (array $plan = []) {
+    return [];
+});
+
 Server::setResource('certificates', function () {
     $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
     if (empty($email)) {
