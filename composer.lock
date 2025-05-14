@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a5c4c6b723423bc6cb3a7344ab071b43",
+    "content-hash": "2c14e20244a06f508dd67cda717aefeb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1109,16 +1109,16 @@
         },
         {
             "name": "open-telemetry/api",
-            "version": "1.2.3",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/api.git",
-                "reference": "199d7ddda88f5f5619fa73463f1a5a7149ccd1f1"
+                "reference": "4e3bb38e069876fb73c2ce85c89583bf2b28cd86"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/199d7ddda88f5f5619fa73463f1a5a7149ccd1f1",
-                "reference": "199d7ddda88f5f5619fa73463f1a5a7149ccd1f1",
+                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/4e3bb38e069876fb73c2ce85c89583bf2b28cd86",
+                "reference": "4e3bb38e069876fb73c2ce85c89583bf2b28cd86",
                 "shasum": ""
             },
             "require": {
@@ -1175,7 +1175,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-03-05T21:42:54+00:00"
+            "time": "2025-05-07T12:32:21+00:00"
         },
         {
             "name": "open-telemetry/context",
@@ -1238,16 +1238,16 @@
         },
         {
             "name": "open-telemetry/exporter-otlp",
-            "version": "1.2.1",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/exporter-otlp.git",
-                "reference": "b7580440b7481a98da97aceabeb46e1b276c8747"
+                "reference": "19adf03d2b0f91f9e9b1c7f93db6c755c737cf6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/b7580440b7481a98da97aceabeb46e1b276c8747",
-                "reference": "b7580440b7481a98da97aceabeb46e1b276c8747",
+                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/19adf03d2b0f91f9e9b1c7f93db6c755c737cf6c",
+                "reference": "19adf03d2b0f91f9e9b1c7f93db6c755c737cf6c",
                 "shasum": ""
             },
             "require": {
@@ -1298,7 +1298,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-03-06T23:21:56+00:00"
+            "time": "2025-05-12T00:36:35+00:00"
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
@@ -1365,16 +1365,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.3.0",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "05d9ceb6773b5bddcf485af6d4a6f543bbeb980b"
+                "reference": "939d3a28395c249a763676458140dad44b3a8011"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/05d9ceb6773b5bddcf485af6d4a6f543bbeb980b",
-                "reference": "05d9ceb6773b5bddcf485af6d4a6f543bbeb980b",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/939d3a28395c249a763676458140dad44b3a8011",
+                "reference": "939d3a28395c249a763676458140dad44b3a8011",
                 "shasum": ""
             },
             "require": {
@@ -1451,7 +1451,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-05-01T23:20:43+00:00"
+            "time": "2025-05-07T12:32:21+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -3499,16 +3499,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.68.1",
+            "version": "0.69.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "72b2e2c0b875028f7d9dd755f6d4524b693c6507"
+                "reference": "cc6538e05e25d930244ab938c966d32db0922e83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/72b2e2c0b875028f7d9dd755f6d4524b693c6507",
-                "reference": "72b2e2c0b875028f7d9dd755f6d4524b693c6507",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/cc6538e05e25d930244ab938c966d32db0922e83",
+                "reference": "cc6538e05e25d930244ab938c966d32db0922e83",
                 "shasum": ""
             },
             "require": {
@@ -3549,9 +3549,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.68.1"
+                "source": "https://github.com/utopia-php/database/tree/0.69.1"
             },
-            "time": "2025-05-09T10:08:53+00:00"
+            "time": "2025-05-13T12:00:31+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3902,16 +3902,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.16.0",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "5f3083697102b1821d6624938186761b1e09c54e"
+                "reference": "c51915d0e030db3a3add37f1561751d18b2d9a85"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/5f3083697102b1821d6624938186761b1e09c54e",
-                "reference": "5f3083697102b1821d6624938186761b1e09c54e",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/c51915d0e030db3a3add37f1561751d18b2d9a85",
+                "reference": "c51915d0e030db3a3add37f1561751d18b2d9a85",
                 "shasum": ""
             },
             "require": {
@@ -3947,9 +3947,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.16.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.17.0"
             },
-            "time": "2025-02-18T08:27:00+00:00"
+            "time": "2025-05-12T16:14:08+00:00"
         },
         {
             "name": "utopia-php/migration",

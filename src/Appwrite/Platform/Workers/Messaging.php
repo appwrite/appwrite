@@ -24,6 +24,7 @@ use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
+use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Telesign;
@@ -455,6 +456,10 @@ class Messaging extends Action
                 $credentials['messageId'] ?? '',
                 $credentials['useDLT'] ?? true
             ),
+            'inforu' => new Inforu(
+                $credentials['senderId'] ?? '',
+                $credentials['apiKey'] ?? '',
+            ),
             default => null
         };
     }
@@ -779,6 +784,10 @@ class Messaging extends Action
                     'apiKey' => $password,
                     'messageId' => $dsn->getParam('messageId'),
                     'useDLT' => $dsn->getParam('useDLT'),
+                ],
+                'inforu' => [
+                    'senderId' => $user,
+                    'apiKey' => $password,
                 ],
                 default => null
             },
