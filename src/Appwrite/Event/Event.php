@@ -286,13 +286,6 @@ class Event
         return $this;
     }
 
-    public function setParamSensitive(string $key): self
-    {
-        $this->sensitive[$key] = true;
-
-        return $this;
-    }
-
     /**
      * Get param of event.
      *
