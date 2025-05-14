@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -66,8 +65,6 @@ abstract class ScheduleBase extends Action
      */
     public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        Runtime::enableCoroutine();
-
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
