@@ -75,9 +75,9 @@ class ScheduleFunctions extends ScheduleBase
             $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
         }
 
-        foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
-                \Co::sleep($delay); // in seconds
+        foreach ($delayedExecutions as $delay => $schedules) {
+            \go(function () use ($delay, $schedules, $pools, $dbForPlatform) {
+                \sleep($delay); // in seconds
 
                 foreach ($schedules as $delayConfig) {
                     $scheduleKey = $delayConfig['key'];

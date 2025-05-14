@@ -61,7 +61,7 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
