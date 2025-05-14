@@ -16,6 +16,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Database\Validator\Queries\DocumentValidator;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -3586,6 +3587,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+        
+        $attributes = $collection->getAttribute('attributes', []);
+        $indexes = $collection->getAttribute('indexes', []);
+
+        $validator = new DocumentValidator(
+            $attributes,
+            $indexes,
+            APP_DATABASE_QUERY_MAX_VALUES
+        );
+
+        if (!$validator->isValid($queries)) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+        }
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -3767,6 +3781,22 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+
+        
+        $attributes = $collection->getAttribute('attributes', []);
+        $indexes = $collection->getAttribute('indexes', []);
+
+        $validator = new DocumentValidator(
+            $attributes,
+            $indexes,
+            APP_DATABASE_QUERY_MAX_VALUES
+        );
+
+        if (!$validator->isValid($queries)) {
+            var_dump("INvalid");
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+        }
+
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
