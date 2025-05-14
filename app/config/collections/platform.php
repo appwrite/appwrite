@@ -1420,7 +1420,7 @@ return [
             [
                 '$id' => ID::custom('_key_piid_riid_rt'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId', 'resourceInternalId', 'resourceType'],
+                'attributes' => ['projectInternalId', 'deploymentInternalId', 'deploymentResourceType'],
                 'lengths' => [],
                 'orders' => [],
             ],
