@@ -46,7 +46,13 @@ class ScheduleFunctions extends ScheduleBase
         $delayedExecutions = []; // Group executions with same delay to share one coroutine
 
         foreach ($this->schedules as $key => $schedule) {
-            $cron = new CronExpression($schedule['schedule']);
+            try {
+                $cron = new CronExpression($schedule['schedule']);
+            } catch (\InvalidArgumentException) {
+                // ignore invalid cron expressions
+                continue;
+            }
+
             $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
@@ -66,17 +72,18 @@ class ScheduleFunctions extends ScheduleBase
                 $delayedExecutions[$delay] = [];
             }
 
-            $delayedExecutions[$delay][] = $key;
+            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
         }
 
-        foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
+        foreach ($delayedExecutions as $delay => $schedules) {
+            \go(function () use ($delay, $schedules, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
                 $queue = $pools->get('publisher')->pop();
                 $connection = $queue->getResource();
 
-                foreach ($scheduleKeys as $scheduleKey) {
+                foreach ($schedules as $delayConfig) {
+                    $scheduleKey = $delayConfig['key'];
                     // Ensure schedule was not deleted
                     if (!\array_key_exists($scheduleKey, $this->schedules)) {
                         return;
@@ -95,6 +102,8 @@ class ScheduleFunctions extends ScheduleBase
                         ->setPath('/')
                         ->setProject($schedule['project'])
                         ->trigger();
+
+                    $this->recordEnqueueDelay($delayConfig['nextDate']);
                 }
 
                 $queue->reclaim();

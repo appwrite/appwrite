@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "194987f84ab514a271856a347ba0e636",
+    "content-hash": "1bedbbb171d688660adb388298261f4c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3499,16 +3499,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.68.1",
+            "version": "0.69.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "72b2e2c0b875028f7d9dd755f6d4524b693c6507"
+                "reference": "cc6538e05e25d930244ab938c966d32db0922e83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/72b2e2c0b875028f7d9dd755f6d4524b693c6507",
-                "reference": "72b2e2c0b875028f7d9dd755f6d4524b693c6507",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/cc6538e05e25d930244ab938c966d32db0922e83",
+                "reference": "cc6538e05e25d930244ab938c966d32db0922e83",
                 "shasum": ""
             },
             "require": {
@@ -3549,9 +3549,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.68.1"
+                "source": "https://github.com/utopia-php/database/tree/0.69.1"
             },
-            "time": "2025-05-09T10:08:53+00:00"
+            "time": "2025-05-13T12:00:31+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3902,16 +3902,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "dev-feat-inforu-adapter",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "3c5a61c5a91a991efc4b4e4bda85ec06a567221e"
+                "reference": "c51915d0e030db3a3add37f1561751d18b2d9a85"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/3c5a61c5a91a991efc4b4e4bda85ec06a567221e",
-                "reference": "3c5a61c5a91a991efc4b4e4bda85ec06a567221e",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/c51915d0e030db3a3add37f1561751d18b2d9a85",
+                "reference": "c51915d0e030db3a3add37f1561751d18b2d9a85",
                 "shasum": ""
             },
             "require": {
@@ -3947,9 +3947,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/feat-inforu-adapter"
+                "source": "https://github.com/utopia-php/messaging/tree/0.17.0"
             },
-            "time": "2025-05-12T16:03:53+00:00"
+            "time": "2025-05-12T16:14:08+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -8136,9 +8136,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/messaging": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
