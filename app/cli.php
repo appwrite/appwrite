@@ -10,6 +10,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Executor\Executor;
+use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -29,7 +30,7 @@ use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Swoole\Timer;
+
 use function Swoole\Coroutine\run;
 
 // Overwriting runtimes to be architecture agnostic for CLI
