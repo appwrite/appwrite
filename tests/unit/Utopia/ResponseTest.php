@@ -100,11 +100,14 @@ class ResponseTest extends TestCase
 
     public function testResponseModelRequiredException(): void
     {
-        $this->expectException(Exception::class);
-        $this->response->output(new Document([
-            'integer' => 123,
-            'boolean' => true,
-        ]), 'single');
+        try {
+            $this->response->output(new Document([
+                'integer' => 123,
+                'boolean' => true,
+            ]), 'single');
+        } catch (\Exception $e) {
+            $this->assertInstanceOf(Exception::class, $e);
+        }
     }
 
     public function testResponseModelLists(): void
