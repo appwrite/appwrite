@@ -160,7 +160,6 @@ class Create extends Base
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'manual',
-            'search' => implode(' ', [$deploymentId]),
             'activate' => $activate,
         ]));
 
@@ -192,7 +191,6 @@ class Create extends Base
                 'deploymentResourceInternalId' => $site->getInternalId(),
                 'status' => 'verified',
                 'certificateId' => '',
-                'search' => implode(' ', [$ruleId, $domain]),
                 'owner' => 'Appwrite',
                 'region' => $project->getAttribute('region')
             ]))

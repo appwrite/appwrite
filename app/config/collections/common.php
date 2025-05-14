@@ -2359,6 +2359,20 @@ return [
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_expired'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['expired'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_session_internal_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['sessionInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 

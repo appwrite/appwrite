@@ -34,9 +34,9 @@ class Specification extends Validator
         $allowedSpecifications = [];
 
         foreach ($this->specifications as $size => $values) {
-            if ($values['cpus'] <= $this->maxCpus && $values['memory'] <= $this->maxMemory) {
-                if (!empty($this->plan) && array_key_exists('specifications', $this->plan)) {
-                    if (!\in_array($size, $this->plan['specifications'])) {
+            if ((empty($this->maxCpus) || $values['cpus'] <= $this->maxCpus) && (empty($this->maxMemory) || $values['memory'] <= $this->maxMemory)) {
+                if (!empty($this->plan) && array_key_exists('runtimeSpecifications', $this->plan)) {
+                    if (!\in_array($size, $this->plan['runtimeSpecifications'])) {
                         continue;
                     }
                 }
