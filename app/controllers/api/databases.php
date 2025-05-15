@@ -379,9 +379,8 @@ function updateAttribute(
         }
 
         if ($primaryDocumentOptions['twoWay']) {
-            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryDocumentOptions['relatedCollection']);
-
-            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
+            $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $primaryDocumentOptions['relatedCollection']);
+            $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
 
             if (!empty($newKey) && $newKey !== $key) {
                 $options['twoWayKey'] = $newKey;
@@ -446,7 +445,7 @@ function updateAttribute(
             }
         }
     } else {
-        $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+        $attribute = $dbForProject->updateDocument('attributes', $database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
     }
 
     $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
@@ -501,8 +500,7 @@ App::post('/v1/databases')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $databaseId = $databaseId === 'unique()'
             ? ID::unique()
@@ -834,8 +832,7 @@ App::delete('/v1/databases/:databaseId')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
@@ -974,8 +971,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject) {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
@@ -1059,8 +1055,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
@@ -1290,8 +1285,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
@@ -3074,7 +3068,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
-    ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/indexes/:key')
     ->desc('Get index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -3122,7 +3116,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
 
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
-    ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/indexes/:key')
     ->desc('Delete index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -3195,7 +3189,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
-    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/documents')
     ->desc('Create document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
@@ -3572,7 +3566,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
-    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/documents')
     ->desc('List documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -3716,6 +3710,33 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), \max(1, $operations));
 
+        $select = \array_reduce($queries, function ($result, $query) {
+            return $result || ($query->getMethod() === Query::TYPE_SELECT);
+        }, false);
+
+        // Check if the SELECT query includes $databaseId and $collectionId
+        $hasDatabaseId = false;
+        $hasCollectionId = false;
+        if ($select) {
+            $hasDatabaseId = \array_reduce($queries, function ($result, $query) {
+                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$databaseId', $query->getValues()));
+            }, false);
+            $hasCollectionId = \array_reduce($queries, function ($result, $query) {
+                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$collectionId', $query->getValues()));
+            }, false);
+        }
+
+        if ($select) {
+            foreach ($documents as $document) {
+                if (!$hasDatabaseId) {
+                    $document->removeAttribute('$databaseId');
+                }
+                if (!$hasCollectionId) {
+                    $document->removeAttribute('$collectionId');
+                }
+            }
+        }
+
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,
@@ -3723,7 +3744,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -3830,7 +3851,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/logs')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId/logs', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId/logs')
     ->desc('List document logs')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -4124,7 +4145,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             );
         } catch (ConflictException) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (RelationshipException $e) {
+        } catch (DuplicateException) {
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+        }  catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
@@ -4387,7 +4410,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
@@ -4799,7 +4822,7 @@ App::get('/v1/databases/:databaseId/usage')
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
-    ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
+    ->alias('/v1/database/:collectionId/usage')
     ->desc('Get collection usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
