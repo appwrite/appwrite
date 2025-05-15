@@ -38,7 +38,7 @@ class Get extends Action
             description: <<<EOT
             Get a token by its unique ID.
             EOT,
-            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            auth: [AuthType::ADMIN],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
