@@ -81,7 +81,6 @@ class Create extends Action
             'name' => $name,
             'expire' => $expire,
             'sdks' => [],
-            'search' => implode('', [$name, $project->getId(), $devKeyId]),
             'accessedAt' => null,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);

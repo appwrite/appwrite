@@ -17,6 +17,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\Swoole\Request;
 use Utopia\System\System;
 
 class Create extends Action
@@ -56,6 +57,7 @@ class Create extends Action
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
@@ -69,6 +71,7 @@ class Create extends Action
     public function action(
         string $siteId,
         string $deploymentId,
+        Request $request,
         Response $response,
         Document $project,
         Database $dbForProject,
@@ -117,16 +120,16 @@ class Create extends Action
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
-            'search' => implode(' ', [$deploymentId]),
             'screenshotLight' => '',
             'screenshotDark' => '',
-            'buildStartAt' => null,
-            'buildEndAt' => null,
+            'buildStartedAt' => null,
+            'buildEndedAt' => null,
             'buildDuration' => 0,
             'buildSize' => 0,
             'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
+            'type' => $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual'
         ]));
 
         $site = $site
@@ -158,7 +161,6 @@ class Create extends Action
                 'deploymentResourceInternalId' => $site->getInternalId(),
                 'status' => 'verified',
                 'certificateId' => '',
-                'search' => implode(' ', [$ruleId, $domain]),
                 'owner' => 'Appwrite',
                 'region' => $project->getAttribute('region')
             ]))

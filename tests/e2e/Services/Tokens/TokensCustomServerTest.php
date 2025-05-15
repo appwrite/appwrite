@@ -11,6 +11,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class TokensCustomServerTest extends Scope
 {
@@ -60,19 +61,19 @@ class TokensCustomServerTest extends Scope
 
         $fileId = $file['body']['$id'];
 
-        $res = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+        $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
 
-        $this->assertEquals(201, $res['headers']['status-code']);
-        $this->assertEquals('files', $res['body']['resourceType']);
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertEquals('files', $token['body']['resourceType']);
 
-        $data = [];
-        $data['fileId'] = $fileId;
-        $data['bucketId'] = $bucketId;
-        $data['tokenId'] = $res['body']['$id'];
-        return $data;
+        return [
+            'fileId' => $fileId,
+            'bucketId' => $bucketId,
+            'tokenId' => $token['body']['$id'],
+        ];
     }
 
     /**
@@ -82,15 +83,28 @@ class TokensCustomServerTest extends Scope
     {
         $tokenId = $data['tokenId'];
 
-        $expiry = DateTime::now();
-        $res = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
+        // Finite expiry
+        $expiry = DateTime::addSeconds(new \DateTime(), 3600);
+        $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'expire' => $expiry,
         ]);
 
-        $this->assertEquals($expiry, $res['body']['expire']);
+        $dateValidator = new DatetimeValidator();
+        $this->assertTrue($dateValidator->isValid($token['body']['expire']));
+
+        // Infinite expiry
+        $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'expire' => null,
+        ]);
+
+        $this->assertEmpty($token['body']['expire']);
+
         return $data;
     }
 

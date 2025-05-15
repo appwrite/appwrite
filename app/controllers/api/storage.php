@@ -401,15 +401,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
         group: 'files',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
-        type: MethodType::UPLOAD,
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        requestType: 'multipart/form-data',
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_FILE,
             )
-        ]
+        ],
+        type: MethodType::UPLOAD,
+        requestType: ContentType::MULTIPART
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -1133,8 +1133,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
+    ->inject('resourceToken')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode, Device $deviceForFiles) {
+    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1145,10 +1146,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getInternalId();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
+        if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -1156,6 +1158,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if ($file->isEmpty()) {
@@ -1282,8 +1288,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('request')
     ->inject('dbForProject')
     ->inject('mode')
+    ->inject('resourceToken')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, string $mode, Device $deviceForFiles) {
+    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1293,10 +1300,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getInternalId();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
+        if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -1304,6 +1312,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if ($file->isEmpty()) {

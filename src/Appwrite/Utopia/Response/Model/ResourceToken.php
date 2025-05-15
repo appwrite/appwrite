@@ -22,29 +22,36 @@ class ResourceToken extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('$permissions', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'default' => '',
+                'example' => ['read("any")'],
+                'array' => true,
+            ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Resource ID.',
                 'default' => '',
                 'example' => '5e5ea5c168bb8:5e5ea5c168bb8',
             ])
-            ->addRule('resourceInternalId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'File ID.',
-                'default' => '',
-                'example' => '1:1',
-            ])
             ->addRule('resourceType', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Resource type.',
                 'default' => '',
-                'example' => 'file',
+                'example' => TOKENS_RESOURCE_TYPE_FILES,
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Token expiration date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('accessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_RESOURCE_TOKEN_ACCESS / 60 / 60 . ' hours.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE
             ])
         ;
     }
