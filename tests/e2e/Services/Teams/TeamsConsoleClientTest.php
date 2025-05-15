@@ -86,7 +86,7 @@ class TeamsConsoleClientTest extends Scope
         $session = $data['session'] ?? '';
 
         /**
-         * Test for SUCCESS
+         * Test for FAILURE
          */
         $roles = ['developer'];
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid, array_merge([
@@ -97,12 +97,8 @@ class TeamsConsoleClientTest extends Scope
             'roles' => $roles
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
-        $this->assertNotEmpty($response['body']['teamId']);
-        $this->assertCount(count($roles), $response['body']['roles']);
-        $this->assertEquals($roles[0], $response['body']['roles'][0]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
 
         /**
          * Test for unknown team
