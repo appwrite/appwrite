@@ -134,7 +134,7 @@ return [
             [
                 'key' => 'react-native',
                 'name' => 'React Native',
-                'version' => '0.7.3',
+                'version' => '0.7.4',
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,

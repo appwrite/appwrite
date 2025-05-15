@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -66,8 +65,6 @@ abstract class ScheduleBase extends Action
      */
     public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        Runtime::enableCoroutine();
-
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
@@ -91,13 +88,18 @@ abstract class ScheduleBase extends Action
         });
 
         while (true) {
-            $this->enqueueResources($pools, $dbForPlatform, $getProjectDB);
-            $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
-            sleep(static::ENQUEUE_TIMER);
+            try {
+                go(fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB));
+                $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
+                sleep(static::ENQUEUE_TIMER);
+            } catch (\Throwable $th) {
+                Console::error('Failed to enqueue resources: ' . $th->getMessage());
+            }
+
         }
     }
 
-    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, ?string &$lastSyncUpdate): void
+    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
@@ -202,10 +204,8 @@ abstract class ScheduleBase extends Action
         Console::success("{$total} resources were loaded in " . $duration . " seconds");
     }
 
-    protected function recordEnqueueDelay(string $expectedExecutionSchedule): void
+    protected function recordEnqueueDelay(\DateTime $expectedExecutionSchedule): void
     {
-        $now = strtotime('now');
-        $scheduledAt = strtotime($expectedExecutionSchedule);
-        $this->enqueueDelayTelemetry->record($now - $scheduledAt, ['resourceType' => static::getSupportedResource()]);
+        $this->enqueueDelayTelemetry->record(time() - $expectedExecutionSchedule->getTimestamp(), ['resourceType' => static::getSupportedResource()]);
     }
 }
