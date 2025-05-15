@@ -7,9 +7,10 @@ mutation {
     ) {
         _id
         _createdAt
+        _permissions
         resourceId
-        resourceInternalId
         resourceType
         expire
+        accessedAt
     }
 }
