@@ -310,6 +310,22 @@ trait UsersBase
         $this->assertNotEmpty($session['secret']);
         $this->assertNotEmpty($session['expire']);
         $this->assertEquals('server', $session['provider']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
 
@@ -1498,6 +1514,7 @@ trait UsersBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
+        $this->assertEquals(false, $response['body']['expired']);
         return $response['body'];
     }
 
@@ -1510,6 +1527,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, \count($response['body']['targets']));
     }

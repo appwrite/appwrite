@@ -1,5 +1,0 @@
-query {
-    accountGetMfaRecoveryCodes {
-        recoveryCodes
-    }
-}

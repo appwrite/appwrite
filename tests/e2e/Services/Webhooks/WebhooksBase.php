@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use Appwrite\Tests\Async;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
@@ -12,29 +13,20 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait WebhooksBase
 {
-    protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
+    use Async;
+
+    protected function awaitDeploymentIsBuilt($functionId, $deploymentId): void
     {
-        while (true) {
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
-            if (
-                $deployment['headers']['status-code'] >= 400
-                || \in_array($deployment['body']['status'], ['ready', 'failed'])
-            ) {
-                break;
-            }
-
-            \sleep(1);
-        }
-
-        if ($checkForSuccess) {
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        }
+        });
     }
 
     public static function getWebhookSignature(array $webhook, string $signatureKey): string
@@ -901,6 +893,17 @@ trait WebhooksBase
         $teamId = $data['teamId'] ?? '';
         $email = uniqid() . 'friend@localhost.test';
 
+        // Create user to ensure team event is triggered after user event
+        $user = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Friend User',
+        ]);
+
         /**
          * Test for SUCCESS
          */
@@ -909,7 +912,6 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
-            'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);

@@ -6,7 +6,6 @@ use Appwrite\Functions\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
-use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -23,7 +22,7 @@ class UsageTest extends Scope
     use SideServer;
     use FunctionsBase;
 
-    private const WAIT = 35;
+    private const WAIT = 5;
     private const CREATE = 20;
 
     protected string $projectId;
@@ -50,6 +49,13 @@ class UsageTest extends Scope
         foreach ($metrics as $metric) {
             $this->assertIsObject(\DateTime::createFromFormat("Y-m-d\TH:i:s.vP", $metric['date']));
         }
+    }
+
+    public static function getYesterday(): string
+    {
+        $date = new DateTime();
+        $date->modify('-1 day');
+        return $date->format(self::$formatTz);
     }
 
     public static function getToday(): string
@@ -127,8 +133,6 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
-        sleep(self::WAIT);
-
         $requestsTotal = $data['requestsTotal'];
 
         $response = $this->client->call(
@@ -143,7 +147,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(20, count($response['body']));
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
         $this->validateDates($response['body']['network']);
         $this->validateDates($response['body']['requests']);
         $this->validateDates($response['body']['users']);
@@ -302,7 +306,7 @@ class UsageTest extends Scope
     /**
      * @depends testPrepareStorageStats
      */
-    #[Retry(count: 1)]
+    #[Retry(count: 10)]
     public function testStorageStats(array $data): array
     {
         $bucketId      = $data['bucketId'];
@@ -310,8 +314,6 @@ class UsageTest extends Scope
         $requestsTotal = $data['requestsTotal'];
         $storageTotal  = $data['storageTotal'];
         $filesTotal    = $data['filesTotal'];
-
-        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -324,7 +326,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(20, count($response['body']));
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
@@ -467,9 +469,9 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
-        $requestsTotal += 1;
-
         sleep(self::WAIT);
+
+        $requestsTotal += 1;
 
         for ($i = 0; $i < self::CREATE; $i++) {
             $name = uniqid() . ' collection';
@@ -545,7 +547,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(20, count($response['body']));
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals(1, count($response['body']['network']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
@@ -590,7 +592,6 @@ class UsageTest extends Scope
         return $data;
     }
 
-
     /** @depends testDatabaseStats */
     public function testPrepareFunctionsStats(array $data): array
     {
@@ -629,9 +630,6 @@ class UsageTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $code = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
-        $this->packageCode('php');
-
         $response = $this->client->call(
             Client::METHOD_POST,
             '/functions/' . $functionId . '/deployments',
@@ -641,8 +639,8 @@ class UsageTest extends Scope
             ], $this->getHeaders()),
             [
                 'entrypoint' => 'index.php',
-                'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
-                'activate' => true
+                'code' => $this->packageFunction('php'),
+                'activate' => true,
             ]
         );
 
@@ -680,7 +678,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 
@@ -704,7 +702,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 
@@ -768,8 +766,6 @@ class UsageTest extends Scope
         $functionId = $data['functionId'];
         $executionTime = $data['executionTime'];
         $executions = $data['executions'];
-
-        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -894,52 +890,40 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        sleep(self::WAIT + 20);
         $tries = 0;
 
-        while (true) {
-            try {
-                // Compare new values with old values
-                $response = $this->client->call(
-                    Client::METHOD_GET,
-                    '/functions/' . $functionId . '/usage?range=30d',
-                    $this->getConsoleHeaders()
-                );
+        $this->assertEventually(function () use ($functionId, $functionsMetrics, $projectMetrics) {
+            // Compare new values with old values
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/functions/' . $functionId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEquals(19, count($response['body']));
-                $this->assertEquals('30d', $response['body']['range']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(19, count($response['body']));
+            $this->assertEquals('30d', $response['body']['range']);
 
-                // Check if the new values are greater than the old values
-                $this->assertEquals($functionsMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
-                $this->assertGreaterThan($functionsMetrics['executionsTimeTotal'], $response['body']['executionsTimeTotal']);
-                $this->assertGreaterThan($functionsMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+            // Check if the new values are greater than the old values
+            $this->assertEquals($functionsMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+            $this->assertGreaterThan($functionsMetrics['executionsTimeTotal'], $response['body']['executionsTimeTotal']);
+            $this->assertGreaterThan($functionsMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
 
-                $response = $this->client->call(
-                    Client::METHOD_GET,
-                    '/project/usage',
-                    $this->getConsoleHeaders(),
-                    [
-                        'period' => '1h',
-                        'startDate' => self::getToday(),
-                        'endDate' => self::getTomorrow(),
-                    ]
-                );
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1h',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
 
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
-                $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
-
-                break;
-            } catch (ExpectationFailedException $th) {
-                if ($tries >= 5) {
-                    throw $th;
-                } else {
-                    $tries++;
-                    sleep(5);
-                }
-            }
-        }
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+            $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+        });
     }
 
     public function tearDown(): void

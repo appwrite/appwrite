@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
-use CURLFile;
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -15,6 +15,7 @@ class FunctionsClientTest extends Scope
     use ProjectCustom;
     use SideClient;
     use Base;
+    use Async;
 
     public function testCreateFunction(): array
     {
@@ -83,10 +84,6 @@ class FunctionsClientTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
 
-        $folder = 'php';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        $this->packageCode($folder);
-
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
@@ -99,7 +96,7 @@ class FunctionsClientTest extends Scope
             'map' => \json_encode([
                 'code' => ["variables.code"]
             ]),
-            'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
+            'code' => $this->packageFunction('php')
         ];
 
         $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -124,7 +121,7 @@ class FunctionsClientTest extends Scope
             ]
         ];
 
-        while (true) {
+        $this->assertEventually(function () use ($projectId, $gqlPayload, &$deployment) {
             $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -135,18 +132,8 @@ class FunctionsClientTest extends Scope
             $this->assertArrayNotHasKey('errors', $deployment['body']);
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
-
-            if (
-                $deployment['status'] === 'ready'
-                || $deployment['status'] === 'failed'
-            ) {
-                break;
-            }
-
-            \sleep(1);
-        }
-
-        $this->assertEquals('ready', $deployment['status']);
+            $this->assertEquals('ready', $deployment['status']);
+        });
 
         return $deployment;
     }

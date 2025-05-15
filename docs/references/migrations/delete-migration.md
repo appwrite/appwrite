@@ -1,0 +1,1 @@
+Delete a migration by its unique ID. This endpoint allows you to remove a migration from your project's migration history. 
