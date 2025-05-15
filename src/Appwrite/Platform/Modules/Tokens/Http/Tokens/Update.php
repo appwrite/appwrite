@@ -47,7 +47,7 @@ class Update extends Action
             description: <<<EOT
             Update a token by its unique ID. Use this endpoint to update a token's expiry date.
             EOT,
-            auth: [AuthType::ADMIN],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
