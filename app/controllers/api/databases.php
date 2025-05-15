@@ -538,16 +538,12 @@ App::post('/v1/databases')
 
         try {
             $dbForProject->createCollection('database_' . $database->getInternalId(), $attributes, $indexes);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         } catch (IndexException) {
             throw new Exception(Exception::INDEX_INVALID);
         } catch (LimitException) {
             throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED);
-        } catch (TimeoutException) {
-            throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
         $queueForEvents->setParam('databaseId', $database->getId());
