@@ -7,6 +7,7 @@ const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_EMAIL_LOGO_URL = 'https://cloud.appwrite.io/images/mails/logo.png';
+const APP_EMAIL_ACCENT_COLOR = '#fd366e';
 const APP_EMAIL_TERMS_URL = 'https://appwrite.io/terms';
 const APP_EMAIL_PRIVACY_URL = 'https://appwrite.io/privacy';
 const APP_USERAGENT = APP_NAME . '-Server v%s. Please report abuse at %s';

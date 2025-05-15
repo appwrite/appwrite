@@ -79,7 +79,7 @@
         <style>
             a.button {
                 display: inline-block;
-                background: #fd366e;
+                background: {{accentColor}};
                 color: #ffffff;
                 border-radius: 8px;
                 height: 48px;
@@ -88,7 +88,7 @@
                 cursor: pointer;
                 text-align: center;
                 text-decoration: none;
-                border-color: #fd366e;
+                border-color: {{accentColor}};
                 border-style: solid;
                 border-width: 1px;
                 margin-right: 24px;
