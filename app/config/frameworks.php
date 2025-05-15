@@ -253,8 +253,8 @@ return [
         'adapters' => [
             'static' => [
                 'key' => 'static',
-                'buildCommand' => 'flutter build web',
-                'installCommand' => '',
+                'buildCommand' => 'flutter build web --release -t lib/main.dart',
+                'installCommand' => 'flutter pub get',
                 'outputDirectory' => './build/web',
                 'startCommand' => 'bash helpers/server.sh',
             ],
