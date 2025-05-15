@@ -3223,12 +3223,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -3356,12 +3356,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -3910,12 +3910,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -7644,26 +7644,6 @@
                                 }
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
-                        },
-                        {
-                            "name": "createDocuments",
-                            "parameters": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/definitions\/documentList"
-                                }
-                            ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -8459,6 +8439,15 @@
                                     "x-example": null,
                                     "items": {
                                         "type": "string"
+                                    }
+                                },
+                                "lengths": {
+                                    "type": "array",
+                                    "description": "Length of index. Maximum of 100",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "integer"
                                     }
                                 }
                             },
@@ -17579,6 +17568,7 @@
                                         "remix",
                                         "lynx",
                                         "flutter",
+                                        "react-native",
                                         "vite",
                                         "other"
                                     ],
@@ -18007,6 +17997,7 @@
                                         "remix",
                                         "lynx",
                                         "flutter",
+                                        "react-native",
                                         "vite",
                                         "other"
                                     ],
@@ -20730,12 +20721,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Preview image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Preview image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     },
                     {
@@ -27240,6 +27231,15 @@
                     },
                     "x-example": []
                 },
+                "lengths": {
+                    "type": "array",
+                    "description": "Index attributes length.",
+                    "items": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "x-example": []
+                },
                 "orders": {
                     "type": "array",
                     "description": "Index orders.",
@@ -27266,6 +27266,7 @@
                 "status",
                 "error",
                 "attributes",
+                "lengths",
                 "$createdAt",
                 "$updatedAt"
             ]
