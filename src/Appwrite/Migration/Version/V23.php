@@ -404,89 +404,38 @@ class V23 extends Migration
                 17. Convert build's "path" to "buildPath"
                 18. Convert build's "logs" to "buildLogs"
                 19. Fill "totalSize" with "buildSize" plus "sourceSize"
-                --- Support for functions dual writing, if function's deploymentId is current deployment
-                1. Fill function's "deploymentCreatedAt" with deployment's "$createdAt"
-                --- Support for functions dual writing, if this is most recent deployment
-                2. Fill function's "latestDeploymentId" with deployment's "$id"
-                3. Fill function's "latestDeploymentInternalId" with deployment's "$internalId"
-                4. Fill function's "latestDeploymentCreatedAt" with deployment's "$createdAt"
-                5. Fill function's "latestDeploymentStatus" with deployment's "$status"
                 */
 
                 $document
-                    ->setAttribute("buildCommands", $document->getAttribute("commands"))
-                    ->setAttribute("sourcePath", $document->getAttribute("path"))
-                    ->setAttribute("sourceSize", $document->getAttribute("size"))
-                    ->setAttribute("sourceMetadata", $document->getAttribute("metadata"))
-                    ->setAttribute("sourceChunksTotal", $document->getAttribute("chunksTotal"))
-                    ->setAttribute("sourceChunksUploaded", $document->getAttribute("chunksUploaded"))
-                ;
+                    ->setAttribute('buildCommands', $document->getAttribute('commands'))
+                    ->setAttribute('sourcePath', $document->getAttribute('path'))
+                    ->setAttribute('sourceSize', $document->getAttribute('size'))
+                    ->setAttribute('sourceMetadata', $document->getAttribute('metadata'))
+                    ->setAttribute('sourceChunksTotal', $document->getAttribute('chunksTotal'))
+                    ->setAttribute('sourceChunksUploaded', $document->getAttribute('chunksUploaded'));
 
                 $build = new Document();
-
                 if (!empty($document->getAttribute('buildId'))) {
-                    $build = Authorization::skip(fn () => $this->projectDB->getDocument('builds', $document->getAttribute('buildId')));
+                    $build = $this->dbForProject->getDocument('builds', $document->getAttribute('buildId'));
                 }
 
                 $document
-                    ->setAttribute("buildStartedAt", $build->getAttribute("startTime", null))
-                    ->setAttribute("buildEndedAt", $build->getAttribute("endTime", null))
-                    ->setAttribute("buildDuration", $build->getAttribute("duration", 0))
-                    ->setAttribute("buildSize", $build->getAttribute("size", 0))
-                    ->setAttribute("status", $build->getAttribute("status", null))
-                    ->setAttribute("buildPath", $build->getAttribute("path", ""))
-                    ->setAttribute("buildLogs", $build->getAttribute("logs", ""))
-                ;
+                    ->setAttribute('buildStartedAt', $build->getAttribute('startTime'))
+                    ->setAttribute('buildEndedAt', $build->getAttribute('endTime'))
+                    ->setAttribute('buildDuration', $build->getAttribute('duration', 0))
+                    ->setAttribute('buildSize', $build->getAttribute('size', 0))
+                    ->setAttribute('status', $build->getAttribute('status'))
+                    ->setAttribute('buildPath', $build->getAttribute('path', ''))
+                    ->setAttribute('buildLogs', $build->getAttribute('logs', ''));
 
-                $totalSize = $document->getAttribute('buildSize', 0) + $document->getAttribute('sourceSize', 0);
-                $document->setAttribute("totalSize", $totalSize);
+                $totalSize = $document->getAttribute('buildSize', 0)
+                    + $document->getAttribute('sourceSize', 0);
 
-                $function = Authorization::skip(fn () => $this->projectDB->getDocument('functions', $document->getAttribute('resourceId')));
-                if (!$function->isEmpty()) {
-                    $activeDeploymentId = $function->getAttribute('deployment', $function->getAttribute('deploymentId', ''));
-                    if ($activeDeploymentId === $document->getId()) {
-                        $function->setAttribute('deploymentCreatedAt', $document->getCreatedAt());
-
-                        $function = Authorization::skip(fn () => $this->projectDB->updateDocument('functions', $function->getId(), $function));
-                    } else {
-                        $latestDeployments = Authorization::skip(fn () => $this->projectDB->find('deployments', [
-                            Query::orderDesc(),
-                            Query::limit(1),
-                            Query::equal('resourceType', ['functions']),
-                            Query::equal('resourceId', [$function->getId()]),
-                        ]));
-                        $latestDeployment = $latestDeployments[0] ? $latestDeployments[0] : new Document();
-
-                        if (!$latestDeployment->isEmpty()) {
-                            if ($latestDeployment->getId() === $document->getId()) {
-                                $function
-                                    ->setAttribute("latestDeploymentId", $document->getId())
-                                    ->setAttribute("latestDeploymentInternalId", $document->getInternalId())
-                                    ->setAttribute("latestDeploymentCreatedAt", $document->getCreatedAt())
-                                    ->setAttribute("latestDeploymentStatus", $document->getAttribute('status'))
-                                ;
-
-                                $function = Authorization::skip(fn () => $this->projectDB->updateDocument('functions', $function->getId(), $function));
-                            }
-                        }
-                    }
-                }
+                $document->setAttribute('totalSize', $totalSize);
                 break;
-            case 'builds':
-                /**
-                    1. Trigger deployments document update
-                 */
-                if (!empty($document->getAttribute('deploymentId'))) {
-                    $deployment = Authorization::skip(fn () => $this->projectDB->getDocument('deployments', $document->getAttribute('deploymentId')));
-                    if (!$deployment->isEmpty()) {
-                        $deployment = $this->fixDocument($deployment);
-
-                        Authorization::skip(fn () => $this->projectDB->updateDocument('deployments', $deployment->getId(), $deployment));
-                    }
-                }
-                break;
+            case 'migrations':
                 /*
-                    1. Fill "options" with "[]"
+                1. Fill "options" with "[]"
                 */
                 $document->setAttribute('options', []);
                 break;
