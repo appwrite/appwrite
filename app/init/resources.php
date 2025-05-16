@@ -507,21 +507,21 @@ App::setResource('timelimit', function (\Redis $redis) {
     };
 }, ['redis']);
 
-App::setResource('deviceForLocal', function (Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, new Local());
-}, ['telemetry']);
+App::setResource('deviceForLocal', function () {
+    return new Local();
+});
 
-App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+App::setResource('deviceForFiles', function ($project) {
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
 
-App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+App::setResource('deviceForFunctions', function ($project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
 
-App::setResource('deviceForBuilds', function ($project, Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+App::setResource('deviceForBuilds', function ($project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
 
 function getDevice(string $root, string $connection = ''): Device
 {
