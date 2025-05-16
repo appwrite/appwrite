@@ -804,6 +804,97 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    public function testListUserMemberships(array $data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        // create a new team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'unique()',
+            'name' => 'Test Team',
+        ]);
+
+        // create a new membership
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $data['userId'],
+            'roles' => ['new-role'],
+        ]);
+
+        // list the memberships
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['memberships'][0]['$id'], $membership['body']['$id']);
+        $this->assertEquals($response['body']['memberships'][0]['roles'], ['new-role']);
+        $this->assertEquals($response['body']['total'], 1);
+
+        // create another membership with a new role
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'unique()',
+            'name' => 'Test Team 2',
+        ]);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $data['userId'],
+            'roles' => ['new-role-2'],
+        ]);
+
+        // list out memberships and query by role
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('roles', ['new-role-2'])->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['memberships'][0]['$id'], $membership['body']['$id']);
+        $this->assertEquals($response['body']['memberships'][0]['roles'], ['new-role-2']);
+        $this->assertEquals($response['body']['total'], 1);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // query using equal on array field
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('roles', ['new-role-2'])->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['body']['code'], 400);
+        $this->assertEquals($response['body']['message'], 'Invalid `queries` param: Invalid query: Cannot query equal on attribute "roles" because it is an array.');
+        $this->assertEquals($response['body']['type'], 'general_argument_invalid');
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
     public function testUpdateUserName(array $data): array
     {
         /**

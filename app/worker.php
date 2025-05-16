@@ -339,6 +339,14 @@ Server::setResource('pools', function (Registry $register) {
 
 Server::setResource('telemetry', fn () => new NoTelemetry());
 
+Server::setResource('deviceForSites', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+
+Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+
 Server::setResource('deviceForFunctions', function (Document $project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
@@ -360,6 +368,10 @@ Server::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
+Server::setResource('plan', function (array $plan = []) {
+    return [];
+});
+
 Server::setResource('certificates', function () {
     $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
     if (empty($email)) {
@@ -370,7 +382,7 @@ Server::setResource('certificates', function () {
 });
 
 Server::setResource('logError', function (Registry $register, Document $project) {
-    return function (Throwable $error, string $namespace, string $action, ?array $extras) use ($register, $project) {
+    return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
         $logger = $register->get('logger');
 
         if ($logger) {
@@ -392,7 +404,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('trace', $error->getTraceAsString());
 
 
-            foreach ($extras as $key => $value) {
+            foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
             }
 

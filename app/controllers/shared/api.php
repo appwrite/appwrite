@@ -174,12 +174,23 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
                     ->addReduce($document);
             }
             break;
+        case $document->getCollection() === 'sites':
+            $queueForStatsUsage
+                ->addMetric(METRIC_SITES, $value); // per project
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForStatsUsage
+                    ->addReduce($document);
+            }
+            break;
         case $document->getCollection() === 'deployments':
             $queueForStatsUsage
                 ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
                 ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value) // per function
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
+                ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per function
+                ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value)
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $value) // per function
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
             break;
         default:
             break;
@@ -254,7 +265,7 @@ App::init()
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
-                $accessedAt = $dbKey->getAttribute('accessedAt', '');
+                $accessedAt = $dbKey->getAttribute('accessedAt', 0);
 
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                     $dbKey->setAttribute('accessedAt', DateTime::now());
@@ -265,7 +276,7 @@ App::init()
                 $sdkValidator = new WhiteList($servers, true);
                 $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
 
-                if ($sdkValidator->isValid($sdk)) {
+                if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
                     $sdks = $dbKey->getAttribute('sdks', []);
 
                     if (!in_array($sdk, $sdks)) {
@@ -314,7 +325,7 @@ App::init()
 
         // Update project last activity
         if (!$project->isEmpty() && $project->getId() !== 'console') {
-            $accessedAt = $project->getAttribute('accessedAt', '');
+            $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
@@ -323,7 +334,7 @@ App::init()
 
         // Update user last activity
         if (!empty($user->getId())) {
-            $accessedAt = $user->getAttribute('accessedAt', '');
+            $accessedAt = $user->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
@@ -404,10 +415,12 @@ App::init()
     ->inject('queueForStatsUsage')
     ->inject('dbForProject')
     ->inject('timelimit')
+    ->inject('resourceToken')
     ->inject('mode')
     ->inject('apiKey')
     ->inject('plan')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, string $mode, ?Key $apiKey, array $plan) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('devKey')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -474,6 +487,7 @@ App::init()
                 $enabled                // Abuse is enabled
                 && !$isAppUser          // User is not API key
                 && !$isPrivilegedUser   // User is not an admin
+                && $devKey->isEmpty()  // request doesn't not contain development key
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
@@ -560,6 +574,10 @@ App::init()
                     $bucketId = $parts[1] ?? null;
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
+                    $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getInternalId();
+                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
@@ -567,18 +585,21 @@ App::init()
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
                     $validator = new Authorization(Database::PERMISSION_READ);
                     $valid = $validator->isValid($bucket->getRead());
-
-                    if (!$fileSecurity && !$valid) {
+                    if (!$fileSecurity && !$valid && !$isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     $parts = explode('/', $cacheLog->getAttribute('resource'));
                     $fileId = $parts[1] ?? null;
 
-                    if ($fileSecurity && !$valid) {
+                    if ($fileSecurity && !$valid && !$isToken) {
                         $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                     } else {
                         $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                    }
+
+                    if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     if ($file->isEmpty()) {
@@ -806,7 +827,7 @@ App::shutdown()
                 $key = $request->cacheIdentifier();
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
-                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([

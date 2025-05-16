@@ -64,6 +64,18 @@ return [ // List of publicly visible scopes
     'functions.write' => [
         'description' => 'Access to create, update, and delete your project\'s functions and code deployments',
     ],
+    'sites.read' => [
+        'description' => 'Access to read your project\'s sites and deployments',
+    ],
+    'sites.write' => [
+        'description' => 'Access to create, update, and delete your project\'s sites and deployments',
+    ],
+    'log.read' => [
+        'description' => 'Access to read your site\'s logs',
+    ],
+    'log.write' => [
+        'description' => 'Access to update, and delete your site\'s logs',
+    ],
     'execution.read' => [
         'description' => 'Access to read your project\'s execution logs',
     ],
@@ -129,5 +141,11 @@ return [ // List of publicly visible scopes
     ],
     'assistant.read' => [
         'description' => 'Access to read the Assistant service',
+    ],
+    'tokens.read' => [
+        'description' => 'Access to read your project\'s tokens',
+    ],
+    'tokens.write' => [
+        'description' => 'Access to create, update, and delete your project\'s tokens',
     ],
 ];
