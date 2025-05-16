@@ -339,6 +339,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEME',
+                'description' => 'To switch between mariadb and postgresql',
+                'introduction' => '1.6.0',
+                'default' => 'mariadb',
+                'required' => true,
+                'question' => 'Choose your database (mariadb|postgresql)',
+                'filter' => ''
             ]
         ],
     ],
