@@ -64,7 +64,11 @@ class V23 extends Migration
         $collections = $this->collections[$collectionType];
 
         foreach ($collections as $collection) {
-            $id = $collection['$id'];
+            $id = $collection['$id'] ?? null;
+
+            if (empty($id)) {
+                continue;
+            }
 
             Console::log("Migrating Collection \"{$id}\"");
 
