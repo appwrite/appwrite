@@ -67,7 +67,7 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.9.*",
         "utopia-php/registry": "0.5.*",
-        "utopia-php/storage": "dev-telemetry-device as 0.18.3",
+        "utopia-php/storage": "dev-telemetry-device as 0.18.999",
         "utopia-php/swoole": "0.8.*",
         "utopia-php/system": "0.9.*",
         "utopia-php/telemetry": "0.1.*",

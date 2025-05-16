@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bbed092f591765dedcb0c6e539f6084f",
+    "content-hash": "ce428d8106494462085dc336383b26a9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -8139,8 +8139,8 @@
         {
             "package": "utopia-php/storage",
             "version": "dev-telemetry-device",
-            "alias": "0.18.3",
-            "alias_normalized": "0.18.3.0"
+            "alias": "0.18.999",
+            "alias_normalized": "0.18.999.0"
         }
     ],
     "minimum-stability": "stable",
