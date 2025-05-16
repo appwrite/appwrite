@@ -64,13 +64,7 @@ export class Functions extends Service {
             let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
             let payload: Payload = {};
 
-            if (typeof queries !== 'undefined') {
-                payload['queries'] = queries;
-            }
-
-            if (typeof search !== 'undefined') {
-                payload['search'] = search;
-            }
+            Service.populatePayload(payload, { queries, search });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('get', uri, {
@@ -100,13 +94,7 @@ export class Functions extends Service {
             let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
             let payload: Payload = {};
 
-            if (typeof data !== 'undefined') {
-                payload['data'] = data;
-            }
-
-            if (typeof async !== 'undefined') {
-                payload['async'] = async;
-            }
+            Service.populatePayload(payload, { data, async });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
