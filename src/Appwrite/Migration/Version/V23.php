@@ -234,12 +234,10 @@ class V23 extends Migration
                         'buildLogs',
                         'totalSize',
                     ];
-                    foreach ($attributes as $attribute) {
-                        try {
-                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
-                        } catch (\Throwable $th) {
-                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
-                        }
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
                     $indexes = [
