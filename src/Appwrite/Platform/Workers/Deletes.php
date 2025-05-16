@@ -497,47 +497,33 @@ class Deletes extends Action
             AbuseDatabase::COLLECTION,
         ];
 
-        $limit = \count($projectCollectionIds) + 25;
-
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
 
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
-        while (true) {
-            $collections = $dbForProject->listCollections($limit);
-
-            foreach ($collections as $collection) {
-                try {
-                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
-                        $dbForProject->deleteCollection($collection->getId());
-                    } else {
-                        $this->deleteByGroup(
-                            $collection->getId(),
-                            [
-                                Query::orderAsc()
-                            ],
-                            database: $dbForProject
-                        );
-                    }
-                } catch (Throwable $e) {
-                    Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+        /**
+         * @var $dbForProject Database
+         */
+        $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
+            try {
+                if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
+                    $dbForProject->deleteCollection($collection->getId());
+                } else {
+                    $this->deleteByGroup(
+                        $collection->getId(),
+                        [
+                            Query::orderAsc()
+                        ],
+                        database: $dbForProject
+                    );
                 }
+            } catch (Throwable $e) {
+                Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
             }
-
-            if ($sharedTables) {
-                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
-
-                if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
-                    break;
-                }
-            } elseif (empty($collections)) {
-                break;
-            }
-        }
+        });
 
         // Delete Platforms
         $this->deleteByGroup('platforms', [
