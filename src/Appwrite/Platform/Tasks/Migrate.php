@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
 use Redis;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -64,7 +65,7 @@ class Migrate extends Action
         $migration = new $class();
 
         $count = 0;
-        $total = $dbForPlatform->count('projects');
+        $total = $dbForPlatform->count('projects') + 1;
 
         $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total) {
             /** @var Database $dbForProject */
@@ -83,6 +84,18 @@ class Migrate extends Action
 
             Console::log('Migrated ' . ++$count . '/' . $total . ' projects...');
         });
+
+        $console = (new App('UTC'))->getResource('console');
+
+        try {
+            $migration
+                ->setProject($console, $getProjectDB($console), $dbForPlatform)
+                ->setPDO($register->get('db', true))
+                ->execute();
+        } catch (\Throwable $th) {
+            Console::error('Failed to migrate project "console" with error: ' . $th->getMessage());
+            throw $th;
+        }
 
         Console::success('Migration completed');
     }
