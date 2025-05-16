@@ -181,6 +181,10 @@ class Install extends Action
                 continue;
             }
 
+            if ($var['name'] === '_APP_DB_SCHEME' && $data !== false) {
+                continue;
+            }
+
             $input[$var['name']] = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
             if (empty($input[$var['name']])) {
