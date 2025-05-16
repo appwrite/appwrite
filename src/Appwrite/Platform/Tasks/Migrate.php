@@ -4,16 +4,13 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
 use Redis;
-use Swoole\Runtime;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
+use Utopia\Database\Exception;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class Migrate extends Action
@@ -84,7 +81,7 @@ class Migrate extends Action
                 throw $th;
             }
 
-            Console::log('Migrated ' . $count++ . '/' . $total . ' projects...');
+            Console::log('Migrated ' . ++$count . '/' . $total . ' projects...');
         });
 
         Console::success('Migration completed');
