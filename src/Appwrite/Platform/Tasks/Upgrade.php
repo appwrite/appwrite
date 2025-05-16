@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\CLI\Console;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -23,8 +24,8 @@ class Upgrade extends Install
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
-            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database));
+            ->param('database', 'mariadb', new Text(length: 0), 'Database to use (mariadb|postgresql)', true)
+            ->callback($this->action(...));
     }
 
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
@@ -40,6 +41,7 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
+        $database = System::getEnv('_APP_DB_SCHEME', 'mariadb');
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 }
