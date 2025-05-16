@@ -158,7 +158,7 @@ abstract class Migration
                 continue;
             }
 
-            Console::log('Migrating collection ' . $collection['$id'] . '...');
+            Console::log('Migrating documents for collection "' . $collection['$id'] . '"');
 
             $this->dbForProject->foreach($collection['$id'], function(Document $document) use ($collection, $callback) {
                 if (empty($document->getId()) || empty($document->getCollection())) {
@@ -204,17 +204,23 @@ abstract class Migration
         };
 
         if (!$this->dbForProject->getCollection($id)->isEmpty()) {
-            $attributes = [];
-            $indexes = [];
             $collection = $this->collections[$collectionType][$id];
+
+            $attributes = [];
             foreach ($collection['attributes'] as $attribute) {
                 $attributes[] = new Document($attribute);
             }
+
+            $indexes = [];
             foreach ($collection['indexes'] as $index) {
                 $indexes[] = new Document($index);
             }
 
-            $this->dbForProject->createCollection($name, $attributes, $indexes);
+            try {
+                $this->dbForProject->createCollection($name, $attributes, $indexes);
+            } catch (Duplicate ) {
+                Console::warning('Failed to create collection "' . $name . '": Collection already exists');
+            }
         }
     }
 
