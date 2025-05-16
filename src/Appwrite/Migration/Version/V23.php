@@ -12,7 +12,6 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 
 class V23 extends Migration
 {
@@ -395,7 +394,7 @@ class V23 extends Migration
                 $deployment = $this->dbForProject->getDocument('deployments', $deploymentId);
                 $document->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
 
-                $latestDeployment = $this->dbForProject->findOne('deployments',[
+                $latestDeployment = $this->dbForProject->findOne('deployments', [
                     Query::orderDesc(),
                     Query::equal('resourceId', [$document->getId()]),
                     Query::equal('resourceType', ['functions']),

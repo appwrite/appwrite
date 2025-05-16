@@ -11,12 +11,9 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\PDO;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\System\System;
 
 abstract class Migration
 {
@@ -125,8 +122,7 @@ abstract class Migration
         Database $dbForProject,
         Database $dbForPlatform,
         ?callable $getProjectDB = null
-    ): self
-    {
+    ): self {
         $this->project = $project;
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
@@ -171,7 +167,7 @@ abstract class Migration
 
             Console::log('Migrating documents for collection "' . $collection['$id'] . '"');
 
-            $this->dbForProject->foreach($collection['$id'], function(Document $document) use ($collection, $callback) {
+            $this->dbForProject->foreach($collection['$id'], function (Document $document) use ($collection, $callback) {
                 if (empty($document->getId()) || empty($document->getCollection())) {
                     return;
                 }
@@ -232,7 +228,7 @@ abstract class Migration
 
         try {
             $this->dbForProject->createCollection($name, $attributes, $indexes);
-        } catch (Duplicate ) {
+        } catch (Duplicate) {
             Console::warning('Failed to create collection "' . $name . '": Collection already exists');
         }
     }
@@ -257,8 +253,7 @@ abstract class Migration
         string $collectionId,
         array $attributeIds,
         string $from = null
-    ): void
-    {
+    ): void {
         $from ??= $collectionId;
 
         $collectionType = match ($this->project->getInternalId()) {
@@ -323,8 +318,7 @@ abstract class Migration
         string $collectionId,
         string $attributeId,
         string $from = null
-    ): void
-    {
+    ): void {
         $from ??= $collectionId;
 
         $collectionType = match ($this->project->getInternalId()) {

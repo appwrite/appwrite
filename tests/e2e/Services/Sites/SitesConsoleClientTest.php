@@ -1,12 +1,11 @@
 <?php
 
-namespace Tests\E2E\Services\Projects;
+namespace Tests\E2E\Services\Sites;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Tests\E2E\Services\Sites\SitesBase;
 use Utopia\Database\Helpers\ID;
 
 class SitesConsoleClientTest extends Scope
