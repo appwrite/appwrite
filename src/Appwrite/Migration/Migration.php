@@ -204,23 +204,25 @@ abstract class Migration
         };
 
         if (!$this->dbForProject->getCollection($id)->isEmpty()) {
-            $collection = $this->collections[$collectionType][$id];
+            return;
+        }
 
-            $attributes = [];
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document($attribute);
-            }
+        $collection = $this->collections[$collectionType][$id];
 
-            $indexes = [];
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document($index);
-            }
+        $attributes = [];
+        foreach ($collection['attributes'] as $attribute) {
+            $attributes[] = new Document($attribute);
+        }
 
-            try {
-                $this->dbForProject->createCollection($name, $attributes, $indexes);
-            } catch (Duplicate ) {
-                Console::warning('Failed to create collection "' . $name . '": Collection already exists');
-            }
+        $indexes = [];
+        foreach ($collection['indexes'] as $index) {
+            $indexes[] = new Document($index);
+        }
+
+        try {
+            $this->dbForProject->createCollection($name, $attributes, $indexes);
+        } catch (Duplicate ) {
+            Console::warning('Failed to create collection "' . $name . '": Collection already exists');
         }
     }
 
