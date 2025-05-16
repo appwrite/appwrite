@@ -15,6 +15,8 @@ class V19 extends Filter
         $parsedResponse = match($model) {
             Response::MODEL_FUNCTION => $this->parseFunction($content),
             Response::MODEL_FUNCTION_LIST => $this->handleList($content, 'functions', fn ($item) => $this->parseFunction($item)),
+            Response::MODEL_DEPLOYMENT => $this->parseDeployment($content),
+            Response::MODEL_PROXY_RULE => $this->parseProxyRule($content),
             default => $parsedResponse,
         };
 
@@ -25,6 +27,24 @@ class V19 extends Filter
     {
         $content['deployment'] = $content['deploymentId'] ?? '';
         unset($content['deploymentId']);
+        return $content;
+    }
+
+    protected function parseDeployment(array $content)
+    {
+        $content['size'] = $content['sourceSize'] ?? '';
+        $content['buildTime'] = $content['buildDuration'] ?? '';
+        unset($content['sourceSize']);
+        unset($content['buildDuration']);
+        return $content;
+    }
+
+    protected function parseProxyRule(array $content)
+    {
+        $content['resourceType'] = $content['deploymentResourceType'] ?? '';
+        $content['resourceId'] = $content['deploymentResourceId'] ?? '';
+        unset($content['deploymentResourceType']);
+        unset($content['deploymentResourceId']);
         return $content;
     }
 }
