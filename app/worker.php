@@ -37,7 +37,10 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
+use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -334,34 +337,40 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-Server::setResource('deviceForSites', function (Document $project) {
-    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('telemetry', fn () => new NoTelemetry());
 
-Server::setResource('deviceForImports', function (Document $project) {
-    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForSites', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForFunctions', function (Document $project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForFiles', function (Document $project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForFunctions', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForBuilds', function (Document $project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForFiles', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForCache', function (Document $project) {
-    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForBuilds', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+
+Server::setResource('deviceForCache', function (Document $project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
 Server::setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
+
+Server::setResource('plan', function (array $plan = []) {
+    return [];
+});
 
 Server::setResource('certificates', function () {
     $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));

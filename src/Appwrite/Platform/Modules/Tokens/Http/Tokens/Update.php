@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Tokens\Http\Tokens;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -11,11 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -50,9 +45,9 @@ class Update extends Action
             group: 'tokens',
             name: 'update',
             description: <<<EOT
-            Update a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.
+            Update a token by its unique ID. Use this endpoint to update a token's expiry date.
             EOT,
-            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            auth: [AuthType::ADMIN],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -63,14 +58,13 @@ class Update extends Action
         ))
         ->param('tokenId', '', new UID(), 'Token unique ID.')
         ->param('expire', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
-        ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
         ->callback([$this, 'action']);
     }
 
-    public function action(string $tokenId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Event $queueForEvents)
+    public function action(string $tokenId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents)
     {
         $token = $dbForProject->getDocument('resourceTokens', $tokenId);
 
@@ -78,47 +72,11 @@ class Update extends Action
             throw new Exception(Exception::TOKEN_NOT_FOUND);
         }
 
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-        ]);
-
-        // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
-            foreach (Database::PERMISSIONS as $type) {
-                foreach ($permissions as $permission) {
-                    $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
-                        continue;
-                    }
-                    $role = (new Role(
-                        $permission->getRole(),
-                        $permission->getIdentifier(),
-                        $permission->getDimension()
-                    ))->toString();
-                    if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
-                    }
-                }
-            }
-        }
-
-        if (\is_null($permissions)) {
-            $permissions = $token->getPermissions() ?? [];
-        }
-
-        $token
-            ->setAttribute('expire', $expire)
-            ->setAttribute('$permissions', $permissions);
+        $token->setAttribute('expire', $expire);
 
         $token = $dbForProject->updateDocument('resourceTokens', $tokenId, $token);
 
-        $queueForEvents
-            ->setParam('tokenId', $token->getId())
-        ;
+        $queueForEvents->setParam('tokenId', $token->getId());
 
         $response->dynamic($token, Response::MODEL_RESOURCE_TOKEN);
     }

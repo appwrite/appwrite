@@ -509,29 +509,26 @@ App::setResource('timelimit', function (\Redis $redis) {
     };
 }, ['redis']);
 
-App::setResource('deviceForLocal', function () {
-    return new Local();
-});
+App::setResource('deviceForLocal', function (Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, new Local());
+}, ['telemetry']);
 
-App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForSites', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForImports', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-App::setResource('deviceForSites', function ($project) {
-    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-}, ['project']);
-
-App::setResource('deviceForImports', function (Document $project) {
-    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
-}, ['project']);
-
-App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
-
-App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForBuilds', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
 function getDevice(string $root, string $connection = ''): Device
 {
@@ -918,38 +915,52 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
         }
 
         $tokenId = $payload['tokenId'] ?? '';
-        $secret = $payload['secret'] ?? '';
-        if (empty($tokenId) || empty($secret)) {
+        if (empty($tokenId)) {
             return new Document([]);
         }
 
         $token = Authorization::skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
 
-        if ($token->isEmpty() || $token->getAttribute('secret') !== $secret) {
+        if ($token->isEmpty()) {
             return new Document([]);
         }
 
-        if ($token->getAttribute('resourceType') === TOKENS_RESOURCE_TYPE_FILES) {
-            $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
-            $ids = explode(':', $token->getAttribute('resourceId'));
+        $expiry = $token->getAttribute('expire');
 
-            if (count($internalIds) !== 2 || count($ids) !== 2) {
+        if ($expiry !== null) {
+            $now = new \DateTime();
+            $expiryDate = new \DateTime($expiry);
+
+            if ($expiryDate < $now) {
                 return new Document([]);
             }
-
-            $accessedAt = $token->getAttribute('accessedAt', 0);
-            if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), - APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
-                $token->setAttribute('accessedAt', DatabaseDateTime::now());
-                Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
-            }
-
-            return new Document([
-                'bucketId' => $ids[0],
-                'fileId' => $ids[1],
-                'bucketInternalId' => $internalIds[0],
-                'fileInternalId' => $internalIds[1],
-            ]);
         }
+
+        return match ($token->getAttribute('resourceType')) {
+            TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject) {
+                $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
+                $ids = explode(':', $token->getAttribute('resourceId'));
+
+                if (count($internalIds) !== 2 || count($ids) !== 2) {
+                    return new Document([]);
+                }
+
+                $accessedAt = $token->getAttribute('accessedAt', 0);
+                if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), - APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
+                    $token->setAttribute('accessedAt', DatabaseDateTime::now());
+                    Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
+                }
+
+                return new Document([
+                    'bucketId' => $ids[0],
+                    'fileId' => $ids[1],
+                    'bucketInternalId' => $internalIds[0],
+                    'fileInternalId' => $internalIds[1],
+                ]);
+            })(),
+
+            default => throw new Exception(Exception::TOKEN_RESOURCE_TYPE_INVALID),
+        };
     }
     return new Document([]);
 }, ['project', 'dbForProject', 'request']);
