@@ -330,7 +330,7 @@ class V23 extends Migration
 
                 $deploymentResourceType = null;
 
-                $type = $document->getAttribute('resourceType');
+                $type = $document->getAttribute('resourceType', $document->getAttribute('type', ''));
                 if ($type === 'function') {
                     $type = 'deployment';
                     $deploymentResourceType = 'function';
@@ -344,7 +344,7 @@ class V23 extends Migration
                     ->setAttribute('trigger', 'manual')
                     ->setAttribute('deploymentResourceId', $resourceId)
                     ->setAttribute('deploymentResourceInternalId', $resourceInternalId)
-                    ->setAttribute('deploymentResourceType', $deploymentResourceType)
+                    ->setAttribute('deploymentResourceType', $document->getAttribute('deploymentResourceType', $deploymentResourceType))
                     ->setAttribute('search', \implode(' ', [$document->getId(), $document->getAttribute('domain', '')]));
 
                 if ($deploymentResourceType === 'function') {
