@@ -31,7 +31,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
+            ->param('database', '', new Text(0), 'Database to use (mariadb|postgresql)', true)
             ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database));
     }
 
@@ -45,7 +45,7 @@ class Install extends Action
         $vars['_APP_DB_SCHEME'] = [
             'name' => '_APP_DB_SCHEME',
             'default' => $database,
-            'required' => false,
+            'required' => true,
             'filter' => '',
             'overwrite' => true,
             'question' => 'Choose your database (mariadb|postgresql)',
@@ -59,13 +59,6 @@ class Install extends Action
 
         Console::success('Starting Appwrite installation...');
 
-        // Create directory with write permissions
-        if (!\file_exists(\dirname($this->path))) {
-            if (!@\mkdir(\dirname($this->path), 0755, true)) {
-                Console::error('Can\'t create directory ' . \dirname($this->path));
-                Console::exit(1);
-            }
-        }
 
         $data = @file_get_contents($this->path . '/docker-compose.yml');
 
@@ -146,6 +139,18 @@ class Install extends Action
             }
         }
 
+        // if ($interactive == 'Y' && Console::isInteractive()) {
+        //     $dbChoice = Console::confirm('Choose your database (mariadb|postgresql): (default: ' . $database . ')');
+        //     if (!empty($dbChoice)) {
+        //         $database = $dbChoice;
+        //         if (!in_array($database, ['mariadb', 'postgresql'])) {
+        //             Console::error('Invalid database choice. Please choose either mariadb or postgresql.');
+        //             Console::exit(1);
+        //         }
+        //     }
+        //     $vars['_APP_DB_SCHEME']['default'] = $database;
+        // }
+
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
             $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
@@ -180,19 +185,6 @@ class Install extends Action
                 continue;
             }
 
-            if ($var['name'] === '_APP_DB_SCHEME') {
-                $input[$var['name']] = Console::confirm('Choose your database (mariadb|postgresql): (default: ' . $var['default'] . ')');
-                if (empty($input[$var['name']])) {
-                    $input[$var['name']] = $var['default'];
-                }
-                if (!in_array($input[$var['name']], ['mariadb', 'postgresql'])) {
-                    Console::error('Invalid database choice. Please choose either mariadb or postgresql.');
-                    Console::exit(1);
-                }
-                $database = $input[$var['name']];
-                continue;
-            }
-
             $input[$var['name']] = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
             if (empty($input[$var['name']])) {
@@ -209,18 +201,18 @@ class Install extends Action
                 }
             }
         }
+        $database = $input['_APP_DB_SCHEME'];
 
         $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
         $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
-
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
             ->setParam('organization', $organization)
             ->setParam('image', $image)
-            ->setParam('database',$database);
-        $input['_APP_DB_SCHEME'] = $database;
+            ->setParam('database', $database);
+
         $templateForEnv->setParam('vars', $input);
 
         if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
