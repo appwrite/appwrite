@@ -74,7 +74,7 @@ class Migrate extends Action
 
             try {
                 $migration
-                    ->setProject($project, $dbForProject, $dbForPlatform)
+                    ->setProject($project, $dbForProject, $dbForPlatform, $getProjectDB)
                     ->setPDO($register->get('db', true))
                     ->execute();
             } catch (\Throwable $th) {
@@ -89,7 +89,7 @@ class Migrate extends Action
 
         try {
             $migration
-                ->setProject($console, $getProjectDB($console), $dbForPlatform)
+                ->setProject($console, $getProjectDB($console), $dbForPlatform, $getProjectDB)
                 ->setPDO($register->get('db', true))
                 ->execute();
         } catch (\Throwable $th) {

@@ -348,16 +348,15 @@ class V23 extends Migration
                     ->setAttribute('search', \implode(' ', [$document->getId(), $document->getAttribute('domain', '')]));
 
                 if ($deploymentResourceType === 'function') {
-                    if ($this->project->getInternalId() !== 'console') {
-                        $function = $this->dbForProject->getDocument('functions', $resourceId);
+                    $project = $this->dbForProject->getDocument('projects', $document->getAttribute('projectId'));
+                    $dbForOwnerProject = ($this->getProjectDB)($project);
+                    $function = $dbForOwnerProject->getDocument('functions', $resourceId);
+                    $deploymentId = $function->getAttribute('deployment', $function->getAttribute('deploymentId', $document->getAttribute('deploymentId')));
+                    $deploymentInternalId = $function->getAttribute('deploymentInternalId', $document->getAttribute('deploymentInternalId', ''));
 
-                        $deploymentId = $function->getAttribute('deployment', $document->getAttribute('deploymentId', ''));
-                        $deploymentInternalId = $function->getAttribute('deploymentInternalId', $document->getAttribute('deploymentInternalId', ''));
-
-                        $document
-                            ->setAttribute('deploymentId', $deploymentId)
-                            ->setAttribute('deploymentInternalId', $deploymentInternalId);
-                    }
+                    $document
+                        ->setAttribute('deploymentId', $deploymentId)
+                        ->setAttribute('deploymentInternalId', $deploymentInternalId);
                 }
                 break;
             case 'variables':

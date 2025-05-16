@@ -28,6 +28,11 @@ abstract class Migration
 
     protected Database $dbForPlatform;
 
+    /**
+     * @var callable(Document): Database
+     */
+    protected mixed $getProjectDB;
+
     protected PDO $pdo;
 
     /**
@@ -115,11 +120,17 @@ abstract class Migration
      * @param Database $dbForPlatform
      * @return self
      */
-    public function setProject(Document $project, Database $dbForProject, Database $dbForPlatform): self
+    public function setProject(
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        ?callable $getProjectDB = null
+    ): self
     {
         $this->project = $project;
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
+        $this->getProjectDB = $getProjectDB;
 
         return $this;
     }
