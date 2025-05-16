@@ -258,7 +258,7 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
-                            'postgresql' => new Postgres($resource),
+                            'postgresql' => new Postgres($resource()),
                             default => null
                         };
 
