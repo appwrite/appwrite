@@ -106,6 +106,16 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist',
         'fallbackFile' => 'index.html',
     ],
+    'REACT_NATIVE' => [
+        'key' => 'react-native',
+        'name' => 'React Native',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist',
+        'fallbackFile' => '+not-found.html',
+    ],
     'ANGULAR' => [
         'key' => 'angular',
         'name' => 'Angular',
@@ -866,9 +876,8 @@ return [
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-native-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-native-light.png',
         'frameworks' => [
-            getFramework('REACT', [
+            getFramework('REACT_NATIVE', [
                 'providerRootDirectory' => './',
-                'fallbackFile' => '+not-found.html',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -1332,7 +1341,7 @@ return [
         'screenshotDark' => $url . '/images/sites/templates/playground-for-react-native-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/playground-for-react-native-light.png',
         'frameworks' => [
-            getFramework('REACT', [
+            getFramework('REACT_NATIVE', [
                 'providerRootDirectory' => './react-native/starter',
             ]),
         ],

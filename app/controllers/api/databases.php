@@ -2813,11 +2813,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
+    ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional:true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2877,9 +2878,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'size' => 0
         ];
 
-        // lengths hidden by default
-        $lengths = [];
-
         foreach ($attributes as $i => $attribute) {
             // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -2901,8 +2899,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
-            $lengths[$i] = null;
-
+            $lengths[$i] ??= null;
             if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
                 $orders[$i] = null;
@@ -3204,25 +3201,25 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     new Parameter('permissions', optional: true),
                 ]
             ),
-            new Method(
-                namespace: 'databases',
-                group: 'documents',
-                name: 'createDocuments',
-                description: '/docs/references/databases/create-documents.md',
-                auth: [AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_DOCUMENT_LIST,
-                    )
-                ],
-                contentType: ContentType::JSON,
-                parameters: [
-                    new Parameter('databaseId', optional: false),
-                    new Parameter('collectionId', optional: false),
-                    new Parameter('documents', optional: false),
-                ]
-            )
+            // new Method(
+            //     namespace: 'databases',
+            //     group: 'documents',
+            //     name: 'createDocuments',
+            //     description: '/docs/references/databases/create-documents.md',
+            //     auth: [AuthType::KEY],
+            //     responses: [
+            //         new SDKResponse(
+            //             code: Response::STATUS_CODE_CREATED,
+            //             model: Response::MODEL_DOCUMENT_LIST,
+            //         )
+            //     ],
+            //     contentType: ContentType::JSON,
+            //     parameters: [
+            //         new Parameter('databaseId', optional: false),
+            //         new Parameter('collectionId', optional: false),
+            //         new Parameter('documents', optional: false),
+            //     ]
+            // )
         ]
     )
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -4742,8 +4739,8 @@ App::get('/v1/databases/:databaseId/usage')
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE),
-            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_READS),
-            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_WRITES)
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
