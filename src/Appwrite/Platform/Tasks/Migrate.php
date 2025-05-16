@@ -27,8 +27,6 @@ class Migrate extends Action
 
     public function __construct()
     {
-        Runtime::enableCoroutine();
-
         $this
             ->desc('Migrate Appwrite to new version')
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
@@ -60,52 +58,45 @@ class Migrate extends Action
             return;
         }
 
-        \Co\run(function (
-            string $version,
-            Database $dbForPlatform,
-            callable $getProjectDB,
-            Registry $register,
-        ) {
-            $this->redis = new Redis();
-            $this->redis->connect(
-                System::getEnv('_APP_REDIS_HOST', ''),
-                System::getEnv('_APP_REDIS_PORT', 6379),
-                3,
-                null,
-                10
-            );
+        $this->redis = new Redis();
+        $this->redis->connect(
+            System::getEnv('_APP_REDIS_HOST', ''),
+            System::getEnv('_APP_REDIS_PORT', 6379),
+            3,
+            null,
+            10
+        );
 
-            Console::success('Starting Data Migration to version ' . $version);
+        Console::success('Starting Data Migration to version ' . $version);
 
 
-            $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
+        $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
 
-            /** @var Migration $migration */
-            $migration = new $class();
+        /** @var Migration $migration */
+        $migration = new $class();
 
-            $count = 0;
-            $total = $dbForPlatform->count('projects');
+        $count = 0;
+        $total = $dbForPlatform->count('projects');
 
-            $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total) {
-                /** @var Database $dbForProject */
-                $dbForProject = $getProjectDB($project);
-                $dbForProject->disableValidation();
+        $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total) {
+            /** @var Database $dbForProject */
+            $dbForProject = $getProjectDB($project);
+            $dbForProject->disableValidation();
 
-                try {
-                    $migration
-                        ->setProject($project, $dbForProject, $dbForPlatform)
-                        ->setPDO($register->get('db', true))
-                        ->execute();
-                } catch (\Throwable $th) {
-                    Console::error('Failed to migrate project "' . $project->getId() . '" with error: ' . $th->getMessage());
-                    throw $th;
-                }
+            try {
+                $migration
+                    ->setProject($project, $dbForProject, $dbForPlatform)
+                    ->setPDO($register->get('db', true))
+                    ->execute();
+            } catch (\Throwable $th) {
+                Console::error('Failed to migrate project "' . $project->getId() . '" with error: ' . $th->getMessage());
+                throw $th;
+            }
 
-                Console::log('Migrated ' . $count++ . '/' . $total . ' projects...');
-            });
+            Console::log('Migrated ' . $count++ . '/' . $total . ' projects...');
+        });
 
-            Console::success('Migration completed');
-        }, [$version, $dbForPlatform, $getProjectDB, $register]);
+        Console::success('Migration completed');
     }
 
     private function clearProjectsCache(Document $project): void
