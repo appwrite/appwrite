@@ -61,7 +61,8 @@ App::get('/v1/console/variables')
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
-            '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled
+            '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
+            '_APP_SUPPORTS_MULTI_REGION' => System::getEnv('_APP_SUPPORTS_MULTI_REGION')
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);

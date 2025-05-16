@@ -51,7 +51,16 @@ class ConsoleVariables extends Model
                 'description' => 'Defines if AI assistant is enabled.',
                 'default' => false,
                 'example' => true,
-            ]);
+            ])
+            ->addRule(
+                '_APP_SUPPORTS_MULTI_REGION',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Defines if multi-region is supported.',
+                    'default' => false,
+                    'example' => true,
+                ]
+            );
     }
 
     /**
