@@ -50,7 +50,7 @@ class Create extends Action
             description: <<<EOT
             Create a new token. A token is linked to a file. Token can be passed as a header or request get parameter.
             EOT,
-            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
