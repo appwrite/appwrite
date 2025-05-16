@@ -23,10 +23,11 @@ class Upgrade extends Install
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->callback([$this, 'action']);
+            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
+            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
     {
         // Check for previous installation
         $data = @file_get_contents($this->path . '/docker-compose.yml');
@@ -39,6 +40,6 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart);
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 }

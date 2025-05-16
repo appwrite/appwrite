@@ -69,8 +69,12 @@ $image = $this->getParam('image', '');
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - mariadb
       - redis
+      <?php if ($this->getParam('_APP_DB_SCHEME', 'mariadb') === 'mariadb'): ?>
+      - mariadb
+      <?php else: ?>
+      - postgres
+      <?php endif; ?>
 #      - clamav
     environment:
       - _APP_ENV
@@ -105,6 +109,7 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_SCHEME
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -219,8 +224,8 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
       - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -927,6 +932,20 @@ $image = $this->getParam('image', '');
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
 
+  postgres:
+    image: postgres:15-alpine
+    container_name: appwrite-postgres
+    <<: *x-logging
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgres:/var/lib/postgresql/data:rw
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+
   redis:
     image: redis:7.2.4-alpine
     container_name: appwrite-redis
@@ -970,3 +989,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
+  appwrite-postgres:
