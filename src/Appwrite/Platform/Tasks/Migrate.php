@@ -42,6 +42,7 @@ class Migrate extends Action
      * @param callable(Document): Database $getProjectDB
      * @param Registry $register
      * @return void
+     * @throws Exception
      */
     public function action(
         string $version,
@@ -58,17 +59,7 @@ class Migrate extends Action
             return;
         }
 
-        $this->redis = new Redis();
-        $this->redis->connect(
-            System::getEnv('_APP_REDIS_HOST', ''),
-            System::getEnv('_APP_REDIS_PORT', 6379),
-            3,
-            null,
-            10
-        );
-
         Console::success('Starting Data Migration to version ' . $version);
-
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
 
@@ -97,23 +88,5 @@ class Migrate extends Action
         });
 
         Console::success('Migration completed');
-    }
-
-    private function clearProjectsCache(Document $project): void
-    {
-        try {
-            $iterator = null;
-            do {
-                $pattern = "default-cache-mariadb:_{$project->getInternalId()}:*";
-                $keys = $this->redis->scan($iterator, $pattern, 1000);
-                if ($keys !== false) {
-                    foreach ($keys as $key) {
-                        $this->redis->del($key);
-                    }
-                }
-            } while ($iterator > 0);
-        } catch (\Throwable $th) {
-            Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
-        }
     }
 }
