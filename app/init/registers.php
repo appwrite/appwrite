@@ -14,6 +14,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
@@ -120,19 +121,19 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql','postgresql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql','postgresql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql','postgresql'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -225,6 +226,17 @@ $register->set('pools', function () {
                         ));
                     });
                 },
+                'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase}", $dsnUser, $dsnPass, array(
+                            \PDO::ATTR_TIMEOUT => 3, // Seconds
+                            \PDO::ATTR_PERSISTENT => false,
+                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                            \PDO::ATTR_EMULATE_PREPARES => true,
+                            \PDO::ATTR_STRINGIFY_FETCHES => true
+                        ));
+                    });
+                },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
@@ -245,6 +257,7 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
+                            'postgresql' => new Postgres($resource),
                             default => null
                         };
 
@@ -286,10 +299,15 @@ $register->set('db', function () {
     $dbPort = System::getEnv('_APP_DB_PORT', '');
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
-    $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbScheme = System::getEnv('_APP_DB_SCHEME', 'mariadb');
+    $dsn = ($dbScheme === 'postgresql')
+    ? "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}"
+    : "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
+
 
     return new PDO(
-        "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
+        $dsn,
         $dbUser,
         $dbPass,
         SQL::getPDOAttributes()

@@ -31,16 +31,25 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart));
+            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
+            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
     {
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         /** @var array<string, array<string, string>> $vars array whre key is variable name and value is variable */
         $vars = [];
+        $vars['_APP_DB_SCHEME'] = [
+            'name' => '_APP_DB_SCHEME',
+            'default' => $database,
+            'required' => false,
+            'filter' => '',
+            'overwrite' => true,
+            'question' => 'Choose your database (mariadb|postgresql)',
+        ];
 
         foreach ($config as $category) {
             foreach ($category['variables'] ?? [] as $var) {
@@ -171,6 +180,19 @@ class Install extends Action
                 continue;
             }
 
+            if ($var['name'] === '_APP_DB_SCHEME') {
+                $input[$var['name']] = Console::confirm('Choose your database (mariadb|postgresql): (default: ' . $var['default'] . ')');
+                if (empty($input[$var['name']])) {
+                    $input[$var['name']] = $var['default'];
+                }
+                if (!in_array($input[$var['name']], ['mariadb', 'postgresql'])) {
+                    Console::error('Invalid database choice. Please choose either mariadb or postgresql.');
+                    Console::exit(1);
+                }
+                $database = $input[$var['name']];
+                continue;
+            }
+
             $input[$var['name']] = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
             if (empty($input[$var['name']])) {
@@ -196,8 +218,9 @@ class Install extends Action
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
             ->setParam('organization', $organization)
-            ->setParam('image', $image);
-
+            ->setParam('image', $image)
+            ->setParam('database',$database);
+        $input['_APP_DB_SCHEME'] = $database;
         $templateForEnv->setParam('vars', $input);
 
         if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
