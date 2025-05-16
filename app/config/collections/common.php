@@ -1117,7 +1117,7 @@ return [
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'required' => true,
+                'required' => false,
                 'signed' => false,
                 'default' => null,
                 'array' => false,
