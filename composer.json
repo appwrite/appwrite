@@ -30,7 +30,7 @@
         }
     },
     "require": {
-        "php": ">=8.0.0",
+        "php": ">=8.3.0",
         "ext-curl": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
@@ -48,7 +48,7 @@
         "utopia-php/abuse": "0.52.*",
         "utopia-php/analytics": "0.10.*",
         "utopia-php/audit": "0.55.*",
-        "utopia-php/cache": "0.12.*",
+        "utopia-php/cache": "0.13.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.69.*",
@@ -67,7 +67,7 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.9.*",
         "utopia-php/registry": "0.5.*",
-        "utopia-php/storage": "0.18.*",
+        "utopia-php/storage": "dev-telemetry-device as 0.18.3",
         "utopia-php/swoole": "0.8.*",
         "utopia-php/system": "0.9.*",
         "utopia-php/telemetry": "0.1.*",
@@ -99,8 +99,8 @@
             "php": "8.3"
         },
         "allow-plugins": {
-            "php-http/discovery": false,
-            "tbachert/spi": false
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     }
 }
