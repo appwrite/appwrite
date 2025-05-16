@@ -8,6 +8,9 @@ use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
@@ -33,7 +36,7 @@ class V23 extends Migration
         $this->migrateCollections();
 
         Console::info('Migrating Documents');
-        $this->forEachDocument([$this, 'fixDocument']);
+        $this->forEachDocument($this->migrateDocument(...));
 
         Console::log('Cleaning Up Collections');
         $this->cleanCollections();
@@ -47,52 +50,57 @@ class V23 extends Migration
      */
     private function migrateCollections(): void
     {
-        $internalProjectId = $this->project->getInternalId();
-        $collectionType = match ($internalProjectId) {
+        $projectInternalId = $this->project->getInternalId();
+
+        if (empty($projectInternalId)) {
+            throw new Exception('Project ID is null');
+        }
+
+        $collectionType = match ($projectInternalId) {
             'console' => 'console',
             default => 'projects',
         };
 
         $collections = $this->collections[$collectionType];
+
         foreach ($collections as $collection) {
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_$internalProjectId");
-
             switch ($id) {
                 case '_metadata':
                     $this->createCollection('sites');
                     $this->createCollection('resourceTokens');
-                    if ($internalProjectId === 'console') {
+                    if ($projectInternalId === 'console') {
                         $this->createCollection('devKeys');
                     }
                     break;
                 case 'identities':
-                    $attributesToCreate = [
+                    $attributes = [
                         'scopes',
                         'expire',
                     ];
-                    foreach ($attributesToCreate as $attribute) {
-                        try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
-                        } catch (\Throwable $th) {
-                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
-                        }
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'projects':
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'devKeys');
-                    } catch (Throwable $th) {
-                        Console::warning("'devKeys' from {$id}: {$th->getMessage()}");
+                        $attributes = [
+                            'devKeys',
+                        ];
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'rules':
-                    $attributesToCreate = [
+                    $attributes = [
                         'type',
                         'trigger',
                         'redirectUrl',
@@ -105,15 +113,13 @@ class V23 extends Migration
                         'deploymentVcsProviderBranch',
                         'search'
                     ];
-                    foreach ($attributesToCreate as $attribute) {
-                        try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
-                        } catch (\Throwable $th) {
-                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
-                        }
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
-                    $indexesToCreate = [
+                    $indexes = [
                         '_key_search',
                         '_key_type',
                         '_key_trigger',
@@ -124,49 +130,57 @@ class V23 extends Migration
                         '_key_deploymentInternalId',
                         '_key_deploymentVcsProviderBranch',
                     ];
-                    foreach ($indexesToCreate as $index) {
+
+                    foreach ($indexes as $index) {
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
-
-                    $this->projectDB->purgeCachedCollection($id);
-
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'memberships':
-                    // Create roles index
-                    try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_roles');
-                    } catch (Throwable $th) {
-                        Console::warning("'_key_roles' from {$id}: {$th->getMessage()}");
+                    $indexes = [
+                        '_key_roles',
+                    ];
+                    foreach ($indexes as $index) {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
+                        }
                     }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'migrations':
-                    $attributesToCreate = [
+                    $attributes = [
                         'options',
                         'resourceId',
                         'resourceType'
                     ];
-                    foreach ($attributesToCreate as $attribute) {
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $indexes = [
+                        '_key_resource_id',
+                    ];
+
+                    foreach ($indexes as $index) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
-                        } catch (\Throwable $th) {
-                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_resource_id');
-                    } catch (Throwable $th) {
-                        Console::warning("'_key_resource_id' from {$id}: {$th->getMessage()}");
-                    }
-
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'functions':
-                    $attributesToCreate = [
+                    $attributes = [
                         'deploymentId',
                         'deploymentCreatedAt',
                         'latestDeploymentId',
@@ -174,24 +188,28 @@ class V23 extends Migration
                         'latestDeploymentCreatedAt',
                         'latestDeploymentStatus',
                     ];
-                    foreach ($attributesToCreate as $attribute) {
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $indexes = [
+                        '_key_deploymentId',
+                    ];
+
+                    foreach ($indexes as $index) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
-                        } catch (\Throwable $th) {
-                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_deploymentId');
-                    } catch (Throwable $th) {
-                        Console::warning("'_key_deploymentId' from {$id}: {$th->getMessage()}");
-                    }
-
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'deployments':
-                    $attributesToCreate = [
+                    $attributes = [
                         'buildCommands',
                         'sourcePath',
                         'buildOutput',
@@ -212,15 +230,15 @@ class V23 extends Migration
                         'buildLogs',
                         'totalSize',
                     ];
-                    foreach ($attributesToCreate as $attribute) {
+                    foreach ($attributes as $attribute) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (\Throwable $th) {
-                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $indexesToCreate = [
+                    $indexes = [
                         '_key_sourceSize',
                         '_key_buildSize',
                         '_key_totalSize',
@@ -228,53 +246,57 @@ class V23 extends Migration
                         '_key_type',
                         '_key_status',
                     ];
-                    foreach ($indexesToCreate as $index) {
+
+                    foreach ($indexes as $index) {
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'executions':
-                    $attributesToCreate = [
+                    $attributes = [
                         'resourceInternalId',
                         'resourceId',
                         'resourceType'
                     ];
-                    foreach ($attributesToCreate as $attribute) {
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $indexes = [
+                        '_key_resource',
+                    ];
+                    foreach ($indexes as $index) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_resource');
-                    } catch (Throwable $th) {
-                        Console::warning("'_key_resource' from {$id}: {$th->getMessage()}");
-                    }
-
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'variables':
+                    $attributes = [
+                        'secret',
+                    ];
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'secret');
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                     } catch (\Throwable $th) {
-                        Console::warning("'secret' from {$id}: {$th->getMessage()}");
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
-
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 default:
                     break;
             }
-
-            usleep(50000);
         }
     }
 
@@ -283,8 +305,14 @@ class V23 extends Migration
      *
      * @param Document $document
      * @return Document
+     * @throws Conflict
+     * @throws Structure
+     * @throws Timeout
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws \Utopia\Database\Exception\Query
      */
-    protected function fixDocument(Document $document): Document
+    protected function migrateDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
             case 'rules':
@@ -316,24 +344,23 @@ class V23 extends Migration
                     ->setAttribute('deploymentResourceInternalId', $document->getAttribute('resourceInternalId'))
                     ->setAttribute('trigger', 'manual')
                     ->setAttribute('deploymentResourceType', $deploymentResourceType)
-                    ->setAttribute('search', \implode(" ", [$document->getId(), $document->getAttribute('domain', '')]))
+                    ->setAttribute('search', \implode(' ', [$document->getId(), $document->getAttribute('domain', '')]))
                 ;
 
                 if ($deploymentResourceType === 'function') {
                     if ($this->project->getInternalId() !== 'console') {
-                        $function = Authorization::skip(fn () => $this->projectDB->getDocument('functions', $resourceId));
+                        $function = $this->dbForProject->getDocument('functions', $resourceId);
 
                         $document
                             ->setAttribute('deploymentId', $function->getAttribute('deployment', $function->getAttribute('deploymentId', '')))
-                            ->setAttribute('deploymentInternalId', $function->getAttribute('deployment', $function->getAttribute('deploymentId', '')))
-                        ;
+                            ->setAttribute('deploymentInternalId', $function->getAttribute('deployment', $function->getAttribute('deploymentId', '')));
                     }
                 }
                 break;
             case 'variables':
                 /*
-                    1. Fill "secret" with "false"
-                    */
+                1. Fill "secret" with "false"
+                */
                 $document->setAttribute('secret', false);
                 break;
             case 'executions':
@@ -347,12 +374,6 @@ class V23 extends Migration
                     ->setAttribute('resourceId', $document->getAttribute('functionId'))
                     ->setAttribute('resourceType', 'functions');
                 break;
-            case 'migrations':
-                /*
-                    1. Fill "options" with "[]"
-                    */
-                $document->setAttribute('options', []);
-                break;
             case 'functions':
                 /*
                 1. Convert "deployment" to "deploymentId"
@@ -364,23 +385,22 @@ class V23 extends Migration
                 5. Fill latestDeploymentCreatedAt with latestDeployment's "$createdAt"
                 6. Fill latestDeploymentStatus with latestDeployment's build's "status"
                 */
-
                 if ($document->getAttribute('deployment')) {
                     $document->setAttribute('deploymentId', $document->getAttribute('deployment'));
                 }
 
                 $deploymentId = $document->getAttribute('deploymentId');
-                $deployment = Authorization::skip(fn () => $this->projectDB->getDocument('deployments', $deploymentId));
+                $deployment = $this->dbForProject->getDocument('deployments', $deploymentId);
                 $document->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
 
-                $latestDeployments = Authorization::skip(fn () => $this->projectDB->find('deployments', [
+                $latestDeployment = $this->dbForProject->findOne('deployments',[
                     Query::orderDesc(),
-                    Query::limit(1),
                     Query::equal('resourceId', [$document->getId()]),
                     Query::equal('resourceType', ['functions']),
-                ]));
-                $latestDeployment = $latestDeployments[0] ?? new Document();
-                $latestBuild = Authorization::skip(fn () => $this->projectDB->getDocument('builds', $latestDeployment->getAttribute('buildId', '')));
+                ]);
+
+                $latestBuild = $this->dbForProject->getDocument('builds', $latestDeployment->getAttribute('buildId', ''));
+
                 $document
                     ->setAttribute('latestDeploymentId', $latestDeployment->getId())
                     ->setAttribute('latestDeploymentInternalId', $latestDeployment->getInternalId())
@@ -462,21 +482,21 @@ class V23 extends Migration
 
             switch ($id) {
                 case '_metadata':
-                    if ($this->projectDB->exists('builds')) {
-                        $this->projectDB->deleteCollection('builds');
+                    if (!$this->dbForProject->getCollection('builds')->isEmpty()) {
+                        $this->dbForProject->deleteCollection('builds');
                     }
                     break;
                 case 'rules':
-                    $attributesToDelete = [
+                    $attributes = [
                         'resourceId',
                         'resourceInternalId',
                         'resourceType',
                     ];
-                    foreach ($attributesToDelete as $attribute) {
+                    foreach ($attributes as $attribute) {
                         try {
-                            $this->projectDB->deleteAttribute($id, $attribute);
+                            $this->dbForProject->deleteAttribute($id, $attribute);
                         } catch (\Throwable $th) {
-                            Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete attribute \"$attribute\" from collection {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -487,19 +507,19 @@ class V23 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete index \"$index\" from collection {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'functions':
                     try {
-                        $this->projectDB->deleteAttribute($id, 'deployment');
+                        $this->dbForProject->deleteAttribute($id, 'deployment');
                     } catch (\Throwable $th) {
-                        Console::warning("'deployment' from {$id}: {$th->getMessage()}");
+                        Console::warning("Failed to delete attribute \"deployment\" from collection {$id}: {$th->getMessage()}");
                     }
 
                     $indexesToDelete = [
@@ -507,16 +527,16 @@ class V23 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete index \"$index\" from collection {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'deployments':
-                    $attributesToDelete = [
+                    $attributes = [
                         'buildInternalId',
                         'buildId',
                         'commands',
@@ -527,11 +547,11 @@ class V23 extends Migration
                         'chunksUploaded',
                         'search'
                     ];
-                    foreach ($attributesToDelete as $attribute) {
+                    foreach ($attributes as $attribute) {
                         try {
-                            $this->projectDB->deleteAttribute($id, $attribute);
+                            $this->dbForProject->deleteAttribute($id, $attribute);
                         } catch (\Throwable $th) {
-                            Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete attribute \"$attribute\" from collection {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -542,25 +562,25 @@ class V23 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete index \"$index\" from collection {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'executions':
-                    $attributesToDelete = [
+                    $attributes = [
                         'functionId',
                         'functionInternalId',
                         'search'
                     ];
-                    foreach ($attributesToDelete as $attribute) {
+                    foreach ($attributes as $attribute) {
                         try {
-                            $this->projectDB->deleteAttribute($id, $attribute);
+                            $this->dbForProject->deleteAttribute($id, $attribute);
                         } catch (\Throwable $th) {
-                            Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete attribute \"$attribute\" from collection {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -570,18 +590,17 @@ class V23 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete index \"$index\" from collection {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 default:
                     break;
             }
-            usleep(50000);
         }
     }
 }
