@@ -447,8 +447,9 @@ class V23 extends Migration
 
     private function cleanCollections(): void
     {
-        $internalProjectId = $this->project->getInternalId();
-        $collectionType = match ($internalProjectId) {
+        $projectInternalId = $this->project->getInternalId();
+
+        $collectionType = match ($projectInternalId) {
             'console' => 'console',
             default => 'projects',
         };
@@ -458,8 +459,6 @@ class V23 extends Migration
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
-
-            $this->projectDB->setNamespace("_$internalProjectId");
 
             switch ($id) {
                 case '_metadata':
