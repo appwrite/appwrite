@@ -21977,22 +21977,19 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "tokens.read",
                     "platforms": [
-                        "client",
-                        "server",
+                        "console",
                         "server"
                     ],
                     "packaging": false,
                     "auth": {
                         "Project": [],
-                        "Session": []
+                        "Key": []
                     }
                 },
                 "security": [
                     {
                         "Project": [],
-                        "Session": [],
-                        "Key": [],
-                        "JWT": []
+                        "Key": []
                     }
                 ],
                 "parameters": [
@@ -22061,22 +22058,19 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "tokens.write",
                     "platforms": [
-                        "client",
-                        "server",
+                        "console",
                         "server"
                     ],
                     "packaging": false,
                     "auth": {
                         "Project": [],
-                        "Session": []
+                        "Key": []
                     }
                 },
                 "security": [
                     {
                         "Project": [],
-                        "Session": [],
-                        "Key": [],
-                        "JWT": []
+                        "Key": []
                     }
                 ],
                 "parameters": [
@@ -22111,6 +22105,200 @@
                                 }
                             }
                         }
+                    }
+                ]
+            }
+        },
+        "\/tokens\/{tokenId}": {
+            "get": {
+                "summary": "Get token",
+                "operationId": "tokensGet",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "description": "Get a token by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "ResourceToken",
+                        "schema": {
+                            "$ref": "#\/definitions\/resourceToken"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "get",
+                    "group": "tokens",
+                    "weight": 437,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "tokens\/get.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a token by its unique ID.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "tokens.read",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "tokenId",
+                        "description": "Token ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TOKEN_ID>",
+                        "in": "path"
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update token",
+                "operationId": "tokensUpdate",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "description": "Update a token by its unique ID. Use this endpoint to update a token's expiry date.",
+                "responses": {
+                    "200": {
+                        "description": "ResourceToken",
+                        "schema": {
+                            "$ref": "#\/definitions\/resourceToken"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "update",
+                    "group": "tokens",
+                    "weight": 439,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "tokens\/update.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterUpdate a token by its unique ID. Use this endpoint to update a token's expiry date.",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "tokens.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "tokenId",
+                        "description": "Token unique ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TOKEN_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "expire": {
+                                    "type": "string",
+                                    "description": "File token expiry date",
+                                    "default": null,
+                                    "x-example": null,
+                                    "x-nullable": true
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete token",
+                "operationId": "tokensDelete",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "tokens"
+                ],
+                "description": "Delete a token by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "delete",
+                    "group": "tokens",
+                    "weight": 440,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "tokens\/delete.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterDelete a token by its unique ID.",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "tokens.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "tokenId",
+                        "description": "Token ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TOKEN_ID>",
+                        "in": "path"
                     }
                 ]
             }
