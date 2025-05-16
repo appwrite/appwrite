@@ -21,6 +21,7 @@ func main() {
         "key",
         []interface{}{},
         databases.WithCreateIndexOrders([]interface{}{}),
+        databases.WithCreateIndexLengths([]interface{}{}),
     )
 
     if error != nil {

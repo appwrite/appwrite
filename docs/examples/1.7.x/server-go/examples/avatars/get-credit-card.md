@@ -18,7 +18,7 @@ func main() {
         "amex",
         avatars.WithGetCreditCardWidth(0),
         avatars.WithGetCreditCardHeight(0),
-        avatars.WithGetCreditCardQuality(0),
+        avatars.WithGetCreditCardQuality(-1),
     )
 
     if error != nil {

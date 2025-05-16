@@ -11,7 +11,7 @@ UInt8List bytes = await avatars.getCreditCard(
     code: CreditCard.americanExpress,
     width: 0, // optional
     height: 0, // optional
-    quality: 0, // optional
+    quality: -1, // optional
 )
 
 final file = File('path_to_file/filename.ext');
@@ -23,7 +23,7 @@ FutureBuilder(
     code: CreditCard.americanExpress,
     width:0 , // optional
     height:0 , // optional
-    quality:0 , // optional
+    quality:-1 , // optional
 ), // Works for both public file and private file, for private files you need to be logged in
     builder: (context, snapshot) {
       return snapshot.hasData && snapshot.data != null

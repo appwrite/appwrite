@@ -3530,12 +3530,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -3661,12 +3661,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -4211,12 +4211,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -4631,26 +4631,6 @@
                                 }
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
-                        },
-                        {
-                            "name": "createDocuments",
-                            "parameters": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/definitions\/documentList"
-                                }
-                            ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -6439,6 +6419,15 @@
                         "type": "string",
                         "x-example": "<FILE_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "token",
+                        "description": "File token for accessing this file.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<TOKEN>",
+                        "default": "",
+                        "in": "query"
                     }
                 ]
             }
@@ -6554,12 +6543,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Preview image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Preview image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     },
                     {
@@ -6637,6 +6626,15 @@
                         "x-enum-keys": [],
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "token",
+                        "description": "File token for accessing this file.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<TOKEN>",
+                        "default": "",
+                        "in": "query"
                     }
                 ]
             }
@@ -6707,6 +6705,15 @@
                         "type": "string",
                         "x-example": "<FILE_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "token",
+                        "description": "File token for accessing this file.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<TOKEN>",
+                        "default": "",
+                        "in": "query"
                     }
                 ]
             }
@@ -7732,451 +7739,6 @@
                     }
                 ]
             }
-        },
-        "\/tokens\/buckets\/{bucketId}\/files\/{fileId}": {
-            "get": {
-                "summary": "List tokens",
-                "operationId": "tokensList",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "List all the tokens created for a specific file or bucket. You can use the query params to filter your results.",
-                "responses": {
-                    "200": {
-                        "description": "Resource Tokens List",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceTokenList"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "list",
-                    "group": "files",
-                    "weight": 439,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/list.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterList all the tokens created for a specific file or bucket. You can use the query params to filter your results.",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tokens.read",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "bucketId",
-                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<BUCKET_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "fileId",
-                        "description": "File unique ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<FILE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: expire",
-                        "required": false,
-                        "type": "array",
-                        "collectionFormat": "multi",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": [],
-                        "in": "query"
-                    }
-                ]
-            },
-            "post": {
-                "summary": "Create file token",
-                "operationId": "tokensCreateFileToken",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Create a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.",
-                "responses": {
-                    "201": {
-                        "description": "ResourceToken",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceToken"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "createFileToken",
-                    "group": "files",
-                    "weight": 436,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/create-file-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "tokens.write",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "bucketId",
-                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<BUCKET_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "fileId",
-                        "description": "File unique ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<FILE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "expire": {
-                                    "type": "string",
-                                    "description": "Token expiry date",
-                                    "default": null,
-                                    "x-example": null,
-                                    "x-nullable": true
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": [],
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            }
-        },
-        "\/tokens\/{tokenId}": {
-            "get": {
-                "summary": "Get token",
-                "operationId": "tokensGet",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Get a token by its unique ID.",
-                "responses": {
-                    "200": {
-                        "description": "ResourceToken",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceToken"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "get",
-                    "group": "tokens",
-                    "weight": 437,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/get.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a token by its unique ID.",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tokens.read",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "Token ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    }
-                ]
-            },
-            "patch": {
-                "summary": "Update token",
-                "operationId": "tokensUpdate",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Update a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.",
-                "responses": {
-                    "200": {
-                        "description": "ResourceToken",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceToken"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "update",
-                    "group": "tokens",
-                    "weight": 440,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/update.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterUpdate a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "tokens.write",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "Token unique ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "expire": {
-                                    "type": "string",
-                                    "description": "File token expiry date",
-                                    "default": null,
-                                    "x-example": null,
-                                    "x-nullable": true
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            },
-            "delete": {
-                "summary": "Delete token",
-                "operationId": "tokensDelete",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Delete a token by its unique ID.",
-                "responses": {
-                    "204": {
-                        "description": "No content"
-                    }
-                },
-                "x-appwrite": {
-                    "method": "delete",
-                    "group": "tokens",
-                    "weight": 441,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/delete.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterDelete a token by its unique ID.",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "tokens.write",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "Token ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    }
-                ]
-            }
-        },
-        "\/tokens\/{tokenId}\/jwt": {
-            "get": {
-                "summary": "Get token as JWT",
-                "operationId": "tokensGetJWT",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Get a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.",
-                "responses": {
-                    "200": {
-                        "description": "JWT",
-                        "schema": {
-                            "$ref": "#\/definitions\/jwt"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getJWT",
-                    "group": "tokens",
-                    "weight": 438,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/get-j-w-t.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tokens.read",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "File token ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    }
-                ]
-            }
         }
     },
     "tags": [
@@ -8378,31 +7940,6 @@
             "required": [
                 "total",
                 "files"
-            ]
-        },
-        "resourceTokenList": {
-            "description": "Resource Tokens List",
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer",
-                    "description": "Total number of tokens documents that matched your query.",
-                    "x-example": 5,
-                    "format": "int32"
-                },
-                "tokens": {
-                    "type": "array",
-                    "description": "List of tokens.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/resourceToken"
-                    },
-                    "x-example": ""
-                }
-            },
-            "required": [
-                "total",
-                "tokens"
             ]
         },
         "teamList": {
@@ -9610,61 +9147,6 @@
                 "sizeOriginal",
                 "chunksTotal",
                 "chunksUploaded"
-            ]
-        },
-        "resourceToken": {
-            "description": "ResourceToken",
-            "type": "object",
-            "properties": {
-                "$id": {
-                    "type": "string",
-                    "description": "Token ID.",
-                    "x-example": "bb8ea5c16897e"
-                },
-                "$createdAt": {
-                    "type": "string",
-                    "description": "Token creation date in ISO 8601 format.",
-                    "x-example": "2020-10-15T06:38:00.000+00:00"
-                },
-                "$permissions": {
-                    "type": "array",
-                    "description": "Token permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                    "items": {
-                        "type": "string"
-                    },
-                    "x-example": [
-                        "read(\"any\")"
-                    ]
-                },
-                "resourceId": {
-                    "type": "string",
-                    "description": "Resource ID.",
-                    "x-example": "5e5ea5c168bb8:5e5ea5c168bb8"
-                },
-                "resourceType": {
-                    "type": "string",
-                    "description": "Resource type.",
-                    "x-example": "files"
-                },
-                "expire": {
-                    "type": "string",
-                    "description": "Token expiration date in ISO 8601 format.",
-                    "x-example": "2020-10-15T06:38:00.000+00:00"
-                },
-                "accessedAt": {
-                    "type": "string",
-                    "description": "Most recent access date in ISO 8601 format. This attribute is only updated again after 24 hours.",
-                    "x-example": "2020-10-15T06:38:00.000+00:00"
-                }
-            },
-            "required": [
-                "$id",
-                "$createdAt",
-                "$permissions",
-                "resourceId",
-                "resourceType",
-                "expire",
-                "accessedAt"
             ]
         },
         "team": {

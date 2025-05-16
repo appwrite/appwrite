@@ -11,5 +11,5 @@ const result = await avatars.getFlag(
     sdk.Flag.Afghanistan, // code
     0, // width (optional)
     0, // height (optional)
-    0 // quality (optional)
+    -1 // quality (optional)
 );

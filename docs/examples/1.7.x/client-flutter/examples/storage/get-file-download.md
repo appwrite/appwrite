@@ -10,6 +10,7 @@ Storage storage = Storage(client);
 UInt8List bytes = await storage.getFileDownload(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
+    token: '<TOKEN>', // optional
 )
 
 final file = File('path_to_file/filename.ext');
@@ -20,6 +21,7 @@ FutureBuilder(
     future: storage.getFileDownload(
     bucketId:'<BUCKET_ID>' ,
     fileId:'<FILE_ID>' ,
+    token:'<TOKEN>' , // optional
 ), // Works for both public file and private file, for private files you need to be logged in
     builder: (context, snapshot) {
       return snapshot.hasData && snapshot.data != null

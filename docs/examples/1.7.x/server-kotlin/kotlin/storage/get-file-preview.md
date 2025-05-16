@@ -15,12 +15,13 @@ val result = storage.getFilePreview(
     width = 0, // optional
     height = 0, // optional
     gravity = "center", // optional
-    quality = 0, // optional
+    quality = -1, // optional
     borderWidth = 0, // optional
     borderColor = "", // optional
     borderRadius = 0, // optional
     opacity = 0, // optional
     rotation = -360, // optional
     background = "", // optional
-    output = "jpg" // optional
+    output = "jpg", // optional
+    token = "<TOKEN>" // optional
 )

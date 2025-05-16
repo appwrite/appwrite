@@ -8,7 +8,8 @@ const storage = new Storage(client);
 
 const result = storage.getFileView(
     '<BUCKET_ID>', // bucketId
-    '<FILE_ID>' // fileId
+    '<FILE_ID>', // fileId
+    '<TOKEN>' // token (optional)
 );
 
 console.log(result);

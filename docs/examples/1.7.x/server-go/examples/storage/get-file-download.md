@@ -17,6 +17,7 @@ func main() {
     response, error := service.GetFileDownload(
         "<BUCKET_ID>",
         "<FILE_ID>",
+        storage.WithGetFileDownloadToken("<TOKEN>"),
     )
 
     if error != nil {

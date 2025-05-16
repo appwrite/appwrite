@@ -1,15 +1,14 @@
 mutation {
     tokensUpdate(
         tokenId: "<TOKEN_ID>",
-        expire: "",
-        permissions: ["read("any")"]
+        expire: ""
     ) {
         _id
         _createdAt
-        _permissions
         resourceId
         resourceType
         expire
+        secret
         accessedAt
     }
 }

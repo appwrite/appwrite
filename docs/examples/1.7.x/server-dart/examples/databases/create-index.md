@@ -14,4 +14,5 @@ Index result = await databases.createIndex(
     type: IndexType.key,
     attributes: [],
     orders: [], // (optional)
+    lengths: [], // (optional)
 );

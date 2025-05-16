@@ -13,5 +13,5 @@ result = avatars.get_credit_card(
     code = CreditCard.AMERICAN_EXPRESS,
     width = 0, # optional
     height = 0, # optional
-    quality = 0 # optional
+    quality = -1 # optional
 )

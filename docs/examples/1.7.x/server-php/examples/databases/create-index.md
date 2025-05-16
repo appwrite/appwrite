@@ -17,5 +17,6 @@ $result = $databases->createIndex(
     key: '',
     type: IndexType::KEY(),
     attributes: [],
-    orders: [] // optional
+    orders: [], // optional
+    lengths: [] // optional
 );

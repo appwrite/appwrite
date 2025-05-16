@@ -14,5 +14,5 @@ result = avatars.get_browser(
     code: Browser::AVANT_BROWSER,
     width: 0, # optional
     height: 0, # optional
-    quality: 0 # optional
+    quality: -1 # optional
 )

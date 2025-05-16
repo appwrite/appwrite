@@ -18,7 +18,7 @@ func main() {
         "af",
         avatars.WithGetFlagWidth(0),
         avatars.WithGetFlagHeight(0),
-        avatars.WithGetFlagQuality(0),
+        avatars.WithGetFlagQuality(-1),
     )
 
     if error != nil {

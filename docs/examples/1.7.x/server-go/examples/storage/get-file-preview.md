@@ -20,7 +20,7 @@ func main() {
         storage.WithGetFilePreviewWidth(0),
         storage.WithGetFilePreviewHeight(0),
         storage.WithGetFilePreviewGravity("center"),
-        storage.WithGetFilePreviewQuality(0),
+        storage.WithGetFilePreviewQuality(-1),
         storage.WithGetFilePreviewBorderWidth(0),
         storage.WithGetFilePreviewBorderColor(""),
         storage.WithGetFilePreviewBorderRadius(0),
@@ -28,6 +28,7 @@ func main() {
         storage.WithGetFilePreviewRotation(-360),
         storage.WithGetFilePreviewBackground(""),
         storage.WithGetFilePreviewOutput("jpg"),
+        storage.WithGetFilePreviewToken("<TOKEN>"),
     )
 
     if error != nil {

@@ -9,5 +9,6 @@ const storage = new sdk.Storage(client);
 
 const result = await storage.getFileView(
     '<BUCKET_ID>', // bucketId
-    '<FILE_ID>' // fileId
+    '<FILE_ID>', // fileId
+    '<TOKEN>' // token (optional)
 );

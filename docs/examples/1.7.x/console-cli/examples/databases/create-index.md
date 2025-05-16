@@ -5,3 +5,4 @@ appwrite databases createIndex \
         --type key \
         --attributes one two three \
 
+

@@ -10,5 +10,6 @@ storage = Storage(client)
 
 result = storage.get_file_download(
     bucket_id = '<BUCKET_ID>',
-    file_id = '<FILE_ID>'
+    file_id = '<FILE_ID>',
+    token = '<TOKEN>' # optional
 )

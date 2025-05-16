@@ -13,5 +13,6 @@ const result = await databases.createIndex(
     '', // key
     sdk.IndexType.Key, // type
     [], // attributes
-    [] // orders (optional)
+    [], // orders (optional)
+    [] // lengths (optional)
 );

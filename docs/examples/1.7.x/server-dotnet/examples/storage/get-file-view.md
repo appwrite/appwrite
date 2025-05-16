@@ -11,5 +11,6 @@ Storage storage = new Storage(client);
 
 byte[] result = await storage.GetFileView(
     bucketId: "<BUCKET_ID>",
-    fileId: "<FILE_ID>"
+    fileId: "<FILE_ID>",
+    token: "<TOKEN>" // optional
 );

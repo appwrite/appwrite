@@ -17,6 +17,7 @@ func main() {
     response, error := service.GetFileView(
         "<BUCKET_ID>",
         "<FILE_ID>",
+        storage.WithGetFileViewToken("<TOKEN>"),
     )
 
     if error != nil {

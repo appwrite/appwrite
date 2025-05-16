@@ -12,7 +12,8 @@ const result = await databases.createIndex(
     '', // key
     IndexType.Key, // type
     [], // attributes
-    [] // orders (optional)
+    [], // orders (optional)
+    [] // lengths (optional)
 );
 
 console.log(result);

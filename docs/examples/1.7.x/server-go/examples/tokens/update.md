@@ -11,13 +11,12 @@ func main() {
 
     client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
-    client.SetSession("") // The user session to authenticate with
+    client.SetKey("<YOUR_API_KEY>") // Your secret API key
 
     service := tokens.NewTokens(client)
     response, error := service.Update(
         "<TOKEN_ID>",
         tokens.WithUpdateExpire(""),
-        tokens.WithUpdatePermissions(interface{}{"read("any")"}),
     )
 
     if error != nil {

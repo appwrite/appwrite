@@ -10,5 +10,6 @@ storage = Storage(client)
 
 result = storage.get_file_view(
     bucket_id = '<BUCKET_ID>',
-    file_id = '<FILE_ID>'
+    file_id = '<FILE_ID>',
+    token = '<TOKEN>' # optional
 )

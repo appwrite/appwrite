@@ -15,5 +15,6 @@ result = databases.create_index(
     key = '',
     type = IndexType.KEY,
     attributes = [],
-    orders = [] # optional
+    orders = [], # optional
+    lengths = [] # optional
 )

@@ -18,7 +18,7 @@ func main() {
         "aa",
         avatars.WithGetBrowserWidth(0),
         avatars.WithGetBrowserHeight(0),
-        avatars.WithGetBrowserQuality(0),
+        avatars.WithGetBrowserQuality(-1),
     )
 
     if error != nil {

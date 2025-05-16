@@ -14,7 +14,7 @@ storage.getFilePreview(
     0, // width (optional)
     0, // height (optional)
     ImageGravity.CENTER, // gravity (optional)
-    0, // quality (optional)
+    -1, // quality (optional)
     0, // borderWidth (optional)
     "", // borderColor (optional)
     0, // borderRadius (optional)
@@ -22,6 +22,7 @@ storage.getFilePreview(
     -360, // rotation (optional)
     "", // background (optional)
     ImageFormat.JPG, // output (optional)
+    "<TOKEN>", // token (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

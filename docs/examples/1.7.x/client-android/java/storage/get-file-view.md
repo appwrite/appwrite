@@ -11,6 +11,7 @@ Storage storage = new Storage(client);
 storage.getFileView(
     "<BUCKET_ID>", // bucketId 
     "<FILE_ID>", // fileId 
+    "<TOKEN>", // token (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

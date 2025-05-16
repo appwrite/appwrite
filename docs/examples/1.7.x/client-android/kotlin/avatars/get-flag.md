@@ -13,5 +13,5 @@ val result = avatars.getFlag(
     code = Flag.AFGHANISTAN,
     width = 0, // (optional)
     height = 0, // (optional)
-    quality = 0, // (optional)
+    quality = -1, // (optional)
 )

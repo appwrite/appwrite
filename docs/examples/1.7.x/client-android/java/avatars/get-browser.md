@@ -13,7 +13,7 @@ avatars.getBrowser(
     Browser.AVANT_BROWSER, // code 
     0, // width (optional)
     0, // height (optional)
-    0, // quality (optional)
+    -1, // quality (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

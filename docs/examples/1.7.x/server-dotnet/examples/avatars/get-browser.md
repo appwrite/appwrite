@@ -14,5 +14,5 @@ byte[] result = await avatars.GetBrowser(
     code: Browser.AvantBrowser,
     width: 0, // optional
     height: 0, // optional
-    quality: 0 // optional
+    quality: -1 // optional
 );

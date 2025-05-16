@@ -8,8 +8,7 @@ const tokens = new Tokens(client);
 
 const result = await tokens.update(
     '<TOKEN_ID>', // tokenId
-    '', // expire (optional)
-    ["read("any")"] // permissions (optional)
+    '' // expire (optional)
 );
 
 console.log(result);

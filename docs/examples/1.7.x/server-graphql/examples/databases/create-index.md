@@ -5,13 +5,15 @@ mutation {
         key: "",
         type: "key",
         attributes: [],
-        orders: []
+        orders: [],
+        lengths: []
     ) {
         key
         type
         status
         error
         attributes
+        lengths
         orders
         _createdAt
         _updatedAt

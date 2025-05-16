@@ -5,13 +5,12 @@ import io.appwrite.services.Tokens
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
-    .setSession("") // The user session to authenticate with
+    .setKey("<YOUR_API_KEY>") // Your secret API key
 
 val tokens = Tokens(client)
 
 val response = tokens.createFileToken(
     bucketId = "<BUCKET_ID>",
     fileId = "<FILE_ID>",
-    expire = "", // optional
-    permissions = listOf("read("any")") // optional
+    expire = "" // optional
 )

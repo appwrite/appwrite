@@ -13,7 +13,7 @@ UInt8List bytes = await storage.getFilePreview(
     width: 0, // optional
     height: 0, // optional
     gravity: ImageGravity.center, // optional
-    quality: 0, // optional
+    quality: -1, // optional
     borderWidth: 0, // optional
     borderColor: '', // optional
     borderRadius: 0, // optional
@@ -21,6 +21,7 @@ UInt8List bytes = await storage.getFilePreview(
     rotation: -360, // optional
     background: '', // optional
     output: ImageFormat.jpg, // optional
+    token: '<TOKEN>', // optional
 )
 
 final file = File('path_to_file/filename.ext');
@@ -34,7 +35,7 @@ FutureBuilder(
     width:0 , // optional
     height:0 , // optional
     gravity: ImageGravity.center, // optional
-    quality:0 , // optional
+    quality:-1 , // optional
     borderWidth:0 , // optional
     borderColor:'' , // optional
     borderRadius:0 , // optional
@@ -42,6 +43,7 @@ FutureBuilder(
     rotation:-360 , // optional
     background:'' , // optional
     output: ImageFormat.jpg, // optional
+    token:'<TOKEN>' , // optional
 ), // Works for both public file and private file, for private files you need to be logged in
     builder: (context, snapshot) {
       return snapshot.hasData && snapshot.data != null

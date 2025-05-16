@@ -22,6 +22,7 @@ mutation {
             status
             error
             attributes
+            lengths
             orders
             _createdAt
             _updatedAt

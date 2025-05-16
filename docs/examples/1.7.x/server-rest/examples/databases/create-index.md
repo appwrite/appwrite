@@ -9,5 +9,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "key": ,
   "type": "key",
   "attributes": [],
-  "orders": []
+  "orders": [],
+  "lengths": []
 }
