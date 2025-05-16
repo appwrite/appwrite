@@ -30615,8 +30615,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "tokens.read",
                     "platforms": [
-                        "client",
-                        "server",
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -30627,8 +30626,7 @@
                 "security": [
                     {
                         "Project": [],
-                        "Key": [],
-                        "JWT": []
+                        "Key": []
                     }
                 ],
                 "parameters": [
@@ -30697,8 +30695,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "tokens.write",
                     "platforms": [
-                        "client",
-                        "server",
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -30709,8 +30706,7 @@
                 "security": [
                     {
                         "Project": [],
-                        "Key": [],
-                        "JWT": []
+                        "Key": []
                     }
                 ],
                 "parameters": [
@@ -30788,7 +30784,8 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "tokens.read",
                     "platforms": [
-                        "console"
+                        "console",
+                        "server"
                     ],
                     "packaging": false,
                     "auth": {
@@ -30797,7 +30794,8 @@
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Key": []
                     }
                 ],
                 "parameters": [
@@ -30846,7 +30844,8 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "tokens.write",
                     "platforms": [
-                        "console"
+                        "console",
+                        "server"
                     ],
                     "packaging": false,
                     "auth": {
@@ -30855,7 +30854,8 @@
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Key": []
                     }
                 ],
                 "parameters": [
@@ -30914,7 +30914,8 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "tokens.write",
                     "platforms": [
-                        "console"
+                        "console",
+                        "server"
                     ],
                     "packaging": false,
                     "auth": {
@@ -30923,7 +30924,8 @@
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Key": []
                     }
                 ],
                 "parameters": [

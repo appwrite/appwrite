@@ -41,7 +41,7 @@ class XList extends Action
                 description: <<<EOT
                 List all the tokens created for a specific file or bucket. You can use the query params to filter your results.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

@@ -45,7 +45,7 @@ class Delete extends Action
             description: <<<EOT
             Delete a token by its unique ID.
             EOT,
-            auth: [AuthType::ADMIN],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_NOCONTENT,
