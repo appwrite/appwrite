@@ -11,6 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
+$dbService = $this->getParam('database', 'mariadb') === 'mariadb' ? 'mariadb' : 'postgresql';
 ?>services:
   traefik:
     image: traefik:2.11
@@ -70,11 +71,7 @@ $image = $this->getParam('image', '');
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      <?php if ($this->getParam('_APP_DB_SCHEME', 'mariadb') === 'mariadb'): ?>
-      - mariadb
-      <?php else: ?>
-      - postgres
-      <?php endif; ?>
+      - <?= $dbService  . "\n" ?>
 #      - clamav
     environment:
       - _APP_ENV
@@ -225,7 +222,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -254,7 +251,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -280,7 +277,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -308,7 +305,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -371,7 +368,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -397,7 +394,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
@@ -465,7 +462,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -500,7 +497,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
       - openruntimes-executor
     environment:
       - _APP_ENV
@@ -539,6 +536,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -575,6 +573,7 @@ $image = $this->getParam('image', '');
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -625,7 +624,7 @@ $image = $this->getParam('image', '');
     volumes:
       - appwrite-imports:/storage/imports:rw
     depends_on:
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -658,6 +657,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -695,7 +695,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -724,7 +724,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -752,7 +752,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -779,7 +779,7 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService  . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -804,7 +804,7 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService  . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -829,7 +829,7 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService  . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -932,15 +932,15 @@ $image = $this->getParam('image', '');
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
 
-  postgres:
+  postgresql:
     image: postgres:15-alpine
-    container_name: appwrite-postgres
+    container_name: appwrite-postgresql
     <<: *x-logging
     restart: unless-stopped
     networks:
       - appwrite
     volumes:
-      - appwrite-postgres:/var/lib/postgresql/data:rw
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
     environment:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
@@ -989,4 +989,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
-  appwrite-postgres:
+  appwrite-postgresql:
