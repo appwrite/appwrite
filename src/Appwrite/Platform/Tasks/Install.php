@@ -32,7 +32,7 @@ class Install extends Action
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
-            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database));
+            ->callback($this->action(...));
     }
 
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
@@ -59,6 +59,13 @@ class Install extends Action
 
         Console::success('Starting Appwrite installation...');
 
+        // Create directory with write permissions
+        if (!\file_exists(\dirname($this->path))) {
+            if (!@\mkdir(\dirname($this->path), 0755, true)) {
+                Console::error('Can\'t create directory ' . \dirname($this->path));
+                Console::exit(1);
+            }
+        }
 
         $data = @file_get_contents($this->path . '/docker-compose.yml');
 

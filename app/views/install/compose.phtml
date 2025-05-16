@@ -11,7 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
-$dbService = $this->getParam('database', 'mariadb') === 'mariadb' ? 'mariadb' : 'postgresql';
+$dbService = $this->getParam('database');
 ?>services:
   traefik:
     image: traefik:2.11
@@ -885,10 +885,12 @@ $dbService = $this->getParam('database', 'mariadb') === 'mariadb' ? 'mariadb' : 
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
+
+<?php if ($dbService === 'mariadb'): ?>
+
   mariadb:
-    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.11
     container_name: appwrite-mariadb
-    <<: *x-logging
     restart: unless-stopped
     networks:
       - appwrite
@@ -902,10 +904,11 @@ $dbService = $this->getParam('database', 'mariadb') === 'mariadb' ? 'mariadb' : 
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
 
+<?php elseif ($dbService === 'postgresql'): ?>
+
   postgresql:
     image: postgres:15-alpine
     container_name: appwrite-postgresql
-    <<: *x-logging
     restart: unless-stopped
     networks:
       - appwrite
@@ -915,6 +918,8 @@ $dbService = $this->getParam('database', 'mariadb') === 'mariadb' ? 'mariadb' : 
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
+
+<?php endif; ?>
 
   redis:
     image: redis:7.2.4-alpine
@@ -949,7 +954,11 @@ networks:
     name: runtimes
 
 volumes:
+<?php if ($dbService === 'mariadb'): ?>
   appwrite-mariadb:
+<?php elseif ($dbService === 'postgresql'): ?>
+  appwrite-postgresql:
+<?php endif; ?>
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
@@ -957,4 +966,3 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   appwrite-config:
-  appwrite-postgresql:
