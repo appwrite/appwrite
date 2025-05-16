@@ -64,7 +64,7 @@ class V23 extends Migration
         $collections = $this->collections[$collectionType];
 
         foreach ($collections as $collection) {
-            $id = $collection['$id'] ?? null;
+            $id = $collection['$id'];
 
             if (empty($id)) {
                 continue;
@@ -314,7 +314,7 @@ class V23 extends Migration
      * @throws \Utopia\Database\Exception\Authorization
      * @throws \Utopia\Database\Exception\Query
      */
-    protected function migrateDocument(Document $document): Document
+    private function migrateDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
             case 'rules':
@@ -328,34 +328,35 @@ class V23 extends Migration
                 7. Fill "deploymentId" and "deploymentInternalId". If "deploymentResourceType" is "function", get project DB, and find function with ID "resourceId". Then fill rule's "deploymentId" with function's "deployment", and "deploymentId" as backup
                 */
 
+                $deploymentResourceType = null;
+
                 $type = $document->getAttribute('resourceType');
                 if ($type === 'function') {
                     $type = 'deployment';
-                }
-
-                $deploymentResourceType = null;
-                if ($document->getAttribute('resourceType') === 'function') {
                     $deploymentResourceType = 'function';
                 }
 
-                $resourceId = $document->getAttribute('resourceId');
+                $resourceId = $document->getAttribute('resourceId', $document->getAttribute('deploymentResourceId'));
+                $resourceInternalId = $document->getAttribute('resourceInternalId', $document->getAttribute('deploymentResourceInternalId'));
 
                 $document
                     ->setAttribute('type', $type)
-                    ->setAttribute('deploymentResourceId', $resourceId)
-                    ->setAttribute('deploymentResourceInternalId', $document->getAttribute('resourceInternalId'))
                     ->setAttribute('trigger', 'manual')
+                    ->setAttribute('deploymentResourceId', $resourceId)
+                    ->setAttribute('deploymentResourceInternalId', $resourceInternalId)
                     ->setAttribute('deploymentResourceType', $deploymentResourceType)
-                    ->setAttribute('search', \implode(' ', [$document->getId(), $document->getAttribute('domain', '')]))
-                ;
+                    ->setAttribute('search', \implode(' ', [$document->getId(), $document->getAttribute('domain', '')]));
 
                 if ($deploymentResourceType === 'function') {
                     if ($this->project->getInternalId() !== 'console') {
                         $function = $this->dbForProject->getDocument('functions', $resourceId);
 
+                        $deploymentId = $function->getAttribute('deployment', $document->getAttribute('deploymentId', ''));
+                        $deploymentInternalId = $function->getAttribute('deploymentInternalId', $document->getAttribute('deploymentInternalId', ''));
+
                         $document
-                            ->setAttribute('deploymentId', $function->getAttribute('deployment', $function->getAttribute('deploymentId', '')))
-                            ->setAttribute('deploymentInternalId', $function->getAttribute('deployment', $function->getAttribute('deploymentId', '')));
+                            ->setAttribute('deploymentId', $deploymentId)
+                            ->setAttribute('deploymentInternalId', $deploymentInternalId);
                     }
                 }
                 break;
@@ -363,7 +364,7 @@ class V23 extends Migration
                 /*
                 1. Fill "secret" with "false"
                 */
-                $document->setAttribute('secret', false);
+                $document->setAttribute('secret', $document->getAttribute('secret', false));
                 break;
             case 'executions':
                 /*
@@ -372,9 +373,9 @@ class V23 extends Migration
                 3. Fill "resourceType" with "functions"
                 */
                 $document
-                    ->setAttribute('resourceInternalId', $document->getAttribute('functionInternalId'))
-                    ->setAttribute('resourceId', $document->getAttribute('functionId'))
-                    ->setAttribute('resourceType', 'functions');
+                    ->setAttribute('resourceInternalId', $document->getAttribute('functionInternalId', $document->getAttribute('resourceInternalId')))
+                    ->setAttribute('resourceId', $document->getAttribute('functionId', $document->getAttribute('resourceId', '')))
+                    ->setAttribute('resourceType', $document->getAttribute('resourceType', 'functions'));
                 break;
             case 'functions':
                 /*
@@ -388,7 +389,7 @@ class V23 extends Migration
                 6. Fill latestDeploymentStatus with latestDeployment's build's "status"
                 */
                 if ($document->getAttribute('deployment')) {
-                    $document->setAttribute('deploymentId', $document->getAttribute('deployment'));
+                    $document->setAttribute('deploymentId', $document->getAttribute('deployment', $document->getAttribute('deploymentId', '')));
                 }
 
                 $deploymentId = $document->getAttribute('deploymentId');
@@ -407,7 +408,7 @@ class V23 extends Migration
                     ->setAttribute('latestDeploymentId', $latestDeployment->getId())
                     ->setAttribute('latestDeploymentInternalId', $latestDeployment->getInternalId())
                     ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $latestBuild->getAttribute('status'));
+                    ->setAttribute('latestDeploymentStatus', $latestBuild->getAttribute('status', $document->getAttribute('latestDeploymentStatus', '')));
                 break;
             case 'deployments':
                 /*
@@ -429,12 +430,12 @@ class V23 extends Migration
                 */
 
                 $document
-                    ->setAttribute('buildCommands', $document->getAttribute('commands'))
-                    ->setAttribute('sourcePath', $document->getAttribute('path'))
-                    ->setAttribute('sourceSize', $document->getAttribute('size'))
-                    ->setAttribute('sourceMetadata', $document->getAttribute('metadata'))
-                    ->setAttribute('sourceChunksTotal', $document->getAttribute('chunksTotal'))
-                    ->setAttribute('sourceChunksUploaded', $document->getAttribute('chunksUploaded'));
+                    ->setAttribute('buildCommands', $document->getAttribute('commands', $document->getAttribute('buildCommands', '')))
+                    ->setAttribute('sourcePath', $document->getAttribute('path', $document->getAttribute('sourcePath', '')))
+                    ->setAttribute('sourceSize', $document->getAttribute('size', $document->getAttribute('sourceSize', 0)))
+                    ->setAttribute('sourceMetadata', $document->getAttribute('metadata', $document->getAttribute('sourceMetadata', [])))
+                    ->setAttribute('sourceChunksTotal', $document->getAttribute('chunksTotal', $document->getAttribute('sourceChunksTotal', 0)))
+                    ->setAttribute('sourceChunksUploaded', $document->getAttribute('chunksUploaded', $document->getAttribute('sourceChunksUploaded', 0)));
 
                 $build = new Document();
                 if (!empty($document->getAttribute('buildId'))) {
@@ -442,13 +443,13 @@ class V23 extends Migration
                 }
 
                 $document
-                    ->setAttribute('buildStartedAt', $build->getAttribute('startTime'))
-                    ->setAttribute('buildEndedAt', $build->getAttribute('endTime'))
-                    ->setAttribute('buildDuration', $build->getAttribute('duration', 0))
-                    ->setAttribute('buildSize', $build->getAttribute('size', 0))
-                    ->setAttribute('status', $build->getAttribute('status'))
-                    ->setAttribute('buildPath', $build->getAttribute('path', ''))
-                    ->setAttribute('buildLogs', $build->getAttribute('logs', ''));
+                    ->setAttribute('buildStartedAt', $build->getAttribute('startTime', $document->getAttribute('buildStartTime', '')))
+                    ->setAttribute('buildEndedAt', $build->getAttribute('endTime', $document->getAttribute('buildEndTime', '')))
+                    ->setAttribute('buildDuration', $build->getAttribute('duration', $document->getAttribute('buildDuration', 0)))
+                    ->setAttribute('buildSize', $build->getAttribute('size', $document->getAttribute('buildSize', 0)))
+                    ->setAttribute('status', $build->getAttribute('status', $document->getAttribute('status', '')))
+                    ->setAttribute('buildPath', $build->getAttribute('path', $document->getAttribute('buildPath', '')))
+                    ->setAttribute('buildLogs', $build->getAttribute('logs', $document->getAttribute('buildLogs', '')));
 
                 $totalSize = $document->getAttribute('buildSize', 0)
                     + $document->getAttribute('sourceSize', 0);
@@ -459,7 +460,7 @@ class V23 extends Migration
                 /*
                 1. Fill "options" with "[]"
                 */
-                $document->setAttribute('options', []);
+                $document->setAttribute('options', $document->getAttribute('options', []));
                 break;
             default:
                 break;
