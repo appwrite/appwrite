@@ -96,18 +96,14 @@ abstract class Migration
 
         $this->collections = Config::getParam('collections', []);
 
-        $this->collections['projects'][] = [
-            '_metadata' => [
-                '$id' => ID::custom('_metadata'),
-                '$collection' => Database::METADATA
-            ]
+        $this->collections['projects']['_metadata'] = [
+            '$id' => ID::custom('_metadata'),
+            '$collection' => Database::METADATA,
         ];
 
-        $this->collections['projects'][] = [
-            'audit' => [
-                '$id' => ID::custom('audit'),
-                '$collection' => Database::METADATA
-            ],
+        $this->collections['projects']['audit'] = [
+            '$id' => ID::custom('audit'),
+            '$collection' => Database::METADATA,
         ];
     }
 
