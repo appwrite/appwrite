@@ -261,26 +261,30 @@ abstract class Migration
             throw new Exception("Collection {$from} not found");
         }
 
-        $attributes = [];
-        foreach ($attributeIds as $attributeId) {
-            $attribute = $collection['attributes'][$attributeId] ?? null;
+        $attributesToCreate = [];
+        $attributes = $collection['attributes'];
+        $attributeKeys = \array_column($collection['attributes'], '$id');
 
-            if ($attribute === null) {
+        foreach ($attributeIds as $attributeId) {
+            $attributeKey = \array_search($attributeId, $attributeKeys);
+
+            if ($attributeKey === false) {
                 throw new Exception("Attribute {$attributeId} not found");
             }
 
+            $attribute = $attributes[$attributeKey];
             $attribute['filters'] ??= [];
             $attribute['default'] ??= null;
             $attribute['default'] = \in_array('json', $attribute['filters'])
                 ? \json_encode($attribute['default'])
                 : $attribute['default'];
 
-            $attributes[] = $attribute;
+            $attributesToCreate[] = $attribute;
         }
 
         $database->createAttributes(
             collection: $collectionId,
-            attributes: $attributes,
+            attributes: $attributesToCreate,
         );
     }
 
