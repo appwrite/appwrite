@@ -46,17 +46,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async create<Preferences extends Models.Preferences>(userId: string, email: string, password: string, name?: string): Promise<Models.Account<Preferences>> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof email === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "email"');
-            }
-
-            if (typeof password === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "password"');
-            }
+            Service.validateRequiredParameters({ userId, email, password });
 
             let path = '/account';
             let payload: Payload = {};
@@ -101,13 +91,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updateEmail<Preferences extends Models.Preferences>(email: string, password: string): Promise<Models.Account<Preferences>> {
-            if (typeof email === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "email"');
-            }
-
-            if (typeof password === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "password"');
-            }
+            Service.validateRequiredParameters({ email, password });
 
             let path = '/account/email';
             let payload: Payload = {};
@@ -182,9 +166,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updateName<Preferences extends Models.Preferences>(name: string): Promise<Models.Account<Preferences>> {
-            if (typeof name === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "name"');
-            }
+            Service.validateRequiredParameters({ name });
 
             let path = '/account/name';
             let payload: Payload = {};
@@ -212,9 +194,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updatePassword<Preferences extends Models.Preferences>(password: string, oldPassword?: string): Promise<Models.Account<Preferences>> {
-            if (typeof password === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "password"');
-            }
+            Service.validateRequiredParameters({ password });
 
             let path = '/account/password';
             let payload: Payload = {};
@@ -248,13 +228,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updatePhone<Preferences extends Models.Preferences>(phone: string, password: string): Promise<Models.Account<Preferences>> {
-            if (typeof phone === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "phone"');
-            }
-
-            if (typeof password === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "password"');
-            }
+            Service.validateRequiredParameters({ phone, password });
 
             let path = '/account/phone';
             let payload: Payload = {};
@@ -303,9 +277,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updatePrefs<Preferences extends Models.Preferences>(prefs: object): Promise<Models.Account<Preferences>> {
-            if (typeof prefs === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "prefs"');
-            }
+            Service.validateRequiredParameters({ prefs });
 
             let path = '/account/prefs';
             let payload: Payload = {};
@@ -338,13 +310,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async createRecovery(email: string, url: string): Promise<Models.Token> {
-            if (typeof email === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "email"');
-            }
-
-            if (typeof url === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "url"');
-            }
+            Service.validateRequiredParameters({ email, url });
 
             let path = '/account/recovery';
             let payload: Payload = {};
@@ -384,21 +350,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updateRecovery(userId: string, secret: string, password: string, passwordAgain: string): Promise<Models.Token> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof secret === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "secret"');
-            }
-
-            if (typeof password === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "password"');
-            }
-
-            if (typeof passwordAgain === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "passwordAgain"');
-            }
+            Service.validateRequiredParameters({ userId, secret, password, passwordAgain });
 
             let path = '/account/recovery';
             let payload: Payload = {};
@@ -498,13 +450,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async createEmailSession(email: string, password: string): Promise<Models.Session> {
-            if (typeof email === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "email"');
-            }
-
-            if (typeof password === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "password"');
-            }
+            Service.validateRequiredParameters({ email, password });
 
             let path = '/account/sessions/email';
             let payload: Payload = {};
@@ -545,13 +491,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async createMagicURLSession(userId: string, email: string, url?: string): Promise<Models.Token> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof email === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "email"');
-            }
+            Service.validateRequiredParameters({ userId, email });
 
             let path = '/account/sessions/magic-url';
             let payload: Payload = {};
@@ -595,13 +535,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updateMagicURLSession(userId: string, secret: string): Promise<Models.Session> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof secret === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "secret"');
-            }
+            Service.validateRequiredParameters({ userId, secret });
 
             let path = '/account/sessions/magic-url';
             let payload: Payload = {};
@@ -644,9 +578,7 @@ export class Account extends Service {
          * @returns {void|string}
          */
         createOAuth2Session(provider: string, success?: string, failure?: string, scopes?: string[]): void | URL {
-            if (typeof provider === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "provider"');
-            }
+            Service.validateRequiredParameters({ provider });
 
             let path = '/account/sessions/oauth2/{provider}'.replace('{provider}', provider);
             let payload: Payload = {};
@@ -693,13 +625,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async createPhoneSession(userId: string, phone: string): Promise<Models.Token> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof phone === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "phone"');
-            }
+            Service.validateRequiredParameters({ userId, phone });
 
             let path = '/account/sessions/phone';
             let payload: Payload = {};
@@ -733,13 +659,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updatePhoneSession(userId: string, secret: string): Promise<Models.Session> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof secret === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "secret"');
-            }
+            Service.validateRequiredParameters({ userId, secret });
 
             let path = '/account/sessions/phone';
             let payload: Payload = {};
@@ -769,9 +689,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async getSession(sessionId: string): Promise<Models.Session> {
-            if (typeof sessionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "sessionId"');
-            }
+            Service.validateRequiredParameters({ sessionId });
 
             let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
             let payload: Payload = {};
@@ -794,9 +712,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updateSession(sessionId: string): Promise<Models.Session> {
-            if (typeof sessionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "sessionId"');
-            }
+            Service.validateRequiredParameters({ sessionId });
 
             let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
             let payload: Payload = {};
@@ -820,9 +736,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async deleteSession(sessionId: string): Promise<{}> {
-            if (typeof sessionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "sessionId"');
-            }
+            Service.validateRequiredParameters({ sessionId });
 
             let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
             let payload: Payload = {};
@@ -877,9 +791,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async createVerification(url: string): Promise<Models.Token> {
-            if (typeof url === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "url"');
-            }
+            Service.validateRequiredParameters({ url });
 
             let path = '/account/verification';
             let payload: Payload = {};
@@ -908,13 +820,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updateVerification(userId: string, secret: string): Promise<Models.Token> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof secret === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "secret"');
-            }
+            Service.validateRequiredParameters({ userId, secret });
 
             let path = '/account/verification';
             let payload: Payload = {};
@@ -970,13 +876,7 @@ export class Account extends Service {
          * @returns {Promise}
          */
         async updatePhoneVerification(userId: string, secret: string): Promise<Models.Token> {
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof secret === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "secret"');
-            }
+            Service.validateRequiredParameters({ userId, secret });
 
             let path = '/account/verification/phone';
             let payload: Payload = {};
