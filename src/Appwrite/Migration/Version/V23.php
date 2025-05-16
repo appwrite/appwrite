@@ -32,13 +32,13 @@ class V23 extends Migration
             );
         }
 
-        Console::info('Migrating Collections');
+        Console::info('Migrating collections');
         $this->migrateCollections();
 
-        Console::info('Migrating Documents');
+        Console::info('Migrating documents');
         $this->forEachDocument($this->migrateDocument(...));
 
-        Console::log('Cleaning Up Collections');
+        Console::info('Cleaning up collections');
         $this->cleanCollections();
     }
 
@@ -70,7 +70,7 @@ class V23 extends Migration
                 continue;
             }
 
-            Console::log("Migrating Collection \"{$id}\"");
+            Console::log("Migrating collection \"{$id}\"");
 
             switch ($id) {
                 case '_metadata':
@@ -139,7 +139,7 @@ class V23 extends Migration
                         try {
                             $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -152,7 +152,7 @@ class V23 extends Migration
                         try {
                             $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (Throwable $th) {
-                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -177,7 +177,7 @@ class V23 extends Migration
                         try {
                             $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (Throwable $th) {
-                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -206,7 +206,7 @@ class V23 extends Migration
                         try {
                             $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (Throwable $th) {
-                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -253,7 +253,7 @@ class V23 extends Migration
                         try {
                             $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -278,7 +278,7 @@ class V23 extends Migration
                         try {
                             $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
-                            Console::warning("Failed to create \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -480,7 +480,7 @@ class V23 extends Migration
         foreach ($collections as $collection) {
             $id = $collection['$id'];
 
-            Console::log("Migrating Collection \"{$id}\"");
+            Console::log("Cleaning up collection \"{$id}\"");
 
             switch ($id) {
                 case '_metadata':
