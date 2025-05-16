@@ -3201,25 +3201,25 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     new Parameter('permissions', optional: true),
                 ]
             ),
-            // new Method(
-            //     namespace: 'databases',
-            //     group: 'documents',
-            //     name: 'createDocuments',
-            //     description: '/docs/references/databases/create-documents.md',
-            //     auth: [AuthType::KEY],
-            //     responses: [
-            //         new SDKResponse(
-            //             code: Response::STATUS_CODE_CREATED,
-            //             model: Response::MODEL_DOCUMENT_LIST,
-            //         )
-            //     ],
-            //     contentType: ContentType::JSON,
-            //     parameters: [
-            //         new Parameter('databaseId', optional: false),
-            //         new Parameter('collectionId', optional: false),
-            //         new Parameter('documents', optional: false),
-            //     ]
-            // )
+             new Method(
+                 namespace: 'databases',
+                 group: 'documents',
+                 name: 'createDocuments',
+                 description: '/docs/references/databases/create-documents.md',
+                 auth: [AuthType::KEY],
+                 responses: [
+                     new SDKResponse(
+                         code: Response::STATUS_CODE_CREATED,
+                         model: Response::MODEL_DOCUMENT_LIST,
+                     )
+                 ],
+                 contentType: ContentType::JSON,
+                 parameters: [
+                     new Parameter('databaseId', optional: false),
+                     new Parameter('collectionId', optional: false),
+                     new Parameter('documents', optional: false),
+                 ]
+             )
         ]
     )
     ->param('databaseId', '', new UID(), 'Database ID.')

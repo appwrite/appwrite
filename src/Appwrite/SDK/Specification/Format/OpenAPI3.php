@@ -178,6 +178,7 @@ class OpenAPI3 extends Format
                     $desc = $method->getDescriptionFilePath();
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
+                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
