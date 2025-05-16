@@ -216,6 +216,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
@@ -245,6 +246,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -271,6 +273,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -305,6 +308,7 @@ $dbService = $this->getParam('database');
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -361,6 +365,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -390,6 +395,7 @@ $dbService = $this->getParam('database');
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -454,6 +460,7 @@ $dbService = $this->getParam('database');
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -485,6 +492,7 @@ $dbService = $this->getParam('database');
       - <?= $dbService  . "\n" ?>
       - openruntimes-executor
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -522,6 +530,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -559,6 +568,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -608,6 +618,7 @@ $dbService = $this->getParam('database');
     depends_on:
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -639,6 +650,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -677,6 +689,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -706,6 +719,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -734,6 +748,7 @@ $dbService = $this->getParam('database');
       - redis
       - <?= $dbService  . "\n" ?>
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -762,6 +777,7 @@ $dbService = $this->getParam('database');
       - <?= $dbService  . "\n" ?>
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -787,6 +803,7 @@ $dbService = $this->getParam('database');
       - <?= $dbService  . "\n" ?>
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -812,6 +829,7 @@ $dbService = $this->getParam('database');
       - <?= $dbService  . "\n" ?>
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
