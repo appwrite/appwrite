@@ -99,9 +99,10 @@ $register->set('logger', function () {
 
 $register->set('pools', function () {
     $group = new Group();
+    $dbScheme = System::getEnv('_APP_DB_SCHEME', 'mariadb');
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
+        'scheme' => $dbScheme,
         'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => System::getEnv('_APP_DB_PORT', '3306'),
         'user' => System::getEnv('_APP_DB_USER', ''),
