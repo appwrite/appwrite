@@ -2374,6 +2374,17 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('options'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65536,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ]
         ],
         'indexes' => [
             [
