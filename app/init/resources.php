@@ -509,7 +509,7 @@ App::setResource('timelimit', function (\Redis $redis) {
     };
 }, ['redis']);
 
-App::setResource('deviceForFiles', function (Telemetry $telemetry) {
+App::setResource('deviceForLocal', function (Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, new Local());
 }, ['telemetry']);
 
