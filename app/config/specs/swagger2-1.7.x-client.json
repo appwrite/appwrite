@@ -6638,7 +6638,6 @@
                         "enum": [
                             "jpg",
                             "jpeg",
-                            "gif",
                             "png",
                             "webp",
                             "heic",
