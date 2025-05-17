@@ -671,7 +671,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             timeout: $timeout,
-                            remove: false,
+                            remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
