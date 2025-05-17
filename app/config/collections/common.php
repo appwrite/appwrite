@@ -1101,6 +1101,28 @@ return [
                 'array' => false,
                 'filters' => ['json', 'encrypt'],
             ],
+            [
+                '$id' => ID::custom('scopes'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('expire'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'required' => false,
+                'signed' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
         ],
         'indexes' => [
             [

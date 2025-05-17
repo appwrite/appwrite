@@ -225,7 +225,7 @@ return [
                 '$id' => ID::custom('templates'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1000000, // TODO make sure size fits
+                'size' => 1_000_000, // TODO make sure size fits
                 'signed' => true,
                 'required' => false,
                 'default' => [],
@@ -1890,5 +1890,5 @@ return [
         'name' => 'vcsCommentLocks',
         'attributes' => [],
         'indexes' => []
-    ]
+    ],
 ];

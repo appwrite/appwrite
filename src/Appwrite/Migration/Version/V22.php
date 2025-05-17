@@ -50,27 +50,27 @@ class V22 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_$internalProjectId");
+            $this->dbForProject->setNamespace("_$internalProjectId");
 
             switch ($id) {
                 case 'installations':
                     // Create personalAccessToken attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'personalAccessToken');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'personalAccessToken');
                     } catch (Throwable $th) {
                         Console::warning("'personalAccessToken' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create personalAccessTokenExpiry attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'personalAccessTokenExpiry');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'personalAccessTokenExpiry');
                     } catch (Throwable $th) {
                         Console::warning("'personalAccessTokenExpiry' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create personalRefreshToken attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'personalRefreshToken');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'personalRefreshToken');
                     } catch (Throwable $th) {
                         Console::warning("'personalRefreshToken' from {$id}: {$th->getMessage()}");
                     }
