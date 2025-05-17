@@ -1160,11 +1160,35 @@ App::error()
                         break;
                 }
                 break;
-            case 'Utopia\Database\Exception\Authorization':
-                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+            case 'Utopia\Database\Exception\Conflict':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
                 break;
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Query':
+                $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Structure':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Duplicate':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
+                break;
+            case 'Utopia\Database\Exception\Restricted':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
+                break;
+            case 'Utopia\Database\Exception\Authorization':
+                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+                break;
+            case 'Utopia\Database\Exception\Relationship':
+                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\NotFound':
+                $error = new AppwriteException(AppwriteException::COLLECTION_NOT_FOUND, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Dependency':
+                $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, null, previous: $error);
                 break;
         }
 
