@@ -99,7 +99,7 @@ class Executor
         $endpoint = $this->selectEndpoint($projectId, $deploymentId);
 
         $body = '';
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, callback: function ($chunk) use ($body) {
+        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, callback: function ($chunk) use (&$body) {
             $body .= $chunk;
         });
 
