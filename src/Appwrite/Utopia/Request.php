@@ -220,4 +220,17 @@ class Request extends UtopiaRequest
 
         return UtopiaRequest::getUserAgent($default);
     }
+
+    /**
+     * Creates a unique stable cache identifier for this GET request.
+     * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
+     *
+     * @return string
+     */
+    public function cacheIdentifier(): string
+    {
+        $params = $this->getParams();
+        ksort($params);
+        return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
+    }
 }
