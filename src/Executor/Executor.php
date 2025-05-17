@@ -97,7 +97,11 @@ class Executor
         ];
 
         $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+
+        $body = '';
+        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, callback: function ($chunk) use ($body) {
+            $body .= $chunk;
+        });
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -105,7 +109,7 @@ class Executor
             throw new \Exception($message, $status);
         }
 
-        return $response['body'];
+        return $body;
     }
 
     /**
