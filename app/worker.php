@@ -348,10 +348,10 @@ Server::setResource('deviceForFunctions', function (Document $project, Telemetry
 }, ['project', 'telemetry']);
 
 Server::setResource('deviceForBuilds', function (Document $project, Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 
-Server::setResource('deviceForCache', function (Document $project, Telemetry $telemetry ) {
+Server::setResource('deviceForCache', function (Document $project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 
