@@ -685,11 +685,9 @@ $image = $this->getParam('image', '');
     container_name: appwrite-task-stats-resources
     entrypoint: stats-resources
     <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
