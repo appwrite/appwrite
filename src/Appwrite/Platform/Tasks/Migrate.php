@@ -27,7 +27,7 @@ class Migrate extends Action
     {
         $this
             ->desc('Migrate Appwrite to new version')
-            ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+            ->param('version', APP_VERSION_STABLE, new Text(16), 'Version to migrate to.', true)
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
