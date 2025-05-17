@@ -509,9 +509,9 @@ App::setResource('timelimit', function (\Redis $redis) {
     };
 }, ['redis']);
 
-App::setResource('deviceForLocal', function () {
-    return new Local();
-});
+App::setResource('deviceForFiles', function (Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, new Local());
+}, ['telemetry']);
 
 App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));

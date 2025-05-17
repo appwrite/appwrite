@@ -40,6 +40,7 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -336,6 +337,7 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
+Server::setResource('telemetry', fn () => new NoTelemetry());
 
 Server::setResource('deviceForSites', function (Document $project, Telemetry $telemetry) {
     return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
