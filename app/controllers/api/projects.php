@@ -2066,6 +2066,7 @@ App::patch('/v1/projects/:projectId/smtp')
         if ($enabled) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
+            $mail->SMTPAuth = (!empty($username) && !empty($password)) ? true : false;
             $mail->Username = $username;
             $mail->Password = $password;
             $mail->Host = $host;
