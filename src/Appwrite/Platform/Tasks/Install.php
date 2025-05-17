@@ -31,16 +31,25 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart));
+            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
+            ->callback($this->action(...));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
     {
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         /** @var array<string, array<string, string>> $vars array whre key is variable name and value is variable */
         $vars = [];
+        $vars['_APP_DB_SCHEME'] = [
+            'name' => '_APP_DB_SCHEME',
+            'default' => $database,
+            'required' => true,
+            'filter' => '',
+            'overwrite' => true,
+            'question' => 'Choose your database (mariadb|postgresql)',
+        ];
 
         foreach ($config as $category) {
             foreach ($category['variables'] ?? [] as $var) {
@@ -137,6 +146,7 @@ class Install extends Action
             }
         }
 
+
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
             $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
@@ -171,6 +181,10 @@ class Install extends Action
                 continue;
             }
 
+            if ($var['name'] === '_APP_DB_SCHEME' && $data !== false) {
+                continue;
+            }
+
             $input[$var['name']] = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
             if (empty($input[$var['name']])) {
@@ -187,16 +201,24 @@ class Install extends Action
                 }
             }
         }
+        $database = $input['_APP_DB_SCHEME'];
+        if ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
+        }
 
         $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
         $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
-
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
             ->setParam('organization', $organization)
-            ->setParam('image', $image);
+            ->setParam('image', $image)
+            ->setParam('database', $database);
 
         $templateForEnv->setParam('vars', $input);
 
