@@ -971,7 +971,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.15-streaming-
+    image: openruntimes/executor:0.7.15-streaming-1
     restart: unless-stopped
     networks:
       - appwrite
