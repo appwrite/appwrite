@@ -19,6 +19,12 @@ class V19 extends Filter
             case 'functions.listExecutions':
                 unset($content['search']);
                 break;
+            case 'project.createVariable':
+            case 'project.listVariables':
+            case 'functions.createVariable':
+            case 'functions.updateVariable':
+                $content['secret'] = false;
+                break;
         }
         return $content;
     }
