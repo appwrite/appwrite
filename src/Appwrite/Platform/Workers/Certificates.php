@@ -300,7 +300,7 @@ class Certificates extends Action
 
             $validators = [];
             $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-            if (!$targetCNAME->isKnown() || $targetCNAME->isTest()) {
+            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
                 $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
             }
             if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
