@@ -37,7 +37,6 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -337,31 +336,29 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-Server::setResource('telemetry', fn () => new NoTelemetry());
+Server::setResource('deviceForSites', function (Document $project) {
+    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
+}, ['project']);
 
-Server::setResource('deviceForSites', function (Document $project, Telemetry $telemetry) {
-    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+Server::setResource('deviceForImports', function (Document $project) {
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
+}, ['project']);
 
-Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
-    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+Server::setResource('deviceForFunctions', function (Document $project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
 
-Server::setResource('deviceForFunctions', function (Document $project, Telemetry $telemetry) {
-    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+Server::setResource('deviceForFiles', function (Document $project) {
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
 
-Server::setResource('deviceForFiles', function (Document $project, Telemetry $telemetry) {
-    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+Server::setResource('deviceForBuilds', function (Document $project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
 
-Server::setResource('deviceForBuilds', function (Document $project, Telemetry $telemetry) {
-    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
-
-Server::setResource('deviceForCache', function (Document $project, Telemetry $telemetry) {
-    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+Server::setResource('deviceForCache', function (Document $project) {
+    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
+}, ['project']);
 
 Server::setResource(
     'isResourceBlocked',
