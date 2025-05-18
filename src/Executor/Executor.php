@@ -37,7 +37,8 @@ class Executor
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
-            'x-opr-addressing-method' => 'anycast-efficient'
+            'x-opr-addressing-method' => 'anycast-efficient',
+            'x-edge-bypass-gateway' => '1'
         ];
     }
 
