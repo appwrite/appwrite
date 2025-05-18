@@ -667,11 +667,11 @@ class Builds extends Action
 
                                 // Enter output directory, if set
                                 if (!empty($resource->getAttribute('outputDirectory', ''))) {
-                                    $listFilesCommand .= 'cd ' . \escapeshellarg($resource->getAttribute('outputDirectory', ''));
+                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($resource->getAttribute('outputDirectory', ''));
                                 }
 
                                 // Print files, and end separation
-                                $listFilesCommand .= 'find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+                                $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
 
                                 // Use SSR file listing
                                 if (empty($command)) {
