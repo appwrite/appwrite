@@ -607,15 +607,6 @@ class RealtimeConsoleClientTest extends Scope
             $this->assertContains("projects.{$projectId}", $response['data']['channels']);
             $this->assertArrayHasKey('buildLogs', $response['data']['payload']);
 
-            // Ignore comparasion for first payload
-            if ($previousBuildLogs !== null) {
-                $this->assertNotEquals($previousBuildLogs, $response['data']['payload']['buildLogs']);
-            }
-
-            $previousBuildLogs = $response['data']['payload']['buildLogs'];
-
-            $this->assertEquals('building', $response['data']['payload']['status']);
-
             if (!empty($response['data']['payload']['buildEndedAt'])) {
                 $this->assertNotEmpty($response['data']['payload']['buildEndedAt']);
                 $this->assertNotEmpty($response['data']['payload']['buildStartedAt']);
@@ -626,6 +617,15 @@ class RealtimeConsoleClientTest extends Scope
                 $this->assertNotEmpty($response['data']['payload']['buildLogs']);
                 break;
             }
+
+            // Ignore comparasion for first payload
+            if ($previousBuildLogs !== null) {
+                $this->assertNotEquals($previousBuildLogs, $response['data']['payload']['buildLogs']);
+            }
+
+            $previousBuildLogs = $response['data']['payload']['buildLogs'];
+
+            $this->assertEquals('building', $response['data']['payload']['status']);
         }
 
         $response = json_decode($client->receive(), true);

@@ -659,6 +659,28 @@ class Builds extends Action
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
+                            if ($resource->getCollection() === 'sites') {
+                                $listFilesCommand = '';
+
+                                // Start separation, enter build folder
+                                $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
+
+                                // Enter output directory, if set
+                                if (!empty($resource->getAttribute('outputDirectory', ''))) {
+                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($resource->getAttribute('outputDirectory', ''));
+                                }
+
+                                // Print files, and end separation
+                                $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+
+                                // Use SSR file listing
+                                if (empty($command)) {
+                                    $command = $listFilesCommand;
+                                } else {
+                                    $command .= ' && ' . $listFilesCommand;
+                                }
+                            }
+
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
                         }
 
@@ -671,7 +693,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             timeout: $timeout,
-                            remove: false,
+                            remove:  true,
                             entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
@@ -684,11 +706,13 @@ class Builds extends Action
                 }),
                 Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $timeout, &$err, $queueForRealtime, &$isCanceled) {
                     try {
+                        $insideSeparation = false;
+
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
                             timeout: $timeout,
-                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime) {
+                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime, &$insideSeparation) {
                                 if ($isCanceled) {
                                     return;
                                 }
@@ -706,7 +730,28 @@ class Builds extends Action
                                     // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
+                                    // Do not stream logs added for SSR detection
+                                    if (!$insideSeparation) {
+                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
+                                        if ($separator !== false) {
+                                            $logs = \substr($logs, 0, $separator);
+                                            $insideSeparation = true;
+                                        }
+                                    } else {
+                                        $logs = '';
+                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                                        if ($separator !== false) {
+                                            $logs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                                            $insideSeparation = false;
+                                        }
+                                    }
+
+                                    if (empty($logs)) {
+                                        return;
+                                    }
+
                                     $currentLogs = $deployment->getAttribute('buildLogs', '');
+                                    $affected = false;
 
                                     $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
                                     foreach (\explode("\n", $streamLogs) as $streamLog) {
@@ -719,14 +764,20 @@ class Builds extends Action
 
                                         // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
                                         $currentLogs .= $streamParts[1];
+
+                                        if (!empty($streamParts[1])) {
+                                            $affected = true;
+                                        }
                                     }
 
-                                    $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
-                                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                                    if ($affected) {
+                                        $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
+                                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-                                    $queueForRealtime
-                                        ->setPayload($deployment->getArrayCopy())
-                                        ->trigger();
+                                        $queueForRealtime
+                                            ->setPayload($deployment->getArrayCopy())
+                                            ->trigger();
+                                    }
                                 }
                             }
                         );
@@ -755,44 +806,6 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
 
-            if ($resource->getCollection() === 'sites') {
-                // TODO: Refactor with structured command in future, using utopia library (CLI)
-                $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory', './')) . " && find . -name 'node_modules' -prune -o -type f -print";
-                $command = $executor->createCommand(
-                    deploymentId: $deployment->getId(),
-                    projectId: $project->getId(),
-                    command: $listFilesCommand,
-                    timeout: 15
-                );
-
-                $files = \explode("\n", $command['output']); // Parse output
-                $files = \array_filter($files); // Remove empty
-                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
-                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
-
-                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
-                $detector
-                    ->addOption(new SSR())
-                    ->addOption(new XStatic());
-                $detection = $detector->detect();
-
-                $adapter = $resource->getAttribute('adapter', '');
-
-                if (empty($adapter)) {
-                    $resource->setAttribute('adapter', $detection->getName());
-                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-
-                    $deployment->setAttribute('adapter', $detection->getName());
-                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
-                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
-                }
-            }
-
-            $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
-
             /** Update the build document */
             $deployment->setAttribute('buildStartedAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $deployment->setAttribute('buildEndedAt', $endTime);
@@ -806,12 +819,48 @@ class Builds extends Action
                 $logs .= $log['content'];
             }
 
+            // Separate logs for SSR detection
+            $detectionLogs = '';
+            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
+            if ($separator !== false) {
+                $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
+                $separatorEnd = \strpos($detectionLogs, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                $logs .= \substr($detectionLogs, $separatorEnd + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                $detectionLogs = \substr($detectionLogs, 0, $separatorEnd);
+                $logs = \substr($logs, 0, $separator);
+            }
+
             if ($resource->getCollection() === 'sites') {
                 $date = \date('H:i:s');
                 $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
             }
 
             $deployment->setAttribute('buildLogs', $logs);
+
+            if ($resource->getCollection() === 'sites' && !empty($detectionLogs)) {
+                $files = \explode("\n", $detectionLogs); // Parse output
+                $files = \array_filter($files); // Remove empty
+                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
+                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
+
+                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
+                $detector
+                    ->addOption(new SSR())
+                    ->addOption(new XStatic());
+                $detection = $detector->detect();
+
+                $adapter = $resource->getAttribute('adapter', '');
+                if (empty($adapter)) {
+                    $resource->setAttribute('adapter', $detection->getName());
+                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                    $deployment->setAttribute('adapter', $detection->getName());
+                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
+                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                }
+            }
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -1159,6 +1208,13 @@ class Builds extends Action
             $message = $th->getMessage();
             if (!\str_contains($message, '')) {
                 $message = "[31m" . $message;
+            }
+
+            $separator = \strpos($message, '{APPWRITE_DETECTION_SEPARATOR_START}');
+            if ($separator !== false) {
+                $error = \substr($message, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
+                $message = \substr($message, 0, $separator);
+                $message .= "\n[31m" . $error;
             }
 
             $endTime = DateTime::now();
