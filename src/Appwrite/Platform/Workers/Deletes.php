@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
+use Appwrite\Deletes\Identities;
+use Appwrite\Deletes\Targets;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
@@ -149,7 +151,7 @@ class Deletes extends Action
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_TARGET:
-                $this->deleteTargetSubscribers($project, $getProjectDB, $document);
+                Targets::deleteSubscribers($getProjectDB($project), $document);
                 break;
             case DELETE_TYPE_EXPIRED_TARGETS:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -269,78 +271,17 @@ class Deletes extends Action
      * @param Document $project
      * @param callable $getProjectDB
      * @param Document $target
-     * @throws Exception
-     */
-    private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target): void
-    {
-        /** @var Database */
-        $dbForProject = $getProjectDB($project);
-
-        // Delete subscribers and decrement topic counts
-        $this->deleteByGroup(
-            'subscribers',
-            [
-                Query::equal('targetInternalId', [$target->getInternalId()]),
-                Query::orderAsc(),
-            ],
-            $dbForProject,
-            function (Document $subscriber) use ($dbForProject, $target) {
-                $topicId = $subscriber->getAttribute('topicId');
-                $topicInternalId = $subscriber->getAttribute('topicInternalId');
-                $topic = $dbForProject->getDocument('topics', $topicId);
-                if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
-                    $totalAttribute = match ($target->getAttribute('providerType')) {
-                        MESSAGE_TYPE_EMAIL => 'emailTotal',
-                        MESSAGE_TYPE_SMS => 'smsTotal',
-                        MESSAGE_TYPE_PUSH => 'pushTotal',
-                        default => throw new Exception('Invalid target CertificatesAdapter type'),
-                    };
-                    $dbForProject->decreaseDocumentAttribute(
-                        'topics',
-                        $topicId,
-                        $totalAttribute,
-                        min: 0
-                    );
-                }
-            }
-        );
-    }
-
-    /**
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param Document $target
      * @return void
      * @throws Exception
      */
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
-        $this->deleteByGroup(
-            'targets',
-            [
-                Query::equal('expired', [true]),
-                Query::orderAsc(),
-            ],
-            $getProjectDB($project),
-            function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
-            }
-        );
+        Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
     }
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
-        $this->deleteByGroup(
-            'targets',
-            [
-                Query::equal('sessionInternalId', [$session->getInternalId()]),
-                Query::orderAsc(),
-            ],
-            $getProjectDB($project),
-            function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
-            }
-        );
+        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getInternalId()]));
     }
 
     /**
@@ -556,47 +497,33 @@ class Deletes extends Action
             AbuseDatabase::COLLECTION,
         ];
 
-        $limit = \count($projectCollectionIds) + 25;
-
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
 
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
-        while (true) {
-            $collections = $dbForProject->listCollections($limit);
-
-            foreach ($collections as $collection) {
-                try {
-                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
-                        $dbForProject->deleteCollection($collection->getId());
-                    } else {
-                        $this->deleteByGroup(
-                            $collection->getId(),
-                            [
-                                Query::orderAsc()
-                            ],
-                            database: $dbForProject
-                        );
-                    }
-                } catch (Throwable $e) {
-                    Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+        /**
+         * @var $dbForProject Database
+         */
+        $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
+            try {
+                if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
+                    $dbForProject->deleteCollection($collection->getId());
+                } else {
+                    $this->deleteByGroup(
+                        $collection->getId(),
+                        [
+                            Query::orderAsc()
+                        ],
+                        database: $dbForProject
+                    );
                 }
+            } catch (Throwable $e) {
+                Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
             }
-
-            if ($sharedTables) {
-                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
-
-                if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
-                    break;
-                }
-            } elseif (empty($collections)) {
-                break;
-            }
-        }
+        });
 
         // Delete Platforms
         $this->deleteByGroup('platforms', [
@@ -723,23 +650,10 @@ class Deletes extends Action
         ], $dbForProject);
 
         // Delete identities
-        $this->deleteByGroup('identities', [
-            Query::equal('userInternalId', [$userInternalId]),
-            Query::orderAsc()
-        ], $dbForProject);
+        Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
         // Delete targets
-        $this->deleteByGroup(
-            'targets',
-            [
-                Query::equal('userInternalId', [$userInternalId]),
-                Query::orderAsc()
-            ],
-            $dbForProject,
-            function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
-            }
-        );
+        Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
     }
 
     /**
