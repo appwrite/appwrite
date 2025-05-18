@@ -314,6 +314,10 @@ class Swagger2 extends Format
             );
 
             foreach ($parameters as $name => $param) { // Set params
+                if ($param['deprecated']) {
+                    continue;
+                }
+
                 /** @var Validator $validator */
                 $validator = (\is_callable($param['validator']))
                     ? ($param['validator'])(...$this->app->getResources($param['injections']))

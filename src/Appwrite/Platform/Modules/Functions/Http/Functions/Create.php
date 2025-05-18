@@ -2,8 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
+use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
@@ -13,6 +17,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model\Rule;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -25,12 +30,14 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Request;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -91,12 +98,22 @@ class Create extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
+            ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
+            ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
+            ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true, deprecated: true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
             ->inject('project')
             ->inject('queueForEvents')
+            ->inject('queueForBuilds')
+            ->inject('queueForRealtime')
+            ->inject('queueForWebhooks')
+            ->inject('queueForFunctions')
             ->inject('dbForPlatform')
+            ->inject('request')
+            ->inject('gitHub')
             ->callback([$this, 'action']);
     }
 
@@ -119,12 +136,22 @@ class Create extends Base
         bool $providerSilentMode,
         string $providerRootDirectory,
         string $specification,
+        string $templateRepository,
+        string $templateOwner,
+        string $templateRootDirectory,
+        string $templateVersion,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
         Document $project,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Build $queueForBuilds,
+        Realtime $queueForRealtime,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Database $dbForPlatform,
+        Request $request,
+        GitHub $github
     ) {
 
         // Temporary abuse check
@@ -250,6 +277,136 @@ class Create extends Base
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+
+        // Backwards compatibility with 1.6 behaviour
+        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        if ($requestFormat && version_compare($requestFormat, '1.7.0', '<')) {
+            // build from template
+            $template = new Document([]);
+            if (
+                !empty($templateRepository)
+                && !empty($templateOwner)
+                && !empty($templateRootDirectory)
+                && !empty($templateVersion)
+            ) {
+                $template->setAttribute('repositoryName', $templateRepository)
+                    ->setAttribute('ownerName', $templateOwner)
+                    ->setAttribute('rootDirectory', $templateRootDirectory)
+                    ->setAttribute('version', $templateVersion);
+            }
+
+            if (!empty($providerRepositoryId)) {
+                // Deploy VCS
+                $template = new Document();
+
+                $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
+                $deployment = $this->redeployVcsFunction(
+                    request: $request,
+                    function: $function,
+                    project: $project,
+                    installation: $installation,
+                    dbForProject: $dbForProject,
+                    queueForBuilds: $queueForBuilds,
+                    template: $template,
+                    github: $github,
+                    activate: true,
+                    reference: $providerBranch,
+                    referenceType: 'branch'
+                );
+
+                $function = $function
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('functions', $function->getId(), $function);
+            } elseif (!$template->isEmpty()) {
+                // Deploy non-VCS from template
+                $deploymentId = ID::unique();
+                $deployment = $dbForProject->createDocument('deployments', new Document([
+                    '$id' => $deploymentId,
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                    'resourceId' => $function->getId(),
+                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceType' => 'functions',
+                    'entrypoint' => $function->getAttribute('entrypoint', ''),
+                    'buildCommands' => $function->getAttribute('commands', ''),
+                    'type' => 'manual',
+                    'activate' => true,
+                ]));
+
+                $function = $function
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('functions', $function->getId(), $function);
+
+                $queueForBuilds
+                    ->setType(BUILD_TYPE_DEPLOYMENT)
+                    ->setResource($function)
+                    ->setDeployment($deployment)
+                    ->setTemplate($template);
+            }
+
+            $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+            if (!empty($functionsDomain)) {
+                $routeSubdomain = ID::unique();
+                $domain = "{$routeSubdomain}.{$functionsDomain}";
+                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+
+                $rule = Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'status' => 'verified',
+                        'type' => 'deployment',
+                        'trigger' => 'manual',
+                        'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),
+                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                        'deploymentResourceType' => 'function',
+                        'deploymentResourceId' => $function->getId(),
+                        'deploymentResourceInternalId' => $function->getInternalId(),
+                        'deploymentVcsProviderBranch' => '',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+
+                $ruleModel = new Rule();
+                $ruleCreate =
+                    $queueForEvents
+                        ->setProject($project)
+                        ->setEvent('rules.[ruleId].create')
+                        ->setParam('ruleId', $rule->getId())
+                        ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+
+                /** Trigger Webhook */
+                $queueForWebhooks
+                    ->from($ruleCreate)
+                    ->trigger();
+
+                /** Trigger Functions */
+                $queueForFunctions
+                    ->from($ruleCreate)
+                    ->trigger();
+
+                /** Trigger Realtime Events */
+                $queueForRealtime
+                    ->from($ruleCreate)
+                    ->setSubscribers(['console', $project->getId()])
+                    ->trigger();
+            }
+        }
 
         $queueForEvents->setParam('functionId', $function->getId());
 
