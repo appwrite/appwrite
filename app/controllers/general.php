@@ -452,7 +452,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $endpoint = $protocol . '://' . $hostname . "/v1";
 
         // Appwrite vars
-        if($type === 'function') {
+        if ($type === 'function') {
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
                 'APPWRITE_FUNCTION_ID' => $resource->getId(),
@@ -464,7 +464,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
                 'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             ]);
-        } else if($type === 'site') {
+        } elseif ($type === 'site') {
             $vars = \array_merge($vars, [
                 'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
                 'APPWRITE_SITE_ID' => $resource->getId(),
@@ -477,7 +477,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 'APPWRITE_SITE_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             ]);
         }
-        
+
         $vars = \array_merge($vars, [
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
