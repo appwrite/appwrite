@@ -120,8 +120,6 @@ abstract class ScheduleBase extends Action
                 $schedule->getAttribute('resourceId')
             );
 
-            //$pools->reclaim();
-
             return [
                 '$internalId' => $schedule->getInternalId(),
                 '$id' => $schedule->getId(),
