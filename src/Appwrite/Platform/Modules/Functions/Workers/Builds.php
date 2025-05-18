@@ -661,7 +661,12 @@ class Builds extends Action
                         } else {
                             if ($resource->getCollection() === 'sites') {
                                 $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR}" && cd /usr/local/build && cd $OPEN_RUNTIMES_OUTPUT_DIRECTORY && find . -name \'node_modules\' -prune -o -type f -print';
-                                $command .= '&& ' . $listFilesCommand;
+
+                                if (empty($command)) {
+                                    $command = $listFilesCommand;
+                                } else {
+                                    $command .= ' && ' . $listFilesCommand;
+                                }
                             }
 
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
