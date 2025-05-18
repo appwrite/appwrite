@@ -107,7 +107,9 @@ class Executor
             $params,
             true,
             $timeout,
-            callback: fn ($chunk) => $response .= $chunk
+            callback: function ($chunk) use (&$response) {
+                $response .= $chunk;
+            }
         );
 
         $response = json_decode($response, true);
