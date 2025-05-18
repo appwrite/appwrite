@@ -72,18 +72,17 @@ class ScheduleFunctions extends ScheduleBase
                 $delayedExecutions[$delay] = [];
             }
 
-            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
+            $delayedExecutions[$delay][] = $key;
         }
 
-        foreach ($delayedExecutions as $delay => $schedules) {
-            \go(function () use ($delay, $schedules, $pools, $dbForPlatform) {
+        foreach ($delayedExecutions as $delay => $scheduleKeys) {
+            \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
                 $queue = $pools->get('publisher')->pop();
                 $connection = $queue->getResource();
 
-                foreach ($schedules as $delayConfig) {
-                    $scheduleKey = $delayConfig['key'];
+                foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
                     if (!\array_key_exists($scheduleKey, $this->schedules)) {
                         return;
@@ -103,7 +102,7 @@ class ScheduleFunctions extends ScheduleBase
                         ->setProject($schedule['project'])
                         ->trigger();
 
-                    $this->recordEnqueueDelay($delayConfig['nextDate']);
+                    $this->recordEnqueueDelay($schedule['schedule']);
                 }
 
                 $queue->reclaim();
