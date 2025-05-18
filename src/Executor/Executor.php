@@ -103,7 +103,7 @@ class Executor
             $endpoint,
             self::METHOD_POST,
             $route,
-            [ 'x-opr-runtime-id' => $runtimeId ],
+            ['x-opr-runtime-id' => $runtimeId],
             $params,
             true,
             $timeout,
@@ -113,8 +113,7 @@ class Executor
         );
 
         $response = json_decode($response, true);
-        $status = $respomse['code'] ?? 201;
-
+        $status = $response['code'] ?? 201;
         if ($status >= 400) {
             throw new \Exception($response['message'], $status);
         }
