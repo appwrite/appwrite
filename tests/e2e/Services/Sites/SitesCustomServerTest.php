@@ -524,6 +524,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($deploymentId);
 
         $site = $this->getSite($siteId);
+        \var_dump($site);
         $this->assertEquals('200', $site['headers']['status-code']);
         $this->assertEquals('static', $site['body']['adapter']);
         $this->assertEquals('main.html', $site['body']['fallbackFile']);

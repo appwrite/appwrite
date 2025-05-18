@@ -660,8 +660,20 @@ class Builds extends Action
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
                             if ($resource->getCollection() === 'sites') {
-                                $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR}" && cd /usr/local/build && cd $OPEN_RUNTIMES_OUTPUT_DIRECTORY && find . -name \'node_modules\' -prune -o -type f -print';
+                                $listFilesCommand = '';
 
+                                // Start separation, enter build folder
+                                $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
+
+                                // Enter output directory, if set
+                                if (!empty($resource->getAttribute('outputDirectory', ''))) {
+                                    $listFilesCommand .= 'cd ' . \escapeshellarg($resource->getAttribute('outputDirectory', ''));
+                                }
+
+                                // Print files, and end separation
+                                $listFilesCommand .= 'find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+
+                                // Use SSR file listing
                                 if (empty($command)) {
                                     $command = $listFilesCommand;
                                 } else {
@@ -694,11 +706,13 @@ class Builds extends Action
                 }),
                 Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $timeout, &$err, $queueForRealtime, &$isCanceled) {
                     try {
+                        $insideSeparation = false;
+
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
                             timeout: $timeout,
-                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime) {
+                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime, &$insideSeparation) {
                                 if ($isCanceled) {
                                     return;
                                 }
@@ -717,9 +731,19 @@ class Builds extends Action
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
                                     // Do not stream logs added for SSR detection
-                                    $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR}');
-                                    if ($separator !== false) {
-                                        $logs =  substr($logs, 0, $separator);
+                                    if (!$insideSeparation) {
+                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
+                                        if ($separator !== false) {
+                                            $logs = \substr($logs, 0, $separator);
+                                            $insideSeparation = true;
+                                        }
+                                    } else {
+                                        $logs = '';
+                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                                        if ($separator !== false) {
+                                            $logs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                                            $insideSeparation = false;
+                                        }
                                     }
 
                                     $currentLogs = $deployment->getAttribute('buildLogs', '');
@@ -786,9 +810,12 @@ class Builds extends Action
 
             // Separate logs for SSR detection
             $detectionLogs = '';
-            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR}');
+            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
             if ($separator !== false) {
                 $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
+                $separatorEnd = \strpos($detectionLogs, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                $logs .= \substr($detectionLogs, $separatorEnd + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                $detectionLogs = \substr($detectionLogs, 0, $separatorEnd);
                 $logs = \substr($logs, 0, $separator);
             }
 
