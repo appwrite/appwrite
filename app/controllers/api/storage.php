@@ -401,15 +401,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
         group: 'files',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
-        type: MethodType::UPLOAD,
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        requestType: 'multipart/form-data',
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_FILE,
             )
-        ]
+        ],
+        type: MethodType::UPLOAD,
+        requestType: ContentType::MULTIPART
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -943,7 +943,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
     ->param('gravity', Image::GRAVITY_CENTER, new WhiteList(Image::getGravityTypes()), 'Image crop gravity. Can be one of ' . implode(",", Image::getGravityTypes()), true)
-    ->param('quality', 100, new Range(0, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('quality', -1, new Range(-1, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
     ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
     ->param('borderRadius', 0, new Range(0, 4000), 'Preview image border radius in pixels. Pass an integer between 0 to 4000.', true)

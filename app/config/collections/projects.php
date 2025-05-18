@@ -1182,6 +1182,13 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_resource_internal_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -1330,7 +1337,14 @@ return [
                 'attributes' => ['deploymentId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_deployment_internal_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['deploymentInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -1602,6 +1616,13 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_function_internal_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['functionInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -1717,6 +1738,13 @@ return [
                 '$id' => ID::custom('_fulltext_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_resource_internal_id_resource_type'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceInternalId', 'resourceType'],
                 'lengths' => [],
                 'orders' => [],
             ],

@@ -356,7 +356,21 @@ return [
                 'attributes' => ['pingedAt'],
                 'lengths' => [],
                 'orders' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_database'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['database'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_region_accessed_at'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['region', 'accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -477,6 +491,20 @@ return [
                 '$id' => ID::custom('_key_region_resourceType_projectId_resourceId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['region', 'resourceType', 'projectId', 'resourceId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_project_id_region'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectId', 'region'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_region_rt_active'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['region', 'resourceType', 'active'],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -1147,6 +1175,13 @@ return [
                 'lengths' => [16],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_piid_riid_rt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectInternalId', 'resourceInternalId', 'resourceType'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -1442,7 +1477,14 @@ return [
                 'attributes' => ['resourceType'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_piid_riid_rt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectInternalId', 'resourceInternalId', 'resourceType'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -1589,6 +1631,13 @@ return [
                 'attributes' => ['providerBranch'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_piid_prid_rt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectInternalId', 'providerRepositoryId'],
+                'lengths' => [],
+                'orders' => [],
             ],
         ],
     ],

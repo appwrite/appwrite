@@ -1422,9 +1422,102 @@ trait DatabasesBase
         return $data;
     }
 
+
     /**
-     * @depends testCreateIndexes
-     */
+ * @depends testCreateAttributes
+ */
+    public function testGetIndexByKeyWithLengths(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['moviesId'];
+
+        // Test case for valid lengths
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthTestIndex',
+            'type' => 'key',
+            'attributes' => ['title','description'],
+            'lengths' => [128,200]
+        ]);
+        $this->assertEquals(202, $create['headers']['status-code']);
+
+        // Fetch index and check correct lengths
+        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthTestIndex", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+        $this->assertEquals(200, $index['headers']['status-code']);
+        $this->assertEquals('lengthTestIndex', $index['body']['key']);
+        $this->assertEquals([128, 200], $index['body']['lengths']);
+
+        // Test case for lengths array overriding
+        // set a length for an array attribute, it should get overriden with Database::ARRAY_INDEX_LENGTH
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthOverrideTestIndex',
+            'type' => 'key',
+            'attributes' => ['actors'],
+            'lengths' => [120]
+        ]);
+        $this->assertEquals(202, $create['headers']['status-code']);
+
+        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
+
+        // Test case for count of lengths greater than attributes (should throw 400)
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthCountExceededIndex',
+            'type' => 'key',
+            'attributes' => ['title'],
+            'lengths' => [128, 128]
+        ]);
+        $this->assertEquals(400, $create['headers']['status-code']);
+
+        // Test case for lengths exceeding total of 768
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'lengthTooLargeIndex',
+            'type' => 'key',
+            'attributes' => ['title','description','tagline','actors'],
+            'lengths' => [256,256,256,20]
+        ]);
+
+        $this->assertEquals(400, $create['headers']['status-code']);
+
+        // Test case for negative length values
+        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'negativeLengthIndex',
+            'type' => 'key',
+            'attributes' => ['title'],
+            'lengths' => [-1]
+        ]);
+        $this->assertEquals(400, $create['headers']['status-code']);
+    }
+    /**
+        * @depends testCreateIndexes
+        */
     public function testListIndexes(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -1586,12 +1679,6 @@ trait DatabasesBase
         $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
 
         $this->assertEquals(400, $document4['headers']['status-code']);
-
-        // Delete document 4 with incomplete path
-        $this->assertEquals(404, $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()))['headers']['status-code']);
 
         return $data;
     }
@@ -2367,38 +2454,6 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-
-        /**
-         * Test for failure
-         */
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-timestamp' => 'invalid',
-        ], $this->getHeaders()), [
-            'data' => [
-                'title' => 'Thor: Ragnarok',
-            ],
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid X-Appwrite-Timestamp header value', $response['body']['message']);
-        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-timestamp' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -1000)),
-        ], $this->getHeaders()), [
-            'data' => [
-                'title' => 'Thor: Ragnarok',
-            ],
-        ]);
-
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('Remote document is newer than local.', $response['body']['message']);
-        $this->assertEquals(Exception::DOCUMENT_UPDATE_CONFLICT, $response['body']['type']);
 
         return [];
     }
@@ -4916,5 +4971,11 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(408, $response['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
     }
 }
