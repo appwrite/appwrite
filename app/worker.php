@@ -336,6 +336,8 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
+Server::setResource('telemetry', fn () => new NoTelemetry());
+
 Server::setResource('deviceForSites', function (Document $project) {
     return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
 }, ['project']);
