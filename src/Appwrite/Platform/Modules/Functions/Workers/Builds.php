@@ -659,6 +659,11 @@ class Builds extends Action
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
+                            if ($resource->getCollection() === 'sites') {
+                                $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR}" && cd /usr/local/build && cd $OPEN_RUNTIMES_OUTPUT_DIRECTORY && find . -name \'node_modules\' -prune -o -type f -print';
+                                $command .= '&& ' . $listFilesCommand;
+                            }
+
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
                         }
 
@@ -705,6 +710,12 @@ class Builds extends Action
 
                                     // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8');
+
+                                    // Do not stream logs added for SSR detection
+                                    $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR}');
+                                    if ($separator !== false) {
+                                        $logs =  substr($logs, 0, $separator);
+                                    }
 
                                     $currentLogs = $deployment->getAttribute('buildLogs', '');
 
@@ -755,44 +766,6 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
 
-            if ($resource->getCollection() === 'sites') {
-                // TODO: Refactor with structured command in future, using utopia library (CLI)
-                $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory', './')) . " && find . -name 'node_modules' -prune -o -type f -print";
-                $command = $executor->createCommand(
-                    deploymentId: $deployment->getId(),
-                    projectId: $project->getId(),
-                    command: $listFilesCommand,
-                    timeout: 15
-                );
-
-                $files = \explode("\n", $command['output']); // Parse output
-                $files = \array_filter($files); // Remove empty
-                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
-                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
-
-                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
-                $detector
-                    ->addOption(new SSR())
-                    ->addOption(new XStatic());
-                $detection = $detector->detect();
-
-                $adapter = $resource->getAttribute('adapter', '');
-
-                if (empty($adapter)) {
-                    $resource->setAttribute('adapter', $detection->getName());
-                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-
-                    $deployment->setAttribute('adapter', $detection->getName());
-                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
-                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
-                }
-            }
-
-            $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
-
             /** Update the build document */
             $deployment->setAttribute('buildStartedAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $deployment->setAttribute('buildEndedAt', $endTime);
@@ -806,12 +779,45 @@ class Builds extends Action
                 $logs .= $log['content'];
             }
 
+            // Separate logs for SSR detection
+            $detectionLogs = '';
+            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR}');
+            if ($separator !== false) {
+                $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
+                $logs = \substr($logs, 0, $separator);
+            }
+
             if ($resource->getCollection() === 'sites') {
                 $date = \date('H:i:s');
                 $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
             }
 
             $deployment->setAttribute('buildLogs', $logs);
+
+            if ($resource->getCollection() === 'sites' && !empty($detectionLogs)) {
+                $files = \explode("\n", $detectionLogs); // Parse output
+                $files = \array_filter($files); // Remove empty
+                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
+                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
+
+                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
+                $detector
+                    ->addOption(new SSR())
+                    ->addOption(new XStatic());
+                $detection = $detector->detect();
+
+                $adapter = $resource->getAttribute('adapter', '');
+                if (empty($adapter)) {
+                    $resource->setAttribute('adapter', $detection->getName());
+                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                    $deployment->setAttribute('adapter', $detection->getName());
+                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
+                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                }
+            }
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
