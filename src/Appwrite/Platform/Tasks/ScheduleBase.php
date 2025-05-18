@@ -13,9 +13,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\System\System;
-use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Telemetry\Gauge;
-use Utopia\Telemetry\Histogram;
+
+use function Swoole\Coroutine\run;
 
 abstract class ScheduleBase extends Action
 {
@@ -23,11 +22,6 @@ abstract class ScheduleBase extends Action
     protected const ENQUEUE_TIMER = 60; //seconds
 
     protected array $schedules = [];
-
-    private ?Histogram $collectSchedulesTelemetryDuration = null;
-    private ?Gauge $collectSchedulesTelemetryCount = null;
-    private ?Gauge $scheduleTelemetryCount = null;
-    private ?Histogram $enqueueDelayTelemetry = null;
 
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
@@ -43,8 +37,7 @@ abstract class ScheduleBase extends Action
             ->inject('pools')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->inject('telemetry')
-            ->callback($this->action(...));
+            ->callback(fn (Group $pools, Database $dbForPlatform, callable $getProjectDB) => $this->action($pools, $dbForPlatform, $getProjectDB));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
@@ -63,46 +56,10 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
-
-        $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
-        $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
-        $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
-        $this->enqueueDelayTelemetry = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
-
-        // start with "0" to load all active documents.
-        $lastSyncUpdate = "0";
-        $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
-
-        Console::success("Starting timers at " . DateTime::now());
-        /**
-         * The timer synchronize $schedules copy with database collection.
-         */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($pools, $dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
-            $time = DateTime::now();
-            Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
-        });
-
-        while (true) {
-            try {
-                go(fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB));
-                $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
-                sleep(static::ENQUEUE_TIMER);
-            } catch (\Throwable $th) {
-                Console::error('Failed to enqueue resources: ' . $th->getMessage());
-            }
-
-        }
-    }
-
-    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
-    {
-        // If we haven't synced yet, load all active schedules
-        $initialLoad = $lastSyncUpdate === "0";
 
         /**
          * Extract only necessary attributes to lower memory used.
@@ -111,15 +68,13 @@ abstract class ScheduleBase extends Action
          * @throws Exception
          * @var Document $schedule
          */
-        $getSchedule = function (Document $schedule) use ($pools, $dbForPlatform, $getProjectDB): array {
+        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
             $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
 
             $resource = $getProjectDB($project)->getDocument(
                 static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
             );
-
-            $pools->reclaim();
 
             return [
                 '$internalId' => $schedule->getInternalId(),
@@ -133,12 +88,12 @@ abstract class ScheduleBase extends Action
             ];
         };
 
-        $loadStart = microtime(true);
-        $time = DateTime::now();
+        $lastSyncUpdate = DateTime::now();
 
         $limit = 10_000;
         $sum = $limit;
         $total = 0;
+        $loadStart = \microtime(true);
         $latestDocument = null;
 
         while ($sum === $limit) {
@@ -155,59 +110,105 @@ abstract class ScheduleBase extends Action
                 $regions[] = 'default';
             }
 
-            $paginationQueries = [
-                ...$paginationQueries,
+            $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
                 Query::equal('region', $regions),
                 Query::equal('resourceType', [static::getSupportedResource()]),
-            ];
+                Query::equal('active', [true]),
+            ]));
 
-            if ($initialLoad) {
-                $paginationQueries[] = Query::equal('active', [true]);
-            } else {
-                $paginationQueries[] = Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate);
-            }
-
-            $results = $dbForPlatform->find('schedules', $paginationQueries);
-
-            $sum = count($results);
+            $sum = \count($results);
             $total = $total + $sum;
 
             foreach ($results as $document) {
-                $localDocument = $this->schedules[$document->getInternalId()] ?? null;
-
-                if ($localDocument !== null) {
-                    if (!$document['active']) {
-                        Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
-                        unset($this->schedules[$document->getInternalId()]);
-                    } elseif (strtotime($localDocument['resourceUpdatedAt']) !== strtotime($document['resourceUpdatedAt'])) {
-                        Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
-                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
-                    }
-                } else {
-                    try {
-                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
-                    } catch (\Throwable $th) {
-                        $collectionId = static::getCollectionId();
-                        Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
-                        Console::error($th->getMessage());
-                    }
+                try {
+                    $this->schedules[$document->getInternalId()] = $getSchedule($document);
+                } catch (\Throwable $th) {
+                    $collectionId = static::getCollectionId();
+                    Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
+                    Console::error($th->getMessage());
                 }
             }
 
             $latestDocument = \end($results);
         }
 
-        $lastSyncUpdate = $time;
-        $duration = microtime(true) - $loadStart;
-        $this->collectSchedulesTelemetryDuration->record($duration, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
-        $this->collectSchedulesTelemetryCount->record($total, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
-        Console::success("{$total} resources were loaded in " . $duration . " seconds");
-    }
+        $pools->reclaim();
 
-    protected function recordEnqueueDelay(string $expectedExecutionSchedule): void
-    {
-        $now = strtotime('now');
-        $scheduledAt = strtotime($expectedExecutionSchedule);
-        $this->enqueueDelayTelemetry->record($now - $scheduledAt, ['resourceType' => static::getSupportedResource()]);
+        Console::success("{$total} resources were loaded in " . (\microtime(true) - $loadStart) . " seconds");
+
+        Console::success("Starting timers at " . DateTime::now());
+
+        run(function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule, $pools, $getProjectDB) {
+            /**
+             * The timer synchronize $schedules copy with database collection.
+             */
+            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule, $pools) {
+                $time = DateTime::now();
+                $timerStart = \microtime(true);
+
+                $limit = 1000;
+                $sum = $limit;
+                $total = 0;
+                $latestDocument = null;
+
+                Console::log("Sync tick: Running at $time");
+
+                while ($sum === $limit) {
+                    $paginationQueries = [Query::limit($limit)];
+
+                    if ($latestDocument) {
+                        $paginationQueries[] = Query::cursorAfter($latestDocument);
+                    }
+
+                    // Temporarly accepting both 'fra' and 'default'
+                    // When all migrated, only use _APP_REGION with 'default' as default value
+                    $regions = [System::getEnv('_APP_REGION', 'default')];
+                    if (!in_array('default', $regions)) {
+                        $regions[] = 'default';
+                    }
+
+                    $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
+                        Query::equal('region', $regions),
+                        Query::equal('resourceType', [static::getSupportedResource()]),
+                        Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
+                    ]));
+
+                    $sum = count($results);
+                    $total = $total + $sum;
+
+                    foreach ($results as $document) {
+                        $localDocument = $this->schedules[$document->getInternalId()] ?? null;
+
+                        // Check if resource has been updated since last sync
+                        $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
+                        $new = \strtotime($document['resourceUpdatedAt']);
+
+                        if (!$document['active']) {
+                            Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
+                            unset($this->schedules[$document->getInternalId()]);
+                        } elseif ($new !== $org) {
+                            Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
+                            $this->schedules[$document->getInternalId()] = $getSchedule($document);
+                        }
+                    }
+
+                    $latestDocument = \end($results);
+                }
+
+                $lastSyncUpdate = $time;
+                $timerEnd = \microtime(true);
+
+                $pools->reclaim();
+
+                Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
+            });
+
+            Timer::tick(
+                static::ENQUEUE_TIMER * 1000,
+                fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB)
+            );
+
+            $this->enqueueResources($pools, $dbForPlatform, $getProjectDB);
+        });
     }
 }
