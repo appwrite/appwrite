@@ -13,7 +13,7 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 
-class V23 extends Migration
+class V22 extends Migration
 {
     /**
      * @throws Throwable
