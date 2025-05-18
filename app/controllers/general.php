@@ -452,16 +452,33 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $endpoint = $protocol . '://' . $hostname . "/v1";
 
         // Appwrite vars
+        if ($type === 'function') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                'APPWRITE_FUNCTION_ID' => $resource->getId(),
+                'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
+                'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+                'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+                'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+                'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+            ]);
+        } elseif ($type === 'site') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
+                'APPWRITE_SITE_ID' => $resource->getId(),
+                'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
+                'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
+                'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
+                'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
+                'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_SITE_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                'APPWRITE_SITE_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+            ]);
+        }
+
         $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-            'APPWRITE_FUNCTION_ID' => $resource->getId(),
-            'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
-            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
