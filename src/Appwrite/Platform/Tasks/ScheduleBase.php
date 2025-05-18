@@ -14,6 +14,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\System\System;
+use function Swoole\Coroutine\run;
 
 abstract class ScheduleBase extends Action
 {
