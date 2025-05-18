@@ -6,8 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\App;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class ProxyCustomServerTest extends Scope
 {
@@ -328,7 +328,7 @@ class ProxyCustomServerTest extends Scope
     public function testUpdateRule(): void
     {
         // Create function appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_FUNCTIONS');
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);
@@ -337,7 +337,7 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($rule['body']['$id']);
 
         // Create site appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . App::getEnv('_APP_DOMAIN_SITES');
+        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_SITES');
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);
