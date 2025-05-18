@@ -693,7 +693,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             timeout: $timeout,
-                            remove: true,
+                            remove:  true,
                             entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
@@ -746,7 +746,12 @@ class Builds extends Action
                                         }
                                     }
 
+                                    if (empty($logs)) {
+                                        return;
+                                    }
+
                                     $currentLogs = $deployment->getAttribute('buildLogs', '');
+                                    $affected = false;
 
                                     $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
                                     foreach (\explode("\n", $streamLogs) as $streamLog) {
@@ -759,14 +764,20 @@ class Builds extends Action
 
                                         // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
                                         $currentLogs .= $streamParts[1];
+
+                                        if (!empty($streamParts[1])) {
+                                            $affected = true;
+                                        }
                                     }
 
-                                    $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
-                                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                                    if ($affected) {
+                                        $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
+                                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-                                    $queueForRealtime
-                                        ->setPayload($deployment->getArrayCopy())
-                                        ->trigger();
+                                        $queueForRealtime
+                                            ->setPayload($deployment->getArrayCopy())
+                                            ->trigger();
+                                    }
                                 }
                             }
                         );
@@ -1197,6 +1208,13 @@ class Builds extends Action
             $message = $th->getMessage();
             if (!\str_contains($message, '')) {
                 $message = "[31m" . $message;
+            }
+
+            $separator = \strpos($message, '{APPWRITE_DETECTION_SEPARATOR_START}');
+            if ($separator !== false) {
+                $error = \substr($message, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
+                $message = \substr($message, 0, $separator);
+                $message .= "\n[31m" . $error;
             }
 
             $endTime = DateTime::now();
