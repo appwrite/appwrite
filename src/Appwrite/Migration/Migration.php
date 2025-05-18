@@ -82,9 +82,9 @@ abstract class Migration
         '1.5.11' => 'V20',
         '1.6.0' => 'V21',
         '1.6.1' => 'V21',
-        '1.6.2' => 'V22',
-        '1.7.0-RC1' => 'V23',
-        '1.7.0' => 'V23',
+        '1.6.2' => 'V21',
+        '1.7.0-RC1' => 'V22',
+        '1.7.0' => 'V22',
     ];
 
     /**
@@ -384,6 +384,10 @@ abstract class Migration
             'console' => 'console',
             default => 'projects',
         };
+
+        if ($from === 'files') {
+            $collectionType = 'buckets';
+        }
 
         $collection = $this->collections[$collectionType][$from] ?? null;
 
