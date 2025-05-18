@@ -59,6 +59,13 @@ class Migration extends Model
                 'example' => ['user'],
                 'array' => true
             ])
+            ->addRule('resourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Id of the resource to migrate.',
+                'default' => '',
+                'example' => 'databaseId:collectionId',
+                'array' => false
+            ])
             ->addRule('statusCounters', [
                 'type' => self::TYPE_JSON,
                 'description' => 'A group of counters that represent the total progress of the migration.',

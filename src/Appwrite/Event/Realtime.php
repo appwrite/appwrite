@@ -42,7 +42,7 @@ class Realtime extends Event
      * Set subscribers for this realtime event.
      *
      * @param array $subscribers
-     * @return array
+     * @return self
      */
     public function setSubscribers(array $subscribers): self
     {

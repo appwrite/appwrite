@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c14e20244a06f508dd67cda717aefeb",
+    "content-hash": "735023e2b70ce47fe65985f195b257bd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.16.5",
+            "version": "0.19.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9"
+                "reference": "8d21483efc19b9d977e323188989ee67a188464b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9",
-                "reference": "1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/8d21483efc19b9d977e323188989ee67a188464b",
+                "reference": "8d21483efc19b9d977e323188989ee67a188464b",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.16.5"
+                "source": "https://github.com/appwrite/runtimes/tree/0.19.0"
             },
-            "time": "2024-11-25T15:17:06+00:00"
+            "time": "2025-03-25T22:37:51+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -3499,16 +3499,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.69.2",
+            "version": "0.69.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "60591ab073bb80bb9843338754b679bb8169e4ed"
+                "reference": "4abe53609dfc23b2ea82884d12b149df6a8af2f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/60591ab073bb80bb9843338754b679bb8169e4ed",
-                "reference": "60591ab073bb80bb9843338754b679bb8169e4ed",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4abe53609dfc23b2ea82884d12b149df6a8af2f5",
+                "reference": "4abe53609dfc23b2ea82884d12b149df6a8af2f5",
                 "shasum": ""
             },
             "require": {
@@ -3549,9 +3549,54 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.69.2"
+                "source": "https://github.com/utopia-php/database/tree/0.69.5"
             },
-            "time": "2025-05-14T07:51:44+00:00"
+            "time": "2025-05-17T08:01:51+00:00"
+        },
+        {
+            "name": "utopia-php/detector",
+            "version": "0.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/detector.git",
+                "reference": "895a4147463965b5f9cbc083b764b6476f547879"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/895a4147463965b5f9cbc083b764b6476f547879",
+                "reference": "895a4147463965b5f9cbc083b764b6476f547879",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Detector\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for fast and reliable environment identification.",
+            "keywords": [
+                "detector",
+                "framework",
+                "php",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/detector/issues",
+                "source": "https://github.com/utopia-php/detector/tree/0.1.4"
+            },
+            "time": "2025-04-09T11:50:45+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4546,16 +4591,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.9.5",
+            "version": "0.10.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "055956545ca7ab4e8688df5de1df3e2833859793"
+                "reference": "1f9823ebcb8fd098607de0074f18f48e28985012"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/055956545ca7ab4e8688df5de1df3e2833859793",
-                "reference": "055956545ca7ab4e8688df5de1df3e2833859793",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/1f9823ebcb8fd098607de0074f18f48e28985012",
+                "reference": "1f9823ebcb8fd098607de0074f18f48e28985012",
                 "shasum": ""
             },
             "require": {
@@ -4573,8 +4618,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\VCS\\": "src/VCS",
-                    "Utopia\\Detector\\": "src/Detector"
+                    "Utopia\\VCS\\": "src/VCS"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -4590,9 +4634,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.9.5"
+                "source": "https://github.com/utopia-php/vcs/tree/0.10.2"
             },
-            "time": "2025-04-17T04:38:49+00:00"
+            "time": "2025-04-17T04:35:25+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -4770,16 +4814,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.40.16",
+            "version": "0.40.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "f1f506da74033f0cb5a11e3dffcfd1ee8daf237d"
+                "reference": "7e333c1003bfd4763e4d6f3a0a799fde5e7bc4de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/f1f506da74033f0cb5a11e3dffcfd1ee8daf237d",
-                "reference": "f1f506da74033f0cb5a11e3dffcfd1ee8daf237d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/7e333c1003bfd4763e4d6f3a0a799fde5e7bc4de",
+                "reference": "7e333c1003bfd4763e4d6f3a0a799fde5e7bc4de",
                 "shasum": ""
             },
             "require": {
@@ -4815,9 +4859,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.16"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.17"
             },
-            "time": "2025-05-09T12:06:09+00:00"
+            "time": "2025-05-16T15:10:54+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5616,6 +5660,65 @@
                 }
             ],
             "time": "2025-03-12T08:01:40+00:00"
+        },
+        {
+            "name": "phpstan/phpstan",
+            "version": "1.8.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpstan/phpstan.git",
+                "reference": "46e223dd68a620da18855c23046ddb00940b4014"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/46e223dd68a620da18855c23046ddb00940b4014",
+                "reference": "46e223dd68a620da18855c23046ddb00940b4014",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2|^8.0"
+            },
+            "conflict": {
+                "phpstan/phpstan-shim": "*"
+            },
+            "bin": [
+                "phpstan",
+                "phpstan.phar"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHPStan - PHP Static Analysis Tool",
+            "keywords": [
+                "dev",
+                "static analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/phpstan/phpstan/issues",
+                "source": "https://github.com/phpstan/phpstan/tree/1.8.11"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/ondrejmirtes",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/phpstan",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/phpstan/phpstan",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-10-24T15:45:13+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
