@@ -85,6 +85,7 @@ abstract class ScheduleBase extends Action
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
             $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
+            $pools->reclaim();
         });
 
         while (true) {
@@ -111,7 +112,7 @@ abstract class ScheduleBase extends Action
          * @throws Exception
          * @var Document $schedule
          */
-        $getSchedule = function (Document $schedule) use ($pools, $dbForPlatform, $getProjectDB): array {
+        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
             $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
 
             $resource = $getProjectDB($project)->getDocument(
@@ -119,7 +120,7 @@ abstract class ScheduleBase extends Action
                 $schedule->getAttribute('resourceId')
             );
 
-            $pools->reclaim();
+            //$pools->reclaim();
 
             return [
                 '$internalId' => $schedule->getInternalId(),
