@@ -4204,12 +4204,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
 App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId')
-    ->desc('upsert document')
+    ->desc('Upsert document')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'document.update')
+    ->label('audits.event', 'document.upsert')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
@@ -4218,7 +4218,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         namespace: 'databases',
         group: 'documents',
         name: 'upsertDocument',
-        description: '/docs/references/databases/update-document.md',
+        description: '/docs/references/databases/upsert-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
@@ -4367,7 +4367,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
-        $documents = [$documentId => $newDocument];
+        $documents = [$newDocument];
         $upserted = [];
         try {
             $modified = $dbForProject->createOrUpdateDocuments(
