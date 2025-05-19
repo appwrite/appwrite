@@ -10,6 +10,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Executor\Executor;
+use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -298,4 +299,6 @@ $cli
 
 $cli->shutdown()->action(fn () => Timer::clearAll());
 
+// Enable coroutines, but disable TCP hooks. These don't work until we use `\Utopia\Cache\Adapter\Pool` and `\Utopia\Database\Adapter\Pool`.
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
 run($cli->run(...));
