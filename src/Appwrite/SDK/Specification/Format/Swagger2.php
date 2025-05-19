@@ -314,7 +314,7 @@ class Swagger2 extends Format
             );
 
             foreach ($parameters as $name => $param) { // Set params
-                if ($param['deprecated']) {
+                if (($param['deprecated'] ?? false)) {
                     continue;
                 }
 
