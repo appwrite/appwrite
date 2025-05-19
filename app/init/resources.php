@@ -29,6 +29,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -51,6 +52,7 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 // Runtime Execution
@@ -468,7 +470,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
 App::setResource('telemetry', fn () => new NoTelemetry());
 
-App::setResource('cache', function (Group $pools, Telemetry $telemetry) {
+App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -479,12 +481,8 @@ App::setResource('cache', function (Group $pools, Telemetry $telemetry) {
             ->getResource();
     }
 
-    $cache = new Cache(new Sharding($adapters));
-
-    $cache->setTelemetry($telemetry);
-
-    return $cache;
-}, ['pools', 'telemetry']);
+    return new Cache(new Sharding($adapters));
+}, ['pools']);
 
 App::setResource('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
@@ -508,20 +506,24 @@ App::setResource('timelimit', function (\Redis $redis) {
 }, ['redis']);
 
 App::setResource('deviceForLocal', function (Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, new Local());
+    return new Local();
 }, ['telemetry']);
 
-App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
-
-App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
-
-App::setResource('deviceForBuilds', function ($project, Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
-}, ['project', 'telemetry']);
+App::setResource('deviceForFiles', function ($project) {
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
+App::setResource('deviceForSites', function ($project) {
+    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
+}, ['project']);
+App::setResource('deviceForImports', function ($project) {
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
+}, ['project']);
+App::setResource('deviceForFunctions', function ($project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
+App::setResource('deviceForBuilds', function ($project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
 
 function getDevice(string $root, string $connection = ''): Device
 {
@@ -788,6 +790,49 @@ App::setResource('smsRates', function () {
     return [];
 });
 
+App::setResource('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform) {
+    $devKey = $request->getHeader('x-appwrite-dev-key', $request->getParam('devKey', ''));
+
+    // Check if given key match project's development keys
+    $key = $project->find('secret', $devKey, 'devKeys');
+    if (!$key) {
+        return new Document([]);
+    }
+
+    // check expiration
+    $expire = $key->getAttribute('expire');
+    if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+        return new Document([]);
+    }
+
+    // update access time
+    $accessedAt = $key->getAttribute('accessedAt', 0);
+    if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+        $key->setAttribute('accessedAt', DatabaseDateTime::now());
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+    }
+
+    // add sdk to key
+    $sdkValidator = new WhiteList($servers, true);
+    $sdk = \strtolower($request->getHeader('x-sdk-name', 'UNKNOWN'));
+
+    if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+        $sdks = $key->getAttribute('sdks', []);
+
+        if (!in_array($sdk, $sdks)) {
+            $sdks[] = $sdk;
+            $key->setAttribute('sdks', $sdks);
+
+            /** Update access time as well */
+            $key->setAttribute('accessedAt', DatabaseDateTime::now());
+            $key = Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+        }
+    }
+    return $key;
+}, ['request', 'project', 'servers', 'dbForPlatform']);
+
 App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
@@ -821,16 +866,24 @@ App::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-App::setResource('previewHostname', function (Request $request) {
+App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
+    $allowed = false;
+
     if (App::isDevelopment()) {
-        $host = $request->getQuery('appwrite-hostname') ?? '';
+        $allowed = true;
+    } elseif (!\is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
+        $allowed = true;
+    }
+
+    if ($allowed) {
+        $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', '')) ?? '';
         if (!empty($host)) {
             return $host;
         }
     }
 
     return '';
-}, ['request']);
+}, ['request', 'apiKey']);
 
 App::setResource('apiKey', function (Request $request, Document $project): ?Key {
     $key = $request->getHeader('x-appwrite-key');
@@ -843,3 +896,66 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
 }, ['request', 'project']);
 
 App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+
+App::setResource('resourceToken', function ($project, $dbForProject, $request) {
+    $tokenJWT = $request->getParam('token');
+
+    if (!empty($tokenJWT) && !$project->isEmpty()) { // JWT authentication
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $payload = $jwt->decode($tokenJWT);
+        } catch (JWTException $error) {
+            return new Document([]);
+        }
+
+        $tokenId = $payload['tokenId'] ?? '';
+        if (empty($tokenId)) {
+            return new Document([]);
+        }
+
+        $token = Authorization::skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
+
+        if ($token->isEmpty()) {
+            return new Document([]);
+        }
+
+        $expiry = $token->getAttribute('expire');
+
+        if ($expiry !== null) {
+            $now = new \DateTime();
+            $expiryDate = new \DateTime($expiry);
+
+            if ($expiryDate < $now) {
+                return new Document([]);
+            }
+        }
+
+        return match ($token->getAttribute('resourceType')) {
+            TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject) {
+                $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
+                $ids = explode(':', $token->getAttribute('resourceId'));
+
+                if (count($internalIds) !== 2 || count($ids) !== 2) {
+                    return new Document([]);
+                }
+
+                $accessedAt = $token->getAttribute('accessedAt', 0);
+                if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), - APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
+                    $token->setAttribute('accessedAt', DatabaseDateTime::now());
+                    Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
+                }
+
+                return new Document([
+                    'bucketId' => $ids[0],
+                    'fileId' => $ids[1],
+                    'bucketInternalId' => $internalIds[0],
+                    'fileInternalId' => $internalIds[1],
+                ]);
+            })(),
+
+            default => throw new Exception(Exception::TOKEN_RESOURCE_TYPE_INVALID),
+        };
+    }
+    return new Document([]);
+}, ['project', 'dbForProject', 'request']);

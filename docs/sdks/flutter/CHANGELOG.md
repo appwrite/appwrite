@@ -1,3 +1,12 @@
+# Change Log
+
+## 16.0.0
+
+* Remove `Gif` from ImageFormat enum
+* Remove `search` param from `listExecutions` method
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Update default `quality` for `getFilePreview` from 0 to -1
+
 ## 15.0.2
 
 * Avoid setting empty `User-Agent` header and only encode it when present.

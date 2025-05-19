@@ -17,6 +17,30 @@ class TeamsConsoleClientTest extends Scope
     /**
      * @depends testCreateTeam
      */
+    public function testTeamCreateMembershipConsole($data): array
+    {
+        $teamUid = $data['teamUid'] ?? '';
+        $email = uniqid() . 'friend@localhost.test';
+        $name = 'Friend User';
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'name' => $name,
+            'roles' => ['developer'],
+            'url' => 'http://example.com/join-us#title' // bad url
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateTeam
+     */
     public function testTeamMembershipPerms($data): array
     {
         $teamUid = $data['teamUid'] ?? '';

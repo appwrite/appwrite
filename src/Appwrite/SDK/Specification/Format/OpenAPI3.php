@@ -116,7 +116,7 @@ class OpenAPI3 extends Format
                 $method = \array_keys($method)[0];
             }
 
-            $desc = $sdk->getDescriptionFilePath();
+            $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
@@ -143,11 +143,14 @@ class OpenAPI3 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
+            $desc ??= '';
+            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $namespace . ucfirst($method),
                 'tags' => [$namespace],
-                'description' => ($desc) ? \file_get_contents($desc) : '',
+                'description' => $descContents,
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
@@ -175,6 +178,7 @@ class OpenAPI3 extends Format
                     $desc = $method->getDescriptionFilePath();
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
+                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -305,6 +309,10 @@ class OpenAPI3 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
+                if ($param['deprecated']) {
+                    continue;
+                }
+
                 /**
                  * @var \Utopia\Validator $validator
                  */
