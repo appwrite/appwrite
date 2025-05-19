@@ -355,7 +355,7 @@ class Builds extends Action
                         ->trigger();
                 }
             } elseif ($isVcsEnabled) {
-                // VCS and VCS+Temaplte
+                // VCS and VCS+Template
                 $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
                 $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');
@@ -469,7 +469,7 @@ class Builds extends Action
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
                 $localDevice = new Local();
 
-                if (substr($tmpDirectory, -1) !== '/') {
+                if (!str_ends_with($tmpDirectory, '/')) {
                     $tmpDirectory .= '/';
                 }
 
@@ -573,7 +573,6 @@ class Builds extends Action
             $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
-
             $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
@@ -605,6 +604,8 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
+            $flutterVarsForSite = [];
+
             switch ($resource->getCollection()) {
                 case 'functions':
                     $vars = [
@@ -635,12 +636,15 @@ class Builds extends Action
                         'APPWRITE_SITE_CPUS' => $cpus,
                         'APPWRITE_SITE_MEMORY' => $memory,
                     ];
+
+                    $flutterVarsForSite = $vars;
                     break;
             }
 
             $command = $this->getCommand(
                 resource: $resource,
-                deployment: $deployment
+                deployment: $deployment,
+                flutterVars: $flutterVarsForSite,
             );
 
             $response = null;
@@ -1317,7 +1321,7 @@ class Builds extends Action
         };
     }
 
-    protected function getCommand(Document $resource, Document $deployment): string
+    protected function getCommand(Document $resource, Document $deployment, array $flutterVars = []): string
     {
         if ($resource->getCollection() === 'functions') {
             return $deployment->getAttribute('buildCommands', '');
@@ -1339,6 +1343,30 @@ class Builds extends Action
             $commands[] = $bundleCommand;
 
             $commands = array_filter($commands, fn ($command) => !empty($command));
+
+            /**
+             * Injects `--dart-define` flags into Flutter build commands.
+             *
+             * Since Flutter requires build-time vars via flags (not .env), we inject them
+             * here. The runtimes executor allows longer commands for Flutter to support this.
+             */
+            if ($framework['key'] === 'flutter') {
+                foreach ($commands as $i => $cmd) {
+                    if (str_contains($cmd, 'flutter build web')) {
+                        $envs = '';
+                        foreach ($flutterVars as $key => $value) {
+                            $envs .= ' --dart-define=' . $key . '=' . escapeshellarg($value);
+                        }
+
+                        $commands[$i] = str_replace(
+                            'flutter build web',
+                            'flutter build web' . $envs,
+                            $cmd
+                        );
+                        break;
+                    }
+                }
+            }
 
             return implode(' && ', $commands);
         }
