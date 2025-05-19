@@ -738,11 +738,12 @@ class Builds extends Action
                                             $insideSeparation = true;
                                         }
                                     } else {
-                                        $logs = '';
                                         $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
                                         if ($separator !== false) {
                                             $logs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
                                             $insideSeparation = false;
+                                        } else {
+                                            $logs = '';
                                         }
                                     }
 
