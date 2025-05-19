@@ -30946,7 +30946,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "Create a new token. A token is linked to a file. Token can be passed as a request parameter.",
+                "description": "Create a new token. A token is linked to a file. Token can be passed as a request URL search parameter.",
                 "responses": {
                     "201": {
                         "description": "ResourceToken",
@@ -30963,7 +30963,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "tokens\/create-file-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new token. A token is linked to a file. Token can be passed as a request parameter.",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new token. A token is linked to a file. Token can be passed as a request URL search parameter.",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
