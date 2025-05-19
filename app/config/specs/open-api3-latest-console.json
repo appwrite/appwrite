@@ -9768,6 +9768,26 @@
                                         "type": "string",
                                         "description": "Runtime specification for the function and builds.",
                                         "x-example": null
+                                    },
+                                    "templateRepository": {
+                                        "type": "string",
+                                        "description": "Repository name of the template.",
+                                        "x-example": "<TEMPLATE_REPOSITORY>"
+                                    },
+                                    "templateOwner": {
+                                        "type": "string",
+                                        "description": "The name of the owner of the template.",
+                                        "x-example": "<TEMPLATE_OWNER>"
+                                    },
+                                    "templateRootDirectory": {
+                                        "type": "string",
+                                        "description": "Path to function code in the template repo.",
+                                        "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
+                                    },
+                                    "templateVersion": {
+                                        "type": "string",
+                                        "description": "Version (tag) for the repo linked to the function template.",
+                                        "x-example": "<TEMPLATE_VERSION>"
                                     }
                                 },
                                 "required": [
@@ -30695,7 +30715,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "Create a new token. A token is linked to a file. Token can be passed as a header or request get parameter.",
+                "description": "Create a new token. A token is linked to a file. Token can be passed as a request parameter.",
                 "responses": {
                     "201": {
                         "description": "ResourceToken",
@@ -30716,7 +30736,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "tokens\/create-file-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new token. A token is linked to a file. Token can be passed as a header or request get parameter.",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new token. A token is linked to a file. Token can be passed as a request parameter.",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
