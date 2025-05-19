@@ -252,7 +252,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
-                'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
             ])));
 
