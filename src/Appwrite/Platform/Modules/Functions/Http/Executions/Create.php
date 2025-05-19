@@ -423,12 +423,21 @@ class Create extends Base
                 }
             }
 
+            $maxLogLength = 100000;
+            $logs = $executionResponse['logs'] ?? '';
+            $logsTruncated = false;
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $logs = \substr($logs, 0, $maxLogLength) . "\n[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.";
+                $logsTruncated = true;
+            }
+
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
-            $execution->setAttribute('logs', $executionResponse['logs']);
+            $execution->setAttribute('logs', $logs);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
