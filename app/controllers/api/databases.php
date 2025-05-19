@@ -4231,7 +4231,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
-    ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
+    ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('requestTimestamp')
     ->inject('response')
@@ -4367,12 +4367,11 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
-        $documents = [$newDocument];
         $upserted = [];
         try {
             $modified = $dbForProject->createOrUpdateDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $documents,
+                [$newDocument],
                 onNext: function (Document $document) use (&$upserted) {
                     $upserted[] = $document;
                 },

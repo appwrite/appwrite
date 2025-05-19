@@ -1708,6 +1708,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertCount(3, $document['body']['$permissions']);
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1740,12 +1741,59 @@ trait DatabasesBase
 
         $this->assertEquals('Thor: Love and Thunder', $document['body']['title']);
 
+        // removing permission to read and delete
+        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Love and Thunder',
+                'releaseYear' => 2000
+            ],
+            'permissions' => [
+                Permission::update(Role::users())
+            ],
+        ]);
+        // shouldn't be able to read as no read permission
+        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        switch ($this->getSide()) {
+            case 'client':
+                $this->assertEquals(404, $document['headers']['status-code']);
+                break;
+            case 'server':
+                $this->assertEquals(200, $document['headers']['status-code']);
+                break;
+        }
+        // shouldn't be able to delete as no delete permission
         $document = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-
+        $this->assertEquals(401, $document['headers']['status-code']);
+        // giving the delete permission
+        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Love and Thunder',
+                'releaseYear' => 2000
+            ],
+            'permissions' => [
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users())
+            ],
+        ]);
+        $document = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $document['headers']['status-code']);
     }
 
     /**
