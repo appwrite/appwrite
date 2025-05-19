@@ -48,7 +48,7 @@ class Create extends Action
             group: 'files',
             name: 'createFileToken',
             description: <<<EOT
-            Create a new token. A token is linked to a file. Token can be passed as a header or request get parameter.
+            Create a new token. A token is linked to a file. Token can be passed as a request parameter.
             EOT,
             auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
