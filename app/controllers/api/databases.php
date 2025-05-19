@@ -4204,7 +4204,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
 App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId')
-    ->desc('Create or update document')
+    ->desc('upsert document')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
@@ -4217,7 +4217,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->label('sdk', new Method(
         namespace: 'databases',
         group: 'documents',
-        name: 'updateDocument',
+        name: 'upsertDocument',
         description: '/docs/references/databases/update-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
@@ -4258,12 +4258,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        // Read permission should not be required for update
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        if ($document->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-        }
-
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
             Database::PERMISSION_READ,
@@ -4290,10 +4284,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                     }
                 }
             }
-        }
-
-        if (\is_null($permissions)) {
-            $permissions = $document->getPermissions() ?? [];
         }
 
         $data['$id'] = $documentId;
