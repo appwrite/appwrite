@@ -102,7 +102,7 @@ class ConsoleVariables extends Model
                     'default' => false,
                     'example' => true,
                 ]
-            );;
+            );
     }
 
     /**
