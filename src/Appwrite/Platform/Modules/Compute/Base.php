@@ -190,7 +190,6 @@ class Base extends Action
             'providerCommitUrl' => $commitDetails['commitUrl'] ?? '',
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $site->getAttribute('providerRootDirectory', ''),
-            'search' => implode(' ', [$deploymentId]),
             'activate' => $activate,
         ]));
 
