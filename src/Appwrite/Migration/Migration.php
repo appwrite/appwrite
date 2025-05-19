@@ -9,6 +9,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\PDO;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
@@ -38,9 +39,9 @@ abstract class Migration
     protected Database $consoleDB;
 
     /**
-     * @var \PDO
+     * @var PDO
      */
-    protected \PDO $pdo;
+    protected PDO $pdo;
 
     /**
      * @var array
@@ -91,6 +92,8 @@ abstract class Migration
         '1.5.10' => 'V20',
         '1.5.11' => 'V20',
         '1.6.0' => 'V21',
+        '1.6.1' => 'V21',
+        '1.6.2' => 'V21',
     ];
 
     /**
@@ -144,10 +147,10 @@ abstract class Migration
     /**
      * Set PDO for Migration.
      *
-     * @param \PDO $pdo
+     * @param PDO $pdo
      * @return \Appwrite\Migration\Migration
      */
-    public function setPDO(\PDO $pdo): self
+    public function setPDO(PDO $pdo): self
     {
         $this->pdo = $pdo;
 
@@ -371,6 +374,10 @@ abstract class Migration
             'console' => 'console',
             default => 'projects',
         };
+
+        if ($from === 'files') {
+            $collectionType = 'buckets';
+        }
 
         $collection = $this->collections[$collectionType][$from] ?? null;
 

@@ -15,6 +15,8 @@ mutation {
         error
         required
         array
+        _createdAt
+        _updatedAt
         relatedCollection
         relationType
         twoWay

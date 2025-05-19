@@ -10,7 +10,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
-use Utopia\System\System;
 
 class V19 extends Migration
 {
@@ -731,7 +730,7 @@ class V19 extends Migration
 
                 if (empty($document->getAttribute('scheduleId', null))) {
                     $schedule = $this->consoleDB->createDocument('schedules', new Document([
-                        'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                        'region' => $project->getAttribute('region'),
                         'resourceType' => 'function',
                         'resourceId' => $document->getId(),
                         'resourceInternalId' => $document->getInternalId(),

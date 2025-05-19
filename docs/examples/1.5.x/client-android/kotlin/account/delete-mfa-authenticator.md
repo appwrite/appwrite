@@ -5,11 +5,10 @@ import io.appwrite.enums.AuthenticatorType
 
 val client = Client(context)
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("5df5acd0d48c2") // Your project ID
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
 
 val account = Account(client)
 
 val result = account.deleteMfaAuthenticator(
     type = AuthenticatorType.TOTP,
-    otp = "<OTP>", 
 )

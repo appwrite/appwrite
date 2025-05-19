@@ -11,11 +11,13 @@ mutation {
         logging: false,
         entrypoint: "<ENTRYPOINT>",
         commands: "<COMMANDS>",
+        scopes: [],
         installationId: "<INSTALLATION_ID>",
         providerRepositoryId: "<PROVIDER_REPOSITORY_ID>",
         providerBranch: "<PROVIDER_BRANCH>",
         providerSilentMode: false,
-        providerRootDirectory: "<PROVIDER_ROOT_DIRECTORY>"
+        providerRootDirectory: "<PROVIDER_ROOT_DIRECTORY>",
+        specification: ""
     ) {
         _id
         _createdAt
@@ -27,6 +29,7 @@ mutation {
         logging
         runtime
         deployment
+        scopes
         vars {
             _id
             _createdAt
@@ -47,5 +50,6 @@ mutation {
         providerBranch
         providerRootDirectory
         providerSilentMode
+        specification
     }
 }

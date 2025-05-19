@@ -3,7 +3,7 @@ import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
 
 val client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setJWT("<YOUR_JWT>") // Your secret JSON Web Token
 

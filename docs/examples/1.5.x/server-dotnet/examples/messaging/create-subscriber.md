@@ -4,8 +4,8 @@ using Appwrite.Services;
 
 Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    .SetProject("5df5acd0d48c2") // Your project ID
-    .SetJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ..."); // Your secret JSON Web Token
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetJWT("<YOUR_JWT>"); // Your secret JSON Web Token
 
 Messaging messaging = new Messaging(client);
 

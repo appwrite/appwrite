@@ -3,17 +3,16 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Certificate extends Event
 {
     protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::CERTIFICATES_QUEUE_NAME)
@@ -67,19 +66,16 @@ class Certificate extends Event
     }
 
     /**
-     * Executes the event and sends it to the certificates worker.
+     * Prepare the payload for the event
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck
-        ]);
+        ];
     }
 }

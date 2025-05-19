@@ -1,0 +1,1 @@
+Create a new API key. It's recommended to have multiple API keys with strict scopes for separate functions within your project.

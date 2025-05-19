@@ -24,7 +24,15 @@ class Base extends Queries
     public function __construct(string $collection, array $allowedAttributes)
     {
         $config = Config::getParam('collections', []);
-        $collections = array_merge($config['projects'], $config['buckets'], $config['databases'], $config['console']);
+
+        $collections = array_merge(
+            $config['projects'],
+            $config['buckets'],
+            $config['databases'],
+            $config['console'],
+            $config['logs']
+        );
+
         $collection = $collections[$collection];
         // array for constant lookup time
         $allowedAttributesLookup = [];
@@ -35,6 +43,7 @@ class Base extends Queries
         $attributes = [];
         foreach ($collection['attributes'] as $attribute) {
             $key = $attribute['$id'];
+
             if (!isset($allowedAttributesLookup[$key])) {
                 continue;
             }
@@ -62,12 +71,18 @@ class Base extends Queries
             'array' => false,
         ]);
 
+        $internalId = new Document([
+            'key' => '$internalId',
+            'type' => Database::VAR_STRING,
+            'array' => false,
+        ]);
+
         $validators = [
             new Limit(),
             new Offset(),
             new Cursor(),
-            new Filter($attributes),
-            new Order($attributes),
+            new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
+            new Order([...$attributes, $internalId]),
         ];
 
         parent::__construct($validators);

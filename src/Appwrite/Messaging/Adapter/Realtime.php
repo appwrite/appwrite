@@ -7,7 +7,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
-use Utopia\System\System;
+use Utopia\Pools\Pool;
 
 class Realtime extends Adapter
 {
@@ -35,6 +35,14 @@ class Realtime extends Adapter
      *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
      */
     public array $subscriptions = [];
+
+    private Pool $pubsubPool;
+
+    public function __construct()
+    {
+        global $register;
+        $this->pubsubPool = $register->get('pools')->get('pubsub');
+    }
 
     /**
      * Adds a subscription.
@@ -130,7 +138,7 @@ class Realtime extends Adapter
      * @param array $options
      * @return void
      */
-    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
+    public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;
@@ -139,9 +147,7 @@ class Realtime extends Adapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        $redis = new \Redis(); //TODO: make this part of the constructor
-        $redis->connect(System::getEnv('_APP_REDIS_HOST', ''), System::getEnv('_APP_REDIS_PORT', ''));
-        $redis->publish('realtime', json_encode([
+        $message = [
             'project' => $projectId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
@@ -152,7 +158,9 @@ class Realtime extends Adapter
                 'timestamp' => DateTime::formatTz(DateTime::now()),
                 'payload' => $payload
             ]
-        ]));
+        ];
+
+        $this->pubsubPool->use(fn (\Appwrite\PubSub\Adapter $pubsub) => $pubsub->publish('realtime', json_encode($message)));
     }
 
     /**
@@ -243,7 +251,11 @@ class Realtime extends Adapter
      * @param string $event
      * @param Document $payload
      * @param Document|null $project
+     * @param Document|null $database
+     * @param Document|null $collection
+     * @param Document|null $bucket
      * @return array
+     * @throws \Exception
      */
     public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $collection = null, Document $bucket = null): array
     {
@@ -262,6 +274,13 @@ class Realtime extends Adapter
                 break;
             case 'rules':
                 $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
+            case 'projects':
+                $channels[] = 'console';
+                $channels[] = 'projects.' . $parts[1];
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
@@ -280,6 +299,7 @@ class Realtime extends Adapter
             case 'databases':
                 if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
                     $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 } elseif (($parts[4] ?? '') === 'documents') {
@@ -319,6 +339,7 @@ class Realtime extends Adapter
                 if ($parts[2] === 'executions') {
                     if (!empty($payload->getRead())) {
                         $channels[] = 'console';
+                        $channels[] = 'projects.' . $project->getId();
                         $channels[] = 'executions';
                         $channels[] = 'executions.' . $payload->getId();
                         $channels[] = 'functions.' . $payload->getAttribute('functionId');
@@ -326,6 +347,7 @@ class Realtime extends Adapter
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
@@ -333,6 +355,7 @@ class Realtime extends Adapter
                 break;
             case 'migrations':
                 $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;

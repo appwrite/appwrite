@@ -2,15 +2,15 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
 
 Messaging messaging = Messaging(client);
 
 Message result = await messaging.createPush(
     messageId: '<MESSAGE_ID>',
-    title: '<TITLE>',
-    body: '<BODY>',
+    title: '<TITLE>', // (optional)
+    body: '<BODY>', // (optional)
     topics: [], // (optional)
     users: [], // (optional)
     targets: [], // (optional)
@@ -21,7 +21,10 @@ Message result = await messaging.createPush(
     sound: '<SOUND>', // (optional)
     color: '<COLOR>', // (optional)
     tag: '<TAG>', // (optional)
-    badge: '<BADGE>', // (optional)
+    badge: 0, // (optional)
     draft: false, // (optional)
     scheduledAt: '', // (optional)
+    contentAvailable: false, // (optional)
+    critical: false, // (optional)
+    priority: MessagePriority.normal, // (optional)
 );

@@ -5,8 +5,8 @@ use Appwrite\Services\Messaging;
 
 $client = (new Client())
     ->setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    ->setProject('5df5acd0d48c2') // Your project ID
-    ->setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'); // Your secret JSON Web Token
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setJWT('<YOUR_JWT>'); // Your secret JSON Web Token
 
 $messaging = new Messaging($client);
 

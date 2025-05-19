@@ -2,7 +2,7 @@ import { Client, Functions, ExecutionMethod } from "https://deno.land/x/appwrite
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setSession(''); // The user session to authenticate with
 
 const functions = new Functions(client);
@@ -13,5 +13,6 @@ const response = await functions.createExecution(
     false, // async (optional)
     '<PATH>', // path (optional)
     ExecutionMethod.GET, // method (optional)
-    {} // headers (optional)
+    {}, // headers (optional)
+    '' // scheduledAt (optional)
 );

@@ -4,7 +4,7 @@ import io.appwrite.models.InputFile
 import io.appwrite.services.Storage
 
 val client = Client(context)
-    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
 
 val storage = Storage(client)
