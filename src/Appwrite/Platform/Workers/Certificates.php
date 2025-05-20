@@ -55,7 +55,7 @@ class Certificates extends Action
             ->inject('log')
             ->inject('certificates')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -96,11 +96,14 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan);
+        $domainType = $payload['domainType'] ?? null;
+
+        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan);
     }
 
     /**
      * @param Domain $domain
+     * @param ?string $domainType
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Event $queueForEvents
@@ -115,6 +118,7 @@ class Certificates extends Action
      */
     private function execute(
         Domain $domain,
+        ?string $domainType,
         Database $dbForPlatform,
         Mail $queueForMails,
         Event $queueForEvents,
@@ -174,7 +178,7 @@ class Certificates extends Action
                 $this->validateDomain($domain, $isMainDomain, $log);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
-                if (!$certificates->isRenewRequired($domain->get(), $log)) {
+                if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
                     Console::info("Skipping, renew isn't required");
                     return;
                 }
@@ -182,7 +186,7 @@ class Certificates extends Action
 
             // Prepare unique cert name. Using this helps prevent miss-match in configuration when renewing certificates.
             $certName = ID::unique();
-            $renewDate = $certificates->issueCertificate($certName, $domain->get());
+            $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
             // Command succeeded, store all data into document
             $certificate->setAttribute('logs', 'Certificate successfully generated.');
