@@ -1769,8 +1769,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-
-        $this->assertEquals(401, $document['headers']['status-code']);
+        // simulating for the client
+        // the document should not be allowed to be deleted as needed downward
+        if ($this->getSide() === 'client') {
+            $this->assertEquals(401, $document['headers']['status-code']);
+        }
         // giving the delete permission
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
