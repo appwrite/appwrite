@@ -4205,7 +4205,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->desc('Upsert document')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'document.upsert')
