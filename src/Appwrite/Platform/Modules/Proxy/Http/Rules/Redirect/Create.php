@@ -179,7 +179,8 @@ class Create extends Action
         if ($rule->getAttribute('status', '') === 'verifying') {
             $queueForCertificates
                 ->setDomain(new Document([
-                    'domain' => $rule->getAttribute('domain')
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => 'redirect',
                 ]))
                 ->trigger();
         }
