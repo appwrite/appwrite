@@ -1089,7 +1089,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             // Quick check: fetch up to 2 owners to determine if only one exists
             $ownersCount = $dbForProject->count(
                 collection: 'memberships',
-                queries: [Query::contains('roles', ['owner'])],
+                queries: [
+                    Query::contains('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getInternalId()])
+                ],
                 max: 2
             );
 

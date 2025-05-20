@@ -81,7 +81,7 @@ return [
     ],
     Exception::GENERAL_ROUTE_NOT_FOUND => [
         'name' => Exception::GENERAL_ROUTE_NOT_FOUND,
-        'description' => 'The requested route was not found. Please refer to the API docs and try again.',
+        'description' => 'Route not found. Please ensure the endpoint is configured correctly and that the API route is valid for this SDK version. Refer to the API docs for more details.',
         'code' => 404,
     ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
