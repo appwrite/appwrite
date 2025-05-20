@@ -3790,7 +3790,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-        
+
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
