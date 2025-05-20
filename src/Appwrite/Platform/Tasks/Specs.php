@@ -101,6 +101,12 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Session',
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
+                ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
+                    'in' => 'header',
                 ]
             ],
             APP_PLATFORM_SERVER => [
