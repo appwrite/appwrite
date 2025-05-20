@@ -8843,26 +8843,6 @@
                                         "type": "string",
                                         "description": "Runtime specification for the function and builds.",
                                         "x-example": null
-                                    },
-                                    "templateRepository": {
-                                        "type": "string",
-                                        "description": "Repository name of the template.",
-                                        "x-example": "<TEMPLATE_REPOSITORY>"
-                                    },
-                                    "templateOwner": {
-                                        "type": "string",
-                                        "description": "The name of the owner of the template.",
-                                        "x-example": "<TEMPLATE_OWNER>"
-                                    },
-                                    "templateRootDirectory": {
-                                        "type": "string",
-                                        "description": "Path to function code in the template repo.",
-                                        "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
-                                    },
-                                    "templateVersion": {
-                                        "type": "string",
-                                        "description": "Version (tag) for the repo linked to the function template.",
-                                        "x-example": "<TEMPLATE_VERSION>"
                                     }
                                 },
                                 "required": [

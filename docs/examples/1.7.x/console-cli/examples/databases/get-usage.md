@@ -1,0 +1,2 @@
+appwrite databases getUsage \
+

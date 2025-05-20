@@ -8945,30 +8945,6 @@
                                     "description": "Runtime specification for the function and builds.",
                                     "default": "s-1vcpu-512mb",
                                     "x-example": null
-                                },
-                                "templateRepository": {
-                                    "type": "string",
-                                    "description": "Repository name of the template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_REPOSITORY>"
-                                },
-                                "templateOwner": {
-                                    "type": "string",
-                                    "description": "The name of the owner of the template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_OWNER>"
-                                },
-                                "templateRootDirectory": {
-                                    "type": "string",
-                                    "description": "Path to function code in the template repo.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
-                                },
-                                "templateVersion": {
-                                    "type": "string",
-                                    "description": "Version (tag) for the repo linked to the function template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_VERSION>"
                                 }
                             },
                             "required": [
