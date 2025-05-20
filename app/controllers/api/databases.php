@@ -4228,9 +4228,9 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         ],
         contentType: ContentType::JSON
     ))
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('databaseId', '', new CustomId(), 'Database ID.')
+    ->param('collectionId', '', new CustomId(), 'Collection ID.')
+    ->param('documentId', '', new CustomId(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('requestTimestamp')
