@@ -955,7 +955,7 @@ $dbService = $this->getParam('database');
 <?php elseif ($dbService === 'postgresql'): ?>
 
   postgresql:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: appwrite-postgresql
     restart: unless-stopped
     networks:
@@ -966,6 +966,7 @@ $dbService = $this->getParam('database');
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
 
 <?php endif; ?>
 

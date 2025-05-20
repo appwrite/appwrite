@@ -86,6 +86,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./.env:/usr/src/code/.env
     depends_on:
       - mariadb
       - redis
@@ -95,6 +96,7 @@ services:
       - -e
       - app/http.php
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
@@ -263,6 +265,7 @@ services:
       - mariadb
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
@@ -295,6 +298,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -325,6 +329,7 @@ services:
       - mariadb
       - request-catcher
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -362,6 +367,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -419,6 +425,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -454,6 +461,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -524,6 +532,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -560,6 +569,7 @@ services:
       - mariadb
       - openruntimes-executor
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -603,6 +613,7 @@ services:
       - maildev
       # - smtp
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -637,6 +648,7 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -693,6 +705,7 @@ services:
     depends_on:
       - mariadb
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -728,6 +741,7 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -770,6 +784,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -801,6 +816,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -832,6 +848,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -863,6 +880,7 @@ services:
       - mariadb
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -891,6 +909,7 @@ services:
       - mariadb
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -918,6 +937,7 @@ services:
       - mariadb
       - redis
     environment:
+      - _APP_DB_SCHEME
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -1038,6 +1058,22 @@ services:
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
 
+  postgresql:
+    image: postgres:15
+    container_name: appwrite-postgresql
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
+
   redis:
     image: redis:7.2.4-alpine
     <<: *x-logging
@@ -1127,6 +1163,7 @@ networks:
 
 volumes:
   appwrite-mariadb:
+  appwrite-postgresql:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
