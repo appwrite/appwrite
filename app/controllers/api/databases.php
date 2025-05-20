@@ -4202,6 +4202,244 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
+App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
+    ->desc('Upsert document')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
+    ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('audits.event', 'document.upsert')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'documents',
+        name: 'upsertDocument',
+        description: '/docs/references/databases/upsert-document.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('documentId', '', new CustomId(), 'Document ID.')
+    ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+
+        if (empty($data) && \is_null($permissions)) {
+            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+        }
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
+                        continue;
+                    }
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    }
+                }
+            }
+        }
+
+        $data['$id'] = $documentId;
+        $data['$permissions'] = $permissions;
+        $newDocument = new Document($data);
+
+        $operations = 0;
+
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
+
+            $operations++;
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+
+                $isList = \is_array($related) && \array_values($related) === $related;
+
+                if ($isList) {
+                    $relations = $related;
+                } else {
+                    $relations = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($relations as &$relation) {
+                    // If the relation is an array it can be either update or create a child document.
+                    if (
+                        \is_array($relation)
+                        && \array_values($relation) !== $relation
+                        && !isset($relation['$id'])
+                    ) {
+                        $relation['$id'] = ID::unique();
+                        $relation = new Document($relation);
+                    }
+                    if ($relation instanceof Document) {
+                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
+                            $relation->getId()
+                        ));
+                        $relation->removeAttribute('$collectionId');
+                        $relation->removeAttribute('$databaseId');
+                        // Attribute $collection is required for Utopia.
+                        $relation->setAttribute(
+                            '$collection',
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId()
+                        );
+
+                        if ($oldDocument->isEmpty()) {
+                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
+                                $relation['$id'] = ID::unique();
+                            }
+                        }
+                        $setCollection($relatedCollection, $relation);
+                    }
+                }
+
+                if ($isList) {
+                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                } else {
+                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
+                }
+            }
+        });
+
+        $setCollection($collection, $newDocument);
+
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
+
+        $upserted = [];
+        try {
+            $modified = $dbForProject->createOrUpdateDocuments(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                [$newDocument],
+                onNext: function (Document $document) use (&$upserted) {
+                    $upserted[] = $document;
+                },
+            );
+        } catch (ConflictException) {
+            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+        } catch (RelationshipException $e) {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
+
+        $document = $upserted[0];
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $processDocument($collection, $document);
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('documentId', $document->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database)
+            ->setPayload($response->getPayload(), sensitive: $relationships);
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+    });
+
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('Update documents')
     ->groups(['api', 'database'])
