@@ -41,7 +41,7 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        $database = System::getEnv('_APP_DB_SCHEME', 'mariadb');
+        $database = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 }

@@ -101,7 +101,7 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_SCHEME', 'mariadb'),
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
         'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => System::getEnv('_APP_DB_PORT', '3306'),
         'user' => System::getEnv('_APP_DB_USER', ''),
@@ -300,10 +300,20 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
-    $dbScheme = System::getEnv('_APP_DB_SCHEME', 'mariadb');
-    $dsn = ($dbScheme === 'postgresql')
-    ? "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}"
-    : "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
+    $dsn = '';
+
+    switch ($dbAdapter) {
+        case 'postgresql':
+            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
+            break;
+
+        case 'mysql':
+        case 'mariadb':
+        default:
+            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
+            break;
+    }
 
 
     return new PDO(
