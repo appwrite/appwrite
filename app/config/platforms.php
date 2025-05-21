@@ -11,7 +11,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '18.0.1',
+                'version' => '18.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -59,7 +59,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '16.0.1',
+                'version' => '16.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -77,7 +77,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '10.0.1',
+                'version' => '10.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -112,7 +112,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
-                'version' => '8.0.1',
+                'version' => '8.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
