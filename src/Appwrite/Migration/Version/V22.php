@@ -12,6 +12,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class V22 extends Migration
 {
@@ -324,7 +325,9 @@ class V22 extends Migration
                 4. Fill "trigger" with "manual"
                 5. Fill "deploymentResourceType". If "resourceType" is "function", set "deploymentResourceType" to "function"
                 6. Fill "search" with "{$id} {domain}"
-                7. Fill "deploymentId" and "deploymentInternalId". If "deploymentResourceType" is "function", get project DB, and find function with ID "resourceId". Then fill rule's "deploymentId" with function's "deployment", and "deploymentId" as backup
+                7. Set "region" to project region
+                8. Fill "owner" with "Appwrite" if "domain" ends with "functions" or "sites"
+                9. Fill "deploymentId" and "deploymentInternalId". If "deploymentResourceType" is "function", get project DB, and find function with ID "resourceId". Then fill rule's "deploymentId" with function's "deployment", and "deploymentId" as backup
                 */
 
                 $deploymentResourceType = null;
@@ -346,14 +349,29 @@ class V22 extends Migration
                     ->setAttribute('deploymentResourceType', $document->getAttribute('deploymentResourceType', $deploymentResourceType))
                     ->setAttribute('search', \implode(' ', [$document->getId(), $document->getAttribute('domain', '')]));
 
+                $project = $this->dbForProject->getDocument('projects', $document->getAttribute('projectId'));
+
+                if ($project->isEmpty()) {
+                    Console::warning("Project \"{$document->getAttribute('projectId')}\" not found for rule \"{$document->getId()}\"");
+                    $document->setAttribute('region', System::getEnv('_APP_DEFAULT_REGION'));
+                    break;
+                }
+
+                $document->setAttribute('region', $project->getAttribute('region', System::getEnv('_APP_DEFAULT_REGION')));
+
+                $domain = $document->getAttribute('domain', '');
+                $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $owner = $document->getAttribute('owner', '');
+                if (
+                    empty($owner) &&
+                    (!empty($functionsDomain) && \str_ends_with($domain, $functionsDomain)) ||
+                    (!empty($sitesDomain) && \str_ends_with($domain, $sitesDomain))
+                ) {
+                    $document->setAttribute('owner', 'Appwrite');
+                }
+
                 if ($deploymentResourceType === 'function') {
-                    $project = $this->dbForProject->getDocument('projects', $document->getAttribute('projectId'));
-
-                    if ($project->isEmpty()) {
-                        Console::warning("Project \"{$document->getAttribute('projectId')}\" not found for rule \"{$document->getId()}\"");
-                        break;
-                    }
-
                     $dbForOwnerProject = ($this->getProjectDB)($project);
                     $function = $dbForOwnerProject->getDocument('functions', $resourceId);
 
