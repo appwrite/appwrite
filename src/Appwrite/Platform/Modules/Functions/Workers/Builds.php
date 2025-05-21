@@ -639,7 +639,7 @@ class Builds extends Action
 
             $command = $this->getCommand(
                 resource: $resource,
-                deployment: $deployment,
+                deployment: $deployment
             );
 
             $response = null;
