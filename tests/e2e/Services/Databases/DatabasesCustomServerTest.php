@@ -687,6 +687,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
         ]);
 
+        // must fail due to encrpt and no plan
         $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -696,6 +697,18 @@ class DatabasesCustomServerTest extends Scope
             'size' => 256,
             'required' => true,
             'encrypt' => true,
+        ]);
+
+        $this->assertEquals(400, $lastName['headers']['status-code']);
+
+        $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'lastName',
+            'size' => 256,
+            'required' => true,
         ]);
 
 
