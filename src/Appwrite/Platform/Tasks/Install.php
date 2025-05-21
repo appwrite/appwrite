@@ -174,6 +174,7 @@ class Install extends Action
             }
 
             if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
+                $input[$var['name']] = $database;
                 continue;
             }
 
