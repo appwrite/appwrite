@@ -98,15 +98,28 @@ class Executor
         ];
 
         $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
-        $status = $response['headers']['status-code'];
+        $response = '';
+        $this->call(
+            $endpoint,
+            self::METHOD_POST,
+            $route,
+            ['x-opr-runtime-id' => $runtimeId],
+            $params,
+            true,
+            $timeout,
+            callback: function ($chunk) use (&$response) {
+                $response .= $chunk;
+            }
+        );
+
+        $response = json_decode($response, true);
+        $status = $response['code'] ?? 201;
         if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new \Exception($response['message'], $status);
         }
 
-        return $response['body'];
+        return $response;
     }
 
     /**
