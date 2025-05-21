@@ -604,8 +604,6 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
-            $flutterVarsForSite = [];
-
             switch ($resource->getCollection()) {
                 case 'functions':
                     $vars = [
@@ -636,15 +634,12 @@ class Builds extends Action
                         'APPWRITE_SITE_CPUS' => $cpus,
                         'APPWRITE_SITE_MEMORY' => $memory,
                     ];
-
-                    $flutterVarsForSite = $vars;
                     break;
             }
 
             $command = $this->getCommand(
                 resource: $resource,
                 deployment: $deployment,
-                flutterVars: $flutterVarsForSite,
             );
 
             $response = null;
@@ -1321,7 +1316,7 @@ class Builds extends Action
         };
     }
 
-    protected function getCommand(Document $resource, Document $deployment, array $flutterVars = []): string
+    protected function getCommand(Document $resource, Document $deployment): string
     {
         if ($resource->getCollection() === 'functions') {
             return $deployment->getAttribute('buildCommands', '');
@@ -1342,36 +1337,47 @@ class Builds extends Action
             $commands[] = $deployment->getAttribute('buildCommands', '');
             $commands[] = $bundleCommand;
 
+            // only when the framework is `Flutter Web`.
+            $commands = $this->injectFlutterEnvVars($framework, $commands);
+
             $commands = array_filter($commands, fn ($command) => !empty($command));
-
-            /**
-             * Injects `--dart-define` flags into Flutter build commands.
-             *
-             * Since Flutter requires build-time vars via flags (not .env), we inject them
-             * here. The runtimes executor allows longer commands for Flutter to support this.
-             */
-            if ($framework['key'] === 'flutter') {
-                foreach ($commands as $i => $cmd) {
-                    if (str_contains($cmd, 'flutter build web')) {
-                        $envs = '';
-                        foreach ($flutterVars as $key => $value) {
-                            $envs .= ' --dart-define=' . $key . '=' . escapeshellarg($value);
-                        }
-
-                        $commands[$i] = str_replace(
-                            'flutter build web',
-                            'flutter build web' . $envs,
-                            $cmd
-                        );
-                        break;
-                    }
-                }
-            }
 
             return implode(' && ', $commands);
         }
 
         return '';
+    }
+
+    /**
+     * Injects `--dart-define-from-file` into Flutter web build commands.
+     *
+     * Flutter doesn't inherit shell/docker env vars, so we pass them
+     * explicitly using `--dart-define-from-file`. This method ensures
+     * the flag is added only when building for web and not already defined.
+     */
+    protected function injectFlutterEnvVars(array $framework, array $commands): array
+    {
+        // short circuit, fast path return!
+        if (($framework['key'] ?? '') !== 'flutter') {
+            return $commands;
+        }
+
+        /* avoids conflict with user `.env` files. */
+        $envFile = '.open-runtimes';
+        $pattern = '/\bflutter\s+build\s+web\b/';
+        $injectedCommand = "flutter build web --dart-define-from-file=$envFile";
+
+        foreach ($commands as $i => $cmd) {
+            $isWebBuild = preg_match($pattern, $cmd);
+            $hasDartDefine = str_contains($cmd, '--dart-define');
+
+            if ($isWebBuild && !$hasDartDefine) {
+                $commands[$i] = preg_replace($pattern, $injectedCommand, $cmd, 1);
+                break;
+            }
+        }
+
+        return $commands;
     }
 
     /**
