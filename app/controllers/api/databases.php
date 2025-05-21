@@ -1349,7 +1349,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->inject('queueForEvents')
     ->inject('plan')
     ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, array $plan) {
-        if ($encrypt && !empty($plan) && !isset($plan['databasesAllowEncrypt'])) {
+        if ($encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
             throw new Exception(Exception::ATTRIBUTE_FORMAT_UNSUPPORTED, 'Encrypted string attributes are not available on your plan. Please upgrade to create encrypted string attributes.');
         }
         // Ensure attribute default is within required size
