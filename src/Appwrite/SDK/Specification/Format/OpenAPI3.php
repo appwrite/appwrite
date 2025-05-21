@@ -309,6 +309,10 @@ class OpenAPI3 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
+                if (($param['deprecated'] ?? false) === true) {
+                    continue;
+                }
+
                 /**
                  * @var \Utopia\Validator $validator
                  */

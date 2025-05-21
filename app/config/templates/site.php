@@ -1351,4 +1351,23 @@ return [
         'providerVersion' => '0.3.*',
         'variables' => [],
     ],
+    [
+        'key' => 'gallery-for-lynx',
+        'name' => 'Lynx gallery',
+        'tagline' => 'A Lynx website showcasing gallery with smooth animations.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/gallery-for-lynx-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/gallery-for-lynx-light.png',
+        'frameworks' => [
+            getFramework('LYNX', [
+                'providerRootDirectory' => './lynx/gallery',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
 ];

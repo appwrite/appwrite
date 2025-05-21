@@ -12,6 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Gauge;
@@ -23,6 +24,8 @@ abstract class ScheduleBase extends Action
     protected const ENQUEUE_TIMER = 60; //seconds
 
     protected array $schedules = [];
+
+    protected BrokerPool $publisher;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -68,6 +71,7 @@ abstract class ScheduleBase extends Action
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
+        $this->publisher = new BrokerPool($pools->get('publisher'));
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
@@ -118,8 +122,6 @@ abstract class ScheduleBase extends Action
                 static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
             );
-
-            $pools->reclaim();
 
             return [
                 '$internalId' => $schedule->getInternalId(),
