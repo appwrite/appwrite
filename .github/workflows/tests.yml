@@ -141,7 +141,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        db_adapter:[
+        db_adapter: [
           MARIADB,
           POSTGRESQL
         ]
