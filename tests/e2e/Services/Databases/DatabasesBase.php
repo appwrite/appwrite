@@ -195,6 +195,20 @@ trait DatabasesBase
     public function testCreateAttributes(array $data): array
     {
         $databaseId = $data['databaseId'];
+        // must fail as we are using encrypt and plan has no 'databasesAllowEncrypt'
+        $encryptStringAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+            'encrypt' => true
+        ]);
+
+        $this->assertEquals(400, $encryptStringAttribute['headers']['status-code']);
+        $this->assertEquals($encryptStringAttribute['body']['message'], 'Encrypted string attributes are not available on your plan. Please upgrade to create encrypted string attributes.');
 
         $title = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
