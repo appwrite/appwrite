@@ -42,14 +42,6 @@ class Install extends Action
         $defaultHTTPSPort = '443';
         /** @var array<string, array<string, string>> $vars array whre key is variable name and value is variable */
         $vars = [];
-        $vars['_APP_DB_SCHEME'] = [
-            'name' => '_APP_DB_SCHEME',
-            'default' => $database,
-            'required' => true,
-            'filter' => '',
-            'overwrite' => true,
-            'question' => 'Choose your database (mariadb|postgresql)',
-        ];
 
         foreach ($config as $category) {
             foreach ($category['variables'] ?? [] as $var) {
@@ -181,7 +173,7 @@ class Install extends Action
                 continue;
             }
 
-            if ($var['name'] === '_APP_DB_SCHEME' && $data !== false) {
+            if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
                 continue;
             }
 
@@ -201,7 +193,7 @@ class Install extends Action
                 }
             }
         }
-        $database = $input['_APP_DB_SCHEME'];
+        $database = $input['_APP_DB_ADAPTER'];
         if ($database === 'postgresql') {
             $input['_APP_DB_HOST'] = 'postgresql';
             $input['_APP_DB_PORT'] = 5432;

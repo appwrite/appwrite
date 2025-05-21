@@ -341,7 +341,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_DB_SCHEME',
+                'name' => '_APP_DB_ADAPTER',
                 'description' => 'To switch between mariadb and postgresql',
                 'introduction' => '1.6.0',
                 'default' => 'mariadb',
