@@ -695,7 +695,7 @@ class DatabasesCustomServerTest extends Scope
             'key' => 'lastName',
             'size' => 256,
             'required' => true,
-            'encrypt' => true,
+            'encrypt' => true
         ]);
 
 
