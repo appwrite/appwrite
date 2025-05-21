@@ -1223,7 +1223,7 @@ class Builds extends Action
             $deployment->setAttribute('buildEndedAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
-            $deployment->setAttribute('buildLogs', $message);
+            $deployment->setAttribute('buildLogs', $deployment->getAttribute('buildLogs', '') . "\n" . $message);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
