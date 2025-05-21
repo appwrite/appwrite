@@ -10,24 +10,24 @@ class ConsoleVariables extends Model
     public function __construct()
     {
         $this
-        ->addRule('_APP_DOMAIN_TARGET_CNAME', [
-            'type' => self::TYPE_STRING,
-            'description' => 'CNAME target for your Appwrite custom domains.',
-            'default' => '',
-            'example' => 'appwrite.io',
-        ])
-        ->addRule('_APP_DOMAIN_TARGET_A', [
-            'type' => self::TYPE_STRING,
-            'description' => 'A target for your Appwrite custom domains.',
-            'default' => '',
-            'example' => '127.0.0.1',
-        ])
-        ->addRule('_APP_DOMAIN_TARGET_AAAA', [
-            'type' => self::TYPE_STRING,
-            'description' => 'AAAA target for your Appwrite custom domains.',
-            'default' => '',
-            'example' => '::1',
-        ])
+            ->addRule('_APP_DOMAIN_TARGET_CNAME', [
+                'type' => self::TYPE_STRING,
+                'description' => 'CNAME target for your Appwrite custom domains.',
+                'default' => '',
+                'example' => 'appwrite.io',
+            ])
+            ->addRule('_APP_DOMAIN_TARGET_A', [
+                'type' => self::TYPE_STRING,
+                'description' => 'A target for your Appwrite custom domains.',
+                'default' => '',
+                'example' => '127.0.0.1',
+            ])
+            ->addRule('_APP_DOMAIN_TARGET_AAAA', [
+                'type' => self::TYPE_STRING,
+                'description' => 'AAAA target for your Appwrite custom domains.',
+                'default' => '',
+                'example' => '::1',
+            ])
             ->addRule('_APP_STORAGE_LIMIT', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Maximum file size allowed for file upload in bytes.',
@@ -76,33 +76,30 @@ class ConsoleVariables extends Model
                 'default' => '',
                 'example' => 'functions.localhost',
             ])
-            ->addRule(
-                '_APP_OPTIONS_FORCE_HTTPS',
-                [
-                    'type' => self::TYPE_STRING,
-                    'description' => 'Defines if HTTPS is enforced for all requests.',
-                    'default' => '',
-                    'example' => 'enabled',
-                ]
-            )
-            ->addRule(
-                '_APP_DOMAINS_NAMESERVERS',
-                [
-                    'type' => self::TYPE_STRING,
-                    'description' => 'Comma-separated list of nameservers.',
-                    'default' => '',
-                    'example' => 'ns1.example.com,ns2.example.com',
-                ]
-            )
-            ->addRule(
-                '_APP_SUPPORTS_MULTI_REGION',
-                [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => 'Defines if multi-region is supported.',
-                    'default' => false,
-                    'example' => true,
-                ]
-            );
+            ->addRule('_APP_OPTIONS_FORCE_HTTPS', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Defines if HTTPS is enforced for all requests.',
+                'default' => '',
+                'example' => 'enabled',
+            ])
+            ->addRule('_APP_DOMAINS_NAMESERVERS', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Comma-separated list of nameservers.',
+                'default' => '',
+                'example' => 'ns1.example.com,ns2.example.com',
+            ])
+            ->addRule('_APP_SUPPORTS_MULTI_REGION', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines if multi-region is supported.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('_APP_STRIPE_KEY', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines stripe live/test key.',
+                'default' => '',
+                'example' => 'sk_test_51H8xx0A9aBcDeFGhiJklMNopQrStuVwXyZ1234567890abcdefGhIjKlMnOpQr',
+            ]);
     }
 
     /**
