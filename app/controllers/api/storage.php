@@ -1241,12 +1241,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         if (!empty($source)) {
             if (!empty($rangeHeader)) {
                 $response->send(substr($source, $start, ($end - $start + 1)));
+                return;
             }
             $response->send($source);
+            return;
         }
 
         if (!empty($rangeHeader)) {
             $response->send($deviceForFiles->read($path, $start, ($end - $start + 1)));
+            return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
@@ -1407,6 +1410,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         if (!empty($source)) {
             if (!empty($rangeHeader)) {
                 $response->send(substr($source, $start, ($end - $start + 1)));
+                return;
             }
             $response->send($source);
             return;
@@ -1558,6 +1562,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
         if (!empty($source)) {
             if (!empty($rangeHeader)) {
                 $response->send(substr($source, $start, ($end - $start + 1)));
+                return;
             }
             $response->send($source);
             return;
