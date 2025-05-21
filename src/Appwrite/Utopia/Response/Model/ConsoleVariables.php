@@ -98,7 +98,7 @@ class ConsoleVariables extends Model
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Defines stripe live/test key.',
                 'default' => '',
-                'example' => 'sk_test_51H8xx0A9aBcDeFGhiJklMNopQrStuVwXyZ1234567890abcdefGhIjKlMnOpQr',
+                'example' => 'sk_test_51ABC1234567890abcdef1234567890abcdef1234567890abcdef123456',
             ]);
     }
 
