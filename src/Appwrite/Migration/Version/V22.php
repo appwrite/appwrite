@@ -348,9 +348,21 @@ class V22 extends Migration
 
                 if ($deploymentResourceType === 'function') {
                     $project = $this->dbForProject->getDocument('projects', $document->getAttribute('projectId'));
+
+                    if ($project->isEmpty()) {
+                        Console::warning("Project \"{$document->getAttribute('projectId')}\" not found for rule \"{$document->getId()}\"");
+                        break;
+                    }
+
                     $dbForOwnerProject = ($this->getProjectDB)($project);
                     $function = $dbForOwnerProject->getDocument('functions', $resourceId);
-                    $deploymentId = $function->getAttribute('deployment', $function->getAttribute('deploymentId', $document->getAttribute('deploymentId')));
+
+                    if ($function->isEmpty()) {
+                        Console::warning("Function \"{$resourceId}\" not found for rule \"{$document->getId()}\"");
+                        break;
+                    }
+
+                    $deploymentId = $function->getAttribute('deployment', $function->getAttribute('deploymentId', $document->getAttribute('deploymentId', '')));
                     $deploymentInternalId = $function->getAttribute('deploymentInternalId', $document->getAttribute('deploymentInternalId', ''));
 
                     $document
@@ -386,12 +398,19 @@ class V22 extends Migration
                 5. Fill latestDeploymentCreatedAt with latestDeployment's "$createdAt"
                 6. Fill latestDeploymentStatus with latestDeployment's build's "status"
                 */
-                if ($document->getAttribute('deployment')) {
-                    $document->setAttribute('deploymentId', $document->getAttribute('deployment', $document->getAttribute('deploymentId', '')));
+                if (empty($document->getAttribute('deployment'))) {
+                    break;
                 }
 
+                $document->setAttribute('deploymentId', $document->getAttribute('deployment', $document->getAttribute('deploymentId', '')));
                 $deploymentId = $document->getAttribute('deploymentId');
                 $deployment = $this->dbForProject->getDocument('deployments', $deploymentId);
+
+                if ($deployment->isEmpty()) {
+                    Console::warning("Deployment \"{$deploymentId}\" not found for function \"{$document->getId()}\"");
+                    break;
+                }
+
                 $document->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
 
                 $latestDeployment = $this->dbForProject->findOne('deployments', [
@@ -400,7 +419,17 @@ class V22 extends Migration
                     Query::equal('resourceType', ['functions']),
                 ]);
 
+                if ($latestDeployment->isEmpty()) {
+                    Console::warning("Latest deployment not found for function \"{$document->getId()}\"");
+                    break;
+                }
+
                 $latestBuild = $this->dbForProject->getDocument('builds', $latestDeployment->getAttribute('buildId', ''));
+
+                if ($latestBuild->isEmpty()) {
+                    Console::warning("Build \"{$latestDeployment->getAttribute('buildId')}\" not found for deployment \"{$latestDeployment->getId()}\"");
+                    break;
+                }
 
                 $document
                     ->setAttribute('latestDeploymentId', $latestDeployment->getId())
