@@ -240,9 +240,6 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
-Server::setResource('plan', function (array $plan = []) {
-    return [];
-});
 
 Server::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
