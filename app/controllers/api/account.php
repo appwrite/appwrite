@@ -719,9 +719,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 continue;
             }
 
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
-                return $dbForProject->deleteDocument('sessions', $session->getId());
-            });
+            $dbForProject->deleteDocument('sessions', $session->getId());
 
             unset($sessions[$key]);
 
@@ -1184,8 +1182,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('success', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('failure', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
@@ -1212,8 +1210,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
 
-        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-
+        $oAuthProviders = Config::getParam('oAuthProviders');
+        $className = $oAuthProviders[$provider]['class'];
         if (!\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
@@ -1781,8 +1779,8 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('success', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('failure', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
@@ -1862,7 +1860,7 @@ App::post('/v1/account/tokens/magic-url')
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
@@ -2001,6 +1999,7 @@ App::post('/v1/account/tokens/magic-url')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -2100,7 +2099,7 @@ App::post('/v1/account/tokens/email')
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
@@ -2769,7 +2768,7 @@ App::patch('/v1/account/name')
 
         $user->setAttribute('name', $name);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2844,7 +2843,7 @@ App::patch('/v1/account/password')
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2929,7 +2928,7 @@ App::patch('/v1/account/email')
         }
 
         try {
-            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
              * @var Document $oldTarget
              */
@@ -3015,7 +3014,7 @@ App::patch('/v1/account/phone')
         }
 
         try {
-            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
              * @var Document $oldTarget
              */
@@ -3065,7 +3064,7 @@ App::patch('/v1/account/prefs')
 
         $user->setAttribute('prefs', $prefs);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3103,7 +3102,7 @@ App::patch('/v1/account/status')
 
         $user->setAttribute('status', false);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3147,7 +3146,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
+    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients', 'devKey'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3413,7 +3412,7 @@ App::post('/v1/account/verification')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
+    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients', 'devKey']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -3867,7 +3866,7 @@ App::patch('/v1/account/mfa')
 
         $user->setAttribute('mfa', $mfa);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if ($mfa) {
             $factors = $session->getAttribute('factors', []);

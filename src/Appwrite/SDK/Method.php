@@ -21,16 +21,14 @@ class Method
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
-     * @param ContentType $responseType
-     * @param MethodType|null $methodType
+     * @param ContentType $contentType
+     * @param MethodType|null $type
      * @param bool $deprecated
      * @param array|bool $hide
      * @param bool $packaging
-     * @param string $requestType
-     * @param array $parameters
+     * @param ContentType $requestType
+     * @param array<Parameter> $parameters
      * @param array $additionalParameters
-     *
-     * @throws \Exception
      */
     public function __construct(
         protected string $namespace,
@@ -44,7 +42,7 @@ class Method
         protected bool $deprecated = false,
         protected array|bool $hide = false,
         protected bool $packaging = false,
-        protected string $requestType = 'application/json',
+        protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
         protected array $additionalParameters = []
     ) {
@@ -53,7 +51,6 @@ class Method
         $this->validateDesc($description);
 
         foreach ($responses as $response) {
-            /** @var SDKResponse $response */
             $this->validateResponseModel($response->getModel());
             $this->validateNoContent($response);
         }
@@ -89,11 +86,13 @@ class Method
             return;
         }
 
-        $descPath = $this->getDescriptionFilePath();
+        if (\str_ends_with($desc, '.md')) {
+            $descPath = $this->getDescriptionFilePath() ?: $this->getDescription();
 
-        if (empty($descPath)) {
-            self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
-            return;
+            if (empty($descPath)) {
+                self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
+                return;
+            }
         }
     }
 
@@ -191,11 +190,14 @@ class Method
         return $this->packaging;
     }
 
-    public function getRequestType(): string
+    public function getRequestType(): ContentType
     {
         return $this->requestType;
     }
 
+    /**
+     * @return array<Parameter>
+     */
     public function getParameters(): array
     {
         return $this->parameters;
@@ -274,7 +276,7 @@ class Method
         return $this;
     }
 
-    public function setRequestType(string $requestType): self
+    public function setRequestType(ContentType $requestType): self
     {
         $this->requestType = $requestType;
         return $this;

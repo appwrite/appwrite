@@ -52,7 +52,7 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'index.js',
             ])
-            ->addRule('size', [
+            ->addRule('sourceSize', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The code size in bytes.',
                 'default' => 0,
@@ -61,6 +61,12 @@ class Deployment extends Model
             ->addRule('buildSize', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The build output size in bytes.',
+                'default' => 0,
+                'example' => 128,
+            ])
+            ->addRule('totalSize', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'The total size in bytes (source and build output).',
                 'default' => 0,
                 'example' => 128,
             ])
@@ -76,9 +82,21 @@ class Deployment extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('screenshotLight', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot with light theme preference file ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('screenshotDark', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot with dark theme preference file ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The deployment status. Possible values are "processing", "building", "waiting", "ready", and "failed".',
+                'description' => 'The deployment status. Possible values are "waiting", "processing", "building", "ready", and "failed".',
                 'default' => '',
                 'example' => 'ready',
             ])
@@ -88,7 +106,7 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'Compiling source files...',
             ])
-            ->addRule('buildTime', [
+            ->addRule('buildDuration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The current build time in seconds.',
                 'default' => 0,

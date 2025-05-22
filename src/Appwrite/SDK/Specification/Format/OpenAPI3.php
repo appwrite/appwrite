@@ -3,7 +3,9 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
@@ -20,41 +22,6 @@ class OpenAPI3 extends Format
     public function getName(): string
     {
         return 'Open API 3';
-    }
-
-    protected function getNestedModels(Model $model, array &$usedModels): void
-    {
-        foreach ($model->getRules() as $rule) {
-            if (!in_array($model->getType(), $usedModels)) {
-                continue;
-            }
-
-            if (\is_array($rule['type'])) {
-                foreach ($rule['type'] as $ruleType) {
-                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
-                        $usedModels[] = $ruleType;
-
-                        foreach ($this->models as $m) {
-                            if ($m->getType() === $ruleType) {
-                                $this->getNestedModels($m, $usedModels);
-                                continue;
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
-                    $usedModels[] = $rule['type'];
-
-                    foreach ($this->models as $m) {
-                        if ($m->getType() === $rule['type']) {
-                            $this->getNestedModels($m, $usedModels);
-                            continue;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public function parse(): array
@@ -133,25 +100,23 @@ class OpenAPI3 extends Format
             }
 
             $additionalMethods = null;
-            if (is_array($sdk)) {
-                $mainSdk = array_shift($sdk);
+            if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
-
-                $sdk = $mainSdk;
+                $sdk = $sdk[0];
             }
 
             /**
-             * @var \Appwrite\SDK\Method $sdk
+             * @var Method $sdk
              */
-            $consumes = [$sdk->getRequestType()];
+            $consumes = [$sdk->getRequestType()->value];
 
             $method = $sdk->getMethodName() ?? \uniqid();
 
-            if (!empty($method) && is_array($method)) {
-                $method = array_keys($method)[0];
+            if (!empty($method) && \is_array($method)) {
+                $method = \array_keys($method)[0];
             }
 
-            $desc = $sdk->getDescriptionFilePath();
+            $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
@@ -161,10 +126,8 @@ class OpenAPI3 extends Format
                     case AuthType::SESSION:
                         $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                         break;
-                    case AuthType::KEY:
-                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                        break;
                     case AuthType::JWT:
+                    case AuthType::KEY:
                         $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
                     case AuthType::ADMIN:
@@ -180,11 +143,14 @@ class OpenAPI3 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
+            $desc ??= '';
+            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $namespace . ucfirst($method),
                 'tags' => [$namespace],
-                'description' => ($desc) ? \file_get_contents($desc) : '',
+                'description' => $descContents,
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
@@ -206,39 +172,48 @@ class OpenAPI3 extends Format
 
 
             if (!empty($additionalMethods)) {
-                $temp['x-appwrite']['additional-methods'] = [];
+                $temp['x-appwrite']['methods'] = [];
                 foreach ($additionalMethods as $method) {
-                    /** @var \Appwrite\SDK\Method $method */
+                    /** @var Method $method */
+                    $desc = $method->getDescriptionFilePath();
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
+                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
                         'parameters' => [],
                         'required' => [],
-                        'responses' => []
+                        'responses' => [],
+                        'description' => ($desc) ? \file_get_contents($desc) : '',
                     ];
 
-                    foreach ($method->getParameters() as $name => $param) {
-                        $additionalMethod['parameters'][] = $name;
+                    foreach ($method->getParameters() as $parameter) {
+                        $additionalMethod['parameters'][] = $parameter->getName();
 
-                        if (!$param['optional']) {
-                            $additionalMethod['required'][] = $name;
+                        if (!$parameter->getOptional()) {
+                            $additionalMethod['required'][] = $parameter->getName();
                         }
                     }
 
                     foreach ($method->getResponses() as $response) {
-                        /** @var \Appwrite\SDK\Response $response */
-                        $additionalMethod['responses'][] = [
-                            'code' => $response->getCode(),
-                            'model' => '#/components/schemas/' . $response->getModel()
-                        ];
+                        if (\is_array($response->getModel())) {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $response->getModel())
+                            ];
+                        } else {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => '#/components/schemas/' . $response->getModel()
+                            ];
+                        }
                     }
 
-                    $temp['x-appwrite']['additional-methods'][] = $additionalMethod;
+                    $temp['x-appwrite']['methods'][] = $additionalMethod;
                 }
             }
 
             // Handle response models
             foreach ($sdk->getResponses() as $response) {
-                /** @var \Appwrite\SDK\Response $response */
+                /** @var Response $response */
                 $model = $response->getModel();
 
                 foreach ($this->models as $value) {
@@ -306,11 +281,11 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if ((!empty($scope))) { //  && 'public' != $scope
+            if ((!empty($scope))) {
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
-                    /** @var \Appwrite\SDK\AuthType $security */
+                    /** @var AuthType $security */
                     if (array_key_exists($security->value, $this->keys)) {
                         $securities[$security->value] = [];
                     }
@@ -334,6 +309,10 @@ class OpenAPI3 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
+                if (($param['deprecated'] ?? false) === true) {
+                    continue;
+                }
+
                 /**
                  * @var \Utopia\Validator $validator
                  */

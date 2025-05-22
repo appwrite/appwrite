@@ -134,6 +134,20 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'subQueryDevKeys',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('devKeys', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
+    }
+);
+
+Database::addFilter(
     'subQueryWebhooks',
     function (mixed $value) {
         return;
@@ -225,7 +239,7 @@ Database::addFilter(
         return $database
             ->find('variables', [
                 Query::equal('resourceInternalId', [$document->getInternalId()]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', ['function', 'site']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
