@@ -1218,13 +1218,22 @@ class Builds extends Action
                 $message .= "\n[31m" . $error;
             }
 
+            // Combine with previous logs if deployment got past build process
+            $previousLogs = '';
+            if (!empty($deployment->getAttribute('buildEndedAt', ''))) {
+                $previousLogs = $deployment->getAttribute('buildLogs', '');
+                if (!empty($previousLogs)) {
+                    $message = $previousLogs . "\n" . $message;
+                }
+            }
+
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $deployment->setAttribute('buildEndedAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
-            $deployment->setAttribute('buildLogs', $message);
 
+            $deployment->setAttribute('buildLogs', $message);
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {

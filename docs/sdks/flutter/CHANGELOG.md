@@ -1,5 +1,10 @@
 # Change Log
 
+## 16.0.1
+
+* Add `setDevKey` method to Client service
+* Add `upsertDocument` method to Databases service
+
 ## 16.0.0
 
 * Remove `Gif` from ImageFormat enum
