@@ -479,35 +479,37 @@ switch ($type) {
             </div>
         </div>
 
-        <div x-show="page === 'trace'" class="error-trace">
-            <button class="back-button" x-on:click="page = 'error'">
-                Back
-            </button>
-            <div class="trace-grid-header">Error trace</div>
-            <?php foreach ($trace as $index => $traceItem): ?>
-                <div class="trace-grid">
-                    <?php if (isset($traceItem['file'])): ?>
-                        <div class="trace-label">file</div>
-                        <div class="trace-value"><?php echo $this->print($traceItem['file']); ?></div>
-                    <?php endif; ?>
+        <?php if ($development) : ?>
+            <div x-show="page === 'trace'" class="error-trace">
+                <button class="back-button" x-on:click="page = 'error'">
+                    Back
+                </button>
+                <div class="trace-grid-header">Error trace</div>
+                <?php foreach ($trace as $index => $traceItem): ?>
+                    <div class="trace-grid">
+                        <?php if (isset($traceItem['file'])): ?>
+                            <div class="trace-label">file</div>
+                            <div class="trace-value"><?php echo $this->print($traceItem['file']); ?></div>
+                        <?php endif; ?>
 
-                    <?php if (isset($traceItem['line'])): ?>
-                        <div class="trace-label">line</div>
-                        <div class="trace-value"><?php echo $this->print($traceItem['line']); ?></div>
-                    <?php endif; ?>
+                        <?php if (isset($traceItem['line'])): ?>
+                            <div class="trace-label">line</div>
+                            <div class="trace-value"><?php echo $this->print($traceItem['line']); ?></div>
+                        <?php endif; ?>
 
-                    <?php if (isset($traceItem['function'])): ?>
-                        <div class="trace-label">function</div>
-                        <div class="trace-value"><?php echo $this->print($traceItem['function']); ?></div>
-                    <?php endif; ?>
+                        <?php if (isset($traceItem['function'])): ?>
+                            <div class="trace-label">function</div>
+                            <div class="trace-value"><?php echo $this->print($traceItem['function']); ?></div>
+                        <?php endif; ?>
 
-                    <?php if (isset($traceItem['args'])): ?>
-                        <div class="trace-label">args</div>
-                        <div class="trace-args"><pre><?php echo $this->print(\var_export($traceItem['args'], true)); ?></pre></div>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
+                        <?php if (isset($traceItem['args'])): ?>
+                            <div class="trace-label">args</div>
+                            <div class="trace-args"><pre><?php echo $this->print(\var_export($traceItem['args'], true)); ?></pre></div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
     <div x-show="page === 'error'" class="brand">
