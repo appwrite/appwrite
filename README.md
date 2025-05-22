@@ -1,5 +1,4 @@
-> [Get started with Appwrite](https://apwr.dev/appcloud)
-> [Join the Init kick off event 19th of May: The future of Appwrite with Founder & CEO Eldad Fux](https://www.youtube.com/watch?v=1g8tuogsp7A)
+> [Get started with Appwrite](https://apwr.dev/appcloud) > [Join the Init kick off event 19th of May: The future of Appwrite with Founder & CEO Eldad Fux](https://www.youtube.com/watch?v=1g8tuogsp7A)
 
 <br />
 <p align="center">
@@ -25,7 +24,7 @@
 
 English | [简体中文](README-CN.md)
 
-Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
+Appwrite is an end-to-end platform for building Web, Mobile, Native, or Backend apps, packaged as a set of Docker microservices. It includes both a backend server and a fully integrated hosting solution for deploying static and server-side rendered frontends. Appwrite abstracts the complexity and repetitiveness required to build modern apps from scratch and allows you to build secure, full-stack applications faster.
 
 Using Appwrite, you can easily integrate your app with user authentication and multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, Cloud Functions, messaging, and [more services](https://appwrite.io/docs).
 
@@ -50,7 +49,7 @@ Table of Contents:
     - [PowerShell](#powershell)
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [One-Click Setups](#one-click-setups)
-- [Getting Started](#getting-started)
+- [Getting Started](#getting-started-1)
   - [Products](#products)
   - [SDKs](#sdks)
     - [Client](#client)
@@ -63,7 +62,8 @@ Table of Contents:
 - [License](#license)
 
 ## Getting Started
-The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect you credit card information. 
+
+The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect you credit card information.
 
 ## Self-Hosting
 
@@ -128,19 +128,19 @@ Choose from one of the providers below:
     <td align="center" width="100" height="100">
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
         <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
-          <br /><sub><b>Gitpod</b></sub></a>    
+          <br /><sub><b>Gitpod</b></sub></a>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
         <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai Compute</b></sub></a>    
+          <br /><sub><b>Akamai Compute</b></sub></a>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
         <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
-          <br /><sub><b>AWS Marketplace</b></sub></a>    
+          <br /><sub><b>AWS Marketplace</b></sub></a>
       </a>
     </td>
   </tr>
