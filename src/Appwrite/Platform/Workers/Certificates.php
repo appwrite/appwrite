@@ -96,7 +96,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $domainType = $payload['domainType'] ?? null;
+        $domainType = $document->getAttribute('domainType');
 
         $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan);
     }
