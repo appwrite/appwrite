@@ -174,7 +174,7 @@ class Create extends Action
             $queueForCertificates
                 ->setDomain(new Document([
                     'domain' => $rule->getAttribute('domain'),
-                    'domainType' => 'api',
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
                 ->trigger();
         }

@@ -260,7 +260,8 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         // Issue a TLS certificate when domain is verified
         $queueForCertificates
             ->setDomain(new Document([
-                'domain' => $rule->getAttribute('domain')
+                'domain' => $rule->getAttribute('domain'),
+                'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]))
             ->trigger();
 
