@@ -12,6 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Gauge;
@@ -23,6 +24,8 @@ abstract class ScheduleBase extends Action
     protected const ENQUEUE_TIMER = 60; //seconds
 
     protected array $schedules = [];
+
+    protected BrokerPool $publisher;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -68,6 +71,7 @@ abstract class ScheduleBase extends Action
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
+        $this->publisher = new BrokerPool($pools->get('publisher'));
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
@@ -75,16 +79,16 @@ abstract class ScheduleBase extends Action
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
-        $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
+        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
 
         Console::success("Starting timers at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($pools, $dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
+            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
         });
 
         while (true) {
@@ -99,7 +103,7 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
+    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
@@ -111,15 +115,13 @@ abstract class ScheduleBase extends Action
          * @throws Exception
          * @var Document $schedule
          */
-        $getSchedule = function (Document $schedule) use ($pools, $dbForPlatform, $getProjectDB): array {
+        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
             $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
 
             $resource = $getProjectDB($project)->getDocument(
                 static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
             );
-
-            $pools->reclaim();
 
             return [
                 '$internalId' => $schedule->getInternalId(),
