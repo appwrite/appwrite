@@ -607,7 +607,7 @@
 ### Fixes
 * Fix database exception wrapping by @abnegate in https://github.com/appwrite/appwrite/pull/7787
 * Fix exception wrap order by @abnegate in https://github.com/appwrite/appwrite/pull/7818
-* Fix membership query to use sequence by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7834
+* Fix membership query to use internalId by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7834
 * Fix vcs silent mode by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7683
 * Fix function domain permissions by @stnguyen90 in https://github.com/appwrite/appwrite/pull/7852
 * Fix tests required for Cloud by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7777

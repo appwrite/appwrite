@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cb47e05e104d978efba67c3ccc7bf959",
+    "content-hash": "92b3f5ad47dd7b23394f27c18713c7e8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3999,16 +3999,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.9.3",
+            "version": "dev-feat-sequence",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "e518d39eb550fde36bc5cf06c9bd7b2faf5dbedd"
+                "reference": "bef2ad136a86a7747675e0e877f38a8ffe44c39f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e518d39eb550fde36bc5cf06c9bd7b2faf5dbedd",
-                "reference": "e518d39eb550fde36bc5cf06c9bd7b2faf5dbedd",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/bef2ad136a86a7747675e0e877f38a8ffe44c39f",
+                "reference": "bef2ad136a86a7747675e0e877f38a8ffe44c39f",
                 "shasum": ""
             },
             "require": {
@@ -4016,7 +4016,7 @@
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
-                "utopia-php/database": "0.*.*",
+                "utopia-php/database": "dev-feat-internal-to-sequence as 0.65.5",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/storage": "0.18.*"
@@ -4049,9 +4049,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.9.3"
+                "source": "https://github.com/utopia-php/migration/tree/feat-sequence"
             },
-            "time": "2025-05-01T05:41:26+00:00"
+            "time": "2025-05-22T15:27:01+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -8246,11 +8246,18 @@
             "version": "dev-feat-internal-to-sequence",
             "alias": "0.69.5",
             "alias_normalized": "0.69.5.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-sequence",
+            "alias": "0.9.3",
+            "alias_normalized": "0.9.3.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/database": 20
+        "utopia-php/database": 20,
+        "utopia-php/migration": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

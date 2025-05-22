@@ -27,7 +27,7 @@ class Targets
         $database->deleteDocuments(
             'subscribers',
             [
-                Query::equal('targetSequence', [$target->getSequence()]),
+                Query::equal('targetInternalId', [$target->getSequence()]),
                 Query::orderAsc(),
             ],
             Database::DELETE_BATCH_SIZE,

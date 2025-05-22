@@ -2513,7 +2513,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             'topicId' => $topicId,
             'topicInternalId' => $topic->getSequence(),
             'targetId' => $targetId,
-            'targetSequence' => $target->getSequence(),
+            'targetInternalId' => $target->getSequence(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
             'providerType' => $target->getAttribute('providerType'),

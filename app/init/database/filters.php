@@ -329,7 +329,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('targetSequence'),
+            fn ($document) => $document->getAttribute('targetInternalId'),
             $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
