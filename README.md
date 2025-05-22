@@ -186,6 +186,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 - [**Realtime**](https://appwrite.io/docs/realtime) - Listen to real-time events for any of your Appwrite services including users, storage, functions, databases, and more.
 - [**Locale**](https://appwrite.io/docs/references/cloud/client-web/locale) - Track your user's location and manage your app locale-based data.
 - [**Avatars**](https://appwrite.io/docs/references/cloud/client-web/avatars) - Manage your users' avatars, countries' flags, browser icons, and credit card symbols. Generate QR codes from links or plaintext strings.
+- [**MCP**](https://appwrite.io/docs/tooling/mcp) - Use Appwrite's Model Context Protocol (MCP) server to allow LLMs and AI tools like Claude Desktop, Cursor, and Windsurf Editor to directly interact with your Appwrite project through natural language.
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
 
