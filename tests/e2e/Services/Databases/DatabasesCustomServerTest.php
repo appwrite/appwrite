@@ -748,6 +748,28 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals('Jonah', $document['body']['firstName']);
         $this->assertEquals('Jameson', $document['body']['lastName']);
+
+
+        $actors = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []);
+        $attributes = $actors['body']['attributes'];
+        $firstNameAttribute = null;
+        $lastNameAttribute = null;
+        foreach ($attributes as $attribute) {
+            $this->assertArrayHasKey('encrypt', $attribute);
+            if ($attribute['key'] === 'firstName') {
+                $firstNameAttribute = $attribute['encrypt'];
+            }
+            if ($attribute['key'] === 'lastName') {
+                $lastNameAttribute = $attribute['encrypt'];
+            }
+        }
+        $this->assertTrue($lastNameAttribute);
+        $this->assertFalse($firstNameAttribute);
+
     }
 
     public function testDeleteAttribute(): array

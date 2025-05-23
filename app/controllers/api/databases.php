@@ -1063,6 +1063,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $attributes = $collection->getAttribute('attributes');
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
+                $filters = $attribute->getAttribute('filters', []);
+                $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
+            }
+        }
+
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
@@ -1372,12 +1380,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
             'filters' => $filters,
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
-        $stringAttribute = $attribute->getArrayCopy();
-        $stringAttribute['encrypt'] = $encrypt;
-        $stringAttribute = new Document($stringAttribute);
+        $attribute->setAttribute('encrypt', $encrypt);
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($stringAttribute, Response::MODEL_ATTRIBUTE_STRING);
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
@@ -2053,18 +2059,17 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
 
-        $updatedAttributes = [];
+
 
         foreach ($attributes as $attribute) {
-            $filters = $attribute->getAttribute('filters', []);
-            $attributeArray = $attribute->getArrayCopy();
-            $attributeArray['encrypt'] = in_array('encrypt', $filters);
-            $updatedAttribute = new Document($attributeArray);
-            $updatedAttributes[] = $updatedAttribute;
+            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
+                $filters = $attribute->getAttribute('filters', []);
+                $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
+            }
         }
 
         $response->dynamic(new Document([
-            'attributes' => $updatedAttributes,
+            'attributes' => $attributes,
             'total' => $total,
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
@@ -2147,9 +2152,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             },
             default => Response::MODEL_ATTRIBUTE,
         };
-        $attribute = $attribute->getArrayCopy();
-        $attribute['encrypt'] = in_array('encrypt', $filters);
-        $attribute = new Document($attribute);
+        $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
         $response->dynamic($attribute, $model);
     });
 
