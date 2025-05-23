@@ -12,11 +12,13 @@ use Appwrite\Runtimes\Runtimes;
 use Executor\Executor;
 use Swoole\Runtime;
 use Swoole\Timer;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -24,6 +26,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
@@ -46,10 +49,7 @@ CLI::setResource('cache', function ($pools) {
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource();
+        $adapters[] = new CachePool($pools->get($value));
     }
 
     return new Cache(new Sharding($adapters));
@@ -69,12 +69,8 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
         $attempts++;
         try {
             // Prepare database connection
-            $dbAdapter = $pools
-                ->get('console')
-                ->pop()
-                ->getResource();
-
-            $dbForPlatform = new Database($dbAdapter, $cache);
+            $adapter = new DatabasePool($pools->get('console'));
+            $dbForPlatform = new Database($adapter, $cache);
 
             $dbForPlatform
                 ->setNamespace('_console')
@@ -92,7 +88,6 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
             $ready = true;
         } catch (\Throwable $err) {
             Console::warning($err->getMessage());
-            $pools->get('console')->reclaim();
             sleep($sleep);
         }
     } while ($attempts < $maxAttempts && !$ready);
@@ -130,37 +125,33 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
 
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $adapter = new DatabasePool($pools->get($dsn->getHost()));
+        $database = new Database($adapter, $cache);
         $databases[$dsn->getHost()] = $database;
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_' . $project->getSequence());
         }
 
         $database
@@ -173,21 +164,15 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
 CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
+
     return function (?Document $project = null) use ($pools, $cache, $database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get('logs')
-            ->pop()
-            ->getResource();
-
-        $database = new Database(
-            $dbAdapter,
-            $cache
-        );
+        $adapter = new DatabasePool($pools->get('logs'));
+        $database = new Database($adapter, $cache);
 
         $database
             ->setSharedTables(true)
@@ -197,7 +182,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
@@ -211,7 +196,7 @@ CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
 CLI::setResource('publisher', function (Group $pools) {
-    return $pools->get('publisher')->pop()->getResource();
+    return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 CLI::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
