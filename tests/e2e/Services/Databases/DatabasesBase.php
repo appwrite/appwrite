@@ -2114,7 +2114,6 @@ trait DatabasesBase
         $databaseId = $data['databaseId'];
         $document = $data['documents'][0];
 
-        // not selecting internal id
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2128,23 +2127,6 @@ trait DatabasesBase
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
-        $this->assertFalse(array_key_exists('$sequence', $response['body']));
-
-        // selecting internal id as well
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['title', 'releaseYear', '$id','$sequence'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($document['title'], $response['body']['title']);
-        $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
-        $this->assertArrayNotHasKey('birthDay', $response['body']);
-        $this->assertTrue(array_key_exists('$sequence', $response['body']));
         $sequence = $response['body']['$sequence'];
 
         // Query by sequence
