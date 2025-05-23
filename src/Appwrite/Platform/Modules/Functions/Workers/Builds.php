@@ -57,6 +57,7 @@ class Builds extends Action
     {
         $this
             ->desc('Builds worker')
+            ->groups(['builds'])
             ->inject('message')
             ->inject('project')
             ->inject('dbForPlatform')
