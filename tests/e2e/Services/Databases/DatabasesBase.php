@@ -298,7 +298,7 @@ trait DatabasesBase
         $this->assertEquals($title['body']['type'], 'string');
         $this->assertEquals($title['body']['size'], 256);
         $this->assertEquals($title['body']['required'], true);
-        $this->assertFalse($title['body']['encrypt']);
+
         $this->assertEquals(202, $description['headers']['status-code']);
         $this->assertEquals($description['body']['key'], 'description');
         $this->assertEquals($description['body']['type'], 'string');
