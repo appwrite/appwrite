@@ -123,9 +123,9 @@ App::post('/v1/teams')
                     Permission::delete(Role::team($team->getId(), 'owner')),
                 ],
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'teamId' => $team->getId(),
-                'teamInternalId' => $team->getInternalId(),
+                'teamInternalId' => $team->getSequence(),
                 'roles' => $roles,
                 'invited' => DateTime::now(),
                 'joined' => DateTime::now(),
@@ -595,8 +595,8 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $membership = $dbForProject->findOne('memberships', [
-            Query::equal('userInternalId', [$invitee->getInternalId()]),
-            Query::equal('teamInternalId', [$team->getInternalId()]),
+            Query::equal('userInternalId', [$invitee->getSequence()]),
+            Query::equal('teamInternalId', [$team->getSequence()]),
         ]);
 
         $secret = Auth::tokenGenerator();
@@ -612,9 +612,9 @@ App::post('/v1/teams/:teamId/memberships')
                     Permission::delete(Role::team($team->getId(), 'owner')),
                 ],
                 'userId' => $invitee->getId(),
-                'userInternalId' => $invitee->getInternalId(),
+                'userInternalId' => $invitee->getSequence(),
                 'teamId' => $team->getId(),
-                'teamInternalId' => $team->getInternalId(),
+                'teamInternalId' => $team->getSequence(),
                 'roles' => $roles,
                 'invited' => DateTime::now(),
                 'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
@@ -842,7 +842,7 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('teamInternalId', [$team->getInternalId()]);
+        $queries[] = Query::equal('teamInternalId', [$team->getSequence()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -1092,7 +1092,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
                 collection: 'memberships',
                 queries: [
                     Query::contains('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getInternalId()])
+                    Query::equal('teamInternalId', [$team->getSequence()])
                 ],
                 max: 2
             );
@@ -1180,7 +1180,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
@@ -1197,7 +1197,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
-        if ($membership->getAttribute('userInternalId') !== $user->getInternalId()) {
+        if ($membership->getAttribute('userInternalId') !== $user->getSequence()) {
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
@@ -1229,7 +1229,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $user->getAttribute('email'),
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -1338,7 +1338,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 

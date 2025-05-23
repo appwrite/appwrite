@@ -71,8 +71,8 @@ class Base extends Queries
             'array' => false,
         ]);
 
-        $internalId = new Document([
-            'key' => '$internalId',
+        $sequence = new Document([
+            'key' => '$sequence',
             'type' => Database::VAR_STRING,
             'array' => false,
         ]);
@@ -82,7 +82,7 @@ class Base extends Queries
             new Offset(),
             new Cursor(),
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
-            new Order([...$attributes, $internalId]),
+            new Order([...$attributes, $sequence]),
         ];
 
         parent::__construct($validators);
