@@ -1063,7 +1063,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
