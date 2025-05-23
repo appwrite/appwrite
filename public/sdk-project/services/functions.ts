@@ -21,17 +21,7 @@ export class Functions extends Service {
          * @returns {Promise}
          */
         async retryBuild(functionId: string, deploymentId: string, buildId: string): Promise<{}> {
-            if (typeof functionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "functionId"');
-            }
-
-            if (typeof deploymentId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "deploymentId"');
-            }
-
-            if (typeof buildId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "buildId"');
-            }
+            Service.validateRequiredParameters({ functionId, deploymentId, buildId });
 
             let path = '/functions/{functionId}/deployments/{deploymentId}/builds/{buildId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId).replace('{buildId}', buildId);
             let payload: Payload = {};
@@ -57,9 +47,7 @@ export class Functions extends Service {
          * @returns {Promise}
          */
         async listExecutions(functionId: string, queries?: string[], search?: string): Promise<Models.ExecutionList> {
-            if (typeof functionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "functionId"');
-            }
+            Service.validateRequiredParameters({ functionId });
 
             let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
             let payload: Payload = {};
@@ -93,9 +81,7 @@ export class Functions extends Service {
          * @returns {Promise}
          */
         async createExecution(functionId: string, data?: string, async?: boolean): Promise<Models.Execution> {
-            if (typeof functionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "functionId"');
-            }
+            Service.validateRequiredParameters({ functionId });
 
             let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
             let payload: Payload = {};
@@ -125,13 +111,7 @@ export class Functions extends Service {
          * @returns {Promise}
          */
         async getExecution(functionId: string, executionId: string): Promise<Models.Execution> {
-            if (typeof functionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "functionId"');
-            }
-
-            if (typeof executionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "executionId"');
-            }
+            Service.validateRequiredParameters({ functionId, executionId });
 
             let path = '/functions/{functionId}/executions/{executionId}'.replace('{functionId}', functionId).replace('{executionId}', executionId);
             let payload: Payload = {};
