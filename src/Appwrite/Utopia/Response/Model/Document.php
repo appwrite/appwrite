@@ -36,6 +36,12 @@ class Document extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$internalId', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Auto increment integer.',
+                'default' => '',
+                'example' => '1',
+            ])
             ->addRule('$collectionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
@@ -71,7 +77,6 @@ class Document extends Any
 
     public function filter(DatabaseDocument $document): DatabaseDocument
     {
-        $document->removeAttribute('$sequence');
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
 
