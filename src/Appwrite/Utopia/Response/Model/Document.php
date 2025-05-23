@@ -36,11 +36,11 @@ class Document extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$internalId', [
+            ->addRule('$sequence', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Auto increment integer.',
-                'default' => '',
-                'example' => '1',
+                'description' => 'Document automatically incrementing ID.',
+                'default' => 0,
+                'example' => 1,
             ])
             ->addRule('$collectionId', [
                 'type' => self::TYPE_STRING,

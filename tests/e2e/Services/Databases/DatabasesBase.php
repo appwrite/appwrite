@@ -1645,7 +1645,7 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
-        $this->assertTrue(array_key_exists('$internalId', $document1['body']));
+        $this->assertTrue(array_key_exists('$sequence', $document1['body']));
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body']['$collectionId']);
@@ -1663,7 +1663,7 @@ trait DatabasesBase
         $this->assertEquals($document2['body']['birthDay'], null);
         $this->assertEquals($document2['body']['integers'][0], 50);
         $this->assertEquals($document2['body']['integers'][1], 60);
-        $this->assertTrue(array_key_exists('$internalId', $document2['body']));
+        $this->assertTrue(array_key_exists('$sequence', $document2['body']));
 
         $this->assertEquals(201, $document3['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document3['body']['$collectionId']);
@@ -1678,7 +1678,7 @@ trait DatabasesBase
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
         $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
-        $this->assertTrue(array_key_exists('$internalId', $document3['body']));
+        $this->assertTrue(array_key_exists('$sequence', $document3['body']));
 
         $this->assertEquals(400, $document4['headers']['status-code']);
 
@@ -2128,7 +2128,7 @@ trait DatabasesBase
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
-        $this->assertFalse(array_key_exists('$internalId', $response['body']));
+        $this->assertFalse(array_key_exists('$sequence', $response['body']));
 
         // selecting internal id as well
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
@@ -2136,7 +2136,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['title', 'releaseYear', '$id','$internalId'])->toString(),
+                Query::select(['title', 'releaseYear', '$id','$sequence'])->toString(),
             ],
         ]);
 
@@ -2144,23 +2144,23 @@ trait DatabasesBase
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
-        $this->assertTrue(array_key_exists('$internalId', $response['body']));
-        $internalId = $response['body']['$internalId'];
+        $this->assertTrue(array_key_exists('$sequence', $response['body']));
+        $sequence = $response['body']['$sequence'];
 
-        // Query by internalId
+        // Query by sequence
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('$internalId', [$internalId])
+                Query::equal('$sequence', [$sequence])
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
-        $this->assertTrue(array_key_exists('$internalId', $response['body']));
+        $this->assertTrue(array_key_exists('$sequence', $response['body']));
     }
 
     /**
