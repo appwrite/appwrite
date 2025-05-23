@@ -686,6 +686,18 @@ class DatabasesCustomServerTest extends Scope
             'size' => 256,
             'required' => true,
         ]);
+        // checking size test
+        $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'lastName',
+            'size' => 149,
+            'required' => true,
+            'encrypt' => true
+        ]);
+        $this->assertEquals('Size too small. Encrypted strings require a minimum size of 150 characters.', $lastName['body']['message']);
 
         $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
             'content-type' => 'application/json',
