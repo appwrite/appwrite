@@ -1372,7 +1372,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
             'filters' => $filters,
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
-
+        $attribute->setAttribute('encrypt', $encrypt);
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
@@ -2051,6 +2051,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
 
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
+                $filters = $attribute->getAttribute('filters', []);
+                $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
+            }
+        }
+
         $response->dynamic(new Document([
             'attributes' => $attributes,
             'total' => $total,
@@ -2115,7 +2122,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
         $options = $attribute->getAttribute('options', []);
-
+        $filters = $attribute->getAttribute('filters', []);
         foreach ($options as $key => $option) {
             $attribute->setAttribute($key, $option);
         }
@@ -2135,7 +2142,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             },
             default => Response::MODEL_ATTRIBUTE,
         };
-
+        $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
         $response->dynamic($attribute, $model);
     });
 
