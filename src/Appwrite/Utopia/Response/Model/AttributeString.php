@@ -26,7 +26,7 @@ class AttributeString extends Attribute
             ])
             ->addRule('encrypt', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Encryption status for the string attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.',
+                'description' => 'Defines whether this attribute is encrypted or not.',
                 'default' => false,
                 'required' => false,
                 'example' => false,

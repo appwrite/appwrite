@@ -698,8 +698,19 @@ class DatabasesCustomServerTest extends Scope
             'encrypt' => true
         ]);
         $this->assertTrue($lastName['body']['encrypt']);
+        sleep(1);
+        $response = $this->client->call(Client::METHOD_GET, $attributesPath . '/lastName', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
+        $this->assertTrue($response['body']['encrypt']);
 
-
+        $response = $this->client->call(Client::METHOD_GET, $attributesPath, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
         /**
          * Check status of every attribute
          */

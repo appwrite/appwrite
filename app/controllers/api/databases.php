@@ -2053,8 +2053,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
 
+        $updatedAttributes = [];
+
+        foreach ($attributes as $attribute) {
+            $filters = $attribute->getAttribute('filters', []);
+            $attributeArray = $attribute->getArrayCopy();
+            $attributeArray['encrypt'] = in_array('encrypt', $filters);
+            $updatedAttribute = new Document($attributeArray);
+            $updatedAttributes[] = $updatedAttribute;
+        }
+
         $response->dynamic(new Document([
-            'attributes' => $attributes,
+            'attributes' => $updatedAttributes,
             'total' => $total,
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
@@ -2117,7 +2127,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
         $options = $attribute->getAttribute('options', []);
-
+        $filters = $attribute->getAttribute('filters', []);
         foreach ($options as $key => $option) {
             $attribute->setAttribute($key, $option);
         }
@@ -2137,7 +2147,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             },
             default => Response::MODEL_ATTRIBUTE,
         };
-
+        $attribute = $attribute->getArrayCopy();
+        $attribute['encrypt'] = in_array('encrypt', $filters);
+        $attribute = new Document($attribute);
         $response->dynamic($attribute, $model);
     });
 
