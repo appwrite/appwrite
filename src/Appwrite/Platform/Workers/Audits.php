@@ -91,7 +91,7 @@ class Audits extends Action
 
         // Create event data
         $eventData = [
-            'userId' => $user->getSequence(),
+            'userId' => $user->getInternalId(),
             'event' => $event,
             'resource' => $resource,
             'userAgent' => $userAgent,
@@ -108,13 +108,13 @@ class Audits extends Action
             'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
-        if (isset($this->logs[$project->getSequence()])) {
-            $this->logs[$project->getSequence()]['logs'][] = $eventData;
+        if (isset($this->logs[$project->getInternalId()])) {
+            $this->logs[$project->getInternalId()]['logs'][] = $eventData;
         } else {
-            $this->logs[$project->getSequence()] = [
+            $this->logs[$project->getInternalId()] = [
                 'project' => new Document([
                     '$id' => $project->getId(),
-                    '$sequence' => $project->getSequence(),
+                    '$internalId' => $project->getInternalId(),
                     'database' => $project->getAttribute('database'),
                 ]),
                 'logs' => [$eventData]
@@ -130,7 +130,7 @@ class Audits extends Action
 
         if ($shouldProcessBatch) {
             try {
-                foreach ($this->logs as $sequence => $projectLogs) {
+                foreach ($this->logs as $internalId => $projectLogs) {
                     $dbForProject = $getProjectDB($projectLogs['project']);
 
                     Console::log('Processing batch with ' . count($projectLogs['logs']) . ' events');
@@ -139,7 +139,7 @@ class Audits extends Action
                     $audit->logBatch($projectLogs['logs']);
                     Console::success('Audit logs processed successfully');
 
-                    unset($this->logs[$sequence]);
+                    unset($this->logs[$internalId]);
                 }
             } catch (Throwable $e) {
                 Console::error('Error processing audit logs: ' . $e->getMessage());

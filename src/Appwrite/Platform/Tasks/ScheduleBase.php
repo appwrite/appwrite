@@ -124,7 +124,7 @@ abstract class ScheduleBase extends Action
             );
 
             return [
-                '$sequence' => $schedule->getSequence(),
+                '$internalId' => $schedule->getInternalId(),
                 '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
@@ -175,19 +175,19 @@ abstract class ScheduleBase extends Action
             $total = $total + $sum;
 
             foreach ($results as $document) {
-                $localDocument = $this->schedules[$document->getSequence()] ?? null;
+                $localDocument = $this->schedules[$document->getInternalId()] ?? null;
 
                 if ($localDocument !== null) {
                     if (!$document['active']) {
                         Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
-                        unset($this->schedules[$document->getSequence()]);
+                        unset($this->schedules[$document->getInternalId()]);
                     } elseif (strtotime($localDocument['resourceUpdatedAt']) !== strtotime($document['resourceUpdatedAt'])) {
                         Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
-                        $this->schedules[$document->getSequence()] = $getSchedule($document);
+                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
                     }
                 } else {
                     try {
-                        $this->schedules[$document->getSequence()] = $getSchedule($document);
+                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
                     } catch (\Throwable $th) {
                         $collectionId = static::getCollectionId();
                         Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");

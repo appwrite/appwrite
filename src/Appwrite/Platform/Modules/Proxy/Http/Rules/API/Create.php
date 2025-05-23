@@ -153,7 +153,7 @@ class Create extends Action
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
+            'projectInternalId' => $project->getInternalId(),
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'api',

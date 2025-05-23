@@ -44,7 +44,7 @@ class V17 extends Migration
     protected function migrateBuckets(): void
     {
         foreach ($this->documentsIterator('buckets') as $bucket) {
-            $id = "bucket_{$bucket->getSequence()}";
+            $id = "bucket_{$bucket->getInternalId()}";
 
             try {
                 $this->dbForProject->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
@@ -67,7 +67,7 @@ class V17 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
+            $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
                 case 'builds':

@@ -89,7 +89,7 @@ class Update extends Base
         $oldDeploymentInternalId = $site->getAttribute('deploymentInternalId', '');
 
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
-            'deploymentInternalId' => $deployment->getSequence(),
+            'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
             'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
@@ -100,7 +100,7 @@ class Update extends Base
             Query::equal('trigger', 'manual'),
             Query::equal("type", ["deployment"]),
             Query::equal("deploymentResourceType", ["site"]),
-            Query::equal("deploymentResourceInternalId", [$site->getSequence()]),
+            Query::equal("deploymentResourceInternalId", [$site->getInternalId()]),
         ];
 
         if (empty($oldDeploymentInternalId)) {
@@ -112,7 +112,7 @@ class Update extends Base
         $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
-                ->setAttribute('deploymentInternalId', $deployment->getSequence());
+                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
         });
 

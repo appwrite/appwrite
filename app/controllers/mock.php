@@ -185,7 +185,7 @@ App::post('/v1/mock/api-key-unprefixed')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getSequence(),
+            'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => 'Outdated key',
             'scopes' => $scopes,
@@ -235,7 +235,7 @@ App::get('/v1/mock/github/callback')
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
-            $projectInternalId = $project->getSequence();
+            $projectInternalId = $project->getInternalId();
 
             $teamId = $project->getAttribute('teamId', '');
 

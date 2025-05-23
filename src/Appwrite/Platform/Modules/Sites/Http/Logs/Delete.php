@@ -71,7 +71,7 @@ class Delete extends Base
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 
-        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getSequence()) {
+        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getInternalId()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 

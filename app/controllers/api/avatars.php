@@ -669,7 +669,7 @@ App::get('/v1/cards/cloud')
                 }
             }
 
-            $isPlatinum = $user->getSequence() % 100 === 0;
+            $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
             $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
             $createdAt = new \DateTime('now');
@@ -859,7 +859,7 @@ App::get('/v1/cards/cloud-back')
             $isEmployee = \array_key_exists($email, $employees);
 
             $isGolden = $isEmployee || $isHero || $isContributor;
-            $isPlatinum = $user->getSequence() % 100 === 0;
+            $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
             $userId = '63e0bcf3c3eb803ba530';
 
@@ -926,9 +926,9 @@ App::get('/v1/cards/cloud-og')
         }
 
         if (!$mock) {
-            $sequence = $user->getSequence();
-            $bgVariation = $sequence % 3 === 0 ? '1' : ($sequence % 3 === 1 ? '2' : '3');
-            $cardVariation = $sequence % 3 === 0 ? '1' : ($sequence % 3 === 1 ? '2' : '3');
+            $internalId = $user->getInternalId();
+            $bgVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
+            $cardVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
 
             $name = $user->getAttribute('name', 'Anonymous');
             $email = $user->getAttribute('email', '');
@@ -958,7 +958,7 @@ App::get('/v1/cards/cloud-og')
                 }
             }
 
-            $isPlatinum = $user->getSequence() % 100 === 0;
+            $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
             $bgVariation = \str_ends_with($mock, '-bg2') ? '2' : (\str_ends_with($mock, '-bg3') ? '3' : '1');
             $cardVariation = \str_ends_with($mock, '-right') ? '2' : (\str_ends_with($mock, '-middle') ? '3' : '1');

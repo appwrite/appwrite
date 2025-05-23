@@ -110,9 +110,9 @@ class Create extends Action
             $commands[] = $site->getAttribute('buildCommand', '');
         }
 
-        $deployment->removeAttribute('$sequence');
+        $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$sequence' => '',
+            '$internalId' => '',
             '$id' => $deploymentId,
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
@@ -134,7 +134,7 @@ class Create extends Action
 
         $site = $site
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -150,15 +150,15 @@ class Create extends Action
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
+                'projectInternalId' => $project->getInternalId(),
                 'domain' => $domain,
                 'type' => 'deployment',
                 'trigger' => 'deployment',
                 'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getSequence(),
+                'deploymentResourceInternalId' => $site->getInternalId(),
                 'status' => 'verified',
                 'certificateId' => '',
                 'owner' => 'Appwrite',
