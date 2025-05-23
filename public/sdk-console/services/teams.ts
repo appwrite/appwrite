@@ -28,13 +28,7 @@ export class Teams extends Service {
             let path = '/teams';
             let payload: Payload = {};
 
-            if (typeof queries !== 'undefined') {
-                payload['queries'] = queries;
-            }
-
-            if (typeof search !== 'undefined') {
-                payload['search'] = search;
-            }
+            Service.populatePayload(payload, { queries, search });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('get', uri, {
@@ -67,17 +61,7 @@ export class Teams extends Service {
             let path = '/teams';
             let payload: Payload = {};
 
-            if (typeof teamId !== 'undefined') {
-                payload['teamId'] = teamId;
-            }
-
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
-
-            if (typeof roles !== 'undefined') {
-                payload['roles'] = roles;
-            }
+            Service.populatePayload(payload, { teamId, name, roles });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -131,9 +115,7 @@ export class Teams extends Service {
             let path = '/teams/{teamId}'.replace('{teamId}', teamId);
             let payload: Payload = {};
 
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
+            Service.populatePayload(payload, { name });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('put', uri, {
@@ -185,13 +167,7 @@ export class Teams extends Service {
             let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
             let payload: Payload = {};
 
-            if (typeof queries !== 'undefined') {
-                payload['queries'] = queries;
-            }
-
-            if (typeof search !== 'undefined') {
-                payload['search'] = search;
-            }
+            Service.populatePayload(payload, { queries, search });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('get', uri, {
@@ -246,21 +222,7 @@ export class Teams extends Service {
             let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
             let payload: Payload = {};
 
-            if (typeof email !== 'undefined') {
-                payload['email'] = email;
-            }
-
-            if (typeof roles !== 'undefined') {
-                payload['roles'] = roles;
-            }
-
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
-
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
+            Service.populatePayload(payload, { email, roles, url, name });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -326,9 +288,7 @@ export class Teams extends Service {
             let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
             let payload: Payload = {};
 
-            if (typeof roles !== 'undefined') {
-                payload['roles'] = roles;
-            }
+            Service.populatePayload(payload, { roles });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {
@@ -404,13 +364,7 @@ export class Teams extends Service {
             let path = '/teams/{teamId}/memberships/{membershipId}/status'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof secret !== 'undefined') {
-                payload['secret'] = secret;
-            }
+            Service.populatePayload(payload, { userId, secret });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {

@@ -31,13 +31,7 @@ export class Storage extends Service {
             let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
             let payload: Payload = {};
 
-            if (typeof queries !== 'undefined') {
-                payload['queries'] = queries;
-            }
-
-            if (typeof search !== 'undefined') {
-                payload['search'] = search;
-            }
+            Service.populatePayload(payload, { queries, search });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('get', uri, {
@@ -90,17 +84,7 @@ export class Storage extends Service {
             let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
             let payload: Payload = {};
 
-            if (typeof fileId !== 'undefined') {
-                payload['fileId'] = fileId;
-            }
-
-            if (typeof file !== 'undefined') {
-                payload['file'] = file;
-            }
-
-            if (typeof permissions !== 'undefined') {
-                payload['permissions'] = permissions;
-            }
+            Service.populatePayload(payload, { fileId, file, permissions });
 
             const uri = new URL(this.client.config.endpoint + path);
 
@@ -219,9 +203,7 @@ export class Storage extends Service {
             let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};
 
-            if (typeof permissions !== 'undefined') {
-                payload['permissions'] = permissions;
-            }
+            Service.populatePayload(payload, { permissions });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('put', uri, {
@@ -329,49 +311,7 @@ export class Storage extends Service {
             let path = '/storage/buckets/{bucketId}/files/{fileId}/preview'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};
 
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-
-            if (typeof gravity !== 'undefined') {
-                payload['gravity'] = gravity;
-            }
-
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
-
-            if (typeof borderWidth !== 'undefined') {
-                payload['borderWidth'] = borderWidth;
-            }
-
-            if (typeof borderColor !== 'undefined') {
-                payload['borderColor'] = borderColor;
-            }
-
-            if (typeof borderRadius !== 'undefined') {
-                payload['borderRadius'] = borderRadius;
-            }
-
-            if (typeof opacity !== 'undefined') {
-                payload['opacity'] = opacity;
-            }
-
-            if (typeof rotation !== 'undefined') {
-                payload['rotation'] = rotation;
-            }
-
-            if (typeof background !== 'undefined') {
-                payload['background'] = background;
-            }
-
-            if (typeof output !== 'undefined') {
-                payload['output'] = output;
-            }
+            Service.populatePayload(payload, { width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
