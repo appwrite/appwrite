@@ -94,7 +94,7 @@ class ConsoleVariables extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('_APP_STRIPE_KEY', [
+            ->addRule('_APP_STRIPE_PUBLISHABLE_KEY', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Defines stripe live/test key.',
                 'default' => '',
