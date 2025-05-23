@@ -2051,7 +2051,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
 
-
         foreach ($attributes as $attribute) {
             if ($attribute->getAttribute('type') === Database::VAR_STRING) {
                 $filters = $attribute->getAttribute('filters', []);
