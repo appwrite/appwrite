@@ -49,7 +49,7 @@ class V22 extends Migration
      */
     private function migrateCollections(): void
     {
-        $projectInternalId = $this->project->getInternalId();
+        $projectInternalId = $this->project->getSequence();
 
         if (empty($projectInternalId)) {
             throw new Exception('Project ID is null');
@@ -394,7 +394,7 @@ class V22 extends Migration
                 2. Fill "deploymentCreatedAt" with deployment's "$createdAt"
                 --- Fetch latestDeployment using find()
                 3. Fill latestDeploymentId with latestDeployment's "$id"
-                4. Fill latestDeploymentInternalId with latestDeployment's "$internalId"
+                4. Fill latestDeploymentInternalId with latestDeployment's "$sequence"
                 5. Fill latestDeploymentCreatedAt with latestDeployment's "$createdAt"
                 6. Fill latestDeploymentStatus with latestDeployment's build's "status"
                 */
@@ -433,7 +433,7 @@ class V22 extends Migration
 
                 $document
                     ->setAttribute('latestDeploymentId', $latestDeployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $latestDeployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $latestDeployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $latestBuild->getAttribute('status', $document->getAttribute('latestDeploymentStatus', '')));
                 break;
@@ -497,7 +497,7 @@ class V22 extends Migration
 
     private function cleanCollections(): void
     {
-        $projectInternalId = $this->project->getInternalId();
+        $projectInternalId = $this->project->getSequence();
 
         $collectionType = match ($projectInternalId) {
             'console' => 'console',

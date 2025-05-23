@@ -58,7 +58,7 @@ App::get('/v1/proxy/rules')
             $queries[] = Query::search('search', $search);
         }
 
-        $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
+        $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -124,7 +124,7 @@ App::get('/v1/proxy/rules/:ruleId')
     ->action(function (string $ruleId, Response $response, Document $project, Database $dbForPlatform) {
         $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
-        if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
@@ -165,7 +165,7 @@ App::delete('/v1/proxy/rules/:ruleId')
     ->action(function (string $ruleId, Response $response, Document $project, Database $dbForPlatform, Delete $queueForDeletes, Event $queueForEvents) {
         $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
-        if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
@@ -210,7 +210,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->action(function (string $ruleId, Response $response, Certificate $queueForCertificates, Event $queueForEvents, Document $project, Database $dbForPlatform, Log $log) {
         $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
-        if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 

@@ -92,7 +92,7 @@ class Update extends Base
         $oldDeploymentInternalId = $function->getAttribute('deploymentInternalId', '');
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
@@ -109,7 +109,7 @@ class Update extends Base
             Query::equal('trigger', 'manual'),
             Query::equal("type", ["deployment"]),
             Query::equal("deploymentResourceType", ["function"]),
-            Query::equal("deploymentResourceInternalId", [$function->getInternalId()]),
+            Query::equal("deploymentResourceInternalId", [$function->getSequence()]),
         ];
 
         if (empty($oldDeploymentInternalId)) {
@@ -121,7 +121,7 @@ class Update extends Base
         $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
-                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                ->setAttribute('deploymentInternalId', $deployment->getSequence());
             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
         });
 

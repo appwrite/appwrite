@@ -79,8 +79,8 @@ if (!function_exists('getProjectDB')) {
 
         static $databases = [];
 
-        if (isset($databases[$project->getInternalId()])) {
-            return $databases[$project->getInternalId()];
+        if (isset($databases[$project->getSequence()])) {
+            return $databases[$project->getSequence()];
         }
 
         /** @var Group $pools */
@@ -105,20 +105,20 @@ if (!function_exists('getProjectDB')) {
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_' . $project->getSequence());
         }
 
         $database
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
-        return $databases[$project->getInternalId()] = $database;
+        return $databases[$project->getSequence()] = $database;
     }
 }
 

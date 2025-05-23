@@ -845,15 +845,18 @@ App::get('/v1/health/storage')
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {
-            if (!$device->write($device->getPath('health.txt'), 'test', 'text/plain')) {
+            $uniqueFileName = \uniqid('health', true);
+            $filePath = $device->getPath($uniqueFileName);
+
+            if (!$device->write($filePath, 'test', 'text/plain')) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
             }
 
-            if ($device->read($device->getPath('health.txt')) !== 'test') {
+            if ($device->read($filePath) !== 'test') {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
             }
 
-            if (!$device->delete($device->getPath('health.txt'))) {
+            if (!$device->delete($filePath)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
             }
         }
