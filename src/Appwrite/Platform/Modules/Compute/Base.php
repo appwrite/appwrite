@@ -69,13 +69,13 @@ class Base extends Action
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getSequence(),
+            'resourceInternalId' => $function->getInternalId(),
             'resourceType' => 'functions',
             'entrypoint' => $entrypoint,
             'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getSequence(),
+            'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $function->getAttribute('repositoryId', ''),
             'repositoryInternalId' => $function->getAttribute('repositoryInternalId', ''),
@@ -95,7 +95,7 @@ class Base extends Action
 
         $function = $function
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -166,7 +166,7 @@ class Base extends Action
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $site->getId(),
-            'resourceInternalId' => $site->getSequence(),
+            'resourceInternalId' => $site->getInternalId(),
             'resourceType' => 'sites',
             'buildCommands' => implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
@@ -174,7 +174,7 @@ class Base extends Action
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getSequence(),
+            'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $site->getAttribute('repositoryId', ''),
             'repositoryInternalId' => $site->getAttribute('repositoryInternalId', ''),
@@ -194,7 +194,7 @@ class Base extends Action
 
         $site = $site
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -209,15 +209,15 @@ class Base extends Action
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
+                'projectInternalId' => $project->getInternalId(),
                 'domain' => $domain,
                 'trigger' => 'deployment',
                 'type' => 'deployment',
                 'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
+                'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getSequence(),
+                'deploymentResourceInternalId' => $site->getInternalId(),
                 'deploymentVcsProviderBranch' => $providerBranch,
                 'status' => 'verified',
                 'certificateId' => '',
@@ -244,7 +244,7 @@ class Base extends Action
         do {
             $queries = \array_merge([
                 Query::limit($limit),
-                Query::equal("projectInternalId", [$project->getSequence()])
+                Query::equal("projectInternalId", [$project->getInternalId()])
             ], $queries);
 
             if ($cursor !== null) {

@@ -175,8 +175,8 @@ class Update extends Base
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForPlatform->find('repositories', [
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::equal('resourceInternalId', [$function->getSequence()]),
+                Query::equal('projectInternalId', [$project->getInternalId()]),
+                Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', ['function']),
                 Query::limit(100),
             ]);
@@ -208,18 +208,18 @@ class Update extends Base
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getSequence(),
+                'installationInternalId' => $installation->getInternalId(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
+                'projectInternalId' => $project->getInternalId(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getSequence(),
+                'resourceInternalId' => $function->getInternalId(),
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
 
             $repositoryId = $repository->getId();
-            $repositoryInternalId = $repository->getSequence();
+            $repositoryInternalId = $repository->getInternalId();
         }
 
         $live = true;
@@ -260,7 +260,7 @@ class Update extends Base
             'commands' => $commands,
             'scopes' => $scopes,
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getSequence(),
+            'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $repositoryId,
             'repositoryInternalId' => $repositoryInternalId,

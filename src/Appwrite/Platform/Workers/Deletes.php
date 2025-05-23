@@ -34,7 +34,7 @@ use Utopia\System\System;
 
 class Deletes extends Action
 {
-    protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
+    protected array $selects = ['$internalId', '$id', '$collection', '$permissions', '$updatedAt'];
 
     public static function getName(): string
     {
@@ -277,7 +277,7 @@ class Deletes extends Action
         $this->deleteByGroup(
             'subscribers',
             [
-                Query::equal('topicInternalId', [$topic->getSequence()]),
+                Query::equal('topicInternalId', [$topic->getInternalId()]),
                 Query::orderAsc(),
             ],
             $getProjectDB($project)
@@ -298,7 +298,7 @@ class Deletes extends Action
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
-        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
+        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getInternalId()]));
     }
 
     /**
@@ -434,7 +434,7 @@ class Deletes extends Action
     public function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
-        $teamInternalId = $document->getSequence();
+        $teamInternalId = $document->getInternalId();
 
         // Delete Memberships
         $this->deleteByGroup(
@@ -466,7 +466,7 @@ class Deletes extends Action
     {
 
         $projects = $dbForPlatform->find('projects', [
-            Query::equal('teamInternalId', [$document->getSequence()]),
+            Query::equal('teamInternalId', [$document->getInternalId()]),
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
         ]);
 
@@ -497,7 +497,7 @@ class Deletes extends Action
      */
     private function deleteProject(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
     {
-        $projectInternalId = $document->getSequence();
+        $projectInternalId = $document->getInternalId();
         $projectId = $document->getId();
 
         try {
@@ -637,7 +637,7 @@ class Deletes extends Action
     private function deleteUser(callable $getProjectDB, Document $document, Document $project): void
     {
         $userId = $document->getId();
-        $userInternalId = $document->getSequence();
+        $userInternalId = $document->getInternalId();
         $dbForProject = $getProjectDB($project);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
@@ -769,7 +769,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
-        $siteInternalId = $document->getSequence();
+        $siteInternalId = $document->getInternalId();
 
         /**
          * Delete rules for site
@@ -779,7 +779,7 @@ class Deletes extends Action
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$siteInternalId]),
-            Query::equal('projectInternalId', [$project->getSequence()])
+            Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
         });
@@ -804,7 +804,7 @@ class Deletes extends Action
             Query::equal('resourceType', ['site']),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForBuilds, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
-            $deploymentInternalIds[] = $document->getSequence();
+            $deploymentInternalIds[] = $document->getInternalId();
             $deploymentIds[] = $document->getId();
             $this->deleteBuildFiles($deviceForBuilds, $document);
             $this->deleteDeploymentFiles($deviceForSites, $document);
@@ -827,7 +827,7 @@ class Deletes extends Action
          */
         Console::info("Deleting VCS repositories and comments linked to site " . $siteId);
         $this->deleteByGroup('repositories', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::equal('resourceInternalId', [$siteInternalId]),
             Query::equal('resourceType', ['site']),
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform) {
@@ -855,7 +855,7 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $functionId = $document->getId();
-        $functionInternalId = $document->getSequence();
+        $functionInternalId = $document->getInternalId();
 
         /**
          * Delete rules
@@ -865,7 +865,7 @@ class Deletes extends Action
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('deploymentResourceInternalId', [$functionInternalId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::orderAsc()
         ], $dbForPlatform, function (Document $document) use ($project, $dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -892,7 +892,7 @@ class Deletes extends Action
             Query::equal('resourceType', ['function']),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, $deviceForBuilds, &$deploymentInternalIds) {
-            $deploymentInternalIds[] = $document->getSequence();
+            $deploymentInternalIds[] = $document->getInternalId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
             $this->deleteBuildFiles($deviceForBuilds, $document);
         });
@@ -913,7 +913,7 @@ class Deletes extends Action
          */
         Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
         $this->deleteByGroup('repositories', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['function']),
             Query::orderAsc()
@@ -957,7 +957,7 @@ class Deletes extends Action
         }
 
         foreach ($screenshotIds as $id) {
-            $file = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $id));
+            $file = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getInternalId(), $id));
 
             if ($file->isEmpty()) {
                 Console::error('Failed to get deployment screenshot: ' . $id);
@@ -1060,7 +1060,7 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $deploymentId = $document->getId();
-        $deploymentInternalId = $document->getSequence();
+        $deploymentInternalId = $document->getInternalId();
 
         /**
          * Delete deployment files
@@ -1089,7 +1089,7 @@ class Deletes extends Action
             Query::equal('trigger', ['deployment']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentInternalId', [$deploymentInternalId]),
-            Query::equal('projectInternalId', [$project->getSequence()])
+            Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
         });
@@ -1211,7 +1211,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
 
-        $dbForProject->deleteCollection('bucket_' . $document->getSequence());
+        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
         $deviceForFiles->deletePath($document->getId());
     }
@@ -1229,7 +1229,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $this->listByGroup('functions', [
-            Query::equal('installationInternalId', [$document->getSequence()])
+            Query::equal('installationInternalId', [$document->getInternalId()])
         ], $dbForProject, function ($function) use ($dbForProject, $dbForPlatform) {
             $dbForPlatform->deleteDocument('repositories', $function->getAttribute('repositoryId'));
 
@@ -1260,7 +1260,7 @@ class Deletes extends Action
             $this->listByGroup(
                 'deployments',
                 [
-                    Query::equal('resourceInternalId', [$function->getSequence()]),
+                    Query::equal('resourceInternalId', [$function->getInternalId()]),
                     Query::equal('resourceType', ['functions']),
                 ],
                 $getProjectDB($project),

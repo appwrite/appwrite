@@ -309,7 +309,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
+                $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
             }
 
             if (Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
@@ -357,7 +357,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
+                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes));
             }
         });
 

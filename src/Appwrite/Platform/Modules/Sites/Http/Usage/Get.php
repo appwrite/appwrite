@@ -74,20 +74,20 @@ class Get extends Base
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED),
-            str_replace(['{siteInternalId}'], [$site->getSequence()], METRIC_SITES_ID_REQUESTS),
-            str_replace(['{siteInternalId}'], [$site->getSequence()], METRIC_SITES_ID_INBOUND),
-            str_replace(['{siteInternalId}'], [$site->getSequence()], METRIC_SITES_ID_OUTBOUND),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED),
+            str_replace(['{siteInternalId}'], [$site->getInternalId()], METRIC_SITES_ID_REQUESTS),
+            str_replace(['{siteInternalId}'], [$site->getInternalId()], METRIC_SITES_ID_INBOUND),
+            str_replace(['{siteInternalId}'], [$site->getInternalId()], METRIC_SITES_ID_OUTBOUND),
 
         ];
 

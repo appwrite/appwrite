@@ -29,12 +29,12 @@ class V21 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
+        $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
-        if ($this->project->getSequence() !== 'console') {
+        if ($this->project->getInternalId() !== 'console') {
             Console::info('Migrating Buckets');
             $this->migrateBuckets();
         }
@@ -51,7 +51,7 @@ class V21 extends Migration
      */
     private function migrateCollections(): void
     {
-        $internalProjectId = $this->project->getSequence();
+        $internalProjectId = $this->project->getInternalId();
         $collectionType = match ($internalProjectId) {
             'console' => 'console',
             default => 'projects',
@@ -251,7 +251,7 @@ class V21 extends Migration
     private function migrateBuckets(): void
     {
         $this->dbForProject->forEach('buckets', function (Document $bucket) {
-            $bucketId = 'bucket_' . $bucket['$sequence'];
+            $bucketId = 'bucket_' . $bucket['$internalId'];
 
             Console::log("Migrating Bucket {$bucketId} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
