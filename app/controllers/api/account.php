@@ -1190,8 +1190,16 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = $request->getProtocol();
+        $port = $request->getPort();
 
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $protocol . '://' . $request->getHostname();
+
+        if (!empty($port) && ($protocol === 'http' && $port !== 80) || ($protocol === 'https' && $port !== 443)) {
+            $callback .= ':' . $port;
+        }
+
+        $callback .= '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -1254,6 +1262,16 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
+        $port = $request->getPort();
+
+        $callback = $protocol . '://' . $domain;
+
+        if (!empty($port) && ($protocol === 'http' && $port !== 80) || ($protocol === 'https' && $port !== 443)) {
+            $callback .= ':' . $port;
+        }
+
+        $callback .= '/v1/account/sessions/oauth2/' . $provider . '/redirect?';
+                
 
         $params = $request->getParams();
         $params['project'] = $projectId;
@@ -1262,8 +1280,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query($params));
+            ->redirect($callback . \http_build_query($params));
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
@@ -1285,6 +1302,16 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
+        $port = $request->getPort();
+        
+        $callback = $protocol . '://' . $domain;
+
+        if (!empty($port) && ($protocol === 'http' && $port !== 80) || ($protocol === 'https' && $port !== 443)) {
+            $callback .= ':' . $port;
+        }
+
+        $callback .= '/v1/account/sessions/oauth2/' . $provider . '/redirect?';
+                
 
         $params = $request->getParams();
         $params['project'] = $projectId;
@@ -1293,8 +1320,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query($params));
+            ->redirect($callback . \http_build_query($params));
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
@@ -1323,7 +1349,16 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('queueForEvents')
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $port = $request->getPort();
+
+        $callback = $protocol . '://' . $request->getHostname() ;
+
+        if (!empty($port) && ($protocol === 'http' && $port !== 80) || ($protocol === 'https' && $port !== 443)) {
+            $callback .= ':' . $port;
+        }
+
+        $callback .= '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
@@ -1787,8 +1822,16 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = $request->getProtocol();
+        $port = $request->getPort();
 
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $protocol . '://' . $request->getHostname();
+
+        if (!empty($port) && ($protocol === 'http' && $port !== 80) || ($protocol === 'https' && $port !== 443)) {
+            $callback .= ':' . $port;
+        }
+
+        $callback .= '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
