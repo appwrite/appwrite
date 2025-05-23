@@ -47,7 +47,7 @@ class Preview extends Adapter
                 position: fixed;
                 right: 16px;
                 bottom: 16px;
-                z-index: 1;
+                z-index: calc(infinity);
                 border-radius: var(--border-radius-S, 8px);
                 border: var(--border-width-S, 1px) solid var(--color-border-neutral, #EDEDF0);
                 background: var(--color-bgColor-neutral-primary, #FFF);
