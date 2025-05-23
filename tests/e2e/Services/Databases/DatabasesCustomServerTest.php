@@ -706,11 +706,6 @@ class DatabasesCustomServerTest extends Scope
         ]));
         $this->assertTrue($response['body']['encrypt']);
 
-        $response = $this->client->call(Client::METHOD_GET, $attributesPath, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]));
         /**
          * Check status of every attribute
          */
