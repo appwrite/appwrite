@@ -2053,7 +2053,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         }
 
 
-
         foreach ($attributes as $attribute) {
             if ($attribute->getAttribute('type') === Database::VAR_STRING) {
                 $filters = $attribute->getAttribute('filters', []);

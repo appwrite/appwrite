@@ -756,19 +756,15 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
         $attributes = $actors['body']['attributes'];
-        $firstNameAttribute = null;
-        $lastNameAttribute = null;
         foreach ($attributes as $attribute) {
             $this->assertArrayHasKey('encrypt', $attribute);
             if ($attribute['key'] === 'firstName') {
-                $firstNameAttribute = $attribute['encrypt'];
+                $this->assertFalse($attribute['encrypt']);
             }
             if ($attribute['key'] === 'lastName') {
-                $lastNameAttribute = $attribute['encrypt'];
+                $this->assertTrue($attribute['encrypt']);
             }
         }
-        $this->assertTrue($lastNameAttribute);
-        $this->assertFalse($firstNameAttribute);
 
     }
 
