@@ -41,7 +41,7 @@ Find out more at: [https://appwrite.io](https://appwrite.io).
 
 Table of Contents:
 
-- [Getting Started](#getting-started)
+- [Installation \& Setup](#installation--setup)
 - [Self-Hosting](#self-hosting)
   - [Unix](#unix)
   - [Windows](#windows)
@@ -49,7 +49,7 @@ Table of Contents:
     - [PowerShell](#powershell)
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [One-Click Setups](#one-click-setups)
-- [Getting Started](#getting-started-1)
+- [Getting Started](#getting-started)
   - [Products](#products)
   - [SDKs](#sdks)
     - [Client](#client)
@@ -61,7 +61,7 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
 
-## Getting Started
+## Installation & Setup
 
 The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect you credit card information.
 
