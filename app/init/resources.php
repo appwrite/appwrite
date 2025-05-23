@@ -52,6 +52,7 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\WhiteList;
@@ -486,9 +487,10 @@ App::setResource('timelimit', function (\Redis $redis) {
     };
 }, ['redis']);
 
-App::setResource('deviceForLocal', function () {
+App::setResource('deviceForLocal', function (Telemetry $telemetry) {
     return new Local();
-});
+}, ['telemetry']);
+
 App::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
@@ -532,8 +534,7 @@ function getDevice(string $root, string $connection = ''): Device
         switch ($device) {
             case Storage::DEVICE_S3:
                 if (!empty($url)) {
-                    $bucketRoot = (!empty($bucket) ? $bucket . '/' : '') . \ltrim($root, '/');
-                    return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl);
+                    return new S3($root, $accessKey, $accessSecret, $url, $region, $acl);
                 } else {
                     return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 }
@@ -565,8 +566,7 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Acl = 'private';
                 $s3EndpointUrl = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
                 if (!empty($s3EndpointUrl)) {
-                    $bucketRoot = (!empty($s3Bucket) ? $s3Bucket . '/' : '') . \ltrim($root, '/');
-                    return new S3($bucketRoot, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
+                    return new S3($root, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
                 } else {
                     return new AWS($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
                 }
