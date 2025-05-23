@@ -5,6 +5,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
@@ -15,10 +16,12 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -28,13 +31,15 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
+use Utopia\Pools\Group;
+use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 /**
- * @var \Utopia\Registry\Registry $register
+ * @var Registry $register
  */
 require_once __DIR__ . '/init.php';
 
@@ -46,17 +51,17 @@ if (!function_exists('getConsoleDB')) {
     {
         global $register;
 
-        /** @var \Utopia\Pools\Group $pools */
+        static $database = null;
+
+        if ($database !== null) {
+            return $database;
+        }
+
+        /** @var Group $pools */
         $pools = $register->get('pools');
 
-        $dbAdapter = $pools
-            ->get('console')
-            ->pop()
-            ->getResource()
-        ;
-
-        $database = new Database($dbAdapter, getCache());
-
+        $adapter = new DatabasePool($pools->get('console'));
+        $database = new Database($adapter, getCache());
         $database
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
@@ -72,7 +77,13 @@ if (!function_exists('getProjectDB')) {
     {
         global $register;
 
-        /** @var \Utopia\Pools\Group $pools */
+        static $databases = [];
+
+        if (isset($databases[$project->getSequence()])) {
+            return $databases[$project->getSequence()];
+        }
+
+        /** @var Group $pools */
         $pools = $register->get('pools');
 
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -86,11 +97,7 @@ if (!function_exists('getProjectDB')) {
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
-        $adapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
+        $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, getCache());
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -98,20 +105,20 @@ if (!function_exists('getProjectDB')) {
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_' . $project->getSequence());
         }
 
         $database
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
-        return $database;
+        return $databases[$project->getSequence()] = $database;
     }
 }
 
@@ -121,20 +128,22 @@ if (!function_exists('getCache')) {
     {
         global $register;
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $pools = $register->get('pools'); /** @var Group $pools */
 
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
 
         foreach ($list as $value) {
-            $adapters[] = $pools
-                ->get($value)
-                ->pop()
-                ->getResource()
-            ;
+            $adapters[] = new CachePool($pools->get($value));
         }
 
-        return new Cache(new Sharding($adapters));
+        return $cache = new Cache(new Sharding($adapters));
     }
 }
 
@@ -142,6 +151,12 @@ if (!function_exists('getCache')) {
 if (!function_exists('getRedis')) {
     function getRedis(): \Redis
     {
+        static $redis = null;
+
+        if ($redis !== null) {
+            return $redis;
+        }
+
         $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
         $port = System::getEnv('_APP_REDIS_PORT', 6379);
         $pass = System::getEnv('_APP_REDIS_PASS', '');
@@ -160,21 +175,39 @@ if (!function_exists('getRedis')) {
 if (!function_exists('getTimelimit')) {
     function getTimelimit(): TimeLimitRedis
     {
-        return new TimeLimitRedis("", 0, 1, getRedis());
+        static $timelimit = null;
+
+        if ($timelimit !== null) {
+            return $timelimit;
+        }
+
+        return $timelimit = new TimeLimitRedis("", 0, 1, getRedis());
     }
 }
 
 if (!function_exists('getRealtime')) {
     function getRealtime(): Realtime
     {
-        return new Realtime();
+        static $realtime = null;
+
+        if ($realtime !== null) {
+            return $realtime;
+        }
+
+        return $realtime = new Realtime();
     }
 }
 
 if (!function_exists('getTelemetry')) {
     function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
     {
-        return new NoTelemetry();
+        static $telemetry = null;
+
+        if ($telemetry !== null) {
+            return $telemetry;
+        }
+
+        return $telemetry = new NoTelemetry();
     }
 }
 
@@ -273,7 +306,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
         } while (true);
-        $register->get('pools')->reclaim();
     });
 
     /**
@@ -299,9 +331,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
                 Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
             } catch (Throwable $th) {
-                call_user_func($logError, $th, "updateWorkerDocument");
-            } finally {
-                $register->get('pools')->reclaim();
+                $logError($th, "updateWorkerDocument");
             }
         });
     }
@@ -370,8 +400,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         'data' => $event['data']
                     ]));
                 }
-
-                $register->get('pools')->reclaim();
             }
         }
         /**
@@ -407,8 +435,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            /** @var \Appwrite\PubSub\Adapter $pubsub */
-            $pubsub = $register->get('pools')->get('pubsub')->pop()->getResource();
+            $pubsub = new PubSubPool($register->get('pools')->get('pubsub'));
+
             if ($pubsub->ping(true)) {
                 $attempts = 0;
                 Console::success('Pub/sub connection established (worker: ' . $workerId . ')');
@@ -436,8 +464,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $realtime->unsubscribe($connection);
                         $realtime->subscribe($projectId, $connection, $roles, $channels);
-
-                        $register->get('pools')->reclaim();
                     }
                 }
 
@@ -463,14 +489,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (Throwable $th) {
-            call_user_func($logError, $th, "pubSubConnection");
+            $logError($th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
-        } finally {
-            $register->get('pools')->reclaim();
         }
     }
 
@@ -572,7 +596,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (Throwable $th) {
-        call_user_func($logError, $th, "initServer");
+        $logError($th, "initServer");
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
@@ -596,8 +620,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
         }
-    } finally {
-        $register->get('pools')->reclaim();
     }
 });
 
@@ -696,8 +718,6 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         if ($th->getCode() === 1008) {
             $server->close($connection, $th->getCode());
         }
-    } finally {
-        $register->get('pools')->reclaim();
     }
 });
 

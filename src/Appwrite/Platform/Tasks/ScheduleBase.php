@@ -12,6 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Gauge;
@@ -23,6 +24,8 @@ abstract class ScheduleBase extends Action
     protected const ENQUEUE_TIMER = 60; //seconds
 
     protected array $schedules = [];
+
+    protected BrokerPool $publisher;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -68,6 +71,7 @@ abstract class ScheduleBase extends Action
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
+        $this->publisher = new BrokerPool($pools->get('publisher'));
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
@@ -119,10 +123,8 @@ abstract class ScheduleBase extends Action
                 $schedule->getAttribute('resourceId')
             );
 
-            $pools->reclaim();
-
             return [
-                '$internalId' => $schedule->getInternalId(),
+                '$sequence' => $schedule->getSequence(),
                 '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
@@ -173,19 +175,19 @@ abstract class ScheduleBase extends Action
             $total = $total + $sum;
 
             foreach ($results as $document) {
-                $localDocument = $this->schedules[$document->getInternalId()] ?? null;
+                $localDocument = $this->schedules[$document->getSequence()] ?? null;
 
                 if ($localDocument !== null) {
                     if (!$document['active']) {
                         Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
-                        unset($this->schedules[$document->getInternalId()]);
+                        unset($this->schedules[$document->getSequence()]);
                     } elseif (strtotime($localDocument['resourceUpdatedAt']) !== strtotime($document['resourceUpdatedAt'])) {
                         Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
-                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
+                        $this->schedules[$document->getSequence()] = $getSchedule($document);
                     }
                 } else {
                     try {
-                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
+                        $this->schedules[$document->getSequence()] = $getSchedule($document);
                     } catch (\Throwable $th) {
                         $collectionId = static::getCollectionId();
                         Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");

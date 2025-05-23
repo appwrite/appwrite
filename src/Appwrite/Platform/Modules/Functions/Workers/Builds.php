@@ -73,6 +73,7 @@ class Builds extends Action
             ->inject('deviceForFiles')
             ->inject('log')
             ->inject('executor')
+            ->inject('plan')
             ->callback([$this, 'action']);
     }
 
@@ -92,6 +93,7 @@ class Builds extends Action
      * @param Device $deviceForFiles
      * @param Log $log
      * @param Executor $executor
+     * @param array $plan
      * @return void
      * @throws \Utopia\Database\Exception
      */
@@ -111,7 +113,8 @@ class Builds extends Action
         callable $isResourceBlocked,
         Device $deviceForFiles,
         Log $log,
-        Executor $executor
+        Executor $executor,
+        array $plan
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -150,7 +153,8 @@ class Builds extends Action
                     $template,
                     $isResourceBlocked,
                     $log,
-                    $executor
+                    $executor,
+                    $plan
                 );
                 break;
 
@@ -177,6 +181,7 @@ class Builds extends Action
      * @param Document $template
      * @param Log $log
      * @param Executor $executor
+     * @param array $plan
      * @return void
      * @throws \Utopia\Database\Exception
      *
@@ -200,7 +205,8 @@ class Builds extends Action
         Document $template,
         callable $isResourceBlocked,
         Log $log,
-        Executor $executor
+        Executor $executor,
+        array $plan
     ): void {
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
@@ -267,7 +273,7 @@ class Builds extends Action
         $deployment->setAttribute('status', 'processing');
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-        if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
             $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
             $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
         }
@@ -476,8 +482,12 @@ class Builds extends Action
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
                 $sizeLimit = (int)System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
 
-                if ($directorySize > $sizeLimit) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / 1048576, 2) . ' MBs.');
+                if (isset($plan['deploymentSize'])) {
+                    $sizeLimit = (int) $plan['deploymentSize'] * 1000 * 1000;
+                }
+
+                if ($directorySize > $sizeLimit && $sizeLimit !== 0) {
+                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -513,7 +523,7 @@ class Builds extends Action
             $deployment->setAttribute('status', 'building');
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
             }
@@ -803,8 +813,11 @@ class Builds extends Action
             $durationEnd = \microtime(true);
 
             $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
-            if ($response['size'] > $buildSizeLimit) {
-                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+            if (isset($plan['buildSize'])) {
+                $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
+            }
+            if ($response['size'] > $buildSizeLimit && $buildSizeLimit !== 0) {
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
             /** Update the build document */
@@ -873,9 +886,9 @@ class Builds extends Action
             if ($resource->getCollection() === 'sites') {
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-                        Query::equal("projectInternalId", [$project->getInternalId()]),
+                        Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
-                        Query::equal('deploymentInternalId', [$deployment->getInternalId()]),
+                        Query::equal('deploymentInternalId', [$deployment->getSequence()]),
                     ]));
 
                     if ($rule->isEmpty()) {
@@ -914,9 +927,9 @@ class Builds extends Action
                             str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
                             str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
                             str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
                         ],
                         'bannerDisabled' => true,
                         'projectCheckDisabled' => true,
@@ -986,7 +999,7 @@ class Builds extends Action
                                 Permission::read(Role::team(ID::custom($teamId))),
                             ],
                             'bucketId' => $bucket->getId(),
-                            'bucketInternalId' => $bucket->getInternalId(),
+                            'bucketInternalId' => $bucket->getSequence(),
                             'name' => $fileName,
                             'path' => $path,
                             'signature' => $deviceForFiles->getFileHash($path),
@@ -1005,7 +1018,7 @@ class Builds extends Action
                             'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
                         ]);
 
-                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
 
                         $deployment->setAttribute($key, $fileId);
                     }
@@ -1041,7 +1054,7 @@ class Builds extends Action
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
-            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
             }
@@ -1064,14 +1077,14 @@ class Builds extends Action
                         $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
-                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getInternalId()]),
+                            Query::equal("projectInternalId", [$project->getSequence()]),
                             Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                            Query::equal("deploymentResourceInternalId", [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
                         ];
@@ -1087,7 +1100,7 @@ class Builds extends Action
                             $rulesUpdated = true;
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
-                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                                ->setAttribute('deploymentInternalId', $deployment->getSequence());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                         });
                         break;
@@ -1095,15 +1108,15 @@ class Builds extends Action
                         $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
-                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
                         $resource->setAttribute('deploymentScreenshotLight', $deployment->getAttribute('screenshotLight', ''));
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getInternalId()]),
+                            Query::equal("projectInternalId", [$project->getSequence()]),
                             Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                            Query::equal("deploymentResourceInternalId", [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
                         ];
@@ -1117,7 +1130,7 @@ class Builds extends Action
                         $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
-                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                                ->setAttribute('deploymentInternalId', $deployment->getSequence());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                         });
 
@@ -1137,15 +1150,15 @@ class Builds extends Action
                         $dbForPlatform->createDocument('rules', new Document([
                             '$id' => $ruleId,
                             'projectId' => $project->getId(),
-                            'projectInternalId' => $project->getInternalId(),
+                            'projectInternalId' => $project->getSequence(),
                             'domain' => $domain,
                             'type' => 'deployment',
                             'trigger' => 'deployment',
                             'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getInternalId(),
+                            'deploymentInternalId' => $deployment->getSequence(),
                             'deploymentResourceType' => 'site',
                             'deploymentResourceId' => $deployment->getId(),
-                            'deploymentResourceInternalId' => $deployment->getInternalId(),
+                            'deploymentResourceInternalId' => $deployment->getSequence(),
                             'deploymentVcsProviderBranch' => $branchName,
                             'status' => 'verified',
                             'certificateId' => '',
@@ -1157,21 +1170,21 @@ class Builds extends Action
                         $rule = $dbForPlatform->getDocument('rules', $ruleId);
                         $rule = $rule
                             ->setAttribute('deploymentId', $deployment->getId())
-                            ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                            ->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                     }
 
                     $this->listRules($project, [
-                        Query::equal("projectInternalId", [$project->getInternalId()]),
+                        Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
-                        Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                        Query::equal("deploymentResourceInternalId", [$resource->getSequence()]),
                         Query::equal('deploymentResourceType', ['site']),
                         Query::equal("deploymentVcsProviderBranch", [$branchName]),
                         Query::equal("trigger", ['manual']),
                     ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
                         $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
-                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                                ->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                     });
                 }
@@ -1218,16 +1231,25 @@ class Builds extends Action
                 $message .= "\n[31m" . $error;
             }
 
+            // Combine with previous logs if deployment got past build process
+            $previousLogs = '';
+            if (!empty($deployment->getAttribute('buildEndedAt', ''))) {
+                $previousLogs = $deployment->getAttribute('buildLogs', '');
+                if (!empty($previousLogs)) {
+                    $message = $previousLogs . "\n" . $message;
+                }
+            }
+
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $deployment->setAttribute('buildEndedAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
-            $deployment->setAttribute('buildLogs', $message);
 
+            $deployment->setAttribute('buildLogs', $message);
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
-            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
             }
@@ -1262,8 +1284,8 @@ class Builds extends Action
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per function
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
             case 'failed':
                 $queue
@@ -1271,8 +1293,8 @@ class Builds extends Action
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per function
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
         }
 
@@ -1285,10 +1307,10 @@ class Builds extends Action
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }
@@ -1446,9 +1468,9 @@ class Builds extends Action
                 };
 
                 $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-                    Query::equal("projectInternalId", [$project->getInternalId()]),
+                    Query::equal("projectInternalId", [$project->getSequence()]),
                     Query::equal("type", ["deployment"]),
-                    Query::equal("deploymentInternalId", [$deployment->getInternalId()]),
+                    Query::equal("deploymentInternalId", [$deployment->getSequence()]),
                 ]));
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
@@ -1476,7 +1498,7 @@ class Builds extends Action
         do {
             $queries = \array_merge([
                 Query::limit($limit),
-                Query::equal("projectInternalId", [$project->getInternalId()])
+                Query::equal("projectInternalId", [$project->getSequence()])
             ], $queries);
 
             if ($cursor !== null) {

@@ -153,7 +153,7 @@ class Create extends Action
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'api',
@@ -174,7 +174,7 @@ class Create extends Action
             $queueForCertificates
                 ->setDomain(new Document([
                     'domain' => $rule->getAttribute('domain'),
-                    'domainType' => 'api',
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
                 ->trigger();
         }

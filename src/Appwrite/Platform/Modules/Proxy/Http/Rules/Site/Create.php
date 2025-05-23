@@ -165,16 +165,16 @@ class Create extends Action
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'deployment',
             'trigger' => 'manual',
             'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-            'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
             'deploymentResourceType' => 'site',
             'deploymentResourceId' => $site->getId(),
-            'deploymentResourceInternalId' => $site->getInternalId(),
+            'deploymentResourceInternalId' => $site->getSequence(),
             'deploymentVcsProviderBranch' => $branch,
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get(), $branch]),
@@ -192,7 +192,7 @@ class Create extends Action
             $queueForCertificates
                 ->setDomain(new Document([
                     'domain' => $rule->getAttribute('domain'),
-                    'domainType' => 'site',
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
                 ->trigger();
         }

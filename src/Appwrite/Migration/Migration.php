@@ -85,6 +85,8 @@ abstract class Migration
         '1.6.2' => 'V21',
         '1.7.0-RC1' => 'V22',
         '1.7.0' => 'V22',
+        '1.7.1' => 'V22',
+        '1.7.2' => 'V22',
     ];
 
     /**
@@ -153,7 +155,7 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        $projectInternalId = $this->project->getInternalId();
+        $projectInternalId = $this->project->getSequence();
 
         $collections = match ($projectInternalId) {
             'console' => $this->collections['console'],
@@ -206,7 +208,7 @@ abstract class Migration
     {
         $name ??= $id;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -257,7 +259,7 @@ abstract class Migration
     ): void {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -322,7 +324,7 @@ abstract class Migration
     ): void {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -380,7 +382,7 @@ abstract class Migration
     {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -426,7 +428,7 @@ abstract class Migration
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();
