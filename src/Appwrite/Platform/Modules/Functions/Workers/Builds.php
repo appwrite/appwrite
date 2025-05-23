@@ -486,7 +486,7 @@ class Builds extends Action
                     $sizeLimit = (int) $plan['deploymentSize'] * 1000 * 1000;
                 }
 
-                if ($directorySize > $sizeLimit) {
+                if ($directorySize > $sizeLimit && $sizeLimit !== 0) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
@@ -816,7 +816,7 @@ class Builds extends Action
             if (isset($plan['buildSize'])) {
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
             }
-            if ($response['size'] > $buildSizeLimit) {
+            if ($response['size'] > $buildSizeLimit && $buildSizeLimit !== 0) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
