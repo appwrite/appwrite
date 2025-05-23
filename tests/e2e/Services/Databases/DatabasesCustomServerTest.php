@@ -697,6 +697,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
             'encrypt' => true
         ]);
+        $this->assertTrue($lastName['body']['encrypt']);
 
 
         /**
