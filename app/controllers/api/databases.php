@@ -1063,13 +1063,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attributes = $collection->getAttribute('attributes');
-        foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
-                $filters = $attribute->getAttribute('filters', []);
-                $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
-            }
-        }
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });

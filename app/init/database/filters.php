@@ -77,12 +77,17 @@ Database::addFilter(
         ]);
 
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            $attributeType = $attribute->getAttribute('type');
+            if ($attributeType === Database::VAR_RELATIONSHIP) {
                 $options = $attribute->getAttribute('options');
                 foreach ($options as $key => $value) {
                     $attribute->setAttribute($key, $value);
                 }
                 $attribute->removeAttribute('options');
+            }
+            if ($attributeType === Database::VAR_STRING) {
+                $filters = $attribute->getAttribute('filters', []);
+                $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
             }
         }
 
