@@ -1372,10 +1372,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
             'filters' => $filters,
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
-
+        $stringAttribute = $attribute->getArrayCopy();
+        $stringAttribute['encrypt'] = $encrypt;
+        $stringAttribute = new Document($stringAttribute);
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+            ->dynamic($stringAttribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
