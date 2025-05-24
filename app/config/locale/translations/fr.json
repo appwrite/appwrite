@@ -28,6 +28,7 @@
     "emails.invitation.thanks": "Merci,",
     "emails.invitation.signature": "L'équipe {{project}}",
     "locale.country.unknown": "Inconnu",
+    "example_tip_git": "Utilisez `git status` pour voir les fichiers modifiés.",
     "countries.af": "Afghanistan",
     "countries.ao": "Angola",
     "countries.al": "Albanie",
