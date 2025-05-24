@@ -353,11 +353,11 @@ class V22 extends Migration
 
                 if ($project->isEmpty()) {
                     Console::warning("Project \"{$document->getAttribute('projectId')}\" not found for rule \"{$document->getId()}\"");
-                    $document->setAttribute('region', System::getEnv('_APP_DEFAULT_REGION'));
+                    $document->setAttribute('region', System::getEnv('_APP_REGION', 'default'));
                     break;
                 }
 
-                $document->setAttribute('region', $project->getAttribute('region', System::getEnv('_APP_DEFAULT_REGION')));
+                $document->setAttribute('region', $project->getAttribute('region', System::getEnv('_APP_REGION', 'default')));
 
                 $domain = $document->getAttribute('domain', '');
                 $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
