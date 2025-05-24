@@ -87,7 +87,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
       - redis
       # - clamav
     entrypoint:
@@ -95,6 +95,7 @@ services:
       - -e
       - app/http.php
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
@@ -260,9 +261,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
       - redis
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
@@ -293,8 +295,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -322,9 +325,10 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
       - request-catcher
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -351,7 +355,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -362,6 +366,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -417,8 +422,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -452,8 +458,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -517,13 +524,14 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -557,9 +565,10 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
       - openruntimes-executor
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -603,6 +612,7 @@ services:
       - maildev
       # - smtp
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -637,6 +647,7 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -691,8 +702,9 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -728,6 +740,7 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -768,8 +781,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -799,8 +813,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -830,8 +845,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -860,9 +876,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
       - redis
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -888,9 +905,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
       - redis
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -915,9 +933,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_ADAPTER:-mariadb}
       - redis
     environment:
+      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -1035,8 +1054,24 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-      - MARIADB_AUTO_UPGRADE=1
+      - ${_APP_DB_ADAPTER:-mariadb}_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
+
+  postgresql:
+    image: postgres:15
+    container_name: appwrite-postgresql
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
 
   redis:
     image: redis:7.2.4-alpine
@@ -1127,6 +1162,7 @@ networks:
 
 volumes:
   appwrite-mariadb:
+  appwrite-postgresql:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
