@@ -1314,10 +1314,11 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, Document $project, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -1339,6 +1340,27 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
+        }
+
+        if ($project->getId() === 'console') {
+            // Quick check:
+            // fetch up to 2 owners to determine if only one exists
+            $ownersCount = $dbForProject->count(
+                collection: 'memberships',
+                queries: [
+                    Query::contains('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getInternalId()])
+                ],
+                max: 2
+            );
+
+            if ($ownersCount === 1) {
+                /* Prevent removal if the user is the only owner. */
+                throw new Exception(
+                    Exception::GENERAL_ARGUMENT_INVALID,
+                    'There must be at least one owner in the organization.'
+                );
+            }
         }
 
         try {
