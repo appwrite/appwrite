@@ -196,7 +196,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:dev
+    image: appwrite/console:5.0.12
     restart: unless-stopped
     networks:
       - appwrite
@@ -949,7 +949,7 @@ services:
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-      - "3307:3306"
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
