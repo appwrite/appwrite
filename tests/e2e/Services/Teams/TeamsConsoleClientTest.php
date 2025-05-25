@@ -73,7 +73,9 @@ class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
 
         return $data;
     }
