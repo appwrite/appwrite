@@ -157,6 +157,7 @@ class Exception extends \Exception
     /** Sites */
     public const SITE_NOT_FOUND                    = 'site_not_found';
     public const SITE_TEMPLATE_NOT_FOUND           = 'site_template_not_found';
+    public const SITE_INVALID_FILE_SIZE            = 'site_invalid_file_size';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
