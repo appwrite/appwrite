@@ -24,7 +24,6 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -691,12 +690,6 @@ App::get('/v1/databases/:databaseId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
-
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId;
         $logs = $audit->getLogsByResource($resource, $queries);
@@ -1112,12 +1105,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
@@ -3900,12 +3887,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
