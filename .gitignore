@@ -13,7 +13,7 @@
 .phpactor.json
 debug/
 app/sdks
-dev/yasd_init.php
+dev/yasd_init.phps
 .phpunit.result.cache
 Makefile
 appwrite.json
