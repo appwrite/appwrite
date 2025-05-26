@@ -710,8 +710,8 @@ trait TeamsBaseClient
     }
 
     /**
-     * @depends testUpdateTeamMembershipRoles
-     */
+    * @depends testUpdateTeamMembershipRoles
+    */
     public function testDeleteTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
