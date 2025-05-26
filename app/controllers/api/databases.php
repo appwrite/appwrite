@@ -1347,17 +1347,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('plan')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, array $plan) {
-        if ($encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string attributes are not available on your plan. Please upgrade to create encrypted string attributes.');
-        }
-        if ($encrypt && $size < APP_DATABASE_ENCRYPT_SIZE_MIN) {
-            throw new Exception(
-                Exception::GENERAL_BAD_REQUEST,
-                "Size too small. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . " characters."
-            );
-        }
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
         // Ensure attribute default is within required size
         $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
@@ -1378,7 +1368,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
             'filters' => $filters,
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
-        $attribute->setAttribute('encrypt', $encrypt);
+
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
@@ -2057,13 +2047,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
 
-        foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
-                $filters = $attribute->getAttribute('filters', []);
-                $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
-            }
-        }
-
         $response->dynamic(new Document([
             'attributes' => $attributes,
             'total' => $total,
@@ -2128,7 +2111,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
         $options = $attribute->getAttribute('options', []);
-        $filters = $attribute->getAttribute('filters', []);
+
         foreach ($options as $key => $option) {
             $attribute->setAttribute($key, $option);
         }
@@ -2148,7 +2131,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             },
             default => Response::MODEL_ATTRIBUTE,
         };
-        $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
+
         $response->dynamic($attribute, $model);
     });
 
