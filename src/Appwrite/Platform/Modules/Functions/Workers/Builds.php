@@ -1130,7 +1130,7 @@ class Builds extends Action
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
                     $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                    $domain = "branch-{$branchName}.{$sitesDomain}";
+                    $domain = "branch-{$branchName}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
                     $ruleId = md5($domain);
 
                     try {
