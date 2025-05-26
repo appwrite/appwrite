@@ -71,7 +71,7 @@ class Document extends Any
 
     public function filter(DatabaseDocument $document): DatabaseDocument
     {
-        $document->removeAttribute('$internalId');
+        $document->removeAttribute('$sequence');
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
 
