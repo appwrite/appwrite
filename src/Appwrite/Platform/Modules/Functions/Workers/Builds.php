@@ -1075,8 +1075,6 @@ class Builds extends Action
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
-                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
-
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
@@ -1088,13 +1086,8 @@ class Builds extends Action
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
                         ];
-
-                        if (empty($oldDeploymentInternalId)) {
-                            $queries[] =  Query::equal("deploymentInternalId", [""]);
-                        } else {
-                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-                        }
 
                         $rulesUpdated = false;
                         $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
@@ -1106,8 +1099,6 @@ class Builds extends Action
                         });
                         break;
                     case 'sites':
-                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
-
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
@@ -1120,13 +1111,8 @@ class Builds extends Action
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
                         ];
-
-                        if (empty($oldDeploymentInternalId)) {
-                            $queries[] =  Query::equal("deploymentInternalId", [""]);
-                        } else {
-                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-                        }
 
                         $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
