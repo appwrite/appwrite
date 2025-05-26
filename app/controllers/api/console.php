@@ -81,6 +81,8 @@ App::get('/v1/console/variables')
             '_APP_DOMAIN_FUNCTIONS' => System::getEnv('_APP_DOMAIN_FUNCTIONS'),
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
+            '_APP_SUPPORTS_MULTI_REGION' => System::getEnv('_APP_SUPPORTS_MULTI_REGION'),
+            '_APP_STRIPE_PUBLISHABLE_KEY' => System::getEnv('_APP_STRIPE_PUBLISHABLE_KEY')
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
