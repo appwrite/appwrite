@@ -11,17 +11,6 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 trait TeamsBaseClient
 {
     /**
-     * Checks if the current project is the Console project.
-     *
-     * This is necessary because the last admin of an org
-     * cannot be removed, which affects certain test conditions.
-     */
-    private function isConsoleProject(): bool
-    {
-        return $this->getProject()['$id'] === 'console';
-    }
-
-    /**
      * @depends testCreateTeam
      */
     public function testGetTeamMemberships($data): array
@@ -71,11 +60,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        if ($this->isConsoleProject()) {
-            $this->assertCount(1, $response['body']['memberships']);
-        } else {
-            $this->assertCount(0, $response['body']['memberships']);
-        }
+        $this->assertCount(0, $response['body']['memberships']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -99,11 +84,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        if ($this->isConsoleProject()) {
-            $this->assertCount(1, $response['body']['memberships']);
-        } else {
-            $this->assertCount(0, $response['body']['memberships']);
-        }
+        $this->assertCount(0, $response['body']['memberships']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -392,11 +373,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $memberships['headers']['status-code']);
         $this->assertIsInt($memberships['body']['total']);
         $this->assertNotEmpty($memberships['body']['memberships']);
-        if ($this->isConsoleProject()) {
-            $this->assertCount(4, $memberships['body']['memberships']);
-        } else {
-            $this->assertCount(3, $memberships['body']['memberships']);
-        }
+        $this->assertCount(3, $memberships['body']['memberships']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $data['teamUid'] . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -410,11 +387,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships']);
-        if ($this->isConsoleProject()) {
-            $this->assertCount(3, $response['body']['memberships']);
-        } else {
-            $this->assertCount(2, $response['body']['memberships']);
-        }
+        $this->assertCount(2, $response['body']['memberships']);
         $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
     }
 
@@ -737,8 +710,8 @@ trait TeamsBaseClient
     }
 
     /**
-    * @depends testUpdateTeamMembershipRoles
-    */
+     * @depends testUpdateTeamMembershipRoles
+     */
     public function testDeleteTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -751,11 +724,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        if ($this->isConsoleProject()) {
-            $this->assertCount(5, $response['body']['memberships']);
-        } else {
-            $this->assertCount(4, $response['body']['memberships']);
-        }
+        $this->assertEquals(4, $response['body']['total']);
 
         $ownerMembershipUid = $response['body']['memberships'][0]['$id'];
 
@@ -785,18 +754,14 @@ trait TeamsBaseClient
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]);
 
-        if ($this->isConsoleProject()) {
-            $this->assertEquals(400, $response['headers']['status-code']);
-        } else {
-            $this->assertEquals(401, $response['headers']['status-code']);
-        }
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
          */
 
         /**
-         * Test for when a user other than the owner tries to delete an owner's membership.
+         * Test for when a user other than the owner tries to delete their membership
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $membershipUid, [
             'origin' => 'http://localhost',
@@ -805,13 +770,8 @@ trait TeamsBaseClient
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]);
 
-        if ($this->isConsoleProject()) {
-            $this->assertEquals(400, $response['headers']['status-code']);
-            $this->assertNotEmpty($response['body']);
-        } else {
-            $this->assertEquals(204, $response['headers']['status-code']);
-            $this->assertEmpty($response['body']);
-        }
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -819,11 +779,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        if ($this->isConsoleProject()) {
-            $this->assertEquals(5, $response['body']['total']);
-        } else {
-            $this->assertEquals(3, $response['body']['total']);
-        }
+        $this->assertEquals(3, $response['body']['total']);
 
         /**
          * Test for when the owner tries to delete their membership
@@ -834,13 +790,8 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        if ($this->isConsoleProject()) {
-            $this->assertEquals(400, $response['headers']['status-code']);
-            $this->assertNotEmpty($response['body']);
-        } else {
-            $this->assertEquals(204, $response['headers']['status-code']);
-            $this->assertEmpty($response['body']);
-        }
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, array_merge([
             'origin' => 'http://localhost',
@@ -848,11 +799,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        if ($this->isConsoleProject()) {
-            $this->assertEquals(200, $response['headers']['status-code']);
-        } else {
-            $this->assertEquals(404, $response['headers']['status-code']);
-        }
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         return [];
     }
