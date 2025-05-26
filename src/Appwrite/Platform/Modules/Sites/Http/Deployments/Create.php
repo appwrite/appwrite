@@ -347,10 +347,16 @@ class Create extends Action
                         'domain' => $domain,
                         'type' => 'deployment',
                         'trigger' => 'deployment',
-                        'value' => $deployment->getId(),
+                        'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
+                        'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
                         'status' => 'verified',
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
                     ]))
                 );
             } else {
