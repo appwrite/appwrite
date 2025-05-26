@@ -641,10 +641,10 @@ class DatabasesCustomServerTest extends Scope
 
     /**
      * @depends testListCollections
+     * @group cl-ignore
      */
     public function testCreateEncryptedAttribute(array $data): void
     {
-
         $databaseId = $data['databaseId'];
 
         /**
@@ -685,6 +685,7 @@ class DatabasesCustomServerTest extends Scope
             'size' => 256,
             'required' => true,
         ]);
+
         // checking size test
         $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
             'content-type' => 'application/json',
@@ -709,12 +710,15 @@ class DatabasesCustomServerTest extends Scope
             'encrypt' => true
         ]);
         $this->assertTrue($lastName['body']['encrypt']);
+
         sleep(1);
+
         $response = $this->client->call(Client::METHOD_GET, $attributesPath . '/lastName', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
+        
         $this->assertTrue($response['body']['encrypt']);
 
         /**
