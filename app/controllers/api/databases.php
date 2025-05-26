@@ -1352,12 +1352,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
         if ($encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string attributes are not available on your plan. Please upgrade to create encrypted string attributes.');
         }
-        if ($encrypt && $size < APP_DATABASE_ENCRYPT_SIZE_MIN) {
-            throw new Exception(
-                Exception::GENERAL_BAD_REQUEST,
-                "Size too small. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . " characters."
-            );
-        }
         // Ensure attribute default is within required size
         $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
