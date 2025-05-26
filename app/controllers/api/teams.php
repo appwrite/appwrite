@@ -1378,7 +1378,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
