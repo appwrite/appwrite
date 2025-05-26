@@ -221,7 +221,7 @@ class Certificates extends Action
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
             $certificate = $dbForPlatform->updateDocument('certificates', $certificate->getId(), $certificate);
         } else {
-            $certificate->removeAttribute('$internalId');
+            $certificate->removeAttribute('$sequence');
             $certificate = $dbForPlatform->createDocument('certificates', $certificate);
         }
 

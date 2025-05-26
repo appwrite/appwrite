@@ -180,7 +180,7 @@ class Builds extends Action
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
-                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentInternalId' => $deployment->getSequence(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'path' => '',
@@ -194,7 +194,7 @@ class Builds extends Action
             ]));
 
             $deployment->setAttribute('buildId', $build->getId());
-            $deployment->setAttribute('buildInternalId', $build->getInternalId());
+            $deployment->setAttribute('buildInternalId', $build->getSequence());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } elseif ($build->getAttribute('status') === 'canceled') {
             Console::info('Build has been canceled');
@@ -644,7 +644,7 @@ class Builds extends Action
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
-                $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $function->setAttribute('deploymentInternalId', $deployment->getSequence());
                 $function->setAttribute('deployment', $deployment->getId());
                 $function->setAttribute('live', true);
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -700,14 +700,14 @@ class Builds extends Action
                 $queueForStatsUsage
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
+                    ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
             } elseif ($build->getAttribute('status') === 'failed') {
                 $queueForStatsUsage
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
+                    ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
             }
 
             $queueForStatsUsage
@@ -715,10 +715,10 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
                 ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+                ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->setProject($project)
                 ->trigger();
         }

@@ -64,11 +64,11 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $functionId = $resource->getAttribute('resourceId');
             $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-            $functionInternalId = $function->getInternalId();
+            $functionInternalId = $function->getSequence();
 
             $deploymentId = ID::unique();
             $repositoryId = $resource->getId();
-            $repositoryInternalId = $resource->getInternalId();
+            $repositoryInternalId = $resource->getSequence();
             $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
             $installationId = $resource->getAttribute('installationId');
             $installationInternalId = $resource->getAttribute('installationInternalId');
@@ -142,7 +142,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                             ],
                             'installationInternalId' => $installationInternalId,
                             'installationId' => $installationId,
-                            'projectInternalId' => $project->getInternalId(),
+                            'projectInternalId' => $project->getSequence(),
                             'projectId' => $project->getId(),
                             'providerRepositoryId' => $providerRepositoryId,
                             'providerBranch' => $providerBranch,
@@ -376,7 +376,7 @@ App::get('/v1/vcs/github/callback')
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
-            $projectInternalId = $project->getInternalId();
+            $projectInternalId = $project->getSequence();
 
             $installation = $dbForPlatform->findOne('installations', [
                 Query::equal('providerInstallationId', [$providerInstallationId]),
@@ -740,7 +740,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
                 $identity = $dbForPlatform->findOne('identities', [
                     Query::equal('provider', ['github']),
-                    Query::equal('userInternalId', [$user->getInternalId()]),
+                    Query::equal('userInternalId', [$user->getSequence()]),
                 ]);
                 if ($identity->isEmpty()) {
                     throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
@@ -987,7 +987,7 @@ App::post('/v1/vcs/github/events')
 
                     foreach ($installations as $installation) {
                         $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
-                            Query::equal('installationInternalId', [$installation->getInternalId()]),
+                            Query::equal('installationInternalId', [$installation->getSequence()]),
                             Query::limit(1000)
                         ]));
 
@@ -1090,7 +1090,7 @@ App::get('/v1/vcs/installations')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
+        $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -1163,7 +1163,7 @@ App::get('/v1/vcs/installations/:installationId')
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if ($installation->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -1246,7 +1246,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         }
 
         $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
-            Query::equal('projectInternalId', [$project->getInternalId()])
+            Query::equal('projectInternalId', [$project->getSequence()])
         ]));
 
         if ($repository->isEmpty()) {

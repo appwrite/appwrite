@@ -307,7 +307,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+                $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
             }
         });
 

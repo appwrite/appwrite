@@ -26,7 +26,7 @@ class V18 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+        $this->projectDB->setNamespace("_{$this->project->getSequence()}");
         $this->addDocumentSecurityToProject();
 
         Console::info('Migrating Databases');
@@ -48,12 +48,12 @@ class V18 extends Migration
     private function migrateDatabases(): void
     {
         foreach ($this->documentsIterator('databases') as $database) {
-            $databaseTable = "database_{$database->getInternalId()}";
+            $databaseTable = "database_{$database->getSequence()}";
 
             Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
-                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
+                $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
 
                 foreach ($collection['attributes'] ?? [] as $attribute) {
                     if ($attribute['type'] !== Database::VAR_FLOAT) {
@@ -197,7 +197,7 @@ class V18 extends Migration
                  * Set the bucket permission in the metadata table
                  */
                 try {
-                    $internalBucketId = "bucket_{$this->project->getInternalId()}";
+                    $internalBucketId = "bucket_{$this->project->getSequence()}";
                     $permissions = $document->getPermissions();
                     $fileSecurity = $document->getAttribute('fileSecurity', false);
                     $this->projectDB->updateCollection($internalBucketId, $permissions, $fileSecurity);
@@ -224,8 +224,8 @@ class V18 extends Migration
                         // Nonetheless, there's nothing else we can do here.
                         break;
                     }
-                    $internalId = $user->getInternalId();
-                    $document->setAttribute('userId', $internalId);
+                    $sequence = $user->getSequence();
+                    $document->setAttribute('userId', $sequence);
                     $data = $document->getAttribute('data', []);
                     $data['userId'] = $user->getId();
                     $document->setAttribute('data', $data);
@@ -244,7 +244,7 @@ class V18 extends Migration
             /**
              * Create 'documentSecurity' column
              */
-            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}__metadata` ADD COLUMN IF NOT EXISTS documentSecurity TINYINT(1);")->execute();
+            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getSequence()}__metadata` ADD COLUMN IF NOT EXISTS documentSecurity TINYINT(1);")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }
@@ -253,7 +253,7 @@ class V18 extends Migration
             /**
              * Set 'documentSecurity' column to 1 if NULL
              */
-            $this->pdo->prepare("UPDATE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}__metadata` SET documentSecurity = 1 WHERE documentSecurity IS NULL")->execute();
+            $this->pdo->prepare("UPDATE `{$this->projectDB->getDatabase()}`.`_{$this->project->getSequence()}__metadata` SET documentSecurity = 1 WHERE documentSecurity IS NULL")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }

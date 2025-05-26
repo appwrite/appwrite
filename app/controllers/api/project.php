@@ -149,7 +149,7 @@ App::get('/v1/project/usage')
         $executionsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
+            $metric = str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -165,7 +165,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -181,7 +181,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -197,7 +197,7 @@ App::get('/v1/project/usage')
         $bucketsBreakdown = array_map(function ($bucket) use ($dbForProject) {
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
+            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -213,7 +213,7 @@ App::get('/v1/project/usage')
         $databasesStorageBreakdown = array_map(function ($database) use ($dbForProject) {
             $id = $database->getId();
             $name = $database->getAttribute('name');
-            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
+            $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_STORAGE);
 
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
@@ -230,13 +230,13 @@ App::get('/v1/project/usage')
         $functionsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
+            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getSequence()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
             $deploymentValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$deploymentMetric]),
                 Query::equal('period', ['inf'])
             ]);
 
-            $buildMetric = str_replace(['{functionInternalId}'], [$function->getInternalId()], METRIC_FUNCTION_ID_BUILDS_STORAGE);
+            $buildMetric = str_replace(['{functionInternalId}'], [$function->getSequence()], METRIC_FUNCTION_ID_BUILDS_STORAGE);
             $buildValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$buildMetric]),
                 Query::equal('period', ['inf'])
@@ -254,7 +254,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -270,7 +270,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])

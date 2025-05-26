@@ -41,7 +41,7 @@ class Migrate extends Action
         try {
             $iterator = null;
             do {
-                $pattern = "default-cache-_{$project->getInternalId()}:*";
+                $pattern = "default-cache-_{$project->getSequence()}:*";
                 $keys = $this->redis->scan($iterator, $pattern, 1000);
                 if ($keys !== false) {
                     foreach ($keys as $key) {
@@ -104,7 +104,7 @@ class Migrate extends Action
                 /**
                  * Skip user projects with id 'console'
                  */
-                if ($project->getId() === 'console' && $project->getInternalId() !== 'console') {
+                if ($project->getId() === 'console' && $project->getSequence() !== 'console') {
                     continue;
                 }
 

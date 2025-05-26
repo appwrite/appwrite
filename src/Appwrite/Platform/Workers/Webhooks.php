@@ -172,7 +172,7 @@ class Webhooks extends Action
             $this->errors[] = $logs;
             $queueForStatsUsage
                 ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getInternalId(), METRIC_WEBHOOK_ID_FAILED), 1)
+                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_FAILED), 1)
             ;
 
 
@@ -182,7 +182,7 @@ class Webhooks extends Action
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
             $queueForStatsUsage
                 ->addMetric(METRIC_WEBHOOKS_SENT, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getInternalId(), METRIC_WEBHOOK_ID_SENT), 1)
+                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_SENT), 1)
             ;
         }
 

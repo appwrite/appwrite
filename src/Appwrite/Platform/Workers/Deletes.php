@@ -33,7 +33,7 @@ use Utopia\System\System;
 
 class Deletes extends Action
 {
-    protected array $selects = ['$internalId', '$id', '$collection', '$permissions', '$updatedAt'];
+    protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
 
     public static function getName(): string
     {
@@ -257,7 +257,7 @@ class Deletes extends Action
         $this->deleteByGroup(
             'subscribers',
             [
-                Query::equal('topicInternalId', [$topic->getInternalId()]),
+                Query::equal('topicInternalId', [$topic->getSequence()]),
                 Query::orderAsc(),
             ],
             $getProjectDB($project)
@@ -278,7 +278,7 @@ class Deletes extends Action
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
-        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getInternalId()]));
+        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
     /**
@@ -414,7 +414,7 @@ class Deletes extends Action
     public function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
-        $teamInternalId = $document->getInternalId();
+        $teamInternalId = $document->getSequence();
 
         // Delete Memberships
         $this->deleteByGroup(
@@ -446,7 +446,7 @@ class Deletes extends Action
     {
 
         $projects = $dbForPlatform->find('projects', [
-            Query::equal('teamInternalId', [$document->getInternalId()]),
+            Query::equal('teamInternalId', [$document->getSequence()]),
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
         ]);
 
@@ -476,7 +476,7 @@ class Deletes extends Action
      */
     private function deleteProject(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
     {
-        $projectInternalId = $document->getInternalId();
+        $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
 
         try {
@@ -615,7 +615,7 @@ class Deletes extends Action
     private function deleteUser(callable $getProjectDB, Document $document, Document $project): void
     {
         $userId = $document->getId();
-        $userInternalId = $document->getInternalId();
+        $userInternalId = $document->getSequence();
         $dbForProject = $getProjectDB($project);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
@@ -749,14 +749,14 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $functionId = $document->getId();
-        $functionInternalId = $document->getInternalId();
+        $functionInternalId = $document->getSequence();
 
         /**
          * Delete rules
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['function']),
             Query::orderAsc()
@@ -784,7 +784,7 @@ class Deletes extends Action
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
-            $deploymentInternalIds[] = $document->getInternalId();
+            $deploymentInternalIds[] = $document->getSequence();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
         });
 
@@ -817,7 +817,7 @@ class Deletes extends Action
          */
         Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
         $this->deleteByGroup('repositories', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['function']),
             Query::orderAsc()
@@ -916,7 +916,7 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $deploymentId = $document->getId();
-        $deploymentInternalId = $document->getInternalId();
+        $deploymentInternalId = $document->getSequence();
 
         /**
          * Delete deployment files
@@ -1052,7 +1052,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
 
-        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
+        $dbForProject->deleteCollection('bucket_' . $document->getSequence());
 
         $deviceForFiles->deletePath($document->getId());
     }
@@ -1070,7 +1070,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $this->listByGroup('functions', [
-            Query::equal('installationInternalId', [$document->getInternalId()])
+            Query::equal('installationInternalId', [$document->getSequence()])
         ], $dbForProject, function ($function) use ($dbForProject, $dbForPlatform) {
             $dbForPlatform->deleteDocument('repositories', $function->getAttribute('repositoryId'));
 
@@ -1101,7 +1101,7 @@ class Deletes extends Action
             $this->listByGroup(
                 'deployments',
                 [
-                    Query::equal('resourceInternalId', [$function->getInternalId()]),
+                    Query::equal('resourceInternalId', [$function->getSequence()]),
                     Query::equal('resourceType', ['functions']),
                 ],
                 $getProjectDB($project),

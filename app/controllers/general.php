@@ -268,9 +268,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => [],
-            'functionInternalId' => $function->getInternalId(),
+            'functionInternalId' => $function->getSequence(),
             'functionId' => $function->getId(),
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' =>  'processing', // waiting / processing / completed / failed
@@ -446,11 +446,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
             ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
             ->addMetric(METRIC_EXECUTIONS, 1)
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+            ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
             ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+            ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger()
         ;
@@ -604,7 +604,7 @@ App::init()
                             'resourceType' => 'api',
                             'status' => 'verifying',
                             'projectId' => $console->getId(),
-                            'projectInternalId' => $console->getInternalId(),
+                            'projectInternalId' => $console->getSequence(),
                             'owner' => $owner,
                             'region' => $console->getAttribute('region')
                         ]);

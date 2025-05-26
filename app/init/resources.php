@@ -346,13 +346,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getInternalId())
+            ->setTenant($project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
             ->setSharedTables(false)
             ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
+            ->setNamespace('_' . $project->getSequence());
     }
 
     return $database;
@@ -399,13 +399,13 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
         });
 
@@ -429,7 +429,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
     return function (?Document $project = null) use ($pools, $cache, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
@@ -444,7 +444,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
@@ -791,7 +791,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
 
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
         return $dbForPlatform->findOne('teams', [
-            Query::equal('$internalId', [$teamInternalId]),
+            Query::equal('$sequence', [$teamInternalId]),
         ]);
     });
 

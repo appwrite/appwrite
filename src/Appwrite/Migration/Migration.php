@@ -164,7 +164,7 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        $internalProjectId = $this->project->getInternalId();
+        $internalProjectId = $this->project->getSequence();
 
         $collections = match ($internalProjectId) {
             'console' => $this->collections['console'],
@@ -256,7 +256,7 @@ abstract class Migration
     {
         $name ??= $id;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -312,7 +312,7 @@ abstract class Migration
     {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -370,7 +370,7 @@ abstract class Migration
     {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -415,7 +415,7 @@ abstract class Migration
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getSequence()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();

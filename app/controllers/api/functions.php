@@ -109,13 +109,13 @@ $redeployVcs = function (Request $request, Document $function, Document $project
             Permission::delete(Role::any()),
         ],
         'resourceId' => $function->getId(),
-        'resourceInternalId' => $function->getInternalId(),
+        'resourceInternalId' => $function->getSequence(),
         'resourceType' => 'functions',
         'entrypoint' => $entrypoint,
         'commands' => $function->getAttribute('commands', ''),
         'type' => 'vcs',
         'installationId' => $installation->getId(),
-        'installationInternalId' => $installation->getInternalId(),
+        'installationInternalId' => $installation->getSequence(),
         'providerRepositoryId' => $providerRepositoryId,
         'repositoryId' => $function->getAttribute('repositoryId', ''),
         'repositoryInternalId' => $function->getAttribute('repositoryInternalId', ''),
@@ -285,7 +285,7 @@ App::post('/v1/functions')
             'search' => implode(' ', [$functionId, $name, $runtime]),
             'version' => 'v4',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => '',
             'repositoryInternalId' => '',
@@ -300,7 +300,7 @@ App::post('/v1/functions')
                 'region' => $project->getAttribute('region'),
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule'  => $function->getAttribute('schedule'),
@@ -309,7 +309,7 @@ App::post('/v1/functions')
         );
 
         $function->setAttribute('scheduleId', $schedule->getId());
-        $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
+        $function->setAttribute('scheduleInternalId', $schedule->getSequence());
 
         // Git connect logic
         if (!empty($providerRepositoryId)) {
@@ -325,18 +325,18 @@ App::post('/v1/functions')
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
 
             $function->setAttribute('repositoryId', $repository->getId());
-            $function->setAttribute('repositoryInternalId', $repository->getInternalId());
+            $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -355,7 +355,7 @@ App::post('/v1/functions')
                     Permission::delete(Role::any()),
                 ],
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'functions',
                 'entrypoint' => $function->getAttribute('entrypoint', ''),
                 'commands' => $function->getAttribute('commands', ''),
@@ -382,11 +382,11 @@ App::post('/v1/functions')
                 fn () => $dbForPlatform->createDocument('rules', new Document([
                     '$id' => $ruleId,
                     'projectId' => $project->getId(),
-                    'projectInternalId' => $project->getInternalId(),
+                    'projectInternalId' => $project->getSequence(),
                     'domain' => $domain,
                     'resourceType' => 'function',
                     'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'status' => 'verified',
                     'certificateId' => '',
                     'owner' => 'Appwrite',
@@ -650,15 +650,15 @@ App::get('/v1/functions/:functionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS)
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getSequence()], METRIC_FUNCTION_ID_DEPLOYMENTS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getSequence()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
+            str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS),
+            str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_STORAGE),
+            str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
+            str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS),
+            str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
+            str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS),
+            str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -928,8 +928,8 @@ App::put('/v1/functions/:functionId')
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForPlatform->find('repositories', [
-                Query::equal('projectInternalId', [$project->getInternalId()]),
-                Query::equal('resourceInternalId', [$function->getInternalId()]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', ['function']),
                 Query::limit(100),
             ]);
@@ -961,18 +961,18 @@ App::put('/v1/functions/:functionId')
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
 
             $repositoryId = $repository->getId();
-            $repositoryInternalId = $repository->getInternalId();
+            $repositoryInternalId = $repository->getSequence();
         }
 
         $live = true;
@@ -1015,7 +1015,7 @@ App::put('/v1/functions/:functionId')
             'commands' => $commands,
             'scopes' => $scopes,
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $repositoryId,
             'repositoryInternalId' => $repositoryInternalId,
@@ -1188,7 +1188,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deployment' => $deployment->getId(),
         ])));
 
@@ -1427,7 +1427,7 @@ App::post('/v1/functions/:functionId/deployments')
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'buildInternalId' => '',
@@ -1458,7 +1458,7 @@ App::post('/v1/functions/:functionId/deployments')
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'buildInternalId' => '',
@@ -1531,7 +1531,7 @@ App::get('/v1/functions/:functionId/deployments')
         }
 
         // Set resource queries
-        $queries[] = Query::equal('resourceInternalId', [$function->getInternalId()]);
+        $queries[] = Query::equal('resourceInternalId', [$function->getSequence()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
         /**
@@ -1759,9 +1759,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
         $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
         $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
-        $deployment->removeAttribute('$internalId');
+        $deployment->removeAttribute('$sequence');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$internalId' => '',
+            '$sequence' => '',
             '$id' => $deploymentId,
             'buildId' => '',
             'buildInternalId' => '',
@@ -1831,7 +1831,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => DateTime::now(),
-                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentInternalId' => $deployment->getSequence(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'canceled',
                 'path' => '',
@@ -1844,7 +1844,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             ]));
 
             $deployment->setAttribute('buildId', $build->getId());
-            $deployment->setAttribute('buildInternalId', $build->getInternalId());
+            $deployment->setAttribute('buildInternalId', $build->getSequence());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
@@ -2061,9 +2061,9 @@ App::post('/v1/functions/:functionId/executions')
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
-            'functionInternalId' => $function->getInternalId(),
+            'functionInternalId' => $function->getSequence(),
             'functionId' => $function->getId(),
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'trigger' => (!is_null($scheduledAt)) ? 'schedule' : 'http',
             'status' => $status, // waiting / processing / completed / failed / scheduled
@@ -2113,7 +2113,7 @@ App::post('/v1/functions/:functionId/executions')
                     'region' => $project->getAttribute('region'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
-                    'resourceInternalId' => $execution->getInternalId(),
+                    'resourceInternalId' => $execution->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
@@ -2123,7 +2123,7 @@ App::post('/v1/functions/:functionId/executions')
 
                 $execution = $execution
                     ->setAttribute('scheduleId', $schedule->getId())
-                    ->setAttribute('scheduleInternalId', $schedule->getInternalId())
+                    ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
@@ -2246,11 +2246,11 @@ App::post('/v1/functions/:functionId/executions')
         } finally {
             $queueForStatsUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
                 ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
             ;
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
@@ -2533,7 +2533,7 @@ App::post('/v1/functions/:functionId/variables')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'resourceInternalId' => $function->getInternalId(),
+            'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'function',
             'key' => $key,
@@ -2635,7 +2635,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         if (
             $variable === false ||
             $variable->isEmpty() ||
-            $variable->getAttribute('resourceInternalId') !== $function->getInternalId() ||
+            $variable->getAttribute('resourceInternalId') !== $function->getSequence() ||
             $variable->getAttribute('resourceType') !== 'function'
         ) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
@@ -2684,7 +2684,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getSequence() || $variable->getAttribute('resourceType') !== 'function') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
@@ -2750,7 +2750,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getSequence() || $variable->getAttribute('resourceType') !== 'function') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

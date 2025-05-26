@@ -674,7 +674,6 @@ class DatabasesCustomServerTest extends Scope
         /**
          * Test for creating encrypted attributes
          */
-
         $attributesPath = '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes';
 
         $firstName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([

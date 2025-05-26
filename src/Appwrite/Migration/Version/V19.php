@@ -28,7 +28,7 @@ class V19 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+        $this->projectDB->setNamespace("_{$this->project->getSequence()}");
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -100,7 +100,7 @@ class V19 extends Migration
     protected function migrateBuckets(): void
     {
         foreach ($this->documentsIterator('buckets') as $bucket) {
-            $id = "bucket_{$bucket->getInternalId()}";
+            $id = "bucket_{$bucket->getSequence()}";
             Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             try {
@@ -121,7 +121,7 @@ class V19 extends Migration
      */
     private function migrateCollections(): void
     {
-        $internalProjectId = $this->project->getInternalId();
+        $internalProjectId = $this->project->getSequence();
         $collectionType = match ($internalProjectId) {
             'console' => 'console',
             default => 'projects',
@@ -680,7 +680,7 @@ class V19 extends Migration
             case 'builds':
                 $deploymentId = $document->getAttribute('deploymentId');
                 $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
-                $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $document->setAttribute('deploymentInternalId', $deployment->getSequence());
 
                 $stdout = $document->getAttribute('stdout', '');
                 $stderr = $document->getAttribute('stderr', '');
@@ -692,12 +692,12 @@ class V19 extends Migration
             case 'deployments':
                 $resourceId = $document->getAttribute('resourceId');
                 $function = $this->projectDB->getDocument('functions', $resourceId);
-                $document->setAttribute('resourceInternalId', $function->getInternalId());
+                $document->setAttribute('resourceInternalId', $function->getSequence());
 
                 $buildId = $document->getAttribute('buildId');
                 if (!empty($buildId)) {
                     $build = $this->projectDB->getDocument('builds', $buildId);
-                    $document->setAttribute('buildInternalId', $build->getInternalId());
+                    $document->setAttribute('buildInternalId', $build->getSequence());
                 }
 
                 $commands = $this->getFunctionCommands($function);
@@ -707,11 +707,11 @@ class V19 extends Migration
             case 'executions':
                 $functionId = $document->getAttribute('functionId');
                 $function = $this->projectDB->getDocument('functions', $functionId);
-                $document->setAttribute('functionInternalId', $function->getInternalId());
+                $document->setAttribute('functionInternalId', $function->getSequence());
 
                 $deploymentId = $document->getAttribute('deploymentId');
                 $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
-                $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $document->setAttribute('deploymentInternalId', $deployment->getSequence());
                 break;
             case 'functions':
                 $document->setAttribute('live', $document->getAttribute('live', true));
@@ -721,7 +721,7 @@ class V19 extends Migration
 
                 if (!empty($deploymentId)) {
                     $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
-                    $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                    $document->setAttribute('deploymentInternalId', $deployment->getSequence());
                     $document->setAttribute('entrypoint', $deployment->getAttribute('entrypoint'));
                 }
 
@@ -733,7 +733,7 @@ class V19 extends Migration
                         'region' => $project->getAttribute('region'),
                         'resourceType' => 'function',
                         'resourceId' => $document->getId(),
-                        'resourceInternalId' => $document->getInternalId(),
+                        'resourceInternalId' => $document->getSequence(),
                         'resourceUpdatedAt' => DateTime::now(),
                         'projectId' => $this->project->getId(),
                         'schedule'  => $document->getAttribute('schedule'),
@@ -741,7 +741,7 @@ class V19 extends Migration
                     ]));
 
                     $document->setAttribute('scheduleId', $schedule->getId());
-                    $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
+                    $document->setAttribute('scheduleInternalId', $schedule->getSequence());
                 }
 
                 break;
@@ -799,7 +799,7 @@ class V19 extends Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        $internalProjectId = $this->project->getInternalId();
+        $internalProjectId = $this->project->getSequence();
 
         $collections = match ($internalProjectId) {
             'console' => $this->collections['console'],

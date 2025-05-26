@@ -576,9 +576,9 @@ App::init()
                     $fileId = $parts[1] ?? null;
 
                     if ($fileSecurity && !$valid) {
-                        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                        $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                     } else {
-                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                     }
 
                     if ($file->isEmpty()) {
