@@ -26,7 +26,7 @@
 
 [**Appwrite 云公开测试版！立即注册！**](https://cloud.appwrite.io)
 
-Appwrite 是一个基于 Docker 的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面简化了从零开始编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
+Appwrite 是一个基于 Docker 的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，原生应用，以及后端。它既包含后端服务器，也提供了用于部署静态和服务器端渲染前端的完全集成托管解决方案。Appwrite 通过视觉化界面简化了从零开始构建现代应用的复杂性和重复性，让您能够更快地构建安全的全栈应用。
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
 
@@ -179,6 +179,8 @@ docker run -it --rm `
 - [**消息传递**](https://appwrite.io/docs/references/cloud/client-web/messaging) - 使用 Appwrite 消息传递功能通过推送通知、电子邮件和短信与用户进行通信。
 - [**语言适配**](https://appwrite.io/docs/references/cloud/client-web/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
 - [**头像**](https://appwrite.io/docs/references/cloud/client-web/avatars) -管理用户头像、国家旗帜、浏览器图标、信用卡符号，和生成二维码。
+- [**MCP**](https://appwrite.io/docs/tooling/mcp) - 使用 Appwrite 的模型上下文协议（Model Context Protocol）服务器，允许大语言模型（LLM）和 AI 工具（如 Claude Desktop、Cursor 和 Windsurf Editor）通过自然语言直接与您的 Appwrite 项目交互。
+- [**站点**](https://appwrite.io/docs/products/sites) - 直接从 Appwrite 开发、部署和扩展您的 Web 应用程序，与您的后端一起。
   如需完整的 API 界面文档，请访问 [https://appwrite.io/docs](https://appwrite.io/docs)。如需更多教程、新闻和公告，请订阅我们的 [博客](https://medium.com/appwrite-io) 和 加入我们的[Discord 社区](https://discord.gg/GSeTUeA)。
 
 ### 开发套件
