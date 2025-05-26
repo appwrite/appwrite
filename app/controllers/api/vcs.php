@@ -324,7 +324,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS commit preview
                 if (!empty($providerCommitHash)) {
-                    $domain = "commit-{$providerCommitHash}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $domain = "commit-{$providerCommitHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
                         Authorization::skip(
