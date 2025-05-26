@@ -718,7 +718,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
-        
+
         $this->assertTrue($response['body']['encrypt']);
 
         /**
