@@ -476,6 +476,7 @@ class Deletes extends Action
      */
     protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
     {
+        var_dump('******Deleting in base class ******');
         $projectInternalId = $document->getInternalId();
         $projectId = $document->getId();
 
