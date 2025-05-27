@@ -53,7 +53,7 @@ abstract class ScheduleBase extends Action
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
         if (!$project->isEmpty() && $project->getId() !== 'console') {
-            $accessedAt = $project->getAttribute('accessedAt', '');
+            $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));

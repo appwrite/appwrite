@@ -2,6 +2,7 @@
 
 use Utopia\Config\Config;
 
+Config::load('template-runtimes', __DIR__ . '/../config/template-runtimes.php');
 Config::load('events', __DIR__ . '/../config/events.php');
 Config::load('auth', __DIR__ . '/../config/auth.php');
 Config::load('apis', __DIR__ . '/../config/apis.php');  // List of APIs
@@ -10,6 +11,7 @@ Config::load('oAuthProviders', __DIR__ . '/../config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/../config/platforms.php');
 Config::load('console', __DIR__ . '/../config/console.php');
 Config::load('collections', __DIR__ . '/../config/collections.php');
+Config::load('frameworks', __DIR__ . '/../config/frameworks.php');
 Config::load('runtimes', __DIR__ . '/../config/runtimes.php');
 Config::load('runtimes-v2', __DIR__ . '/../config/runtimes-v2.php');
 Config::load('usage', __DIR__ . '/../config/usage.php');
@@ -33,5 +35,6 @@ Config::load('storage-logos', __DIR__ . '/../config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/../config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/../config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/../config/storage/outputs.php');
-Config::load('runtime-specifications', __DIR__ . '/../config/runtimes/specifications.php');
-Config::load('function-templates', __DIR__ . '/../config/function-templates.php');
+Config::load('specifications', __DIR__ . '/../config/specifications.php');
+Config::load('templates-function', __DIR__ . '/../config/templates/function.php');
+Config::load('templates-site', __DIR__ . '/../config/templates/site.php');

@@ -36,7 +36,7 @@ class V20 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->projectDB->setNamespace("_{$this->project->getSequence()}");
+        $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -94,19 +94,19 @@ class V20 extends Migration
                 ) {
                     if (\in_array($attribute->getAttribute('key'), $index->getAttribute('attributes'))) {
                         try {
-                            $this->projectDB->deleteIndex($collectionId, $index->getAttribute('key'));
+                            $this->dbForProject->deleteIndex($collectionId, $index->getAttribute('key'));
                         } catch (Throwable $th) {
                             Console::warning("Failed to delete index: {$th->getMessage()}");
                         }
                         try {
-                            $this->projectDB->deleteDocument('indexes', $index->getId());
+                            $this->dbForProject->deleteDocument('indexes', $index->getId());
                         } catch (Throwable $th) {
                             Console::warning("Failed to remove index: {$th->getMessage()}");
                         }
                     }
                 }
 
-                $this->projectDB->updateAttribute($collectionId, $attribute['key'], $attribute['type']);
+                $this->dbForProject->updateAttribute($collectionId, $attribute['key'], $attribute['type']);
             }
         }
 
@@ -116,19 +116,19 @@ class V20 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_$internalProjectId");
+            $this->dbForProject->setNamespace("_$internalProjectId");
 
             // Support database array type migration
             foreach ($collection['attributes'] ?? [] as $attribute) {
                 if ($attribute['array'] === true) {
                     foreach ($collection['indexes'] ?? [] as $index) {
                         if (\in_array($attribute['$id'], $index['attributes'])) {
-                            $this->projectDB->deleteIndex($id, $index['$id']);
+                            $this->dbForProject->deleteIndex($id, $index['$id']);
                         }
                     }
 
                     try {
-                        $this->projectDB->updateAttribute($id, $attribute['$id'], $attribute['type']);
+                        $this->dbForProject->updateAttribute($id, $attribute['$id'], $attribute['type']);
                     } catch (Throwable $th) {
                         Console::warning("'{$attribute['$id']}' from {$id}: {$th->getMessage()}");
                     }
@@ -151,19 +151,19 @@ class V20 extends Migration
 
                     // Create resourceType attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceType');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'resourceType');
                     } catch (Throwable $th) {
                         Console::warning("'resourceType' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create mimeType attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'mimeType');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'mimeType');
                     } catch (Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
                     try {
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
                     }
@@ -174,11 +174,11 @@ class V20 extends Migration
                         /**
                          * Delete 'type' attribute
                          */
-                        $this->projectDB->deleteAttribute($id, 'type');
+                        $this->dbForProject->deleteAttribute($id, 'type');
                         /**
                          * Alter `signed`  internal type on `value` attr
                          */
-                        $this->projectDB->updateAttribute(collection: $id, id: 'value', signed: true);
+                        $this->dbForProject->updateAttribute(collection: $id, id: 'value', signed: true);
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
@@ -187,13 +187,13 @@ class V20 extends Migration
                         /**
                          * Ensure 'time' attribute is not required
                          */
-                        $this->projectDB->updateAttribute($id, 'time', required: false);
+                        $this->dbForProject->updateAttribute($id, 'time', required: false);
                     } catch (Throwable $th) {
                         Console::warning("'time' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
                     }
@@ -202,13 +202,13 @@ class V20 extends Migration
                     $index = '_key_metric_period_time';
 
                     try {
-                        $this->projectDB->deleteIndex($id, $index);
+                        $this->dbForProject->deleteIndex($id, $index);
                     } catch (\Throwable $th) {
                         Console::warning("'$index' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createIndexFromCollection($this->projectDB, $id, $index);
+                        $this->createIndexFromCollection($this->dbForProject, $id, $index);
                     } catch (\Throwable $th) {
                         Console::warning("'$index' from {$id}: {$th->getMessage()}");
                     }
@@ -217,27 +217,27 @@ class V20 extends Migration
                 case 'sessions':
                     // Create expire attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'expire');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'expire');
                     } catch (Throwable $th) {
                         Console::warning("'expire' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create factors attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'factors');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'factors');
                     } catch (Throwable $th) {
                         Console::warning("'factors' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create mfaRecoveryCodes attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'mfaUpdatedAt');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'mfaUpdatedAt');
                     } catch (Throwable $th) {
                         Console::warning("'mfaUpdatedAt' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
                     }
@@ -246,41 +246,41 @@ class V20 extends Migration
                 case 'users':
                     // Create targets attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'targets');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'targets');
                     } catch (Throwable $th) {
                         Console::warning("'targets' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create mfa attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'mfa');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'mfa');
                     } catch (Throwable $th) {
                         Console::warning("'mfa' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create mfaRecoveryCodes attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'mfaRecoveryCodes');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'mfaRecoveryCodes');
                     } catch (Throwable $th) {
                         Console::warning("'mfaRecoveryCodes' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create challenges attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'challenges');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'challenges');
                     } catch (Throwable $th) {
                         Console::warning("'challenges' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create authenticators attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'authenticators');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'authenticators');
                     } catch (Throwable $th) {
                         Console::warning("'authenticators' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
                     }
@@ -289,20 +289,20 @@ class V20 extends Migration
                 case 'projects':
                     // Rename providers authProviders to oAuthProviders
                     try {
-                        $this->projectDB->renameAttribute($id, 'authProviders', 'oAuthProviders');
+                        $this->dbForProject->renameAttribute($id, 'authProviders', 'oAuthProviders');
                     } catch (Throwable $th) {
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create apis attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'apis');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'apis');
                     } catch (Throwable $th) {
                         Console::warning("'apis' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
                     }
@@ -311,27 +311,27 @@ class V20 extends Migration
                 case 'webhooks':
                     // Create enabled attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'enabled');
                     } catch (Throwable $th) {
                         Console::warning("'enabled' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create logs attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'logs');
                     } catch (Throwable $th) {
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create attempts attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'attempts');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'attempts');
                     } catch (Throwable $th) {
                         Console::warning("'attempts' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
                     }
@@ -339,25 +339,25 @@ class V20 extends Migration
                     break;
                 case 'topics':
                     try {
-                        $this->projectDB->updateAttributeDefault($id, 'emailTotal', 0);
+                        $this->dbForProject->updateAttributeDefault($id, 'emailTotal', 0);
                     } catch (Throwable $th) {
                         Console::warning("'topics' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->updateAttributeDefault($id, 'pushTotal', 0);
+                        $this->dbForProject->updateAttributeDefault($id, 'pushTotal', 0);
                     } catch (Throwable $th) {
                         Console::warning("'topics' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->updateAttributeDefault($id, 'smsTotal', 0);
+                        $this->dbForProject->updateAttributeDefault($id, 'smsTotal', 0);
                     } catch (Throwable $th) {
                         Console::warning("'topics' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
                     }
@@ -382,7 +382,7 @@ class V20 extends Migration
          */
         Console::info('Migrating Sessions metric');
 
-        $sessionsCreated = $this->projectDB->sum('stats', 'value', [
+        $sessionsCreated = $this->dbForProject->sum('stats', 'value', [
             Query::equal('metric', [
                 'sessions.email-password.requests.create',
                 'sessions.magic-url.requests.create',
@@ -394,7 +394,7 @@ class V20 extends Migration
             Query::equal('period', ['1d']),
         ]);
 
-        $query = $this->projectDB->findOne('stats', [
+        $query = $this->dbForProject->findOne('stats', [
             Query::equal('metric', ['sessions.$all.requests.delete']),
             Query::equal('period', ['1d']),
         ]);
@@ -420,7 +420,7 @@ class V20 extends Migration
              */
             Console::log("Creating inf metric to {$metric}");
             $id = \md5("_inf_{$metric}");
-            $this->projectDB->createDocument('stats', new Document([
+            $this->dbForProject->createDocument('stats', new Document([
                 '$id' => $id,
                 'metric' => $metric,
                 'period' => 'inf',
@@ -448,7 +448,7 @@ class V20 extends Migration
             str_contains($from, '$all') ||
             str_contains($from, '.total')
         ) {
-            $query = $this->projectDB->sum('stats', 'value', [
+            $query = $this->dbForProject->sum('stats', 'value', [
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
             ]);
@@ -470,7 +470,7 @@ class V20 extends Migration
                 if ($latestDocument !== null) {
                     $paginationQueries[] = Query::cursorAfter($latestDocument);
                 }
-                $stats = $this->projectDB->find('stats', \array_merge($paginationQueries, [
+                $stats = $this->dbForProject->find('stats', \array_merge($paginationQueries, [
                     Query::equal('metric', [$from]),
                 ]));
 
@@ -479,10 +479,10 @@ class V20 extends Migration
                 foreach ($stats as $stat) {
                     $format = $stat['period'] === '1d' ? 'Y-m-d 00:00' : 'Y-m-d H:00';
                     $time = date($format, strtotime($stat['time']));
-                    $this->projectDB->deleteDocument('stats', $stat->getId());
+                    $this->dbForProject->deleteDocument('stats', $stat->getId());
                     $stat->setAttribute('$id', \md5("{$time}_{$stat['period']}_{$to}"));
                     $stat->setAttribute('metric', $to);
-                    $this->projectDB->createDocument('stats', $stat);
+                    $this->dbForProject->createDocument('stats', $stat);
                     Console::log("deleting metric {$from} and creating {$to}");
                 }
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
@@ -610,7 +610,7 @@ class V20 extends Migration
                         'identifier' => $document->getAttribute('email'),
                     ]);
                     try {
-                        $this->projectDB->createDocument('targets', $target);
+                        $this->dbForProject->createDocument('targets', $target);
                     } catch (Duplicate $th) {
                         Console::warning("Email target for user {$document->getId()} already exists.");
                     }
@@ -625,7 +625,7 @@ class V20 extends Migration
                         'identifier' => $document->getAttribute('phone'),
                     ]);
                     try {
-                        $this->projectDB->createDocument('targets', $target);
+                        $this->dbForProject->createDocument('targets', $target);
                     } catch (Duplicate $th) {
                         Console::warning("Email target for user {$document->getId()} already exists.");
                     }

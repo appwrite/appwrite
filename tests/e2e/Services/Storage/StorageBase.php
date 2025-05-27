@@ -13,6 +13,9 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
 {
+    /**
+     * @group fileTokens
+     */
     public function testCreateBucketFile(): array
     {
         /**
