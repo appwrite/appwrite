@@ -115,7 +115,7 @@ class Update extends Base
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
-            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
         });
 
         $queueForEvents

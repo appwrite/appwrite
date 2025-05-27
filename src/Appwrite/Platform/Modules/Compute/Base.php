@@ -251,7 +251,7 @@ class Base extends Action
                 $queries[] = Query::cursorAfter($cursor);
             }
 
-            $results = $database->find('rules', $queries);
+            $results = Authorization::skip(fn () => $database->find('rules', $queries));
 
             $total = \count($results);
             if ($total > 0) {
