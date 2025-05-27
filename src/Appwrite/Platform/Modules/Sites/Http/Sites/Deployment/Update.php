@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Modules\Sites\Http\Sites\Deployment;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -101,14 +101,15 @@ class Update extends Base
             Query::equal("deploymentResourceType", ["site"]),
             Query::equal("deploymentResourceInternalId", [$site->getInternalId()]),
             Query::equal("deploymentVcsProviderBranch", [""]),
+            Query::equal("projectInternalId", [$project->getInternalId()])
         ];
 
-        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+        Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
             Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
-        });
+        }, $queries));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())
