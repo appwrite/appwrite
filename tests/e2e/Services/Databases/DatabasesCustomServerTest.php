@@ -641,10 +641,10 @@ class DatabasesCustomServerTest extends Scope
 
     /**
      * @depends testListCollections
+     * @group cl-ignore
      */
     public function testCreateEncryptedAttribute(array $data): void
     {
-
         $databaseId = $data['databaseId'];
 
         /**
@@ -674,7 +674,6 @@ class DatabasesCustomServerTest extends Scope
         /**
          * Test for creating encrypted attributes
          */
-
         $attributesPath = '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes';
 
         $firstName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
@@ -687,6 +686,19 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
         ]);
 
+        // checking size test
+        $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'lastName',
+            'size' => 149,
+            'required' => true,
+            'encrypt' => true
+        ]);
+        $this->assertEquals("Size too small. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . " characters.", $lastName['body']['message']);
+
         $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -698,12 +710,15 @@ class DatabasesCustomServerTest extends Scope
             'encrypt' => true
         ]);
         $this->assertTrue($lastName['body']['encrypt']);
+
         sleep(1);
+
         $response = $this->client->call(Client::METHOD_GET, $attributesPath . '/lastName', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
+
         $this->assertTrue($response['body']['encrypt']);
 
         /**
