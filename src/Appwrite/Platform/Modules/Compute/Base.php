@@ -240,8 +240,10 @@ class Base extends Action
     {
         $limit = 100;
         $cursor = null;
-
+        
         do {
+            \var_dump("Project internal ID: " . $project->getInternalId());
+            
             $queries = \array_merge([
                 Query::limit($limit),
                 Query::equal("projectInternalId", [$project->getInternalId()])
@@ -251,9 +253,8 @@ class Base extends Action
                 $queries[] = Query::cursorAfter($cursor);
             }
 
-            \var_dump("Actual find");
+            \var_dump($queries);
             $results = Authorization::skip(fn () => $database->find('rules', $queries));
-            \var_dump($results);
 
             $total = \count($results);
             if ($total > 0) {
@@ -265,11 +266,8 @@ class Base extends Action
             }
 
             foreach ($results as $document) {
-                \var_dump("In foreach");
                 if (is_callable($callback)) {
-                    \var_dump("Callback start");
                     $callback($document);
-                    \var_dump("Callback end");
                 }
             }
         } while (!\is_null($cursor));
