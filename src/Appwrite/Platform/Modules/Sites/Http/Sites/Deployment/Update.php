@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -106,7 +107,7 @@ class Update extends Base
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
-            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
         });
 
         $queueForEvents
