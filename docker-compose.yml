@@ -87,7 +87,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
       - redis
       # - clamav
     entrypoint:
@@ -95,7 +95,6 @@ services:
       - -e
       - app/http.php
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
@@ -130,6 +129,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -261,10 +261,9 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
@@ -279,6 +278,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
@@ -295,9 +295,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -310,6 +309,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
@@ -325,10 +325,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
       - request-catcher
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -338,6 +337,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -355,7 +355,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -366,7 +366,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -379,6 +378,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -422,9 +422,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -437,6 +436,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
@@ -458,9 +458,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -475,6 +474,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
@@ -524,14 +524,13 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -550,6 +549,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
@@ -565,10 +565,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
       - openruntimes-executor
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -583,6 +582,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -612,7 +612,6 @@ services:
       - maildev
       # - smtp
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -647,7 +646,6 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -660,6 +658,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
@@ -702,9 +701,8 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -722,6 +720,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -740,7 +739,6 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -758,6 +756,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -781,9 +780,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -792,6 +790,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -813,9 +812,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -824,6 +822,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -845,9 +844,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -856,6 +854,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -876,10 +875,9 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -892,6 +890,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-scheduler-executions:
@@ -905,10 +904,9 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -921,6 +919,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
@@ -933,10 +932,9 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_ADAPTER:-mariadb}
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
-      - _APP_DB_ADAPTER
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -949,6 +947,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-assistant:
@@ -1054,7 +1053,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-      - ${_APP_DB_ADAPTER:-mariadb}_AUTO_UPGRADE=1
+      - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
 
   postgresql:
