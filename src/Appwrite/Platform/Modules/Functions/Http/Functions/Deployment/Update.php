@@ -111,12 +111,21 @@ class Update extends Base
             Query::equal("deploymentVcsProviderBranch", [""]),
         ];
 
+        \var_dump("About to set to deployment ID " . $deployment->getId());
+        \var_dump("Project ID: " . $project->getId());
+        \var_dump("Project internal ID: " . $project->getInternalId());
+        \var_dump("Function internal ID: " . $function->getInternalId());
+        
         $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+            \var_dump("Updating rule" . $rule->getId());
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
             Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+            \var_dump("Successfully updated " . $rule->getId());
         });
+        
+        \var_dump("Post update");
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

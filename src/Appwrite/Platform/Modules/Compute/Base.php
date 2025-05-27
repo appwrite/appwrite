@@ -251,7 +251,9 @@ class Base extends Action
                 $queries[] = Query::cursorAfter($cursor);
             }
 
+            \var_dump("Actual find");
             $results = Authorization::skip(fn () => $database->find('rules', $queries));
+            \var_dump($results);
 
             $total = \count($results);
             if ($total > 0) {
@@ -263,8 +265,11 @@ class Base extends Action
             }
 
             foreach ($results as $document) {
+                \var_dump("In foreach");
                 if (is_callable($callback)) {
+                    \var_dump("Callback start");
                     $callback($document);
+                    \var_dump("Callback end");
                 }
             }
         } while (!\is_null($cursor));
