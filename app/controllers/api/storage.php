@@ -1498,6 +1498,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             $contentType = $file->getAttribute('mimeType');
         }
 
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('X-Content-Type-Options', 'nosniff')
+            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage());
+
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeader('range');
@@ -1506,8 +1514,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
-            if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
-                $end = min(($start + APP_STORAGE_READ_BUFFER - 1), ($size - 1));
+            if ($end === null) {
+                $end = min(($start + 2000000 - 1), ($size - 1));
             }
 
             if ($unit != 'bytes' || $start >= $end || $end >= $size) {
@@ -1520,14 +1528,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
-
-        $response
-            ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
-            ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage());
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
