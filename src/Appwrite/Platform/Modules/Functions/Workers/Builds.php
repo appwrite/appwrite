@@ -1138,7 +1138,7 @@ class Builds extends Action
                         $branchPrefix .= substr(hash('sha256', $remainingChars), 0, 7);
                     }
                     $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
-                    $domain = "branch-{$branchPrefix}{$resourceProjectHash}.{$sitesDomain}";
+                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
 
                     try {
