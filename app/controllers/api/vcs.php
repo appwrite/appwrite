@@ -296,7 +296,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $branchPrefix = substr($providerBranch, 0, 16);
                     if (strlen($providerBranch) > 16) {
                         $remainingChars = substr($providerBranch, 16);
-                        $branchPrefix .= substr(hash('sha256', $remainingChars), 0, 7);
+                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
                     }
                     $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
                     $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
