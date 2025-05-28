@@ -3219,25 +3219,25 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     new Parameter('permissions', optional: true),
                 ]
             ),
-            // new Method(
-            //     namespace: 'databases',
-            //     group: 'documents',
-            //     name: 'createDocuments',
-            //     description: '/docs/references/databases/create-documents.md',
-            //     auth: [AuthType::KEY],
-            //     responses: [
-            //         new SDKResponse(
-            //             code: Response::STATUS_CODE_CREATED,
-            //             model: Response::MODEL_DOCUMENT_LIST,
-            //         )
-            //     ],
-            //     contentType: ContentType::JSON,
-            //     parameters: [
-            //         new Parameter('databaseId', optional: false),
-            //         new Parameter('collectionId', optional: false),
-            //         new Parameter('documents', optional: false),
-            //     ]
-            // )
+            new Method(
+                namespace: 'databases',
+                group: 'documents',
+                name: 'createDocuments',
+                description: '/docs/references/databases/create-documents.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DOCUMENT_LIST,
+                    )
+                ],
+                contentType: ContentType::JSON,
+                parameters: [
+                    new Parameter('databaseId', optional: false),
+                    new Parameter('collectionId', optional: false),
+                    new Parameter('documents', optional: false),
+                ]
+            )
         ]
     )
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -4581,7 +4581,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', true, ['plan'])
+    ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')

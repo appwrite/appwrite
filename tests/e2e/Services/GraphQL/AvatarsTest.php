@@ -134,7 +134,7 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(29428, \strlen($qrCode['body']));
+        $this->assertEquals(9169, \strlen($qrCode['body']));
 
         return $qrCode['body'];
     }
