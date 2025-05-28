@@ -1132,7 +1132,13 @@ class Builds extends Action
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
                     $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                    $domain = "branch-{$branchName}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $branchPrefix = substr($branchName, 0, 16);
+                    if (strlen($branchName) > 16) {
+                        $remainingChars = substr($branchName, 16);
+                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+                    }
+                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
+                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
 
                     try {

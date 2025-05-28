@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.19.0",
+            "version": "0.19.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "8d21483efc19b9d977e323188989ee67a188464b"
+                "reference": "7bd0cc3cb97de625d7b07230bd91b121f88e72ae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/8d21483efc19b9d977e323188989ee67a188464b",
-                "reference": "8d21483efc19b9d977e323188989ee67a188464b",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/7bd0cc3cb97de625d7b07230bd91b121f88e72ae",
+                "reference": "7bd0cc3cb97de625d7b07230bd91b121f88e72ae",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.19.0"
+                "source": "https://github.com/appwrite/runtimes/tree/0.19.1"
             },
-            "time": "2025-03-25T22:37:51+00:00"
+            "time": "2025-05-27T07:12:56+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -4378,16 +4378,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.12",
+            "version": "0.18.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "9a2556c39b5f4d9f8e79111fd34ec889b7bb1e97"
+                "reference": "3d8ce53ae042173bf230445e996056c5f65ded22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/9a2556c39b5f4d9f8e79111fd34ec889b7bb1e97",
-                "reference": "9a2556c39b5f4d9f8e79111fd34ec889b7bb1e97",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/3d8ce53ae042173bf230445e996056c5f65ded22",
+                "reference": "3d8ce53ae042173bf230445e996056c5f65ded22",
                 "shasum": ""
             },
             "require": {
@@ -4430,9 +4430,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.12"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.13"
             },
-            "time": "2025-05-15T07:55:58+00:00"
+            "time": "2025-05-26T13:10:35+00:00"
         },
         {
             "name": "utopia-php/swoole",
