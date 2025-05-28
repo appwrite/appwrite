@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.7.3",
+        "version": "1.7.4",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -7820,13 +7820,16 @@
                                 "documents": {
                                     "type": "array",
                                     "description": "Array of document data as JSON objects. May contain partial documents.",
-                                    "default": [],
+                                    "default": null,
                                     "x-example": null,
                                     "items": {
                                         "type": "object"
                                     }
                                 }
-                            }
+                            },
+                            "required": [
+                                "documents"
+                            ]
                         }
                     }
                 ]
@@ -26850,12 +26853,6 @@
                     "type": "string",
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": "default",
-                    "x-nullable": true
-                },
-                "encrypt": {
-                    "type": "boolean",
-                    "description": "Defines whether this attribute is encrypted or not.",
-                    "x-example": false,
                     "x-nullable": true
                 }
             },
