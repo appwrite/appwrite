@@ -4,27 +4,27 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a4b3f30b815230a17c33310f62ffb18d",
+    "content-hash": "de0a0fb794f826fcc412c788185b69f4",
     "packages": [
         {
             "name": "adhocore/jwt",
-            "version": "1.1.2",
+            "version": "1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/adhocore/php-jwt.git",
-                "reference": "6c434af7170090bb7a8880d2bc220a2254ba7899"
+                "reference": "ad417603d9d45578b6af2089ad5b78f101c82367"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/adhocore/php-jwt/zipball/6c434af7170090bb7a8880d2bc220a2254ba7899",
-                "reference": "6c434af7170090bb7a8880d2bc220a2254ba7899",
+                "url": "https://api.github.com/repos/adhocore/php-jwt/zipball/ad417603d9d45578b6af2089ad5b78f101c82367",
+                "reference": "ad417603d9d45578b6af2089ad5b78f101c82367",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.0 || ^8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^6.5 || ^7.5"
+                "phpunit/phpunit": "^7.5 || ^8.5"
             },
             "type": "library",
             "autoload": {
@@ -53,15 +53,19 @@
             ],
             "support": {
                 "issues": "https://github.com/adhocore/php-jwt/issues",
-                "source": "https://github.com/adhocore/php-jwt/tree/1.1.2"
+                "source": "https://github.com/adhocore/php-jwt/tree/1.1.3"
             },
             "funding": [
                 {
                     "url": "https://paypal.me/ji10",
                     "type": "custom"
+                },
+                {
+                    "url": "https://github.com/adhocore",
+                    "type": "github"
                 }
             ],
-            "time": "2021-02-20T09:56:44+00:00"
+            "time": "2025-02-18T01:00:50+00:00"
         },
         {
             "name": "appwrite/appwrite",
@@ -565,16 +569,16 @@
         },
         {
             "name": "dragonmantank/cron-expression",
-            "version": "v3.3.2",
+            "version": "v3.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dragonmantank/cron-expression.git",
-                "reference": "782ca5968ab8b954773518e9e49a6f892a34b2a8"
+                "reference": "adfb1f505deb6384dc8b39804c5065dd3c8c8c0a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dragonmantank/cron-expression/zipball/782ca5968ab8b954773518e9e49a6f892a34b2a8",
-                "reference": "782ca5968ab8b954773518e9e49a6f892a34b2a8",
+                "url": "https://api.github.com/repos/dragonmantank/cron-expression/zipball/adfb1f505deb6384dc8b39804c5065dd3c8c8c0a",
+                "reference": "adfb1f505deb6384dc8b39804c5065dd3c8c8c0a",
                 "shasum": ""
             },
             "require": {
@@ -614,7 +618,7 @@
             ],
             "support": {
                 "issues": "https://github.com/dragonmantank/cron-expression/issues",
-                "source": "https://github.com/dragonmantank/cron-expression/tree/v3.3.2"
+                "source": "https://github.com/dragonmantank/cron-expression/tree/v3.3.3"
             },
             "funding": [
                 {
@@ -622,7 +626,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-09-10T18:51:20+00:00"
+            "time": "2023-08-10T19:36:49+00:00"
         },
         {
             "name": "giggsey/libphonenumber-for-php-lite",
@@ -709,16 +713,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.31.0",
+            "version": "v4.31.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "d59e31ce4bf0e4b48728e90c4d880839edb5be07"
+                "reference": "2b028ce8876254e2acbeceea7d9b573faad41864"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/d59e31ce4bf0e4b48728e90c4d880839edb5be07",
-                "reference": "d59e31ce4bf0e4b48728e90c4d880839edb5be07",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/2b028ce8876254e2acbeceea7d9b573faad41864",
+                "reference": "2b028ce8876254e2acbeceea7d9b573faad41864",
                 "shasum": ""
             },
             "require": {
@@ -747,9 +751,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.31.0"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.31.1"
             },
-            "time": "2025-05-14T16:17:23+00:00"
+            "time": "2025-05-28T18:52:35+00:00"
         },
         {
             "name": "league/csv",
@@ -3948,16 +3952,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.17.0",
+            "version": "0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "c51915d0e030db3a3add37f1561751d18b2d9a85"
+                "reference": "c151aa5d4d475c788ca15c210b5b2017e21c41d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/c51915d0e030db3a3add37f1561751d18b2d9a85",
-                "reference": "c51915d0e030db3a3add37f1561751d18b2d9a85",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/c151aa5d4d475c788ca15c210b5b2017e21c41d6",
+                "reference": "c151aa5d4d475c788ca15c210b5b2017e21c41d6",
                 "shasum": ""
             },
             "require": {
@@ -3993,9 +3997,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.17.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.18.0"
             },
-            "time": "2025-05-12T16:14:08+00:00"
+            "time": "2025-05-15T05:00:03+00:00"
         },
         {
             "name": "utopia-php/migration",
