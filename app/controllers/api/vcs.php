@@ -123,7 +123,11 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $latestCommentId = '';
 
-            if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
+            // Check if VCS is still connected and resource exists before creating/updating comments
+            $resourceExists = !$resource->isEmpty();
+            $isVcsConnected = !empty($resource->getAttribute('providerRepositoryId', ''));
+
+            if ($resourceExists && $isVcsConnected && !empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
                 $latestComment = Authorization::skip(fn () => $dbForPlatform->findOne('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerPullRequestId', [$providerPullRequestId]),
@@ -166,7 +170,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         ])));
                     }
                 }
-            } elseif (!empty($providerBranch)) {
+            } elseif ($resourceExists && $isVcsConnected && !empty($providerBranch)) {
                 $latestComments = Authorization::skip(fn () => $dbForPlatform->find('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerBranch', [$providerBranch]),
