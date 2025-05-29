@@ -375,6 +375,13 @@ return [
         'code' => 409,
     ],
 
+    /** Console */
+    Exception::RESOURCE_ALREADY_EXISTS => [
+        'name' => Exception::RESOURCE_ALREADY_EXISTS,
+        'description' => 'Resource with the requested ID already exists. Please choose a different ID and try again.',
+        'code' => 409,
+    ],
+
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
@@ -481,6 +488,23 @@ return [
         'code' => 403,
     ],
 
+    /** Tokens */
+    Exception::TOKEN_NOT_FOUND => [
+        'name' => Exception::TOKEN_NOT_FOUND,
+        'description' => 'The requested file token could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOKEN_EXPIRED => [
+        'name' => Exception::TOKEN_EXPIRED,
+        'description' => 'The requested file token has expired.',
+        'code' => 401,
+    ],
+    Exception::TOKEN_RESOURCE_TYPE_INVALID => [
+        'name' => Exception::TOKEN_RESOURCE_TYPE_INVALID,
+        'description' => 'The resource type for the token is invalid.',
+        'code' => 400,
+    ],
+
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
         'name' => Exception::INSTALLATION_NOT_FOUND,
@@ -520,7 +544,7 @@ return [
         'code' => 404,
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
-        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'name' => Exception::FUNCTION_ENTRYPOINT_MISSING,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
@@ -532,6 +556,28 @@ return [
     Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::FUNCTION_RUNTIME_NOT_DETECTED => [
+        'name' => Exception::FUNCTION_RUNTIME_NOT_DETECTED,
+        'description' => 'Function runtime could not be detected.',
+        'code' => 400,
+    ],
+    Exception::FUNCTION_EXECUTE_PERMISSION_MISSING => [
+        'name' => Exception::FUNCTION_EXECUTE_PERMISSION_MISSING,
+        'description' => 'To execute function using domain, execute permissions must include "any" or "guests".',
+        'code' => 401,
+    ],
+
+    /** Sites */
+    Exception::SITE_NOT_FOUND => [
+        'name' => Exception::SITE_NOT_FOUND,
+        'description' => 'Site with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SITE_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
+        'description' => 'Site Template with the requested ID could not be found.',
         'code' => 404,
     ],
 
@@ -556,6 +602,16 @@ return [
         'description' => 'Build with the requested ID is already completed and cannot be canceled.',
         'code' => 400,
     ],
+    Exception::BUILD_CANCELED => [
+        'name' => Exception::BUILD_CANCELED,
+        'description' => 'Build with the requested ID has been canceled.',
+        'code' => 400,
+    ],
+    Exception::BUILD_FAILED => [
+        'name' => Exception::BUILD_FAILED,
+        'description' => 'Build with the requested ID failed. Please check the logs for more information.',
+        'code' => 400,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -575,6 +631,13 @@ return [
         'name' => Exception::EXECUTION_IN_PROGRESS,
         'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
         'code' => 400,
+    ],
+
+    /** Logs */
+    Exception::LOG_NOT_FOUND => [
+        'name' => Exception::LOG_NOT_FOUND,
+        'description' => 'Log with the requested ID could not be found.',
+        'code' => 404,
     ],
 
     /** Databases */
@@ -806,7 +869,7 @@ return [
     Exception::RULE_VERIFICATION_FAILED => [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
-        'code' => 401,
+        'code' => 400,
         'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
@@ -848,6 +911,11 @@ return [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
         'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::VARIABLE_CANNOT_UNSET_SECRET => [
+        'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
+        'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
+        'code' => 400,
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
