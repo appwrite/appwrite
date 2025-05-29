@@ -145,17 +145,16 @@ class V22 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'memberships':
-                    //                    $indexes = [
-                    //                        '_key_roles',
-                    //                    ];
-                    //                    foreach ($indexes as $index) {
-                    //                        try {
-                    //                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
-                    //                        } catch (Throwable $th) {
-                    //                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
-                    //                        }
-                    //                    }
-                    //                    $this->dbForProject->purgeCachedCollection($id);
+                    $indexes = [
+                        '_key_roles',
+                    ];
+                    foreach ($indexes as $index) {
+                        try {
+                            $this->dbForProject->deleteIndex($id, $index);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to delete index \"$index\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
                     break;
                 case 'migrations':
                     $attributes = [
