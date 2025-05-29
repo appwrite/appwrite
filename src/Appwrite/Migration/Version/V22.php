@@ -155,6 +155,7 @@ class V22 extends Migration
                             Console::warning("Failed to delete index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
                 case 'migrations':
                     $attributes = [
