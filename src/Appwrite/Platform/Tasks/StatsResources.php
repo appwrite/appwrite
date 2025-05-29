@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\StatsResources as EventStatsResources;
 use Appwrite\Platform\Action;
-use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -51,8 +50,6 @@ class StatsResources extends Action
 
     public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queue): void
     {
-        Runtime::enableCoroutine(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-
         $this->logError = $logError;
         $this->dbForPlatform = $dbForPlatform;
 
