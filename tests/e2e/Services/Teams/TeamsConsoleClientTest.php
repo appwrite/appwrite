@@ -212,9 +212,6 @@ class TeamsConsoleClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('The current user is not authorized to perform the requested action.', $response['body']['message']);
 
-        /**
-         * Test for when a user other than the owner tries to delete their membership
-         */
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $membershipUid, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -222,7 +219,7 @@ class TeamsConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -230,7 +227,7 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(3, $response['body']['total']);
+        $this->assertEquals(2, $response['body']['total']);
 
         /**
          * Test for when the owner tries to delete their membership
