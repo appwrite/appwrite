@@ -47,7 +47,7 @@ jobs:
           node-version: 20
 
       - name: Build and Publish SDK
-        working-directory: ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
+        working-directory: ./app/sdks/console-web
         run: |
             npm install
             npm run build
