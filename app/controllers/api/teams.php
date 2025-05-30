@@ -1359,10 +1359,12 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
                 max: 2
             );
 
-            // Is the deletion being requested by the user on their own membership?
-            $isCurrentUserAnOwner =  $user->getInternalId() === $membership->getAttribute('userInternalId');
+            // Is the deletion being requested by the user on their own membership and they are also the owner?
+            $isSelfOwner =
+                in_array('owner', $membership->getAttribute('roles')) &&
+                $membership->getAttribute('userInternalId') === $user->getInternalId();
 
-            if ($ownersCount === 1 && $isCurrentUserAnOwner) {
+            if ($ownersCount === 1 && $isSelfOwner) {
                 /* Prevent removal if the user is the only owner. */
                 throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
             }
