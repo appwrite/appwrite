@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Functions\Http\Functions\Deployment;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -89,8 +89,6 @@ class Update extends Base
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $oldDeploymentInternalId = $function->getAttribute('deploymentInternalId', '');
-
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
@@ -106,24 +104,20 @@ class Update extends Base
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queries = [
-            Query::equal('trigger', 'manual'),
+            Query::equal('trigger', ['manual']),
             Query::equal("type", ["deployment"]),
             Query::equal("deploymentResourceType", ["function"]),
             Query::equal("deploymentResourceInternalId", [$function->getInternalId()]),
+            Query::equal("deploymentVcsProviderBranch", [""]),
+            Query::equal("projectInternalId", [$project->getInternalId()])
         ];
 
-        if (empty($oldDeploymentInternalId)) {
-            $queries[] =  Query::equal("deploymentInternalId", [""]);
-        } else {
-            $queries[] =  Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-        }
-
-        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+        Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
-            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-        });
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+        }, $queries));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

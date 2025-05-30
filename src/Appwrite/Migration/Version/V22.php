@@ -150,9 +150,9 @@ class V22 extends Migration
                     ];
                     foreach ($indexes as $index) {
                         try {
-                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (Throwable $th) {
-                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);

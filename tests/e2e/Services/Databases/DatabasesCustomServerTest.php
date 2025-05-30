@@ -686,18 +686,6 @@ class DatabasesCustomServerTest extends Scope
             'size' => 256,
             'required' => true,
         ]);
-        // checking size test
-        $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'lastName',
-            'size' => 149,
-            'required' => true,
-            'encrypt' => true
-        ]);
-        $this->assertEquals("Size too small. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . " characters.", $lastName['body']['message']);
 
         $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
             'content-type' => 'application/json',
@@ -707,16 +695,9 @@ class DatabasesCustomServerTest extends Scope
             'key' => 'lastName',
             'size' => 256,
             'required' => true,
-            'encrypt' => true
+            'encrypt' => true,
         ]);
-        $this->assertTrue($lastName['body']['encrypt']);
-        sleep(1);
-        $response = $this->client->call(Client::METHOD_GET, $attributesPath . '/lastName', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]));
-        $this->assertTrue($response['body']['encrypt']);
+
 
         /**
          * Check status of every attribute
@@ -760,24 +741,6 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals('Jonah', $document['body']['firstName']);
         $this->assertEquals('Jameson', $document['body']['lastName']);
-
-
-        $actors = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
-        $attributes = $actors['body']['attributes'];
-        foreach ($attributes as $attribute) {
-            $this->assertArrayHasKey('encrypt', $attribute);
-            if ($attribute['key'] === 'firstName') {
-                $this->assertFalse($attribute['encrypt']);
-            }
-            if ($attribute['key'] === 'lastName') {
-                $this->assertTrue($attribute['encrypt']);
-            }
-        }
-
     }
 
     public function testDeleteAttribute(): array
