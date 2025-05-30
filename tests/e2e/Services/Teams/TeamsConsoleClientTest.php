@@ -100,6 +100,7 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('membership_deletion_prohibited', $response['body']['type']);
         $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
 
         // Remove the excess developer member to reduce the membership count in `TeamsBaseClient` tests.
@@ -241,6 +242,7 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('membership_deletion_prohibited', $response['body']['type']);
         $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, array_merge([
