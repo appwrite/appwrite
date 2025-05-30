@@ -293,7 +293,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $domain = "branch-{$providerBranch}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $branchPrefix = substr($providerBranch, 0, 16);
+                    if (strlen($providerBranch) > 16) {
+                        $remainingChars = substr($providerBranch, 16);
+                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+                    }
+                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
+                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
                         Authorization::skip(
@@ -324,7 +330,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS commit preview
                 if (!empty($providerCommitHash)) {
-                    $domain = "commit-{$providerCommitHash}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
                         Authorization::skip(

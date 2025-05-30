@@ -1075,8 +1075,6 @@ class Builds extends Action
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
-                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
-
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
@@ -1088,26 +1086,20 @@ class Builds extends Action
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
+                            Query::equal("projectInternalId", [$project->getInternalId()])
                         ];
 
-                        if (empty($oldDeploymentInternalId)) {
-                            $queries[] =  Query::equal("deploymentInternalId", [""]);
-                        } else {
-                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-                        }
-
                         $rulesUpdated = false;
-                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
+                        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
                             $rulesUpdated = true;
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                        });
+                        }, $queries);
                         break;
                     case 'sites':
-                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
-
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
@@ -1120,20 +1112,16 @@ class Builds extends Action
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
+                            Query::equal("projectInternalId", [$project->getInternalId()])
                         ];
 
-                        if (empty($oldDeploymentInternalId)) {
-                            $queries[] =  Query::equal("deploymentInternalId", [""]);
-                        } else {
-                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-                        }
-
-                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                        });
+                        }, $queries);
 
                         break;
                 }
@@ -1144,7 +1132,13 @@ class Builds extends Action
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
                     $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                    $domain = "branch-{$branchName}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $branchPrefix = substr($branchName, 0, 16);
+                    if (strlen($branchName) > 16) {
+                        $remainingChars = substr($branchName, 16);
+                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+                    }
+                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
+                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
 
                     try {
@@ -1175,19 +1169,22 @@ class Builds extends Action
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                     }
 
-                    $this->listRules($project, [
+                    $queries = [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                         Query::equal('deploymentResourceType', ['site']),
                         Query::equal("deploymentVcsProviderBranch", [$branchName]),
                         Query::equal("trigger", ['manual']),
-                    ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        Query::equal("projectInternalId", [$project->getInternalId()])
+                    ];
+
+                    $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
                         $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                    });
+                    }, $queries);
                 }
             }
 
@@ -1489,39 +1486,5 @@ class Builds extends Action
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
-    }
-
-    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
-    {
-        $limit = 100;
-        $cursor = null;
-
-        do {
-            $queries = \array_merge([
-                Query::limit($limit),
-                Query::equal("projectInternalId", [$project->getInternalId()])
-            ], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
-            }
-
-            $results = $database->find('rules', $queries);
-
-            $total = \count($results);
-            if ($total > 0) {
-                $cursor = $results[$total - 1];
-            }
-
-            if ($total < $limit) {
-                $cursor = null;
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-            }
-        } while (!\is_null($cursor));
     }
 }
