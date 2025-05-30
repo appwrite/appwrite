@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3230eea9e592f0b712e78c1ef5f5e244",
+    "content-hash": "1af0bc43c593ee88158240da1ccb6f2c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3798,16 +3798,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.8.3",
+            "version": "dev-PLA-2950",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "8820b0e53b3636b7bdf815e92394d333fef06f26"
+                "reference": "f79ed3a035eb69971d3ad12e4fab81038229f476"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/8820b0e53b3636b7bdf815e92394d333fef06f26",
-                "reference": "8820b0e53b3636b7bdf815e92394d333fef06f26",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/f79ed3a035eb69971d3ad12e4fab81038229f476",
+                "reference": "f79ed3a035eb69971d3ad12e4fab81038229f476",
                 "shasum": ""
             },
             "require": {
@@ -3841,9 +3841,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.8.3"
+                "source": "https://github.com/utopia-php/image/tree/PLA-2950"
             },
-            "time": "2025-05-15T10:39:28+00:00"
+            "time": "2025-05-30T14:36:58+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -8245,9 +8245,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/image",
+            "version": "dev-PLA-2950",
+            "alias": "0.8.0",
+            "alias_normalized": "0.8.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/image": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
