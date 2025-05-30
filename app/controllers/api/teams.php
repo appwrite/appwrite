@@ -1103,7 +1103,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             // Prevent role change if there's only one owner left,
             // the requester is that owner, and the new `$roles` no longer include 'owner'
             if ($ownersCount === 1 && $isOwner && $isCurrentUserAnOwner && !\in_array('owner', $roles)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'There must be at least one owner in the organization.');
+                throw new Exception(Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED, 'There must be at least one owner.');
             }
         }
 
@@ -1364,10 +1364,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
             if ($ownersCount === 1 && $isCurrentUserAnOwner) {
                 /* Prevent removal if the user is the only owner. */
-                throw new Exception(
-                    Exception::GENERAL_ARGUMENT_INVALID,
-                    'There must be at least one owner in the organization.'
-                );
+                throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner.');
             }
         }
 
