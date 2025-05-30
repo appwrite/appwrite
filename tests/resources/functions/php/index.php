@@ -1,6 +1,12 @@
 <?php
 
 return function ($context) {
+    if ($context->req->path === '/custom-response') {
+        $code = (int) ($context->req->query['code'] ?? '200');
+        $body = $context->req->query['body'] ?? '';
+        return $context->res->send($body, $code);
+    }
+
     $context->log('body-is-' . ($context->req->body ?? ''));
     $context->log('custom-header-is-' . ($context->req->headers['x-custom-header'] ?? ''));
     $context->log('method-is-' . \strtolower($context->req->method ?? ''));

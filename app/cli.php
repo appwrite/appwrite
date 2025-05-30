@@ -34,8 +34,8 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 use function Swoole\Coroutine\run;
 
-// Overwriting runtimes to be architecture agnostic for CLI
-Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
+// overwriting runtimes to be architecture agnostic for CLI
+Config::setParam('runtimes', (new Runtimes('v5'))->getAll(supported: false));
 
 // require controllers after overwriting runtimes
 require_once __DIR__ . '/controllers/general.php';

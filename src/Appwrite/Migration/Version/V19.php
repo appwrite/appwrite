@@ -28,7 +28,7 @@ class V19 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+        $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -55,7 +55,7 @@ class V19 extends Migration
 
     protected function migrateDomains(): void
     {
-        if ($this->consoleDB->exists($this->consoleDB->getDatabase(), 'domains')) {
+        if ($this->dbForPlatform->exists($this->dbForPlatform->getDatabase(), 'domains')) {
             foreach ($this->documentsIterator('domains') as $domain) {
                 $status = 'created';
                 if ($domain->getAttribute('verification', false)) {
@@ -82,7 +82,7 @@ class V19 extends Migration
                 ]);
 
                 try {
-                    $this->consoleDB->createDocument('rules', $ruleDocument);
+                    $this->dbForPlatform->createDocument('rules', $ruleDocument);
                 } catch (\Throwable $th) {
                     Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
                 }
@@ -104,8 +104,8 @@ class V19 extends Migration
             Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             try {
-                $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId', 'files');
-                $this->projectDB->purgeCachedCollection($id);
+                $this->createAttributeFromCollection($this->dbForProject, $id, 'bucketInternalId', 'files');
+                $this->dbForProject->purgeCachedCollection($id);
             } catch (\Throwable $th) {
                 Console::warning("'bucketInternalId' from {$id}: {$th->getMessage()}");
             }
@@ -136,7 +136,7 @@ class V19 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_$internalProjectId");
+            $this->dbForProject->setNamespace("_$internalProjectId");
 
             switch ($id) {
                 case '_metadata':
@@ -148,24 +148,24 @@ class V19 extends Migration
                 case 'attributes':
                 case 'indexes':
                     try {
-                        $this->projectDB->updateAttribute($id, 'databaseInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'databaseInternalId', required: true);
                     } catch (\Throwable $th) {
                         Console::warning("'databaseInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->updateAttribute($id, 'collectionInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'collectionInternalId', required: true);
                     } catch (\Throwable $th) {
                         Console::warning("'collectionInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'error');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'error');
                     } catch (\Throwable $th) {
                         Console::warning("'error' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'buckets':
@@ -175,7 +175,7 @@ class V19 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -187,13 +187,13 @@ class V19 extends Migration
 
                     foreach ($indexesToCreate as $index) {
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'builds':
@@ -204,45 +204,45 @@ class V19 extends Migration
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (\Throwable $th) {
                             Console::warning("$attribute from {$id}: {$th->getMessage()}");
                         }
                     }
 
                     try {
-                        $this->projectDB->renameAttribute($id, 'outputPath', 'path');
+                        $this->dbForProject->renameAttribute($id, 'outputPath', 'path');
                     } catch (\Throwable $th) {
                         Console::warning("'path' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'certificates':
                     try {
-                        $this->projectDB->renameAttribute($id, 'log', 'logs');
+                        $this->dbForProject->renameAttribute($id, 'log', 'logs');
                     } catch (\Throwable $th) {
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->updateAttribute($id, 'logs', size: 1000000);
+                        $this->dbForProject->updateAttribute($id, 'logs', size: 1000000);
                     } catch (\Throwable $th) {
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'databases':
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'enabled');
                     } catch (\Throwable $th) {
                         Console::warning("'enabled' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'deployments':
@@ -271,7 +271,7 @@ class V19 extends Migration
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (\Throwable $th) {
                             Console::warning("$attribute from {$id}: {$th->getMessage()}");
                         }
@@ -286,7 +286,7 @@ class V19 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -299,13 +299,13 @@ class V19 extends Migration
                     ];
                     foreach ($indexesToCreate as $index) {
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'executions':
@@ -319,7 +319,7 @@ class V19 extends Migration
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (\Throwable $th) {
                             Console::warning("$attribute from {$id}: {$th->getMessage()}");
                         }
@@ -330,43 +330,43 @@ class V19 extends Migration
                     ];
                     foreach ($attributesToDelete as $attribute) {
                         try {
-                            $this->projectDB->deleteAttribute($id, $attribute);
+                            $this->dbForProject->deleteAttribute($id, $attribute);
                         } catch (\Throwable $th) {
                             Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
                         }
                     }
 
                     try {
-                        $this->projectDB->renameAttribute($id, 'stderr', 'errors');
+                        $this->dbForProject->renameAttribute($id, 'stderr', 'errors');
                     } catch (\Throwable $th) {
                         Console::warning("'errors' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->renameAttribute($id, 'stdout', 'logs');
+                        $this->dbForProject->renameAttribute($id, 'stdout', 'logs');
                     } catch (\Throwable $th) {
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->renameAttribute($id, 'statusCode', 'responseStatusCode');
+                        $this->dbForProject->renameAttribute($id, 'statusCode', 'responseStatusCode');
                     } catch (\Throwable $th) {
                         Console::warning("'responseStatusCode' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->deleteIndex($id, '_key_statusCode');
+                        $this->dbForProject->deleteIndex($id, '_key_statusCode');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_statusCode' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_responseStatusCode');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_responseStatusCode');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_responseStatusCode' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'files':
@@ -378,7 +378,7 @@ class V19 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -387,13 +387,13 @@ class V19 extends Migration
                     $indexesToCreate = $indexesToDelete;
                     foreach ($indexesToCreate as $index) {
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'functions':
@@ -419,7 +419,7 @@ class V19 extends Migration
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (\Throwable $th) {
                             Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
                         }
@@ -433,7 +433,7 @@ class V19 extends Migration
                     ];
                     foreach ($indexesToDelete as $index) {
                         try {
-                            $this->projectDB->deleteIndex($id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -449,34 +449,34 @@ class V19 extends Migration
                     ];
                     foreach ($indexesToCreate as $index) {
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'memberships':
                     try {
-                        $this->projectDB->updateAttribute($id, 'teamInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'teamInternalId', required: true);
                     } catch (\Throwable $th) {
                         Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     // Intentional fall through to update memberships.userInternalId
                 case 'sessions':
                 case 'tokens':
                     try {
-                        $this->projectDB->updateAttribute($id, 'userInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'userInternalId', required: true);
                     } catch (\Throwable $th) {
                         Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'domains':
@@ -484,12 +484,12 @@ class V19 extends Migration
                 case 'platforms':
                 case 'webhooks':
                     try {
-                        $this->projectDB->updateAttribute($id, 'projectInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'projectInternalId', required: true);
                     } catch (\Throwable $th) {
                         Console::warning("'projectInternalId' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'projects':
@@ -500,19 +500,19 @@ class V19 extends Migration
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (\Throwable $th) {
                             Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
                             Console::warning($th->getTraceAsString());
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'stats':
                     try {
-                        $this->projectDB->updateAttribute($id, 'value', signed: true);
+                        $this->dbForProject->updateAttribute($id, 'value', signed: true);
                     } catch (\Throwable $th) {
                         Console::warning("'value' from {$id}: {$th->getMessage()}");
                     }
@@ -539,64 +539,64 @@ class V19 extends Migration
                     //     Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
                     // }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'users':
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'labels');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'labels');
                     } catch (\Throwable $th) {
                         Console::warning("'labels' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'accessedAt');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'accessedAt');
                     } catch (\Throwable $th) {
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->updateAttribute($id, 'search', filters: ['userSearch']);
+                        $this->dbForProject->updateAttribute($id, 'search', filters: ['userSearch']);
                     } catch (\Throwable $th) {
                         Console::warning("'search' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_accessedAt');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_accessedAt' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 case 'variables':
                     try {
-                        $this->projectDB->deleteIndex($id, '_key_function');
+                        $this->dbForProject->deleteIndex($id, '_key_function');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_function' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->deleteIndex($id, '_key_uniqueKey');
+                        $this->dbForProject->deleteIndex($id, '_key_uniqueKey');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_uniqueKey' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceType');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'resourceType');
                     } catch (\Throwable $th) {
                         Console::warning("'resourceType' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->renameAttribute($id, 'functionInternalId', 'resourceInternalId');
+                        $this->dbForProject->renameAttribute($id, 'functionInternalId', 'resourceInternalId');
                     } catch (\Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->projectDB->renameAttribute($id, 'functionId', 'resourceId');
+                        $this->dbForProject->renameAttribute($id, 'functionId', 'resourceId');
                     } catch (\Throwable $th) {
                         Console::warning("'resourceId' from {$id}: {$th->getMessage()}");
                     }
@@ -609,13 +609,13 @@ class V19 extends Migration
                     ];
                     foreach ($indexesToCreate as $index) {
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $this->projectDB->purgeCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
 
                     break;
                 default:
@@ -654,10 +654,10 @@ class V19 extends Migration
             ]) as $attribute
         ) {
             $attribute->setAttribute('size', Database::LENGTH_KEY);
-            $this->projectDB->updateDocument('attributes', $attribute->getId(), $attribute);
+            $this->dbForProject->updateDocument('attributes', $attribute->getId(), $attribute);
             $databaseInternalId = $attribute->getAttribute('databaseInternalId');
             $collectionInternalId = $attribute->getAttribute('collectionInternalId');
-            $this->projectDB->updateAttribute('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), size: 255);
+            $this->dbForProject->updateAttribute('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), size: 255);
         }
     }
 
@@ -679,7 +679,7 @@ class V19 extends Migration
                 break;
             case 'builds':
                 $deploymentId = $document->getAttribute('deploymentId');
-                $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
+                $deployment = $this->dbForProject->getDocument('deployments', $deploymentId);
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
 
                 $stdout = $document->getAttribute('stdout', '');
@@ -691,12 +691,12 @@ class V19 extends Migration
                 break;
             case 'deployments':
                 $resourceId = $document->getAttribute('resourceId');
-                $function = $this->projectDB->getDocument('functions', $resourceId);
+                $function = $this->dbForProject->getDocument('functions', $resourceId);
                 $document->setAttribute('resourceInternalId', $function->getInternalId());
 
                 $buildId = $document->getAttribute('buildId');
                 if (!empty($buildId)) {
-                    $build = $this->projectDB->getDocument('builds', $buildId);
+                    $build = $this->dbForProject->getDocument('builds', $buildId);
                     $document->setAttribute('buildInternalId', $build->getInternalId());
                 }
 
@@ -706,11 +706,11 @@ class V19 extends Migration
                 break;
             case 'executions':
                 $functionId = $document->getAttribute('functionId');
-                $function = $this->projectDB->getDocument('functions', $functionId);
+                $function = $this->dbForProject->getDocument('functions', $functionId);
                 $document->setAttribute('functionInternalId', $function->getInternalId());
 
                 $deploymentId = $document->getAttribute('deploymentId');
-                $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
+                $deployment = $this->dbForProject->getDocument('deployments', $deploymentId);
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 break;
             case 'functions':
@@ -720,7 +720,7 @@ class V19 extends Migration
                 $deploymentId = $document->getAttribute('deployment');
 
                 if (!empty($deploymentId)) {
-                    $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
+                    $deployment = $this->dbForProject->getDocument('deployments', $deploymentId);
                     $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
                     $document->setAttribute('entrypoint', $deployment->getAttribute('entrypoint'));
                 }
@@ -729,7 +729,7 @@ class V19 extends Migration
                 $document->setAttribute('commands', $document->getAttribute('commands', $commands));
 
                 if (empty($document->getAttribute('scheduleId', null))) {
-                    $schedule = $this->consoleDB->createDocument('schedules', new Document([
+                    $schedule = $this->dbForPlatform->createDocument('schedules', new Document([
                         'region' => $project->getAttribute('region'),
                         'resourceType' => 'function',
                         'resourceId' => $document->getId(),
@@ -769,26 +769,26 @@ class V19 extends Migration
     private function cleanCollections(): void
     {
         try {
-            $this->projectDB->deleteAttribute('projects', 'domains');
+            $this->dbForProject->deleteAttribute('projects', 'domains');
         } catch (\Throwable $th) {
             Console::warning("'domains' from projects: {$th->getMessage()}");
         }
 
-        $this->projectDB->purgeCachedCollection('projects');
+        $this->dbForProject->purgeCachedCollection('projects');
 
         try {
-            $this->projectDB->deleteAttribute('builds', 'stderr');
+            $this->dbForProject->deleteAttribute('builds', 'stderr');
         } catch (\Throwable $th) {
             Console::warning("'stderr' from builds: {$th->getMessage()}");
         }
 
         try {
-            $this->projectDB->deleteAttribute('builds', 'stdout');
+            $this->dbForProject->deleteAttribute('builds', 'stdout');
         } catch (\Throwable $th) {
             Console::warning("'stdout' from builds: {$th->getMessage()}");
         }
 
-        $this->projectDB->purgeCachedCollection('builds');
+        $this->dbForProject->purgeCachedCollection('builds');
     }
 
     /**
@@ -829,7 +829,7 @@ class V19 extends Migration
                     }
 
                     try {
-                        $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                        $this->dbForProject->updateDocument($document->getCollection(), $document->getId(), $document);
                     } catch (\Throwable $th) {
                         Console::error('Failed to update document: ' . $th->getMessage());
                         return;

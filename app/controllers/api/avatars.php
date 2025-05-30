@@ -502,6 +502,7 @@ App::get('/v1/avatars/qr')
             'addQuietzone' => true,
             'quietzoneSize' => $margin,
             'outputType' => QRCode::OUTPUT_IMAGICK,
+            'scale' => 15,
         ]);
 
         $qrcode = new QRCode($options);
@@ -516,7 +517,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
-            ->send($image->output('png', 9));
+            ->send($image->output('png', 90));
     });
 
 App::get('/v1/avatars/initials')

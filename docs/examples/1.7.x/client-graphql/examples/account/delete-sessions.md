@@ -1,0 +1,5 @@
+mutation {
+    accountDeleteSessions {
+        status
+    }
+}

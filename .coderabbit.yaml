@@ -1,0 +1,11 @@
+reviews:
+  path_filters:
+    - "!app/config/specs/**"
+    - "!docs/examples/**"
+    - "!docs/references/**"
+    - "!docs/sdks/**"
+  auto_review:
+    base_branches:
+      - main
+      - 1.6.x
+      - 1.7.x

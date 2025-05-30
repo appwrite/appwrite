@@ -29,7 +29,7 @@ class V21 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+        $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -63,13 +63,13 @@ class V21 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_$internalProjectId");
+            $this->dbForProject->setNamespace("_$internalProjectId");
 
             switch ($id) {
                 case 'projects':
                     // Create accessedAt attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'accessedAt');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'accessedAt');
                     } catch (Throwable $th) {
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
@@ -79,7 +79,7 @@ class V21 extends Migration
                     foreach ($attributesToCreate as $attribute) {
                         // Create attribute
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {
                             Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
                         }
@@ -89,7 +89,7 @@ class V21 extends Migration
                     foreach ($indexesToCreate as $index) {
                         // Create index
                         try {
-                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
                         } catch (Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -98,7 +98,7 @@ class V21 extends Migration
                 case 'platforms':
                     // Increase 'type' length to 255
                     try {
-                        $this->projectDB->updateAttribute($id, 'type', size: 255);
+                        $this->dbForProject->updateAttribute($id, 'type', size: 255);
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
@@ -108,7 +108,7 @@ class V21 extends Migration
                     foreach ($attributesToCreate as $attribute) {
                         // Create attribute
                         try {
-                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {
                             Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
                         }
@@ -117,7 +117,7 @@ class V21 extends Migration
                 case 'migrations':
                     // Create destination attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'destination');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'destination');
                     } catch (Throwable $th) {
                         Console::warning("'destination' from {$id}: {$th->getMessage()}");
                     }
@@ -125,7 +125,7 @@ class V21 extends Migration
                 case 'schedules':
                     // Create data attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'data');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'data');
                     } catch (Throwable $th) {
                         Console::warning("'data' from {$id}: {$th->getMessage()}");
                     }
@@ -134,7 +134,7 @@ class V21 extends Migration
                 case 'databases':
                     // Create originalId attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'originalId');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'originalId');
                     } catch (Throwable $th) {
                         Console::warning("'originalId' from {$id}: {$th->getMessage()}");
                     }
@@ -142,14 +142,14 @@ class V21 extends Migration
                 case 'functions':
                     // Create scopes attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'scopes');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'scopes');
                     } catch (Throwable $th) {
                         Console::warning("'scopes' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create specification attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'specification');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'specification');
                     } catch (Throwable $th) {
                         Console::warning("'specification' from {$id}: {$th->getMessage()}");
                     }
@@ -158,21 +158,21 @@ class V21 extends Migration
                 case 'executions':
                     // Create requestMethod index
                     try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_requestMethod');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_requestMethod');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_requestMethod' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create requestPath index
                     try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_requestPath');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_requestPath');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_requestPath' from {$id}: {$th->getMessage()}");
                     }
 
                     // Create deployment index
                     try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_deployment');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_deployment');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_deployment' from {$id}: {$th->getMessage()}");
                     }
@@ -181,7 +181,7 @@ class V21 extends Migration
                         /**
                          * Create 'scheduledAt' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduledAt');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'scheduledAt');
                     } catch (\Throwable $th) {
                         Console::warning("'scheduledAt' from {$id}: {$th->getMessage()}");
                     }
@@ -190,7 +190,7 @@ class V21 extends Migration
                         /**
                          * Create 'scheduleInternalId' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleInternalId');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'scheduleInternalId');
                     } catch (\Throwable $th) {
                         Console::warning("'scheduleInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -199,7 +199,7 @@ class V21 extends Migration
                         /**
                          * Create 'scheduleId' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleId');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'scheduleId');
                     } catch (\Throwable $th) {
                         Console::warning("'scheduleId' from {$id}: {$th->getMessage()}");
                     }
@@ -236,7 +236,7 @@ class V21 extends Migration
 
                 // Set specification attribute
                 if (empty($document->getAttribute('specification'))) {
-                    $document->setAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT);
+                    $document->setAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT);
                 }
         }
 
@@ -250,34 +250,34 @@ class V21 extends Migration
      */
     private function migrateBuckets(): void
     {
-        foreach ($this->documentsIterator('buckets') as $bucket) {
+        $this->dbForProject->forEach('buckets', function (Document $bucket) {
             $bucketId = 'bucket_' . $bucket['$internalId'];
 
             Console::log("Migrating Bucket {$bucketId} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             try {
-                $this->projectDB->updateAttribute($bucketId, 'metadata', size: 65534);
+                $this->dbForProject->updateAttribute($bucketId, 'metadata', size: 65534);
             } catch (\Throwable $th) {
                 Console::warning("'metadata' from {$bucketId}: {$th->getMessage()}");
             }
 
             try {
-                $this->createAttributeFromCollection($this->projectDB, $bucketId, 'transformedAt', 'files');
+                $this->createAttributeFromCollection($this->dbForProject, $bucketId, 'transformedAt', 'files');
             } catch (\Throwable $th) {
                 Console::warning("'transformedAt' from {$bucketId}: {$th->getMessage()}");
             }
 
             try {
-                $this->createIndexFromCollection($this->projectDB, $bucketId, '_key_transformedAt', 'files');
+                $this->createIndexFromCollection($this->dbForProject, $bucketId, '_key_transformedAt', 'files');
             } catch (\Throwable $th) {
                 Console::warning("'_key_transformedAt' from {$bucketId}: {$th->getMessage()}");
             }
 
             try {
-                $this->projectDB->purgeCachedCollection($bucketId);
+                $this->dbForProject->purgeCachedCollection($bucketId);
             } catch (\Throwable $th) {
                 Console::warning("purging {$bucketId}: {$th->getMessage()}");
             }
-        }
+        });
     }
 }

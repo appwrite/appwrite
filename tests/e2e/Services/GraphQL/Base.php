@@ -1568,7 +1568,7 @@ trait Base
                         _id
                         buildId
                         entrypoint
-                        size
+                        buildSize
                         status
                         buildLogs
                     }
@@ -1620,7 +1620,7 @@ trait Base
                 }';
             case self::$RETRY_BUILD:
                 return 'mutation retryBuild($functionId: String!, $deploymentId: String!, $buildId: String!) {
-                    functionsCreateBuild(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId) {
+                    functionsCreateDuplicateDeployment(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId) {
                         status
                     }
                 }';

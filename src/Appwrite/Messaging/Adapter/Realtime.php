@@ -272,7 +272,6 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
-            case 'migrations':
             case 'rules':
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
@@ -353,6 +352,20 @@ class Realtime extends MessagingAdapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
+                break;
+            case 'sites':
+                if ($parts[2] === 'deployments') {
+                    $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
+                    $projectId = 'console';
+                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                }
+                break;
+            case 'migrations':
+                $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 

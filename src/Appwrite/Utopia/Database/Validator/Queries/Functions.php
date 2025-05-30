@@ -8,7 +8,7 @@ class Functions extends Base
         'name',
         'enabled',
         'runtime',
-        'deployment',
+        'deploymentId',
         'schedule',
         'scheduleNext',
         'schedulePrevious',

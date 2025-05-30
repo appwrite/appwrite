@@ -130,7 +130,7 @@ class FunctionsServerTest extends Scope
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
             $this->assertEquals('ready', $deployment['status']);
-        });
+        }, 30000);
         return $deployment;
     }
 
@@ -186,8 +186,8 @@ class FunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsNotArray($response['body']);
-        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['data']);
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testGetFunctions(): array
@@ -252,7 +252,7 @@ class FunctionsServerTest extends Scope
         $runtimes = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        ]), $gqlPayload);
 
         $this->assertIsArray($runtimes['body']['data']);
         $this->assertArrayNotHasKey('errors', $runtimes['body']);

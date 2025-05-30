@@ -28,6 +28,12 @@ class TemplateVariable extends Model
                 'default' => '',
                 'example' => '512',
             ])
+            ->addRule('secret', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Variable secret flag. Secret variables can only be updated or deleted, but never read.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('placeholder', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Variable Placeholder.',

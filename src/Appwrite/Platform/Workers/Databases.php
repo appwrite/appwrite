@@ -38,7 +38,7 @@ class Databases extends Action
             ->inject('dbForProject')
             ->inject('queueForRealtime')
             ->inject('log')
-            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime, Log $log) => $this->action($message, $project, $dbForPlatform, $dbForProject, $queueForRealtime, $log));
+            ->callback([$this, 'action']);
     }
 
     /**
@@ -98,8 +98,15 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      */
-    private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
-    {
+    private function createAttribute(
+        Document $database,
+        Document $collection,
+        Document $attribute,
+        Document $project,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        Realtime $queueForRealtime
+    ): void {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
         }
