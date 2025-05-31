@@ -13,10 +13,13 @@ use Swoole\Table;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -27,6 +30,8 @@ use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 use Utopia\Swoole\Files;
 use Utopia\System\System;
+
+Files::load(__DIR__.'/../public');
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
@@ -167,7 +172,7 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
     $sleep = 1;
     $attempts = 0;
 
-    do {
+    while (true) {
         try {
             $attempts++;
             $resource = $app->getResource($resourceKey);
@@ -176,13 +181,12 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
             break; // exit loop on success
         } catch (\Exception $e) {
             Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
-            $pools->reclaim();
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
             sleep($sleep);
         }
-    } while ($attempts < $max);
+    }
 
     Console::success("[Setup] - $dbName database init started...");
 
@@ -255,8 +259,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $audit->setup();
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() &&
-                !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
+            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 Console::info("    └── Creating default bucket...");
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
@@ -308,6 +311,54 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
             }
+
+            if (Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
+                Console::info("    └── Creating screenshots bucket...");
+                Authorization::skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
+                    '$id' => ID::custom('screenshots'),
+                    '$collection' => ID::custom('buckets'),
+                    'name' => 'Screenshots',
+                    'maximumFileSize' => 20000000, // ~20MB
+                    'allowedFileExtensions' => [ 'png' ],
+                    'enabled' => true,
+                    'compression' => Compression::GZIP,
+                    'encryption' => false,
+                    'antivirus' => false,
+                    'fileSecurity' => true,
+                    '$permissions' => [],
+                    'search' => 'buckets Screenshots',
+                ])));
+
+                $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+
+                Console::info("    └── Creating files collection for screenshots bucket...");
+                $files = $collections['buckets']['files'] ?? [];
+                if (empty($files)) {
+                    throw new Exception('Files collection is not configured.');
+                }
+
+                $attributes = array_map(fn ($attr) => new Document([
+                    '$id' => ID::custom($attr['$id']),
+                    'type' => $attr['type'],
+                    'size' => $attr['size'],
+                    'required' => $attr['required'],
+                    'signed' => $attr['signed'],
+                    'array' => $attr['array'],
+                    'filters' => $attr['filters'],
+                    'default' => $attr['default'] ?? null,
+                    'format' => $attr['format'] ?? ''
+                ]), $files['attributes']);
+
+                $indexes = array_map(fn ($index) => new Document([
+                    '$id' => ID::custom($index['$id']),
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]), $files['indexes']);
+
+                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes));
+            }
         });
 
         $projectCollections = $collections['projects'];
@@ -318,11 +369,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $cache = $app->getResource('cache');
 
         foreach ($sharedTablesV2 as $hostname) {
-            $adapter = $pools
-                ->get($hostname)
-                ->pop()
-                ->getResource();
-
+            $adapter = new DatabasePool($pools->get($hostname));
             $dbForProject = (new Database($adapter, $cache))
                 ->setDatabase('appwrite')
                 ->setSharedTables(true)
@@ -332,7 +379,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             try {
                 Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                 $dbForProject->create();
-            } catch (Duplicate) {
+            } catch (DuplicateException) {
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
@@ -358,7 +405,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             }
         }
 
-        $pools->reclaim();
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -473,6 +519,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         Console::error('[Error] Message: ' . $th->getMessage());
         Console::error('[Error] File: ' . $th->getFile());
         Console::error('[Error] Line: ' . $th->getLine());
+        Console::error('[Error] Trace: ' . $th->getTraceAsString());
 
         $swooleResponse->setStatusCode(500);
 
@@ -490,13 +537,11 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         ];
 
         $swooleResponse->end(\json_encode($output));
-    } finally {
-        $pools->reclaim();
     }
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on('Task', function () use ($register, $domains) {
+$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);
@@ -520,7 +565,6 @@ $http->on('Task', function () use ($register, $domains) {
                 if ($lastSyncUpdate != null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
-                $queries[] = Query::equal('resourceType', ['function']);
                 $results = [];
                 try {
                     $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
@@ -531,7 +575,7 @@ $http->on('Task', function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
                         continue;
                     }
                     $domains->set(md5($domain), ['value' => 1]);

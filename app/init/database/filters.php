@@ -77,12 +77,21 @@ Database::addFilter(
         ]);
 
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
-                $options = $attribute->getAttribute('options');
-                foreach ($options as $key => $value) {
-                    $attribute->setAttribute($key, $value);
-                }
-                $attribute->removeAttribute('options');
+            $attributeType = $attribute->getAttribute('type');
+
+            switch ($attributeType) {
+                case Database::VAR_RELATIONSHIP:
+                    $options = $attribute->getAttribute('options');
+                    foreach ($options as $key => $value) {
+                        $attribute->setAttribute($key, $value);
+                    }
+                    $attribute->removeAttribute('options');
+                    break;
+
+                case Database::VAR_STRING:
+                    $filters = $attribute->getAttribute('filters', []);
+                    $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
+                    break;
             }
         }
 
@@ -127,6 +136,20 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
+    }
+);
+
+Database::addFilter(
+    'subQueryDevKeys',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('devKeys', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
@@ -225,7 +248,7 @@ Database::addFilter(
         return $database
             ->find('variables', [
                 Query::equal('resourceInternalId', [$document->getInternalId()]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', ['function', 'site']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }

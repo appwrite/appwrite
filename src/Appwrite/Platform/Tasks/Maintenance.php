@@ -27,7 +27,7 @@ class Maintenance extends Action
             ->inject('console')
             ->inject('queueForCertificates')
             ->inject('queueForDeletes')
-            ->callback(fn (Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes) => $this->action($dbForPlatform, $console, $queueForCertificates, $queueForDeletes));
+            ->callback([$this, 'action']);
     }
 
     public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
@@ -35,12 +35,27 @@ class Maintenance extends Action
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
-        // # of days in seconds (1 day = 86400s)
-        $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        $delay = (int) System::getEnv('_APP_MAINTENANCE_DELAY', '0');
+        $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
         $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
+        $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
+
+        $now = new \DateTime();
+        $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
+        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $delay = $next->getTimestamp() - $now->getTimestamp();
+
+        /**
+         * If time passed for the target day.
+         */
+        if ($delay <= 0) {
+            $next->add(\DateInterval::createFromDateString('1 days'));
+            $delay = $next->getTimestamp() - $now->getTimestamp();
+        }
+
+        Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
 
         Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
             $time = DateTime::now();

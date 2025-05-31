@@ -24,6 +24,7 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -223,7 +224,7 @@ App::post('/v1/projects')
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         if (!$sharedTablesV2) {
-            $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+            $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
 
             if ($sharedTables) {
@@ -2139,7 +2140,8 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->inject('response')
     ->inject('dbForPlatform')
     ->inject('queueForMails')
-    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Mail $queueForMails) {
+    ->inject('plan')
+    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Mail $queueForMails, array $plan) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -2152,7 +2154,14 @@ App::post('/v1/projects/:projectId/smtp/tests')
         $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
-            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})");
+            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})")
+            ->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL)
+            ->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR)
+            ->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER)
+            ->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD)
+            ->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE)
+            ->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL)
+            ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
 
         foreach ($emails as $email) {
             $queueForMails

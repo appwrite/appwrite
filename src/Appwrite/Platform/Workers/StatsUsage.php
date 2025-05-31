@@ -230,7 +230,11 @@ class StatsUsage extends Action
                 case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
                     $parts = explode('_', $document->getCollection());
                     $databaseInternalId = $parts[1] ?? 0;
-                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $document->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS)));
+                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(
+                        ['{databaseInternalId}', '{collectionInternalId}'],
+                        [$databaseInternalId, $document->getInternalId()],
+                        METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
+                    )));
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
@@ -263,18 +267,22 @@ class StatsUsage extends Action
                     }
                     break;
 
-                case $document->getCollection() === 'functions':
-                    $deployments = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
-                    $deploymentsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
-                    $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
-                    $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
-                    $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
-                    $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
-                    $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
+                case $document->getCollection() === 'functions' || $document->getCollection() === 'sites':
+                    $deployments = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS)));
+                    $deploymentsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE)));
+                    $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS)));
+                    $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE)));
+                    $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE)));
+                    $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS)));
+                    $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE)));
 
                     if (!empty($deployments['value'])) {
                         $metrics[] = [
                             'key' => METRIC_DEPLOYMENTS,
+                            'value' => ($deployments['value'] * -1),
+                        ];
+                        $metrics[] = [
+                            'key' => str_replace("{resourceType}", $document->getCollection(), METRIC_RESOURCE_TYPE_DEPLOYMENTS),
                             'value' => ($deployments['value'] * -1),
                         ];
                     }
@@ -284,11 +292,19 @@ class StatsUsage extends Action
                             'key' => METRIC_DEPLOYMENTS_STORAGE,
                             'value' => ($deploymentsStorage['value'] * -1),
                         ];
+                        $metrics[] = [
+                            'key' => str_replace("{resourceType}", $document->getCollection(), METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE),
+                            'value' => ($deploymentsStorage['value'] * -1),
+                        ];
                     }
 
                     if (!empty($builds['value'])) {
                         $metrics[] = [
                             'key' => METRIC_BUILDS,
+                            'value' => ($builds['value'] * -1),
+                        ];
+                        $metrics[] = [
+                            'key' => str_replace("{resourceType}", $document->getCollection(), METRIC_RESOURCE_TYPE_BUILDS),
                             'value' => ($builds['value'] * -1),
                         ];
                     }
@@ -298,11 +314,19 @@ class StatsUsage extends Action
                             'key' => METRIC_BUILDS_STORAGE,
                             'value' => ($buildsStorage['value'] * -1),
                         ];
+                        $metrics[] = [
+                            'key' => str_replace("{resourceType}", $document->getCollection(), METRIC_RESOURCE_TYPE_BUILDS_STORAGE),
+                            'value' => ($buildsStorage['value'] * -1),
+                        ];
                     }
 
                     if (!empty($buildsCompute['value'])) {
                         $metrics[] = [
                             'key' => METRIC_BUILDS_COMPUTE,
+                            'value' => ($buildsCompute['value'] * -1),
+                        ];
+                        $metrics[] = [
+                            'key' => str_replace("{resourceType}", $document->getCollection(), METRIC_RESOURCE_TYPE_BUILDS_COMPUTE),
                             'value' => ($buildsCompute['value'] * -1),
                         ];
                     }
@@ -312,11 +336,19 @@ class StatsUsage extends Action
                             'key' => METRIC_EXECUTIONS,
                             'value' => ($executions['value'] * -1),
                         ];
+                        $metrics[] = [
+                            'key' => str_replace("{resourceType}", $document->getCollection(), METRIC_RESOURCE_TYPE_EXECUTIONS),
+                            'value' => ($executions['value'] * -1),
+                        ];
                     }
 
                     if (!empty($executionsCompute['value'])) {
                         $metrics[] = [
                             'key' => METRIC_EXECUTIONS_COMPUTE,
+                            'value' => ($executionsCompute['value'] * -1),
+                        ];
+                        $metrics[] = [
+                            'key' => str_replace("{resourceType}", $document->getCollection(), METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
                             'value' => ($executionsCompute['value'] * -1),
                         ];
                     }
@@ -325,7 +357,7 @@ class StatsUsage extends Action
                     break;
             }
         } catch (Throwable $e) {
-            console::error("[reducer] " . " {DateTime::now()} " . " {$project->getInternalId()} " . " {$e->getMessage()}");
+            Console::error("[reducer] " . " {DateTime::now()} " . " {$project->getInternalId()} " . " {$e->getMessage()}");
         }
     }
 
@@ -344,7 +376,7 @@ class StatsUsage extends Action
                 continue;
             }
 
-            console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
+            Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
             try {
                 foreach ($stats['keys'] ?? [] as $key => $value) {
@@ -381,7 +413,7 @@ class StatsUsage extends Action
                     }
                 }
             } catch (Exception $e) {
-                console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+                Console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
         }
 
@@ -405,7 +437,7 @@ class StatsUsage extends Action
 
     }
 
-    protected function prepareForLogsDB(Document $project, Document $stat)
+    protected function prepareForLogsDB(Document $project, Document $stat): void
     {
         if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
             return;
@@ -430,8 +462,7 @@ class StatsUsage extends Action
             return;
         }
 
-        $dbForLogs = call_user_func($this->getLogsDB);
-        $dbForLogs
+        $dbForLogs = ($this->getLogsDB)()
             ->setTenant(null)
             ->setTenantPerDocument(true);
 
@@ -446,6 +477,5 @@ class StatsUsage extends Action
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }
-        $this->register->get('pools')->get('logs')->reclaim();
     }
 }

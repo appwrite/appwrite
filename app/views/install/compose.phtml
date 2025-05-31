@@ -61,10 +61,13 @@ $image = $this->getParam('image', '');
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
+      - appwrite-builds:/storage/builds:rw
     depends_on:
       - mariadb
       - redis
@@ -86,10 +89,12 @@ $image = $this->getParam('image', '');
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -133,17 +138,21 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_FUNCTIONS_SIZE_LIMIT
+      - _APP_COMPUTE_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_FUNCTIONS_RUNTIMES
+      - _APP_SITES_RUNTIMES
+      - _APP_DOMAIN_SITES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_LOGGING_CONFIG
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_DELAY
+      - _APP_MAINTENANCE_START_TIME
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
@@ -168,7 +177,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:5.2.58
+    image: <?php echo $organization; ?>/console:6.0.11
     restart: unless-stopped
     networks:
       - appwrite
@@ -299,6 +308,7 @@ $image = $this->getParam('image', '');
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
@@ -385,7 +395,9 @@ $image = $this->getParam('image', '');
       - mariadb
     volumes:
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
+      - appwrite-uploads:/storage/uploads:rw
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -406,12 +418,13 @@ $image = $this->getParam('image', '');
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_SIZE_LIMIT
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
+      - _APP_COMPUTE_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -435,6 +448,7 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
+      - _APP_DOMAIN_SITES
 
   appwrite-worker-certificates:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -455,7 +469,9 @@ $image = $this->getParam('image', '');
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
@@ -497,9 +513,10 @@ $image = $this->getParam('image', '');
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
@@ -600,6 +617,8 @@ $image = $this->getParam('image', '');
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - appwrite-imports:/storage/imports:rw
     depends_on:
       - mariadb
     environment:
@@ -607,7 +626,9 @@ $image = $this->getParam('image', '');
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_EMAIL_SECURITY
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -636,7 +657,9 @@ $image = $this->getParam('image', '');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -662,11 +685,9 @@ $image = $this->getParam('image', '');
     container_name: appwrite-task-stats-resources
     entrypoint: stats-resources
     <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -828,6 +849,14 @@ $image = $this->getParam('image', '');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
+      
+  appwrite-browser:
+    image: appwrite/browser:0.2.4
+    container_name: appwrite-browser
+    <<: *x-logging
+    restart: unless-stopped
+    networks:
+      - appwrite
 
   openruntimes-executor:
     container_name: openruntimes-executor
@@ -835,7 +864,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.6.11
+    image: openruntimes/executor:0.7.14
     networks:
       - appwrite
       - runtimes
@@ -843,18 +872,20 @@ $image = $this->getParam('image', '');
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       # Host mount nessessary to share files between executor and runtimes.
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_FUNCTIONS_INACTIVE_THRESHOLD
-      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_FUNCTIONS_MAINTENANCE_INTERVAL
-      - OPR_EXECUTOR_NETWORK=$_APP_FUNCTIONS_RUNTIMES_NETWORK
+      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
+      - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
       - OPR_EXECUTOR_DOCKER_HUB_PASSWORD=$_APP_DOCKER_HUB_PASSWORD
       - OPR_EXECUTOR_ENV=$_APP_ENV
-      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
+      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
+      - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -933,7 +964,9 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-imports:
   appwrite-certificates:
   appwrite-functions:
+  appwrite-sites:
   appwrite-builds:
   appwrite-config:

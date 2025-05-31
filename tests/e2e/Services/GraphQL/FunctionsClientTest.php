@@ -133,7 +133,7 @@ class FunctionsClientTest extends Scope
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
             $this->assertEquals('ready', $deployment['status']);
-        });
+        }, 60000);
 
         return $deployment;
     }

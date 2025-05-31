@@ -3,13 +3,16 @@
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
@@ -34,8 +37,8 @@ App::get('/v1/health')
         namespace: 'health',
         group: 'health',
         name: 'get',
-        auth: [AuthType::KEY],
         description: '/docs/references/health/get.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -70,11 +73,11 @@ App::get('/v1/health/db')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'health',
         name: 'getDB',
         description: '/docs/references/health/get-db.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -86,8 +89,8 @@ App::get('/v1/health/db')
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
-
         $output = [];
+        $failures = [];
 
         $configs = [
             'Console.DB' => Config::getParam('pools-console'),
@@ -97,7 +100,7 @@ App::get('/v1/health/db')
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $adapter = new DatabasePool($pools->get($database));
 
                     $checkStart = \microtime(true);
 
@@ -108,16 +111,16 @@ App::get('/v1/health/db')
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
-                        $failure[] = $database;
+                        $failures[] = $database;
                     }
-                } catch (\Throwable $th) {
-                    $failure[] = $database;
+                } catch (\Throwable) {
+                    $failures[] = $database;
                 }
             }
         }
 
-        if (!empty($failure)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failure));
+        if (!empty($failures)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
 
         $response->dynamic(new Document([
@@ -131,11 +134,11 @@ App::get('/v1/health/cache')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'health',
         name: 'getCache',
         description: '/docs/references/health/get-cache.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -147,42 +150,37 @@ App::get('/v1/health/cache')
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
-
         $output = [];
+        $failures = [];
 
         $configs = [
             'Cache' => Config::getParam('pools-cache'),
         ];
 
         foreach ($configs as $key => $config) {
-            foreach ($config as $database) {
+            foreach ($config as $cache) {
                 try {
-                    /** @var \Utopia\Cache\Adapter $adapter */
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $adapter = new CachePool($pools->get($cache));
 
                     $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key . " ($cache)",
                             'status' => 'pass',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
+                        $failures[] = $cache;
                     }
-                } catch (\Throwable $th) {
-                    $output[] = new Document([
-                        'name' => $key . " ($database)",
-                        'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                    ]);
+                } catch (\Throwable) {
+                    $failures[] = $cache;
                 }
             }
+        }
+
+        if (!empty($failures)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Cache failure on: ' . implode(", ", $failures));
         }
 
         $response->dynamic(new Document([
@@ -196,11 +194,11 @@ App::get('/v1/health/pubsub')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'health',
         name: 'getPubSub',
         description: '/docs/references/health/get-pubsub.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -212,42 +210,37 @@ App::get('/v1/health/pubsub')
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
-
         $output = [];
+        $failures = [];
 
         $configs = [
             'PubSub' => Config::getParam('pools-pubsub'),
         ];
 
         foreach ($configs as $key => $config) {
-            foreach ($config as $database) {
+            foreach ($config as $pubsub) {
                 try {
-                    /** @var \Appwrite\PubSub\Adapter $adapter */
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $adapter = new PubSubPool($pools->get($pubsub));
 
                     $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key . " ($pubsub)",
                             'status' => 'pass',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
+                        $failures[] = $pubsub;
                     }
-                } catch (\Throwable $th) {
-                    $output[] = new Document([
-                        'name' => $key . " ($database)",
-                        'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                    ]);
+                } catch (\Throwable) {
+                    $failures[] = $pubsub;
                 }
             }
+        }
+
+        if (!empty($failures)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Pubsub failure on: ' . implode(", ", $failures));
         }
 
         $response->dynamic(new Document([
@@ -261,11 +254,11 @@ App::get('/v1/health/time')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'health',
         name: 'getTime',
         description: '/docs/references/health/get-time.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -325,11 +318,11 @@ App::get('/v1/health/queue/webhooks')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueWebhooks',
         description: '/docs/references/health/get-queue-webhooks.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -351,18 +344,18 @@ App::get('/v1/health/queue/webhooks')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/logs')
     ->desc('Get logs queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueLogs',
         description: '/docs/references/health/get-queue-logs.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -384,18 +377,18 @@ App::get('/v1/health/queue/logs')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/certificate')
     ->desc('Get the SSL certificate for a domain')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'health',
         name: 'getCertificate',
         description: '/docs/references/health/get-certificate.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -441,18 +434,18 @@ App::get('/v1/health/certificate')
             'validTo' => $certificatePayload['validTo_time_t'],
             'signatureTypeSN' => $certificatePayload['signatureTypeSN'],
         ]), Response::MODEL_HEALTH_CERTIFICATE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/certificates')
     ->desc('Get certificates queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueCertificates',
         description: '/docs/references/health/get-queue-certificates.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -474,18 +467,18 @@ App::get('/v1/health/queue/certificates')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/builds')
     ->desc('Get builds queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueBuilds',
         description: '/docs/references/health/get-queue-builds.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -507,18 +500,18 @@ App::get('/v1/health/queue/builds')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/databases')
     ->desc('Get databases queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueDatabases',
         description: '/docs/references/health/get-queue-databases.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -541,18 +534,18 @@ App::get('/v1/health/queue/databases')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/deletes')
     ->desc('Get deletes queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueDeletes',
         description: '/docs/references/health/get-queue-deletes.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -574,18 +567,18 @@ App::get('/v1/health/queue/deletes')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/mails')
     ->desc('Get mails queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueMails',
         description: '/docs/references/health/get-queue-mails.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -607,18 +600,18 @@ App::get('/v1/health/queue/mails')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/messaging')
     ->desc('Get messaging queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueMessaging',
         description: '/docs/references/health/get-queue-messaging.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -640,18 +633,18 @@ App::get('/v1/health/queue/messaging')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/migrations')
     ->desc('Get migrations queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueMigrations',
         description: '/docs/references/health/get-queue-migrations.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -673,18 +666,18 @@ App::get('/v1/health/queue/migrations')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/functions')
     ->desc('Get functions queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueFunctions',
         description: '/docs/references/health/get-queue-functions.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -706,18 +699,18 @@ App::get('/v1/health/queue/functions')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
+    });
 
 App::get('/v1/health/queue/stats-resources')
     ->desc('Get stats  resources queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueStatsResources',
         description: '/docs/references/health/get-queue-stats-resources.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -746,11 +739,11 @@ App::get('/v1/health/queue/stats-usage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getQueueUsage',
         description: '/docs/references/health/get-queue-stats-usage.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -779,11 +772,11 @@ App::get('/v1/health/storage/local')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'storage',
         name: 'getStorageLocal',
         description: '/docs/references/health/get-storage-local.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -829,11 +822,11 @@ App::get('/v1/health/storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'storage',
         name: 'getStorage',
         description: '/docs/references/health/get-storage.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -845,9 +838,10 @@ App::get('/v1/health/storage')
     ->inject('response')
     ->inject('deviceForFiles')
     ->inject('deviceForFunctions')
+    ->inject('deviceForSites')
     ->inject('deviceForBuilds')
-    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds) {
-        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForBuilds];
+    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds) {
+        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForSites,  $deviceForBuilds];
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {
@@ -877,11 +871,11 @@ App::get('/v1/health/anti-virus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'health',
         name: 'getAntivirus',
         description: '/docs/references/health/get-storage-anti-virus.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -923,11 +917,11 @@ App::get('/v1/health/queue/failed/:name')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
-        auth: [AuthType::KEY],
         namespace: 'health',
         group: 'queue',
         name: 'getFailedJobs',
         description: '/docs/references/health/get-failed-queue-jobs.md',
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
