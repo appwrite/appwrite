@@ -60,8 +60,9 @@ class V23 extends Migration
         Console::info("  └── Migrating `migrations` collections.");
 
         /**
-         * direct access.\
-         * same as `$this->collections['projects']['migrations']['$id']`.
+         * Specifying the ID for direct access.
+         *
+         * This is same as `$this->collections['projects']['migrations']['$id']`.
          */
         $migrationCollectionId = 'migrations';
 
