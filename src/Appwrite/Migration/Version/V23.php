@@ -48,15 +48,16 @@ class V23 extends Migration
     {
         $projectInternalId = $this->project->getSequence();
 
+        if (empty($projectInternalId)) {
+            throw new Exception('Project ID is null');
+        }
+
+        // not needed for `console` project.
         if ($projectInternalId !== 'projects') {
             return;
         }
 
         Console::info("  └── Migrating `migrations` collections.");
-
-        if (empty($projectInternalId)) {
-            throw new Exception('Project ID is null');
-        }
 
         /**
          * direct access.\
