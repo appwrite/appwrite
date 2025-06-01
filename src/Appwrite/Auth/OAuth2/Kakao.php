@@ -15,7 +15,12 @@ class Kakao extends OAuth2
     protected array $scopes = [
         'profile_nickname',
         'profile_image',
-        'account_email'
+        'account_email',
+        // Optional scopes that can be enabled based on app requirements:
+        // 'openid',      // for OpenID Connect ID tokens
+        // 'gender',      // for user's gender information
+        // 'age_range',   // for user's age range
+        // 'birthday'     // for user's birthday
     ];
 
     /**
@@ -54,12 +59,17 @@ class Kakao extends OAuth2
      * @param string $code
      *
      * @return array
+     * @throws \Exception
      */
     protected function getTokens(string $code): array
     {
+        if (empty($code)) {
+            throw new \Exception('Authorization code is required');
+        }
+
         if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
-            $this->tokens = \json_decode($this->request(
+            $response = $this->request(
                 'POST',
                 'https://kauth.kakao.com/oauth/token',
                 $headers,
@@ -70,7 +80,23 @@ class Kakao extends OAuth2
                     'redirect_uri' => $this->callback,
                     'code' => $code
                 ])
-            ), true);
+            );
+
+            if (empty($response)) {
+                throw new \Exception('Failed to exchange code for token: Empty response from server');
+            }
+
+            $tokens = \json_decode($response, true);
+            
+            if (\json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Failed to exchange code for token: Invalid JSON response - ' . \json_last_error_msg());
+            }
+
+            if (empty($tokens) || !isset($tokens['access_token'])) {
+                throw new \Exception('Failed to exchange code for token: Invalid token response');
+            }
+
+            $this->tokens = $tokens;
         }
 
         return $this->tokens;
@@ -80,11 +106,16 @@ class Kakao extends OAuth2
      * @param string $refreshToken
      *
      * @return array
+     * @throws \Exception
      */
     public function refreshTokens(string $refreshToken): array
     {
+        if (empty($refreshToken)) {
+            throw new \Exception('Refresh token is required');
+        }
+
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
-        $this->tokens = \json_decode($this->request(
+        $response = $this->request(
             'POST',
             'https://kauth.kakao.com/oauth/token',
             $headers,
@@ -94,8 +125,25 @@ class Kakao extends OAuth2
                 'client_secret' => $this->appSecret,
                 'refresh_token' => $refreshToken
             ])
-        ), true);
+        );
 
+        if (empty($response)) {
+            throw new \Exception('Failed to refresh token: Empty response from server');
+        }
+
+        $tokens = \json_decode($response, true);
+        
+        if (\json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception('Failed to refresh token: Invalid JSON response - ' . \json_last_error_msg());
+        }
+
+        if (empty($tokens) || !isset($tokens['access_token'])) {
+            throw new \Exception('Failed to refresh token: Invalid token response');
+        }
+
+        $this->tokens = $tokens;
+
+        // If the server didn't return a new refresh token, keep the old one
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
@@ -153,17 +201,37 @@ class Kakao extends OAuth2
      * @param string $accessToken
      *
      * @return array
+     * @throws \Exception
      */
     protected function getUser(string $accessToken): array
     {
+        if (empty($accessToken)) {
+            throw new \Exception('Access token is required');
+        }
+
         if (empty($this->user)) {
             $headers = [
-                'Authorization: Bearer ' . \urlencode($accessToken),
+                'Authorization: Bearer ' . $accessToken,
                 'Content-Type: application/x-www-form-urlencoded;charset=utf-8'
             ];
             
-            $user = $this->request('GET', 'https://kapi.kakao.com/v2/user/me', $headers);
-            $this->user = \json_decode($user, true);
+            $response = $this->request('GET', 'https://kapi.kakao.com/v2/user/me', $headers);
+
+            if (empty($response)) {
+                throw new \Exception('Failed to fetch user data: Empty response from server');
+            }
+
+            $user = \json_decode($response, true);
+            
+            if (\json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Failed to fetch user data: Invalid JSON response - ' . \json_last_error_msg());
+            }
+
+            if (empty($user) || !isset($user['id'])) {
+                throw new \Exception('Failed to fetch user data: Invalid user data response');
+            }
+
+            $this->user = $user;
         }
 
         return $this->user;
