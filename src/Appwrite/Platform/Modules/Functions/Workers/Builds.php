@@ -1087,7 +1087,7 @@ class Builds extends Action
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),
-                            Query::equal("projectInternalId", [$project->getInternalId()])
+                            Query::equal("projectInternalId", [$project->getSequence()])
                         ];
 
                         $rulesUpdated = false;
@@ -1113,7 +1113,7 @@ class Builds extends Action
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),
-                            Query::equal("projectInternalId", [$project->getInternalId()])
+                            Query::equal("projectInternalId", [$project->getSequence()])
                         ];
 
                         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
@@ -1170,7 +1170,7 @@ class Builds extends Action
                     }
 
                     $queries = [
-                        Query::equal('projectInternalId', [$project->getInternalId()]),
+                        Query::equal('projectInternalId', [$project->getSequence()]),
                         Query::equal('type', ['deployment']),
                         Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                         Query::equal('deploymentResourceType', ['site']),

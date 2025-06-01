@@ -109,7 +109,7 @@ class Update extends Base
             Query::equal("deploymentResourceType", ["function"]),
             Query::equal("deploymentResourceInternalId", [$function->getSequence()]),
             Query::equal("deploymentVcsProviderBranch", [""]),
-            Query::equal("projectInternalId", [$project->getInternalId()])
+            Query::equal("projectInternalId", [$project->getSequence()])
         ];
 
         Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {

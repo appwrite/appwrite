@@ -365,6 +365,7 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $errorMessages);
             }
         } finally {
+            $this->setMigrationError($migration, $source, $destination);
             $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
             if ($migration->getAttribute('status', '') === 'failed') {
@@ -404,6 +405,30 @@ class Migrations extends Action
             if ($migration->getAttribute('status', '') === 'completed') {
                 $destination?->success();
                 $source?->success();
+            }
+        }
+    }
+
+    /**
+     * Stores a human-readable error message for migration.
+     *
+     * Only applies to migrations where the source is CSV.
+     */
+    private function setMigrationError(Document $migration, ?Source $source, ?Destination $destination): void
+    {
+        if ($migration->isEmpty() || $source === null || $destination === null) {
+            return;
+        }
+
+        $sourceErrors = $source->getErrors();
+        $destinationErrors = $destination->getErrors();
+        $migrationSource = $migration->getAttribute('source');
+
+        if ($migrationSource === CSV::getName()) {
+            if (! empty($sourceErrors)) {
+                $migration->setAttribute('error', $sourceErrors[0]->getMessage());
+            } elseif (! empty($destinationErrors)) {
+                $migration->setAttribute('error', $destinationErrors[0]->getMessage());
             }
         }
     }

@@ -1286,6 +1286,7 @@ return [
             ]
         ],
     ],
+
     'deployments' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('deployments'),
@@ -2339,6 +2340,23 @@ return [
                 'required' => true,
                 'default' => null,
                 'array' => true,
+                'filters' => [],
+            ],
+            [
+                /**
+                 * A short, human-readable error message (no stacktrace),
+                 * unlike `errors` which contains detailed entries with full trace.
+                 *
+                 * This is mainly used used for csv imports as its failure need to be shown on frontend.
+                 */
+                '$id' => ID::custom('error'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
                 'filters' => [],
             ],
             [
