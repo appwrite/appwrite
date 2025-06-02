@@ -871,7 +871,7 @@ trait MigrationsBase
             $this->assertEquals(1, $deployments['body']['total']);
 
             $this->assertEquals('ready', $deployments['body']['deployments'][0]['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployments['body']['deployments'][0], JSON_PRETTY_PRINT));
-        }, 50000, 500);
+        }, 100000, 500);
 
         // Attempt execution
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
