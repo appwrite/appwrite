@@ -103,9 +103,9 @@ class Comment
                 $text .= "| :- | :-  | :-  | :-  | :- |\n";
 
                 foreach ($project['site'] as $siteId => $site) {
-                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
-
                     $imageStatus = in_array($site['status'], ['processing', 'building']) ? 'building' : $site['status'];
+
+                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
 
                     $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
                     $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
