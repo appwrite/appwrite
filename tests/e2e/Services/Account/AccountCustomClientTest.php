@@ -1864,6 +1864,9 @@ class AccountCustomClientTest extends Scope
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
+        $this->assertArrayHasKey('cookies', $response, 'Failed to assert response has cookies, response: ', json_encode($response, JSON_PRETTY_PRINT));
+        $this->assertArrayHasKey('a_session_' . $this->getProject()['$id'], $response['cookies'], 'Failed to assert response had session cookie: ' . json_encode($response, JSON_PRETTY_PRINT));
+
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals(200, $response['headers']['status-code']);
