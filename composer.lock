@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d1e8bc951ce7d70a3254381a9f639971",
+    "content-hash": "3230eea9e592f0b712e78c1ef5f5e244",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4584,16 +4584,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "dev-feat-check-deleted-attribute-on-push",
+            "version": "0.10.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "ba43fd0e797a61c92197885413b650aed6a45577"
+                "reference": "a51ca929aa8a82cc790c2df8b653d6c60cb889d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/ba43fd0e797a61c92197885413b650aed6a45577",
-                "reference": "ba43fd0e797a61c92197885413b650aed6a45577",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/a51ca929aa8a82cc790c2df8b653d6c60cb889d3",
+                "reference": "a51ca929aa8a82cc790c2df8b653d6c60cb889d3",
                 "shasum": ""
             },
             "require": {
@@ -4627,9 +4627,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/feat-check-deleted-attribute-on-push"
+                "source": "https://github.com/utopia-php/vcs/tree/0.10.3"
             },
-            "time": "2025-06-02T08:03:56+00:00"
+            "time": "2025-06-02T08:23:44+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -8232,18 +8232,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/vcs",
-            "version": "dev-feat-check-deleted-attribute-on-push",
-            "alias": "0.10.99",
-            "alias_normalized": "0.10.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/vcs": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
