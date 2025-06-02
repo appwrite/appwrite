@@ -325,7 +325,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => '',
             'fallbackFile' => '',
         ]);
 

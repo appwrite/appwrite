@@ -17,6 +17,8 @@ trait SitesBase
     protected string $stdout = '';
     protected string $stderr = '';
 
+    protected array $prepared = []; // array of folder names of test resources that are already zipped
+
     protected function setupSite(mixed $params): string
     {
         $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
@@ -34,13 +36,52 @@ trait SitesBase
 
     protected function setupDeployment(string $siteId, mixed $params): string
     {
-        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $params);
-        $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        $deploymentId = $deployment['body']['$id'] ?? '';
+        if ($params['code'] instanceof CURLFile) {
+            $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), $params);
+
+            $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+
+            $deploymentId = $deployment['body']['$id'] ?? '';
+        } elseif (\is_string($params['code'])) {
+            $source = realpath(__DIR__ . '/../../../resources/sites') . "/" . $params['code'] . "/code.tar.gz";
+            $chunkSize = 5 * 1024 * 1024;
+            $handle = @fopen($source, "rb");
+            $mimeType = mime_content_type($source);
+            $counter = 0;
+            $size = filesize($source);
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ];
+            $deploymentId = '';
+            while (!feof($handle)) {
+                $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'code.tar.gz');
+
+                $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+
+                if (!empty($deploymentId)) {
+                    $headers['x-appwrite-id'] = $deploymentId;
+                }
+
+                $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge($headers), array_merge($params, [
+                    'code' => $curlFile
+                ]));
+
+                $counter++;
+                $deploymentId = $deployment['body']['$id'] ?? '';
+
+                $this->assertEquals(202, $deployment['headers']['status-code']);
+            }
+
+            @fclose($handle);
+        } else {
+            throw new \Exception('Code parameter missing.');
+        }
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, array_merge([
@@ -220,14 +261,24 @@ trait SitesBase
         return $logs;
     }
 
-    protected function packageSite(string $site): CURLFile
+    protected function packageSite(string $site, bool $silent = true): CURLFile | string
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        if (!\in_array($site, $this->prepared)) {
+            Console::execute("cd $folderPath && curl -fsSL https://bun.sh/install | bash && bun install", '', $this->stdout, $this->stderr);
+
+            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+
+            $this->prepared[] = $site;
+        }
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
+            if ($silent) {
+                return $site;
+            }
+
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
