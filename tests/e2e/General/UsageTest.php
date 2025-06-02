@@ -183,9 +183,11 @@ class UsageTest extends Scope
     /**
      * @depends testPrepareUsersStats
      */
-    #[Retry(count: 1)]
+    #[Retry(count: 10)]
     public function testUsersStats(array $data): array
     {
+        \sleep(1); // To prevent all 10 retries from running instantly
+
         $requestsTotal = $data['requestsTotal'];
 
         $response = $this->client->call(
@@ -362,6 +364,8 @@ class UsageTest extends Scope
     #[Retry(count: 10)]
     public function testStorageStats(array $data): array
     {
+        \sleep(1); // To prevent all 10 retries from running instantly
+
         $bucketId      = $data['bucketId'];
         $bucketsTotal  = $data['bucketsTotal'];
         $requestsTotal = $data['requestsTotal'];
@@ -577,9 +581,11 @@ class UsageTest extends Scope
     }
 
     /** @depends testPrepareDatabaseStats */
-    #[Retry(count: 1)]
+    #[Retry(count: 10)]
     public function testDatabaseStats(array $data): array
     {
+        \sleep(1); // To prevent all 10 retries from running instantly
+
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $requestsTotal = $data['requestsTotal'];
@@ -799,9 +805,11 @@ class UsageTest extends Scope
     }
 
     /** @depends testPrepareFunctionsStats */
-    #[Retry(count: 1)]
+    #[Retry(count: 10)]
     public function testFunctionsStats(array $data): array
     {
+        \sleep(1); // To prevent all 10 retries from running instantly
+
         $functionId = $data['functionId'];
         $executionTime = $data['executionTime'];
         $executions = $data['executions'];
@@ -927,9 +935,11 @@ class UsageTest extends Scope
     }
 
     /** @depends testPrepareSitesStats */
-    #[Retry(count: 1)]
+    #[Retry(count: 10)]
     public function testSitesStats(array $data)
     {
+        \sleep(1); // To prevent all 10 retries from running instantly
+
         $siteId = $data['siteId'];
         $executionTime = $data['executionTime'] ?? 0;
         $executions = $data['executions'] ?? 0;
