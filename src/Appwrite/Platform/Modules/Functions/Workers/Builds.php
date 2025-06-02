@@ -1072,6 +1072,21 @@ class Builds extends Action
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
+                // Check if current active deployment started later than this deployment
+                $currentDeploymentId = $resource->getAttribute('deploymentId', '');
+                if (!empty($currentDeploymentId)) {
+                    $currentDeployment = $dbForProject->getDocument('deployments', $currentDeploymentId);
+                    if (!$currentDeployment->isEmpty()) {
+                        $currentStartTime = $currentDeployment->getAttribute('buildStartedAt', '');
+                        $newStartTime = $deployment->getAttribute('buildStartedAt', '');
+
+                        if (!empty($currentStartTime) && !empty($newStartTime) && $currentStartTime > $newStartTime) {
+                            Console::info('Skipping auto-activation as current deployment started later');
+                            return;
+                        }
+                    }
+                }
+
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
