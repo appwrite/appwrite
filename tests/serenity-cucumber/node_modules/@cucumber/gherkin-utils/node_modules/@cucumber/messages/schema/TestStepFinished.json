@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TestStepFinished.json",
+  "additionalProperties": false,
+  "definitions": {
+    "TestStepResult": {
+      "additionalProperties": false,
+      "required": [
+        "duration",
+        "status"
+      ],
+      "properties": {
+        "duration": {
+          "$ref": "./Duration.json"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "UNKNOWN",
+            "PASSED",
+            "SKIPPED",
+            "PENDING",
+            "UNDEFINED",
+            "AMBIGUOUS",
+            "FAILED"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "testCaseStartedId",
+    "testStepId",
+    "testStepResult",
+    "timestamp"
+  ],
+  "properties": {
+    "testCaseStartedId": {
+      "type": "string"
+    },
+    "testStepId": {
+      "type": "string"
+    },
+    "testStepResult": {
+      "$ref": "#/definitions/TestStepResult"
+    },
+    "timestamp": {
+      "$ref": "./Timestamp.json"
+    }
+  },
+  "type": "object"
+}

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Meta.json",
+  "additionalProperties": false,
+  "definitions": {
+    "Ci": {
+      "additionalProperties": false,
+      "description": "CI environment",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "Name of the CI product, e.g. \"Jenkins\", \"CircleCI\" etc.",
+          "type": "string"
+        },
+        "url": {
+          "description": "Link to the build",
+          "type": "string"
+        },
+        "buildNumber": {
+          "description": "The build number. Some CI servers use non-numeric build numbers, which is why this is a string",
+          "type": "string"
+        },
+        "git": {
+          "$ref": "#/definitions/Git"
+        }
+      },
+      "type": "object"
+    },
+    "Git": {
+      "additionalProperties": false,
+      "description": "Information about Git, provided by the Build/CI server as environment\n variables.",
+      "required": [
+        "remote",
+        "revision"
+      ],
+      "properties": {
+        "remote": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Product": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Used to describe various properties of Meta",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "The product name",
+          "type": "string"
+        },
+        "version": {
+          "description": "The product version",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "description": "*\n This message contains meta information about the environment. Consumers can use\n this for various purposes.",
+  "required": [
+    "protocolVersion",
+    "implementation",
+    "runtime",
+    "os",
+    "cpu"
+  ],
+  "properties": {
+    "protocolVersion": {
+      "description": "*\n The [SEMVER](https://semver.org/) version number of the protocol",
+      "type": "string"
+    },
+    "implementation": {
+      "$ref": "#/definitions/Product",
+      "description": "SpecFlow, Cucumber-JVM, Cucumber.js, Cucumber-Ruby, Behat etc."
+    },
+    "runtime": {
+      "$ref": "#/definitions/Product",
+      "description": "Java, Ruby, Node.js etc"
+    },
+    "os": {
+      "$ref": "#/definitions/Product",
+      "description": "Windows, Linux, MacOS etc"
+    },
+    "cpu": {
+      "$ref": "#/definitions/Product",
+      "description": "386, arm, amd64 etc"
+    },
+    "ci": {
+      "$ref": "#/definitions/Ci"
+    }
+  },
+  "type": "object"
+}

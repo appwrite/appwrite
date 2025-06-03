@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Duration.json",
+  "additionalProperties": false,
+  "description": "The structure is pretty close of the Timestamp one. For clarity, a second type\n of message is used.",
+  "required": [
+    "seconds",
+    "nanos"
+  ],
+  "properties": {
+    "seconds": {
+      "type": "integer"
+    },
+    "nanos": {
+      "description": "Non-negative fractions of a second at nanosecond resolution. Negative\n second values with fractions must still have non-negative nanos values\n that count forward in time. Must be from 0 to 999,999,999\n inclusive.",
+      "type": "integer"
+    }
+  },
+  "type": "object"
+}

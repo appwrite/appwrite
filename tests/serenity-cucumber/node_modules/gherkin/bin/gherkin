@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+'use strict'
+const Stream = require('stream')
+const fs = require('fs')
+const EventStream = require('../lib/gherkin/stream/event_stream')
+
+const args = process.argv.slice(2)
+const types = {
+  'source': true,
+  'gherkin-document': true,
+  'pickle': true
+}
+
+const paths = []
+while (args.length > 0) {
+  const arg = args.shift()
+  switch (arg) {
+    case '--no-source':
+      types['source'] = false;
+      break;
+
+    case '--no-ast':
+      types['gherkin-document'] = false;
+      break;
+
+    case '--no-pickles':
+      types['pickle'] = false;
+      break;
+
+    default:
+      paths.push(arg);
+  }
+}
+
+const ndjsonStream = new Stream.Transform({
+  objectMode: true,
+  transform: function (event, _, callback) {
+    this.push(JSON.stringify(event) + "\n")
+    callback()
+  }
+})
+ndjsonStream.pipe(process.stdout)
+
+function pipeEventsFor(paths, i, callback) {
+  const path = paths[i++]
+  if (!path) return callback()
+  const stream = eventStream(path)
+  stream.pipe(ndjsonStream, { end: false })
+  stream.on('end', () => pipeEventsFor(paths, i, callback))
+}
+
+function eventStream(path) {
+  const fileStream = fs.createReadStream(path, { encoding: 'utf-8' })
+  const eventStream = new EventStream(path, types)
+  fileStream.pipe(eventStream)
+  return eventStream
+}
+
+pipeEventsFor(paths, 0, () => ndjsonStream.end())

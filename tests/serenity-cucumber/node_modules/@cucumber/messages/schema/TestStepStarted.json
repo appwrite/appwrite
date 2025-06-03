@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TestStepStarted.json",
+  "additionalProperties": false,
+  "required": [
+    "testCaseStartedId",
+    "testStepId",
+    "timestamp"
+  ],
+  "properties": {
+    "testCaseStartedId": {
+      "type": "string"
+    },
+    "testStepId": {
+      "type": "string"
+    },
+    "timestamp": {
+      "$ref": "./Timestamp.json"
+    }
+  },
+  "type": "object"
+}

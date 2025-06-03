@@ -1,0 +1,1 @@
+{"version":3,"file":"MessageToNdjsonStream.d.ts","sourceRoot":"","sources":["../../../src/MessageToNdjsonStream.ts"],"names":[],"mappings":";AAAA,OAAO,KAAK,QAAQ,MAAM,oBAAoB,CAAA;AAC9C,OAAO,EAAE,SAAS,EAAE,iBAAiB,EAAE,MAAM,QAAQ,CAAA;AAErD;;GAEG;AACH,MAAM,CAAC,OAAO,OAAO,qBAAsB,SAAQ,SAAS;;IAKnD,UAAU,CACf,QAAQ,EAAE,QAAQ,CAAC,QAAQ,EAC3B,QAAQ,EAAE,MAAM,EAChB,QAAQ,EAAE,iBAAiB;CAM9B"}

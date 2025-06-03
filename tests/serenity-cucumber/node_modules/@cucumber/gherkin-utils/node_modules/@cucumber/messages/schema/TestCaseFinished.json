@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TestCaseFinished.json",
+  "additionalProperties": false,
+  "required": [
+    "testCaseStartedId",
+    "timestamp",
+    "willBeRetried"
+  ],
+  "properties": {
+    "testCaseStartedId": {
+      "type": "string"
+    },
+    "timestamp": {
+      "$ref": "./Timestamp.json"
+    },
+    "willBeRetried": {
+      "type": "boolean"
+    }
+  },
+  "type": "object"
+}

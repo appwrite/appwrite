@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Pickle.json",
+  "additionalProperties": false,
+  "definitions": {
+    "PickleDocString": {
+      "additionalProperties": false,
+      "required": [
+        "content"
+      ],
+      "properties": {
+        "mediaType": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PickleStep": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "*\n An executable step",
+      "required": [
+        "astNodeIds",
+        "id",
+        "text"
+      ],
+      "properties": {
+        "argument": {
+          "$ref": "#/definitions/PickleStepArgument"
+        },
+        "astNodeIds": {
+          "description": "References the IDs of the source of the step. For Gherkin, this can be\n the ID of a Step, and possibly also the ID of a TableRow",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "minItems": 1
+        },
+        "id": {
+          "description": "A unique ID for the PickleStep",
+          "type": "string"
+        },
+        "type": {
+          "description": "The context in which the step was specified: context (Given), action (When) or outcome (Then).\n\nNote that the keywords `But` and `And` inherit their meaning from prior steps and the `*` 'keyword' doesn't have specific meaning (hence Unknown)",
+          "type": "string",
+          "enum": [
+            "Unknown",
+            "Context",
+            "Action",
+            "Outcome"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PickleStepArgument": {
+      "additionalProperties": false,
+      "description": "An optional argument",
+      "properties": {
+        "docString": {
+          "$ref": "#/definitions/PickleDocString"
+        },
+        "dataTable": {
+          "$ref": "#/definitions/PickleTable"
+        }
+      },
+      "type": "object"
+    },
+    "PickleTable": {
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "items": {
+            "$ref": "#/definitions/PickleTableRow"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "PickleTableCell": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PickleTableRow": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "required": [
+        "cells"
+      ],
+      "properties": {
+        "cells": {
+          "items": {
+            "$ref": "#/definitions/PickleTableCell"
+          },
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "type": "object"
+    },
+    "PickleTag": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "*\n A tag",
+      "required": [
+        "name",
+        "astNodeId"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "astNodeId": {
+          "description": "Points to the AST node this was created from",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "description": "//// Pickles\n\n*\n A `Pickle` represents a template for a `TestCase`. It is typically derived\n from another format, such as [GherkinDocument](#io.cucumber.messages.GherkinDocument).\n In the future a `Pickle` may be derived from other formats such as Markdown or\n Excel files.\n\n By making `Pickle` the main data structure Cucumber uses for execution, the\n implementation of Cucumber itself becomes simpler, as it doesn't have to deal\n with the complex structure of a [GherkinDocument](#io.cucumber.messages.GherkinDocument).\n\n Each `PickleStep` of a `Pickle` is matched with a `StepDefinition` to create a `TestCase`",
+  "required": [
+    "id",
+    "uri",
+    "name",
+    "language",
+    "steps",
+    "tags",
+    "astNodeIds"
+  ],
+  "properties": {
+    "id": {
+      "description": "*\n A unique id for the pickle",
+      "type": "string"
+    },
+    "uri": {
+      "description": "The uri of the source file",
+      "type": "string"
+    },
+    "name": {
+      "description": "The name of the pickle",
+      "type": "string"
+    },
+    "language": {
+      "description": "The language of the pickle",
+      "type": "string"
+    },
+    "steps": {
+      "description": "One or more steps",
+      "items": {
+        "$ref": "#/definitions/PickleStep"
+      },
+      "type": "array"
+    },
+    "tags": {
+      "description": "*\n One or more tags. If this pickle is constructed from a Gherkin document,\n It includes inherited tags from the `Feature` as well.",
+      "items": {
+        "$ref": "#/definitions/PickleTag"
+      },
+      "type": "array"
+    },
+    "astNodeIds": {
+      "description": "*\n Points to the AST node locations of the pickle. The last one represents the unique\n id of the pickle. A pickle constructed from `Examples` will have the first\n id originating from the `Scenario` AST node, and the second from the `TableRow` AST node.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "minItems": 1
+    }
+  },
+  "type": "object"
+}

@@ -1,0 +1,74 @@
+{
+  "name": "@cucumber/gherkin-utils",
+  "version": "8.0.2",
+  "description": "Various Gherkin utilities",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "bin": "bin/gherkin-utils",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "eslint-fix": "eslint --ext ts,tsx --max-warnings 0 --fix",
+    "eslint": "eslint --ext ts,tsx --max-warnings 0",
+    "test": "mocha",
+    "prepublishOnly": "tsc --build tsconfig.build.json",
+    "upgrade": "npm-check-updates --upgrade"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cucumber/cucumber.git"
+  },
+  "keywords": [
+    "cucumber"
+  ],
+  "author": "Cucumber Limited <cukes@googlegroups.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cucumber/cucumber/issues"
+  },
+  "homepage": "https://github.com/cucumber/cucumber",
+  "devDependencies": {
+    "@cucumber/compatibility-kit": "^11.0.0",
+    "@cucumber/gherkin-streams": "^5.0.1",
+    "@cucumber/message-streams": "^4.0.1",
+    "@types/mocha": "10.0.0",
+    "@types/node": "18.11.9",
+    "@typescript-eslint/eslint-plugin": "5.43.0",
+    "@typescript-eslint/parser": "5.43.0",
+    "ajv": "8.11.2",
+    "ajv-cli": "5.0.0",
+    "eslint": "8.28.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-import": "2.26.0",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-react": "7.31.11",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "eslint-plugin-simple-import-sort": "8.0.0",
+    "fast-glob": "3.2.12",
+    "mocha": "10.1.0",
+    "npm-check-updates": "16.4.1",
+    "prettier": "2.7.1",
+    "pretty-quick": "3.1.3",
+    "rimraf": "^3.0.2",
+    "ts-node": "10.9.1",
+    "tsconfig-paths": "4.1.0",
+    "typescript": "4.9.3"
+  },
+  "dependencies": {
+    "@cucumber/gherkin": "^25.0.0",
+    "@cucumber/messages": "^19.1.4",
+    "@teppeis/multimaps": "2.0.0",
+    "commander": "9.4.1",
+    "source-map-support": "^0.5.21"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 100
+  }
+}

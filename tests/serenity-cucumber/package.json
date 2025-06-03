@@ -1,0 +1,21 @@
+{
+  "name": "serenity-cucumber",
+  "version": "1.0.0",
+  "description": "Pruebas E2E con Serenity-JS + Cucumber para Appwrite",
+  "scripts": {
+    "test": "cucumber-js --require-module ts-node/register --require steps/**/*.ts"
+  },
+  "dependencies": {
+   },
+  "devDependencies": {
+    "@serenity-js/core":       "^3.31.15",
+    "@serenity-js/rest":       "^3.31.15",
+    "@serenity-js/assertions": "^3.31.15",
+    "@serenity-js/cucumber":   "^3.31.15",
+    "@cucumber/cucumber":      "^9.0.0",
+    "typescript":              "^4.9.5",
+    "ts-node":                 "^10.9.1",
+    "@types/node":             "^18.0.0",
+    "axios":                   "^1.4.0"
+  }
+}

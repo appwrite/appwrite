@@ -1,0 +1,67 @@
+{
+  "name": "@cucumber/ci-environment",
+  "version": "9.2.0",
+  "description": "Detect CI Environment from environment variables",
+  "type": "module",
+  "main": "dist/cjs/src/index.js",
+  "types": "dist/cjs/src/index.d.ts",
+  "files": [
+    "dist/cjs",
+    "dist/esm"
+  ],
+  "module": "dist/esm/src/index.js",
+  "jsnext:main": "dist/esm/src/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js"
+    }
+  },
+  "scripts": {
+    "build:cjs": "tsc --build tsconfig.build-cjs.json && shx cp package.cjs.json dist/cjs/package.json",
+    "build:esm": "tsc --build tsconfig.build-esm.json",
+    "build": "npm run build:cjs && npm run build:esm",
+    "pretest": "npm run generate-ci-environments-ts",
+    "test": "mocha && npm run test:cjs",
+    "test:cjs": "npm run build:cjs && mocha --no-config dist/cjs/test",
+    "prepublishOnly": "npm run build",
+    "eslint-fix": "eslint --ext ts --max-warnings 0 --fix src test",
+    "eslint": "eslint --ext ts --max-warnings 0 src test",
+    "generate-ci-environments-ts": "shx cat CiEnvironments.ts.header ../CiEnvironments.json > src/CiEnvironments.ts && eslint --fix src/CiEnvironments.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cucumber/ci-environment.git"
+  },
+  "keywords": [
+    "cucumber"
+  ],
+  "author": "Cucumber Limited <cukes@googlegroups.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cucumber/ci-environment/issues"
+  },
+  "homepage": "https://github.com/cucumber/ci-environment",
+  "devDependencies": {
+    "@types/glob": "8.1.0",
+    "@types/mocha": "10.0.1",
+    "@types/node": "18.16.1",
+    "@typescript-eslint/eslint-plugin": "5.59.1",
+    "@typescript-eslint/parser": "5.59.1",
+    "eslint": "8.39.0",
+    "eslint-config-prettier": "8.8.0",
+    "eslint-plugin-import": "2.27.5",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-simple-import-sort": "10.0.0",
+    "glob": "8.1.0",
+    "mocha": "10.2.0",
+    "prettier": "2.8.8",
+    "shx": "0.3.4",
+    "ts-node": "10.9.1",
+    "typescript": "5.0.4"
+  },
+  "directories": {
+    "test": "test"
+  }
+}

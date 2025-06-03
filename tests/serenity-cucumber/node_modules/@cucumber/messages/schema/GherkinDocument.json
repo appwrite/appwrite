@@ -1,0 +1,475 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "GherkinDocument.json",
+  "additionalProperties": false,
+  "definitions": {
+    "Background": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "keyword",
+        "name",
+        "description",
+        "steps",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the `Background` keyword"
+        },
+        "keyword": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/Step",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Comment": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "*\n A comment in a Gherkin document",
+      "required": [
+        "location",
+        "text"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the comment"
+        },
+        "text": {
+          "description": "The text of the comment",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "DataTable": {
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "rows"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/definitions/TableRow"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "DocString": {
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "content",
+        "delimiter"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json"
+        },
+        "mediaType": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "delimiter": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Examples": {
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "tags",
+        "keyword",
+        "name",
+        "tableBody",
+        "description",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the `Examples` keyword"
+        },
+        "tags": {
+          "items": {
+            "$ref": "#/definitions/Tag",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "keyword": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "tableHeader": {
+          "$ref": "#/definitions/TableRow"
+        },
+        "tableBody": {
+          "items": {
+            "$ref": "#/definitions/TableRow",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Feature": {
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "tags",
+        "language",
+        "keyword",
+        "name",
+        "description",
+        "children"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the `Feature` keyword"
+        },
+        "tags": {
+          "description": "All the tags placed above the `Feature` keyword",
+          "items": {
+            "$ref": "#/definitions/Tag",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "language": {
+          "description": "The [ISO 639-1](https://en.wikipedia.org/wiki/ISO_639-1) language code of the Gherkin document",
+          "type": "string"
+        },
+        "keyword": {
+          "description": "The text of the `Feature` keyword (in the language specified by `language`)",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of the feature (the text following the `keyword`)",
+          "type": "string"
+        },
+        "description": {
+          "description": "The line(s) underneath the line with the `keyword` that are used as description",
+          "type": "string"
+        },
+        "children": {
+          "description": "Zero or more children",
+          "items": {
+            "$ref": "#/definitions/FeatureChild"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "FeatureChild": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "*\n A child node of a `Feature` node",
+      "properties": {
+        "rule": {
+          "$ref": "#/definitions/Rule"
+        },
+        "background": {
+          "$ref": "#/definitions/Background"
+        },
+        "scenario": {
+          "$ref": "#/definitions/Scenario"
+        }
+      },
+      "type": "object"
+    },
+    "Rule": {
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "tags",
+        "keyword",
+        "name",
+        "description",
+        "children",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the `Rule` keyword"
+        },
+        "tags": {
+          "description": "All the tags placed above the `Rule` keyword",
+          "items": {
+            "$ref": "#/definitions/Tag",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "keyword": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "children": {
+          "items": {
+            "$ref": "#/definitions/RuleChild"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "RuleChild": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "*\n A child node of a `Rule` node",
+      "properties": {
+        "background": {
+          "$ref": "#/definitions/Background"
+        },
+        "scenario": {
+          "$ref": "#/definitions/Scenario"
+        }
+      },
+      "type": "object"
+    },
+    "Scenario": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "tags",
+        "keyword",
+        "name",
+        "description",
+        "steps",
+        "examples",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the `Scenario` keyword"
+        },
+        "tags": {
+          "items": {
+            "$ref": "#/definitions/Tag",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "keyword": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/Step",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "examples": {
+          "items": {
+            "$ref": "#/definitions/Examples",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Step": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "A step",
+      "required": [
+        "location",
+        "keyword",
+        "text",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the steps' `keyword`"
+        },
+        "keyword": {
+          "description": "The actual keyword as it appeared in the source.",
+          "type": "string"
+        },
+        "keywordType": {
+          "description": "The test phase signalled by the keyword: Context definition (Given), Action performance (When), Outcome assertion (Then). Other keywords signal Continuation (And and But) from a prior keyword. Please note that all translations which a dialect maps to multiple keywords (`*` is in this category for all dialects), map to 'Unknown'.",
+          "type": "string",
+          "enum": [
+            "Unknown",
+            "Context",
+            "Action",
+            "Outcome",
+            "Conjunction"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "docString": {
+          "$ref": "#/definitions/DocString"
+        },
+        "dataTable": {
+          "$ref": "#/definitions/DataTable"
+        },
+        "id": {
+          "description": "Unique ID to be able to reference the Step from PickleStep",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "TableCell": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "A cell in a `TableRow`",
+      "required": [
+        "location",
+        "value"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the cell"
+        },
+        "value": {
+          "description": "The value of the cell",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "TableRow": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "A row in a table",
+      "required": [
+        "location",
+        "cells",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "The location of the first cell in the row"
+        },
+        "cells": {
+          "description": "Cells in the row",
+          "items": {
+            "$ref": "#/definitions/TableCell",
+            "$schema": "https://json-schema.org/draft/2020-12/schema"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Tag": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "*\n A tag",
+      "required": [
+        "location",
+        "name",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "./Location.json",
+          "description": "Location of the tag"
+        },
+        "name": {
+          "description": "The name of the tag (including the leading `@`)",
+          "type": "string"
+        },
+        "id": {
+          "description": "Unique ID to be able to reference the Tag from PickleTag",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "description": "*\n The [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) of a Gherkin document.\n Cucumber implementations should *not* depend on `GherkinDocument` or any of its\n children for execution - use [Pickle](#io.cucumber.messages.Pickle) instead.\n\n The only consumers of `GherkinDocument` should only be formatters that produce\n \"rich\" output, resembling the original Gherkin document.",
+  "required": [
+    "comments"
+  ],
+  "properties": {
+    "uri": {
+      "description": "*\n The [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier)\n of the source, typically a file path relative to the root directory",
+      "type": "string"
+    },
+    "feature": {
+      "$ref": "#/definitions/Feature"
+    },
+    "comments": {
+      "description": "All the comments in the Gherkin document",
+      "items": {
+        "$ref": "#/definitions/Comment"
+      },
+      "type": "array"
+    }
+  },
+  "type": "object"
+}

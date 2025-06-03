@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "target": "es6",
+    "module": "commonjs"
+  },
+  "files": [],
+  "include": [
+    "package.json",
+    "src",
+    "test"
+  ]
+}

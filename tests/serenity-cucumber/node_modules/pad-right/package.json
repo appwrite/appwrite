@@ -1,0 +1,64 @@
+{
+  "name": "pad-right",
+  "description": "Right pad a string with zeros or a specified string. Fastest implementation.",
+  "version": "0.2.2",
+  "homepage": "https://github.com/jonschlinkert/pad-right",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/pad-right",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/pad-right/issues"
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "repeat-string": "^1.5.2"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
+  },
+  "keywords": [
+    "align",
+    "alignment",
+    "fill",
+    "left",
+    "pad",
+    "pad-left",
+    "pad-right",
+    "padded",
+    "padding",
+    "right",
+    "right-pad",
+    "spaces",
+    "string",
+    "zero",
+    "zero-fill",
+    "zeros"
+  ],
+  "verb": {
+    "related": {
+      "list": [
+        "align-text",
+        "center-align",
+        "justified",
+        "pad-left",
+        "repeat-string",
+        "right-align",
+        "right-align-keys",
+        "right-align-values",
+        "right-pad-keys",
+        "right-pad-values",
+        "word-wrap"
+      ]
+    }
+  }
+}

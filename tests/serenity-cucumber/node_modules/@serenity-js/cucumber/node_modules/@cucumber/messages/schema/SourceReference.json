@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "SourceReference.json",
+  "additionalProperties": false,
+  "definitions": {
+    "JavaMethod": {
+      "additionalProperties": false,
+      "required": [
+        "className",
+        "methodName",
+        "methodParameterTypes"
+      ],
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "methodName": {
+          "type": "string"
+        },
+        "methodParameterTypes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "JavaStackTraceElement": {
+      "additionalProperties": false,
+      "required": [
+        "className",
+        "fileName",
+        "methodName"
+      ],
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "methodName": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "description": "*\n Points to a [Source](#io.cucumber.messages.Source) identified by `uri` and a\n [Location](#io.cucumber.messages.Location) within that file.",
+  "properties": {
+    "uri": {
+      "type": "string"
+    },
+    "javaMethod": {
+      "$ref": "#/definitions/JavaMethod"
+    },
+    "javaStackTraceElement": {
+      "$ref": "#/definitions/JavaStackTraceElement"
+    },
+    "location": {
+      "$ref": "./Location.json"
+    }
+  },
+  "type": "object"
+}
