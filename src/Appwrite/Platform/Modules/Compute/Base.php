@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Query;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -234,39 +233,5 @@ class Base extends Action
             ->setTemplate($template);
 
         return $deployment;
-    }
-
-    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
-    {
-        $limit = 100;
-        $cursor = null;
-
-        do {
-            $queries = \array_merge([
-                Query::limit($limit),
-                Query::equal("projectInternalId", [$project->getInternalId()])
-            ], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
-            }
-
-            $results = $database->find('rules', $queries);
-
-            $total = \count($results);
-            if ($total > 0) {
-                $cursor = $results[$total - 1];
-            }
-
-            if ($total < $limit) {
-                $cursor = null;
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-            }
-        } while (!\is_null($cursor));
     }
 }
