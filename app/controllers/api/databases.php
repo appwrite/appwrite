@@ -4573,7 +4573,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     });
 
 App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
-    ->desc('Create or update documents')
+    ->desc('Upsert documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
