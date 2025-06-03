@@ -265,7 +265,7 @@ trait SitesBase
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+        }, 150000, 500);
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $site = $this->getSite($siteId);

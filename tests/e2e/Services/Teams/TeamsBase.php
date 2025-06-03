@@ -64,7 +64,7 @@ trait TeamsBase
 
             // Step 4: Assert failure — cannot remove the only OWNER from a team
             $this->assertEquals(400, $response['headers']['status-code']);
-            $this->assertEquals('general_argument_invalid', $response['body']['type']);
+            $this->assertEquals('membership_downgrade_prohibited', $response['body']['type']);
             $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
         }
 

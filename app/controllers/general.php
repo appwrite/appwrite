@@ -749,12 +749,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         return false;
     } elseif ($type === 'redirect') {
         $url = $rule->getAttribute('redirectUrl', '');
-
-        $query = ($swooleRequest->server['query_string'] ?? '');
-        if (!empty($query)) {
-            $url .= '?' . $query;
-        }
-
         $response->redirect($url, \intval($rule->getAttribute('redirectStatusCode', 301)));
         return true;
     } else {
