@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/types/index.ts"],"names":[],"mappings":"","sourcesContent":["export interface ILineAndUri {\n  line: number\n  uri: string\n}\n"]}

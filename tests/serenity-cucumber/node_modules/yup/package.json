@@ -1,0 +1,58 @@
+{
+  "name": "yup",
+  "version": "1.2.0",
+  "description": "Dead simple Object schema validation",
+  "main": "index.js",
+  "module": "index.esm.js",
+  "runkitExampleFilename": "./runkit-example.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jquense/yup.git"
+  },
+  "author": {
+    "name": "@monasticpanic Jason Quense"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jquense/yup/issues"
+  },
+  "homepage": "https://github.com/jquense/yup",
+  "release": {
+    "conventionalCommits": true,
+    "publishDir": "lib"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "lint-staged": {
+    "*.{js,json,css,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "jest": {
+    "globals": {
+      "YUP_USE_SYNC": false
+    },
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "./test-setup.js"
+    ],
+    "roots": [
+      "test"
+    ],
+    "testRegex": "\\.(j|t)s$",
+    "testPathIgnorePatterns": [
+      "helpers\\.ts",
+      "\\.eslintrc\\.js",
+      "types\\.ts"
+    ]
+  },
+  "dependencies": {
+    "property-expr": "^2.0.5",
+    "tiny-case": "^1.0.3",
+    "toposort": "^2.0.2",
+    "type-fest": "^2.19.0"
+  }
+}

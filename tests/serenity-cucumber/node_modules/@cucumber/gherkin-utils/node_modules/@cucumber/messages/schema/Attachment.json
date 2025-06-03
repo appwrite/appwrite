@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Attachment.json",
+  "additionalProperties": false,
+  "description": "//// Attachments (parse errors, execution errors, screenshots, links...)\n\n*\n An attachment represents any kind of data associated with a line in a\n [Source](#io.cucumber.messages.Source) file. It can be used for:\n\n * Syntax errors during parse time\n * Screenshots captured and attached during execution\n * Logs captured and attached during execution\n\n It is not to be used for runtime errors raised/thrown during execution. This\n is captured in `TestResult`.",
+  "required": [
+    "body",
+    "contentEncoding",
+    "mediaType"
+  ],
+  "properties": {
+    "body": {
+      "description": "*\n The body of the attachment. If `contentEncoding` is `IDENTITY`, the attachment\n is simply the string. If it's `BASE64`, the string should be Base64 decoded to\n obtain the attachment.",
+      "type": "string"
+    },
+    "contentEncoding": {
+      "description": "*\n Whether to interpret `body` \"as-is\" (IDENTITY) or if it needs to be Base64-decoded (BASE64).\n\n Content encoding is *not* determined by the media type, but rather by the type\n of the object being attached:\n\n - string => IDENTITY\n - byte array => BASE64\n - stream => BASE64",
+      "enum": [
+        "IDENTITY",
+        "BASE64"
+      ],
+      "type": "string"
+    },
+    "fileName": {
+      "description": "*\n Suggested file name of the attachment. (Provided by the user as an argument to `attach`)",
+      "type": "string"
+    },
+    "mediaType": {
+      "description": "*\n The media type of the data. This can be any valid\n [IANA Media Type](https://www.iana.org/assignments/media-types/media-types.xhtml)\n as well as Cucumber-specific media types such as `text/x.cucumber.gherkin+plain`\n and `text/x.cucumber.stacktrace+plain`",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "./Source.json"
+    },
+    "testCaseStartedId": {
+      "type": "string"
+    },
+    "testStepId": {
+      "type": "string"
+    },
+    "url": {
+      "description": "*\n A URL where the attachment can be retrieved. This field should not be set by Cucumber.\n It should be set by a program that reads a message stream and does the following for\n each Attachment message:\n\n - Writes the body (after base64 decoding if necessary) to a new file.\n - Sets `body` and `contentEncoding` to `null`\n - Writes out the new attachment message\n\n This will result in a smaller message stream, which can improve performance and\n reduce bandwidth of message consumers. It also makes it easier to process and download attachments\n separately from reports.",
+      "type": "string"
+    }
+  },
+  "type": "object"
+}

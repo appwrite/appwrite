@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ParameterType.json",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "preferForRegularExpressionMatch",
+    "regularExpressions",
+    "useForSnippets"
+  ],
+  "properties": {
+    "name": {
+      "description": "The name is unique, so we don't need an id.",
+      "type": "string"
+    },
+    "regularExpressions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "minItems": 1
+    },
+    "preferForRegularExpressionMatch": {
+      "type": "boolean"
+    },
+    "useForSnippets": {
+      "type": "boolean"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "type": "object"
+}

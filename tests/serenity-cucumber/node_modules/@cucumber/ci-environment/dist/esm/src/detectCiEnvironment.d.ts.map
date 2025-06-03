@@ -1,0 +1,1 @@
+{"version":3,"file":"detectCiEnvironment.d.ts","sourceRoot":"","sources":["../../../src/detectCiEnvironment.ts"],"names":[],"mappings":"AAIA,OAAO,EAAE,aAAa,EAAE,GAAG,EAAO,MAAM,YAAY,CAAA;AAEpD,MAAM,CAAC,OAAO,UAAU,mBAAmB,CAAC,GAAG,EAAE,GAAG,GAAG,aAAa,GAAG,SAAS,CAO/E;AAED,wBAAgB,qBAAqB,CAAC,KAAK,EAAE,MAAM,GAAG,MAAM,CAU3D"}

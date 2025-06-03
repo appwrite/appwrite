@@ -1,0 +1,50 @@
+{
+  "name": "knuth-shuffle-seeded",
+  "version": "1.0.6",
+  "description": "The Fisher-Yates (aka Knuth) shuffle for Node.js, with seeding support",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "browserify": "browserify -s shuffle -g uglifyify -o browser.js index.js",
+    "prepublish": "npm run browserify",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha",
+    "codecov": "npm run coverage && cat ./coverage/lcov.info | codecov"
+  },
+  "homepage": "https://github.com/TimothyGu/knuth-shuffle-seeded",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/TimothyGu/knuth-shuffle-seeded.git"
+  },
+  "keywords": [
+    "ronald",
+    "fisher",
+    "frank",
+    "yates",
+    "fisher-yates",
+    "donald",
+    "knuth",
+    "shuffle",
+    "random",
+    "randomize",
+    "unbiased",
+    "algorithm"
+  ],
+  "author": "AJ O'Neal <coolaj86@gmail.com> (http://coolaj86.info/)",
+  "contributors": [
+    "Timothy Gu <timothygu99@gmail.com> (https://timothygu.github.io/)"
+  ],
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/TimothyGu/knuth-shuffle-seeded/issues"
+  },
+  "dependencies": {
+    "seed-random": "~2.2.0"
+  },
+  "devDependencies": {
+    "browserify": "~8.1.1",
+    "codecov.io": "~0.0.8",
+    "istanbul": "~0.3.5",
+    "mocha": "~2.1.0",
+    "uglifyify": "~3.0.1"
+  }
+}

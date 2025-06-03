@@ -1,0 +1,54 @@
+{
+  "name": "regexp-match-indices",
+  "version": "1.0.2",
+  "description": "RegExp Match Indices polyfill",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "clean": "tsc -b --clean ./tsconfig.build.json",
+    "build": "tsc -b ./tsconfig.build.json",
+    "test": "jest",
+    "test-watch": "jest --watch",
+    "prepublishOnly": "npm run clean & npm run build & npm run test"
+  },
+  "author": "Ron Buckton (rbuckton@chronicles.org)",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "regexp-tree": "^0.1.11"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.18",
+    "@types/jest-expect-message": "^1.0.0",
+    "@types/jest-matcher-utils": "^21.0.2",
+    "jest": "^24.8.0",
+    "jest-expect-message": "^1.0.2",
+    "jest-extended": "^0.11.2",
+    "jest-matcher-utils": "^24.9.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "\\.ts$": "ts-jest"
+    },
+    "testRegex": "__tests__/[^_].*(?<!\\.d| copy)\\.ts$",
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "*.ts",
+      "shim/*.ts"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "lcov"
+    ],
+    "setupFilesAfterEnv": [
+      "jest-expect-message",
+      "jest-extended"
+    ]
+  }
+}

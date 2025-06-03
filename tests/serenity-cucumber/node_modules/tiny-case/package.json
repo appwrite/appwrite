@@ -1,0 +1,13 @@
+{
+  "name": "tiny-case",
+  "version": "1.0.3",
+  "description": "Tiny Casing utils",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jquense/tiny-case.git"
+  },
+  "types": "index.d.ts",
+  "author": "Jason Quense",
+  "license": "MIT"
+}

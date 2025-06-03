@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Exception.json",
+  "additionalProperties": false,
+  "description": "A simplified representation of an exception",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "The type of the exception that caused this result. E.g. \"Error\" or \"org.opentest4j.AssertionFailedError\""
+    },
+    "message": {
+      "type": "string",
+      "description": "The message of exception that caused this result. E.g. expected: \"a\" but was: \"b\""
+    }
+  },
+  "type": "object"
+}

@@ -1,0 +1,1 @@
+{"version":3,"file":"typescript.js","sourceRoot":"","sources":["../../../src/formatter/fixtures/typescript.ts"],"names":[],"mappings":";;AAAA,MAAqB,SAAS;CAAG;AAAjC,4BAAiC","sourcesContent":["export default class Formatter {}\n"]}
