@@ -330,7 +330,29 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
-            ]
+            ],
+            [
+                '$id' => ID::custom('scheduleId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('_deletedAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
         ],
         'indexes' => [
             [
@@ -382,6 +404,13 @@ return [
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_deleted_at'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['_deletedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ]
         ],
     ],
 

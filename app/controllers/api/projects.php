@@ -19,6 +19,7 @@ use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Cron\CronExpression;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
 use Utopia\Audit\Audit;
@@ -1171,14 +1172,33 @@ App::delete('/v1/projects/:projectId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $queueForDeletes
-            ->setProject($project)
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($project);
+        $interval = (int)System::getEnv('_APP_PROJECTS_DELETE_EXPIRATION','3600');
+        $expiration = new \DateTime();
+        $expiration->add(new \DateInterval('PT' . $interval . 'S'));
+        $cronPattern = sprintf('%d %d %d %d *',
+            (int)$expiration->format('i'), // minute
+            (int)$expiration->format('G'), // hour
+            (int)$expiration->format('j'), // day of month
+            (int)$expiration->format('n')  // month
+        );
 
-        if (!$dbForPlatform->deleteDocument('projects', $projectId)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
-        }
+        $cronExpression = new CronExpression($cronPattern);
+        $scheduledAt =  $cronExpression->getExpression();
+
+        $schedule = $dbForPlatform->createDocument('schedules', new Document([
+            'region' => $project->getAttribute('region'),
+            'resourceType' => 'project',
+            'resourceId' => $project->getId(),
+            'resourceInternalId' => $project->getInternalId(),
+            'resourceUpdatedAt' => DateTime::now(),
+            'projectId' => $project->getId(),
+            'schedule' => $scheduledAt,
+            'active' => true,
+        ]));
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('scheduleId', $schedule->getId()))
+        ;
 
         $response->noContent();
     });
