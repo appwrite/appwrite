@@ -94,7 +94,7 @@ class Create extends Base
             ->inject('queueForFunctions')
             ->inject('geodb')
             ->inject('executor')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

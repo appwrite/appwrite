@@ -58,7 +58,7 @@ class Update extends Base
             ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

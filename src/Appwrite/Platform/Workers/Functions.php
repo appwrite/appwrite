@@ -53,7 +53,7 @@ class Functions extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('isResourceBlocked')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

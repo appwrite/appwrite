@@ -46,7 +46,7 @@ class XList extends Base
                 ]
             ))
             ->inject('response')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(Response $response)

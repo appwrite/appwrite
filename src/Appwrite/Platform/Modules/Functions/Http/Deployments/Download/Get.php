@@ -61,7 +61,7 @@ class Get extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

@@ -52,7 +52,7 @@ class Update extends Action
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
     public function action(string $projectId, string $keyId, string $name, ?string $expire, Response $response, Database $dbForPlatform)
     {

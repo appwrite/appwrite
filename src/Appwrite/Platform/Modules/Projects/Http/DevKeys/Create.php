@@ -57,7 +57,7 @@ class Create extends Action
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $projectId, string $name, ?string $expire, Document $user, Response $response, Database $dbForPlatform)

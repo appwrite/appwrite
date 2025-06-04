@@ -69,7 +69,7 @@ class Migrations extends Action
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
