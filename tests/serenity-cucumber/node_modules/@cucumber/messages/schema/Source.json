@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Source.json",
+  "additionalProperties": false,
+  "description": "//// Source\n\n*\n A source file, typically a Gherkin document or Java/Ruby/JavaScript source code",
+  "required": [
+    "uri",
+    "data",
+    "mediaType"
+  ],
+  "properties": {
+    "uri": {
+      "description": "*\n The [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier)\n of the source, typically a file path relative to the root directory",
+      "type": "string"
+    },
+    "data": {
+      "description": "The contents of the file",
+      "type": "string"
+    },
+    "mediaType": {
+      "description": "The media type of the file. Can be used to specify custom types, such as\n text/x.cucumber.gherkin+plain",
+      "type": "string",
+      "enum": [
+        "text/x.cucumber.gherkin+plain",
+        "text/x.cucumber.gherkin+markdown"
+      ]
+    }
+  },
+  "type": "object"
+}

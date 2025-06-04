@@ -1,0 +1,277 @@
+﻿@using Berp;
+@helper CallProduction(ProductionRule production)
+{
+  switch(production.Type)
+  {
+    case ProductionRuleType.Start:
+      @:this.startRule(context, RuleType.@production.RuleName);
+      break;
+    case ProductionRuleType.End:
+      @:this.endRule(context);
+      break;
+    case ProductionRuleType.Process:
+      @:this.build(context, token);
+      break;
+  }
+}
+@helper HandleParserError(IEnumerable<string> expectedTokens, State state)
+{<text>
+    token.detach();
+    const expectedTokens = ["@Raw(string.Join("\", \"", expectedTokens))"];
+    const error = token.isEof ?
+      UnexpectedEOFException.create(token, expectedTokens) :
+      UnexpectedTokenException.create(token, expectedTokens);
+    if (this.stopAtFirstError) throw error;
+    this.addError(context, error);
+    return @state.Id;</text>}
+@helper MatchToken(TokenType tokenType)
+{<text>match_@(tokenType)(context, token)</text>}
+// This file is generated. Do not edit! Edit gherkin-javascript.razor instead.
+
+import * as messages from '@@cucumber/messages'
+import {
+  AstBuilderException,
+  CompositeParserException,
+  NoSuchLanguageException,
+  ParserException,
+} from './Errors'
+import {
+  UnexpectedEOFException,
+  UnexpectedTokenException,
+} from './TokenExceptions'
+import TokenScanner from './TokenScanner'
+import ITokenMatcher from './ITokenMatcher'
+import GherkinLine from './GherkinLine'
+import IToken, { Item } from './IToken'
+import { IAstBuilder } from './IAstBuilder'
+
+export class Token implements IToken<TokenType> {
+  public isEof: boolean
+  public matchedText?: string
+  public matchedType: TokenType
+  public matchedItems: readonly Item[]
+  public matchedKeyword: string
+  public matchedIndent: number
+  public matchedGherkinDialect: string
+  public matchedKeywordType: messages.StepKeywordType
+
+  constructor(
+    public readonly line: GherkinLine,
+    public readonly location:  messages.Location
+  ) {
+    this.isEof = !line
+  }
+
+  public getTokenValue(): string {
+    return this.isEof ? 'EOF' : this.line.getLineText(-1)
+  }
+
+  public detach() {
+    // TODO: Detach line, but is this really needed?
+  }
+}
+
+export enum TokenType {
+  None,
+  @foreach(var rule in Model.RuleSet.TokenRules)
+  {<text>  @rule.Name.Replace("#", ""),
+</text>}
+}
+
+export enum RuleType {
+  None,
+  @foreach(var rule in Model.RuleSet.Where(r => !r.TempRule))
+  {<text>  @rule.Name.Replace("#", "_"), // @rule.ToString(true)
+</text>}
+}
+
+interface Context {
+  tokenScanner: TokenScanner<TokenType>
+  tokenQueue: IToken<TokenType>[]
+  errors: Error[]
+}
+
+export default class Parser<AstNode> {
+  public stopAtFirstError = false
+  private context: Context
+
+  constructor(
+    private readonly builder: IAstBuilder<AstNode, TokenType, RuleType>,
+    private readonly tokenMatcher: ITokenMatcher<TokenType>
+  ) {}
+
+  public parse(gherkinSource: string): messages.GherkinDocument {
+    const tokenScanner = new TokenScanner(
+      gherkinSource,
+      (line: string, location:  messages.Location) => {
+        const gherkinLine =
+          line === null || line === undefined
+            ? null
+            : new GherkinLine(line, location.line)
+        return new Token(gherkinLine, location)
+      }
+    )
+    this.builder.reset()
+    this.tokenMatcher.reset()
+    this.context = {
+      tokenScanner,
+      tokenQueue: [],
+      errors: [],
+    }
+    this.startRule(this.context, RuleType.GherkinDocument)
+    let state = 0
+    let token: IToken<TokenType> = null
+    while (true) {
+      token = this.readToken(this.context) as Token
+      state = this.matchToken(state, token, this.context)
+      if (token.isEof) break
+    }
+
+    this.endRule(this.context)
+
+    if (this.context.errors.length > 0) {
+      throw CompositeParserException.create(this.context.errors)
+    }
+
+    return this.getResult()
+  }
+
+  private addError(context: Context, error: Error) {
+    if (!context.errors.map(e => { return e.message }).includes(error.message)) {
+      context.errors.push(error)
+      if (context.errors.length > 10)
+        throw CompositeParserException.create(context.errors)
+    }
+  }
+
+  private startRule(context: Context, ruleType: RuleType) {
+    this.handleAstError(context, () => this.builder.startRule(ruleType))
+  }
+
+  private endRule(context: Context) {
+    this.handleAstError(context, () => this.builder.endRule())
+  }
+
+  private build(context: Context, token: IToken<TokenType>) {
+    this.handleAstError(context, () => this.builder.build(token))
+  }
+
+  private getResult() {
+    return this.builder.getResult()
+  }
+
+  private handleAstError(context: Context, action: () => any) {
+    this.handleExternalError(context, true, action)
+  }
+
+  private handleExternalError<T>(
+    context: Context,
+    defaultValue: T,
+    action: () => T
+  ) {
+    if (this.stopAtFirstError) return action()
+    try {
+      return action()
+    } catch (e) {
+      if (e instanceof CompositeParserException) {
+        e.errors.forEach((error: Error) => this.addError(context, error))
+      } else if (
+        e instanceof ParserException ||
+        e instanceof AstBuilderException ||
+        e instanceof UnexpectedTokenException ||
+        e instanceof NoSuchLanguageException
+      ) {
+        this.addError(context, e)
+      } else {
+        throw e
+      }
+    }
+    return defaultValue
+  }
+
+  private readToken(context: Context) {
+    return context.tokenQueue.length > 0
+      ? context.tokenQueue.shift()
+      : context.tokenScanner.read()
+  }
+
+  private matchToken(state: number, token: IToken<TokenType>, context: Context) {
+    switch(state) {
+    @foreach(var state in Model.States.Values.Where(s => !s.IsEndState))
+    {
+    @:case @state.Id:
+      @:return this.matchTokenAt_@(state.Id)(token, context);
+    }
+    default:
+      throw new Error("Unknown state: " + state);
+    }
+  }
+
+@foreach(var state in Model.States.Values.Where(s => !s.IsEndState))
+{
+<text>
+  // @Raw(state.Comment)
+  private matchTokenAt_@(state.Id)(token: IToken<TokenType>, context: Context) {
+    @foreach(var transition in state.Transitions)
+    {
+    @:if(this.@MatchToken(transition.TokenType)) {
+      if (transition.LookAheadHint != null)
+      {
+      @:if(this.lookahead_@(transition.LookAheadHint.Id)(context, token)) {
+      }
+      foreach(var production in transition.Productions)
+      {
+        @CallProduction(production)
+      }
+      @:return @transition.TargetState;
+      if (transition.LookAheadHint != null)
+      {
+      @:}
+      }
+    @:}
+    }
+    @HandleParserError(state.Transitions.Select(t => "#" + t.TokenType.ToString()).Distinct(), state)
+  }
+</text>
+}
+
+@foreach(var rule in Model.RuleSet.TokenRules)
+{
+<text>
+  private match_@(rule.Name.Replace("#", ""))(context: Context, token: IToken<TokenType>) {
+    @if (rule.Name != "#EOF")
+    {
+    @:if(token.isEof) return false;
+    }
+    return this.handleExternalError(context, false, () => this.tokenMatcher.match_@(rule.Name.Replace("#", ""))(token));
+  }
+</text>
+}
+
+@foreach(var lookAheadHint in Model.RuleSet.LookAheadHints)
+{
+<text>
+  private lookahead_@(lookAheadHint.Id)(context: Context, currentToken: IToken<TokenType>) {
+    currentToken.detach();
+    let token;
+    const queue: IToken<TokenType>[] = [];
+    let match = false;
+    do {
+      token = this.readToken(this.context);
+      token.detach();
+      queue.push(token);
+
+      if (false @foreach(var tokenType in lookAheadHint.ExpectedTokens) { <text>|| this.@MatchToken(tokenType)</text>}) {
+        match = true;
+        break;
+      }
+    } while(false @foreach(var tokenType in lookAheadHint.Skip) { <text>|| this.@MatchToken(tokenType)</text>});
+
+    context.tokenQueue = context.tokenQueue.concat(queue);
+
+    return match;
+  }
+</text>
+}
+
+}

@@ -1,0 +1,53 @@
+{
+	"name": "resolve-pkg",
+	"version": "2.0.0",
+	"description": "Resolve the path of a package regardless of it having an entry point",
+	"license": "MIT",
+	"repository": "sindresorhus/resolve-pkg",
+	"author": {
+		"name": "Sindre Sorhus",
+		"email": "sindresorhus@gmail.com",
+		"url": "sindresorhus.com"
+	},
+	"engines": {
+		"node": ">=8"
+	},
+	"scripts": {
+		"pretest": "del node_modules/@someprivate/module-test && make-dir node_modules/@someprivate/module-test && cpy 'fixtures/private-module-test/*' node_modules/@someprivate/module-test/",
+		"test": "xo && ava && tsd"
+	},
+	"files": [
+		"index.js",
+		"index.d.ts"
+	],
+	"keywords": [
+		"require",
+		"resolve",
+		"path",
+		"module",
+		"from",
+		"like",
+		"path",
+		"cwd",
+		"current",
+		"working",
+		"directory",
+		"grunt",
+		"main",
+		"entry",
+		"point"
+	],
+	"dependencies": {
+		"resolve-from": "^5.0.0"
+	},
+	"devDependencies": {
+		"@someprivate/module-test": "file:./fixtures/private-module-test",
+		"ava": "^1.4.1",
+		"cpy-cli": "^2.0.0",
+		"del-cli": "^1.1.0",
+		"grunt-svgmin": "^6.0.0",
+		"make-dir-cli": "^2.0.0",
+		"tsd": "^0.7.2",
+		"xo": "^0.24.0"
+	}
+}

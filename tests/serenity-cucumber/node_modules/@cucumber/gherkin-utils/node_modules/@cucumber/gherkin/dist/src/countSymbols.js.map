@@ -1,0 +1,1 @@
+{"version":3,"file":"countSymbols.js","sourceRoot":"","sources":["../../src/countSymbols.ts"],"names":[],"mappings":";;AAAA,oDAAoD;AACpD,MAAM,kBAAkB,GAAG,iCAAiC,CAAA;AAE5D,SAAwB,YAAY,CAAC,CAAS;IAC5C,OAAO,CAAC,CAAC,OAAO,CAAC,kBAAkB,EAAE,GAAG,CAAC,CAAC,MAAM,CAAA;AAClD,CAAC;AAFD,+BAEC"}

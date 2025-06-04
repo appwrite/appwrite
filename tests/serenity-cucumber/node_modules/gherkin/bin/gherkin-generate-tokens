@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+var fs = require('fs');
+var Gherkin = require('..');
+
+// We're not exposing this on Gherkin since it's just used for testing
+// By not doing this it doesn't get included in the browserify build
+var TokenFormatterBuilder = require('../lib/gherkin/token_formatter_builder');
+
+var parser = new Gherkin.Parser(new TokenFormatterBuilder());
+parser.stopAtFirstError = true;
+var matcher = new Gherkin.TokenMatcher();
+var files = process.argv.slice(2)
+files.forEach(function (file) {
+  var scanner = new Gherkin.TokenScanner(fs.readFileSync(file, 'UTF-8'));
+  process.stdout.write(parser.parse(scanner, matcher));
+});

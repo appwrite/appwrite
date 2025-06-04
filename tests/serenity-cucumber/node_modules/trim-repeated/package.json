@@ -1,0 +1,41 @@
+{
+  "name": "trim-repeated",
+  "version": "1.0.0",
+  "description": "Trim a consecutively repeated substring: foo--bar---baz → foo-bar-baz",
+  "license": "MIT",
+  "repository": "sindresorhus/trim-repeated",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "condense",
+    "collapse",
+    "compact",
+    "consecutive",
+    "repeated",
+    "string",
+    "str",
+    "trim",
+    "remove",
+    "strip",
+    "character",
+    "char"
+  ],
+  "dependencies": {
+    "escape-string-regexp": "^1.0.2"
+  },
+  "devDependencies": {
+    "ava": "0.0.4"
+  }
+}

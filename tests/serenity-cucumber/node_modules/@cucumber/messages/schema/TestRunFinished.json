@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TestRunFinished.json",
+  "additionalProperties": false,
+  "required": [
+    "success",
+    "timestamp"
+  ],
+  "properties": {
+    "message": {
+      "description": "An informative message about the test run. Typically additional information about failure, but not necessarily.",
+      "type": "string"
+    },
+    "success": {
+      "description": "A test run is successful if all steps are either passed or skipped, all before/after hooks passed and no other exceptions where thrown.",
+      "type": "boolean"
+    },
+    "timestamp": {
+      "$ref": "./Timestamp.json",
+      "description": "Timestamp when the TestRun is finished"
+    },
+    "exception": {
+      "$ref": "./Exception.json",
+      "description": "Any exception thrown during the test run, if any. Does not include exceptions thrown while executing steps."
+    }
+  },
+  "type": "object"
+}

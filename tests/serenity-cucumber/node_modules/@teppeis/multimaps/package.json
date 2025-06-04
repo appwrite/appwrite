@@ -1,0 +1,53 @@
+{
+  "name": "@teppeis/multimaps",
+  "description": "Multimap classes for TypeScript and JavaScript",
+  "version": "2.0.0",
+  "author": "Teppei Sato <teppeis@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=10.17"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
+    "mocha": "mocha -r espower-typescript/guess --extension ts,tsx 'test/*.{ts,tsx}'",
+    "prepublishOnly": "run-s clean build",
+    "test": "run-s clean lint build mocha"
+  },
+  "devDependencies": {
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^10.17.51",
+    "eslint": "^7.18.0",
+    "eslint-config-teppeis": "^12.0.0-6",
+    "espower-typescript": "^9.0.2",
+    "mocha": "^8.2.1",
+    "npm-run-all": "^4.1.5",
+    "power-assert": "^1.6.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  },
+  "homepage": "https://github.com/teppeis/multimaps#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/teppeis/multimaps.git"
+  },
+  "bugs": {
+    "url": "https://github.com/teppeis/multimaps/issues"
+  },
+  "keywords": [
+    "map",
+    "multi-map",
+    "multimap",
+    "typescript"
+  ],
+  "license": "MIT"
+}

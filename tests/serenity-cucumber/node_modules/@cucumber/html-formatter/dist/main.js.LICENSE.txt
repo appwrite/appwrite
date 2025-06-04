@@ -1,0 +1,159 @@
+/*!
+ * Determine if an object is a Buffer
+ *
+ * @author   Feross Aboukhadijeh <https://feross.org>
+ * @license  MIT
+ */
+
+/*!
+ * Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com
+ * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
+ * Copyright 2022 Fonticons, Inc.
+ */
+
+/*!
+ * elasticlunr.Configuration
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.DocumentStore
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.EventEmitter
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.Index
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.InvertedIndex
+ * Copyright (C) 2016 Wei Song
+ * Includes code from - http://tartarus.org/~martin/PorterStemmer/js.txt
+ */
+
+/*!
+ * elasticlunr.Pipeline
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.js
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.stemmer
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ * Includes code from - http://tartarus.org/~martin/PorterStemmer/js.txt
+ */
+
+/*!
+ * elasticlunr.stopWordFilter
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.tokenizer
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.trimmer
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * elasticlunr.utils
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ */
+
+/*!
+ * lunr.SortedSet
+ * Copyright (C) 2016 Oliver Nightingale
+ */
+
+/*!
+ * repeat-string <https://github.com/jonschlinkert/repeat-string>
+ *
+ * Copyright (c) 2014-2015, Jon Schlinkert.
+ * Licensed under the MIT License.
+ */
+
+/*! *****************************************************************************
+Copyright (C) Microsoft. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+
+/**
+ * @license React
+ * react-dom.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * @license React
+ * react.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * @license React
+ * scheduler.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * elasticlunr - http://weixsong.github.io
+ * Lightweight full-text search engine in Javascript for browser search and offline search. - 0.9.5
+ *
+ * Copyright (C) 2016 Oliver Nightingale
+ * Copyright (C) 2016 Wei Song
+ * MIT Licensed
+ * @license
+ */
+
+/** @license React v17.0.2
+ * react-is.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */

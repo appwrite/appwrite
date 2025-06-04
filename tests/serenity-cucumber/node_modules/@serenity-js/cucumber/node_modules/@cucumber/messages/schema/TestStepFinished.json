@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TestStepFinished.json",
+  "additionalProperties": false,
+  "definitions": {
+    "TestStepResult": {
+      "additionalProperties": false,
+      "required": [
+        "duration",
+        "status"
+      ],
+      "properties": {
+        "duration": {
+          "$ref": "./Duration.json"
+        },
+        "message": {
+          "type": "string",
+          "description": "An arbitrary bit of information that explains this result. This can be a stack trace of anything else."
+        },
+        "status": {
+          "enum": [
+            "UNKNOWN",
+            "PASSED",
+            "SKIPPED",
+            "PENDING",
+            "UNDEFINED",
+            "AMBIGUOUS",
+            "FAILED"
+          ],
+          "type": "string"
+        },
+        "exception": {
+          "$ref": "./Exception.json",
+          "description": "Exception thrown while executing this step, if any."
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "testCaseStartedId",
+    "testStepId",
+    "testStepResult",
+    "timestamp"
+  ],
+  "properties": {
+    "testCaseStartedId": {
+      "type": "string"
+    },
+    "testStepId": {
+      "type": "string"
+    },
+    "testStepResult": {
+      "$ref": "#/definitions/TestStepResult"
+    },
+    "timestamp": {
+      "$ref": "./Timestamp.json"
+    }
+  },
+  "type": "object"
+}

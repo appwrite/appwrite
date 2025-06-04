@@ -1,0 +1,39 @@
+{
+  "name": "util-arity",
+  "version": "1.1.0",
+  "description": "Set the length of a function.",
+  "main": "arity.js",
+  "typings": "arity.d.ts",
+  "files": [
+    "arity.d.ts",
+    "arity.js"
+  ],
+  "scripts": {
+    "test": "istanbul cover _mocha -- -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/blakeembrey/arity.git"
+  },
+  "keywords": [
+    "arity",
+    "function",
+    "length",
+    "arguments",
+    "count"
+  ],
+  "author": {
+    "name": "Blake Embrey",
+    "email": "hello@blakeembrey.com",
+    "url": "http://blakeembrey.me"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blakeembrey/arity/issues"
+  },
+  "homepage": "https://github.com/blakeembrey/arity",
+  "devDependencies": {
+    "mocha": "~3.2.0",
+    "istanbul": "~0.4.5"
+  }
+}

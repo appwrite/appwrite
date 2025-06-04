@@ -4,5 +4,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appwrite/appwrite.git"
+  },
+  "devDependencies": {
+    "cypress": "^14.4.0"
   }
 }

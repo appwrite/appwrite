@@ -1,0 +1,1 @@
+{"version":3,"file":"logger.js","sourceRoot":"","sources":["../src/logger.ts"],"names":[],"mappings":"","sourcesContent":["export interface ILogger {\n  debug: (...content: any[]) => void\n  error: (...content: any[]) => void\n  warn: (...content: any[]) => void\n}\n"]}

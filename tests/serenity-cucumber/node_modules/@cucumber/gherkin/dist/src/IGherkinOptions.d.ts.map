@@ -1,0 +1,1 @@
+{"version":3,"file":"IGherkinOptions.d.ts","sourceRoot":"","sources":["../../src/IGherkinOptions.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,WAAW,EAAE,MAAM,oBAAoB,CAAA;AAEhD,MAAM,CAAC,OAAO,WAAW,eAAe;IACtC,cAAc,CAAC,EAAE,MAAM,CAAA;IACvB,aAAa,CAAC,EAAE,OAAO,CAAA;IACvB,sBAAsB,CAAC,EAAE,OAAO,CAAA;IAChC,cAAc,CAAC,EAAE,OAAO,CAAA;IACxB,KAAK,CAAC,EAAE,WAAW,CAAC,KAAK,CAAA;CAC1B"}

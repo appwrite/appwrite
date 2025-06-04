@@ -1,0 +1,1 @@
+{"version":3,"file":"test_run_hook_definition.js","sourceRoot":"","sources":["../../src/models/test_run_hook_definition.ts"],"names":[],"mappings":";;;;;AAAA,8DAAqC;AAErC,MAAqB,qBAAsB,SAAQ,oBAAU;CAAG;AAAhE,wCAAgE","sourcesContent":["import Definition from './definition'\n\nexport default class TestRunHookDefinition extends Definition {}\n"]}

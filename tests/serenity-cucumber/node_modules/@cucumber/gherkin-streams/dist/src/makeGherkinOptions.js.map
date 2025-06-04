@@ -1,0 +1,1 @@
+{"version":3,"file":"makeGherkinOptions.js","sourceRoot":"","sources":["../../src/makeGherkinOptions.ts"],"names":[],"mappings":";;AACA,iDAAgD;AAEhD,MAAM,cAAc,GAAoB;IACtC,cAAc,EAAE,IAAI;IACpB,aAAa,EAAE,IAAI;IACnB,sBAAsB,EAAE,IAAI;IAC5B,cAAc,EAAE,IAAI;IACpB,KAAK,EAAE,sBAAW,CAAC,IAAI,EAAE;CAC1B,CAAA;AAED,SAAwB,cAAc,CAAC,OAAwB;IAC7D,uCAAY,cAAc,GAAK,OAAO,EAAE;AAC1C,CAAC;AAFD,iCAEC"}

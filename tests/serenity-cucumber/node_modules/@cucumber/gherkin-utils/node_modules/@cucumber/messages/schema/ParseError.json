@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ParseError.json",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "message"
+  ],
+  "properties": {
+    "source": {
+      "$ref": "./SourceReference.json"
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "type": "object"
+}

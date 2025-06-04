@@ -1,0 +1,7 @@
+../LICENSE LICENSE
+../../.templates/github/ .github/
+../../.templates/javascript/.travis.yml .travis.yml
+../testdata/ testdata/
+../gherkin.berp gherkin.berp
+../bin/ berp/
+../gherkin-languages.json lib/gherkin/gherkin-languages.json

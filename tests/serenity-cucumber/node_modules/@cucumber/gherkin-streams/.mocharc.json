@@ -1,0 +1,6 @@
+{
+  "require": ["ts-node/register", "source-map-support/register"],
+  "extension": ["ts", "tsx"],
+  "recursive": true,
+  "timeout": 10000
+}

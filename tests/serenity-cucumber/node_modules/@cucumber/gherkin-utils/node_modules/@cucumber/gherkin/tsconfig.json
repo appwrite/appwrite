@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "target": "es2018",
+    "lib": [
+      "es2019",
+      "dom"
+    ],
+    "sourceMap": true,
+    "allowJs": false,
+    "jsx": "react",
+    "resolveJsonModule": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "experimentalDecorators": true
+  }
+}

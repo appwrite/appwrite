@@ -1,23 +1,15 @@
-# WARNING!
-# This is a development version of THE Appwrite docker-compose.yml file.
-# Avoid using this file in your production environment.
-# We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
-
 x-logging: &x-logging
   logging:
-    driver: "json-file"
+    driver: 'json-file'
     options:
-      max-file: "5"
-      max-size: "10m"
-
+      max-file: '5'
+      max-size: '10m'
 services:
   traefik:
     image: traefik:2.11
-    <<: *x-logging
     container_name: appwrite-traefik
+    <<: *x-logging
     command:
-      - --log.level=DEBUG
-      - --api.insecure=true
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
       - --providers.docker=true
@@ -25,12 +17,10 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
-      - --accesslog=true
+    restart: unless-stopped
     ports:
       - 80:80
-      - 8080:80
       - 443:443
-      - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -40,27 +30,19 @@ services:
     networks:
       - gateway
       - appwrite
-      - runtimes
 
   appwrite:
+    image: appwrite/appwrite:1.7.4
     container_name: appwrite
     <<: *x-logging
-    image: appwrite-dev
-    build:
-      context: .
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    ports:
-      - 9501:80
+    restart: unless-stopped
     networks:
       - appwrite
     labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_api.loadbalancer.server.port=80"
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_api.loadbalancer.server.port=80
       #http
       - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
@@ -79,24 +61,12 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
-      - ./phpunit.xml:/usr/src/code/phpunit.xml
-      - ./tests:/usr/src/code/tests
-      - ./app:/usr/src/code/app
-      - ./docs:/usr/src/code/docs
-      - ./public:/usr/src/code/public
-      - ./src:/usr/src/code/src
-      - ./dev:/usr/src/code/dev
     depends_on:
       - mariadb
       - redis
-      # - clamav
-    entrypoint:
-      - php
-      - -e
-      - app/http.php
+#      - clamav
     environment:
       - _APP_ENV
-      - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_COMPRESSION_MIN_SIZE_BYTES
@@ -107,7 +77,6 @@ services:
       - _APP_CONSOLE_HOSTNAMES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_SYSTEM_TEAM_EMAIL
       - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
@@ -175,6 +144,8 @@ services:
       - _APP_EXECUTOR_HOST
       - _APP_LOGGING_CONFIG
       - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_DELAY
+      - _APP_MAINTENANCE_START_TIME
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
@@ -196,24 +167,10 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
-      - _APP_MESSAGE_SMS_TEST_DSN
-      - _APP_MESSAGE_EMAIL_TEST_DSN
-      - _APP_MESSAGE_PUSH_TEST_DSN
-      - _APP_CONSOLE_COUNTRIES_DENYLIST
-      - _APP_EXPERIMENT_LOGGING_PROVIDER
-      - _APP_EXPERIMENT_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
-      - _APP_DATABASE_SHARED_TABLES_V1
-      - _APP_DATABASE_SHARED_NAMESPACE
-      - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
-      - _APP_CUSTOM_DOMAIN_DENY_LIST
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:6.0.11
+    image: appwrite/console:6.0.13
     restart: unless-stopped
     networks:
       - appwrite
@@ -233,13 +190,11 @@ services:
       - traefik.http.routers.appwrite_console_https.tls=true
 
   appwrite-realtime:
+    image: appwrite/appwrite:1.7.4
     entrypoint: realtime
-    <<: *x-logging
     container_name: appwrite-realtime
-    image: appwrite-dev
+    <<: *x-logging
     restart: unless-stopped
-    ports:
-      - 9505:80
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -256,9 +211,6 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.tls=true
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -279,18 +231,15 @@ services:
       - _APP_DB_PASS
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-audits:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-audits
     <<: *x-logging
     container_name: appwrite-worker-audits
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -308,27 +257,24 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-webhooks:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-webhooks
     <<: *x-logging
     container_name: appwrite-worker-webhooks
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
-      - request-catcher
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -339,14 +285,13 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_LOGGING_CONFIG
-      - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-deletes:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-deletes
     <<: *x-logging
     container_name: appwrite-worker-deletes
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
     depends_on:
@@ -359,8 +304,6 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -399,22 +342,21 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_DATABASE_SHARED_TABLES
-      - _APP_DATABASE_SHARED_TABLES_V1
-      - _APP_EMAIL_CERTIFICATES
+      - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_CERTIFICATES
 
   appwrite-worker-databases:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-databases
     <<: *x-logging
     container_name: appwrite-worker-databases
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -432,27 +374,23 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
-      - _APP_WORKERS_NUM
-      - _APP_QUEUE_NAME
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-builds:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-builds
     <<: *x-logging
     container_name: appwrite-worker-builds
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
+    depends_on:
+      - redis
+      - mariadb
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -503,16 +441,14 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_DATABASE_SHARED_TABLES
       - _APP_DOMAIN_SITES
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   appwrite-worker-certificates:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-certificates
     <<: *x-logging
     container_name: appwrite-worker-certificates
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
     depends_on:
@@ -521,8 +457,6 @@ services:
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -543,18 +477,15 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-functions:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-functions
     <<: *x-logging
     container_name: appwrite-worker-functions
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -585,29 +516,28 @@ services:
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_PROVIDER
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-mails:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-mails
     <<: *x-logging
     container_name: appwrite-worker-mails
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - maildev
-      # - smtp
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -620,20 +550,17 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-messaging:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-messaging
     <<: *x-logging
     container_name: appwrite-worker-messaging
     restart: unless-stopped
-    image: appwrite-dev
     networks:
       - appwrite
     volumes:
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
@@ -652,7 +579,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
-      - _APP_SMS_PROJECTS_DENY_LIST
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -675,21 +601,17 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-migrations:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-migrations
     <<: *x-logging
     container_name: appwrite-worker-migrations
     restart: unless-stopped
-    image: appwrite-dev
     networks:
       - appwrite
     volumes:
       - appwrite-imports:/storage/imports:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - ./tests:/usr/src/code/tests
     depends_on:
       - mariadb
     environment:
@@ -713,18 +635,15 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-maintenance:
+    image: appwrite/appwrite:1.7.4
     entrypoint: maintenance
     <<: *x-logging
     container_name: appwrite-task-maintenance
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
@@ -753,19 +672,15 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
-      - _APP_MAINTENANCE_START_TIME
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-stats-resources:
+    image: appwrite/appwrite:1.7.4
     container_name: appwrite-task-stats-resources
     entrypoint: stats-resources
     <<: *x-logging
-    image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -788,15 +703,13 @@ services:
       - _APP_STATS_RESOURCES_INTERVAL
 
   appwrite-worker-stats-resources:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-stats-resources
-    <<: *x-logging
     container_name: appwrite-worker-stats-resources
-    image: appwrite-dev
+    <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -815,19 +728,16 @@ services:
       - _APP_REDIS_PASS
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
-      - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_DATABASE_SHARED_TABLES
+      - _APP_STATS_RESOURCES_INTERVAL
 
   appwrite-worker-stats-usage:
+    image: appwrite/appwrite:1.7.4
     entrypoint: worker-stats-usage
-    <<: *x-logging
     container_name: appwrite-worker-stats-usage
-    image: appwrite-dev
+    <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -847,18 +757,15 @@ services:
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-scheduler-functions:
+    image: appwrite/appwrite:1.7.4
     entrypoint: schedule-functions
-    <<: *x-logging
     container_name: appwrite-task-scheduler-functions
-    image: appwrite-dev
+    <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -875,18 +782,15 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-scheduler-executions:
+    image: appwrite/appwrite:1.7.4
     entrypoint: schedule-executions
-    <<: *x-logging
     container_name: appwrite-task-scheduler-executions
-    image: appwrite-dev
+    <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -905,15 +809,13 @@ services:
       - _APP_DB_PASS
 
   appwrite-task-scheduler-messages:
+    image: appwrite/appwrite:1.7.4
     entrypoint: schedule-messages
-    <<: *x-logging
     container_name: appwrite-task-scheduler-messages
-    image: appwrite-dev
+    <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -930,19 +832,22 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-assistant:
+    image: appwrite/assistant:0.4.0
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.7.0
+    <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-
+      
   appwrite-browser:
-    container_name: appwrite-browser
     image: appwrite/browser:0.2.4
+    container_name: appwrite-browser
+    <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
 
@@ -950,9 +855,9 @@ services:
     container_name: openruntimes-executor
     hostname: exc1
     <<: *x-logging
-    stop_signal: SIGINT
-    image: openruntimes/executor:0.7.16
     restart: unless-stopped
+    stop_signal: SIGINT
+    image: openruntimes/executor:0.7.14
     networks:
       - appwrite
       - runtimes
@@ -965,7 +870,6 @@ services:
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_IMAGE_PULL=enabled
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
@@ -974,7 +878,7 @@ services:
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v5
+      - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -999,123 +903,46 @@ services:
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
-  openruntimes-proxy:
-    container_name: openruntimes-proxy
-    hostname: proxy
-    <<: *x-logging
-    stop_signal: SIGINT
-    image: openruntimes/proxy:0.5.5
-    networks:
-      - appwrite
-      - runtimes
-    environment:
-      - OPR_PROXY_WORKER_PER_CORE=$_APP_WORKER_PER_CORE
-      - OPR_PROXY_ENV=$_APP_ENV
-      - OPR_PROXY_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_PROXY_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-      - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=exc1
-      - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
-      - OPR_PROXY_MAX_TIMEOUT=600
-      - OPR_PROXY_HEALTHCHECK=enabled
-
   mariadb:
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
-    command: "mysqld --innodb-flush-method=fsync"
+    command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
     image: redis:7.2.4-alpine
-    <<: *x-logging
     container_name: appwrite-redis
+    <<: *x-logging
+    restart: unless-stopped
     command: >
       redis-server
       --maxmemory            512mb
       --maxmemory-policy     allkeys-lru
       --maxmemory-samples    5
-    ports:
-      - "6379:6379"
     networks:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
 
-  # Dev Tools Start ------------------------------------------------------------------------------------------
-  #
-  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
-  #
-  # Here is a description of the different tools and why are we using them:
-  #
-  # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
-  # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
-  # Redis Insight - A nice UI for exploring Redis data
-  # Adminer - A nice UI for exploring MariaDB data
-  # GraphQl Explorer - A nice UI for exploring GraphQL API
-
-  maildev: # used mainly for dev tests
-    image: appwrite/mailcatcher:1.0.0
-    container_name: appwrite-mailcatcher
-    <<: *x-logging
-    ports:
-      - "9503:1080"
-    networks:
-      - appwrite
-
-  request-catcher: # used mainly for dev tests
-    image: appwrite/requestcatcher:1.0.0
-    container_name: appwrite-requestcatcher
-    <<: *x-logging
-    ports:
-      - "9504:5000"
-    networks:
-      - appwrite
-
-  adminer:
-    image: adminer
-    container_name: appwrite-adminer
-    <<: *x-logging
-    restart: always
-    ports:
-      - 9506:8080
-    networks:
-      - appwrite
-
-  redis-insight:
-    image: redis/redisinsight:latest
-    restart: unless-stopped
-    networks:
-      - appwrite
-    environment:
-      - REDIS_HOSTS=redis
-    ports:
-      - "8081:5540"
-
-  graphql-explorer:
-    container_name: appwrite-graphql-explorer
-    image: appwrite/altair:0.3.0
-    restart: unless-stopped
-    networks:
-      - appwrite
-    ports:
-      - "9509:3000"
-    environment:
-      - SERVER_URL=http://localhost/v1/graphql
-
-  # Dev Tools End   ------------------------------------------------------------------------------------------
+  # clamav:
+  #   image: appwrite/clamav:1.2.0
+  #   container_name: appwrite-clamav
+  #   restart: unless-stopped
+  #   networks:
+  #     - appwrite
+  #   volumes:
+  #     - appwrite-uploads:/storage/uploads
 
 networks:
   gateway:

@@ -1,0 +1,1 @@
+{"version":3,"file":"parseEnvelope.js","sourceRoot":"","sources":["../../../src/parseEnvelope.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,eAAe,CAAA;AACxC,OAAO,EAAE,YAAY,EAAE,MAAM,mBAAmB,CAAA;AAEhD;;;;GAIG;AACH,MAAM,UAAU,aAAa,CAAC,IAAY;IACxC,MAAM,KAAK,GAAG,IAAI,CAAC,KAAK,CAAC,IAAI,CAAC,CAAA;IAC9B,OAAO,YAAY,CAAC,QAAQ,EAAE,KAAK,CAAC,CAAA;AACtC,CAAC"}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TestRunFinished.json",
+  "additionalProperties": false,
+  "required": [
+    "success",
+    "timestamp"
+  ],
+  "properties": {
+    "message": {
+      "description": "Error message. Can be a stack trace from a failed `BeforeAll` or `AfterAll`.\n If there are undefined parameter types, the message is simply\n \"The following parameter type(s() are not defined: xxx, yyy\".\n The independent `UndefinedParameterType` messages can be used to generate\n snippets for those parameter types.",
+      "type": "string"
+    },
+    "success": {
+      "description": "success = StrictModeEnabled ? (failed_count == 0 && ambiguous_count == 0 && undefined_count == 0 && pending_count == 0) : (failed_count == 0 && ambiguous_count == 0)",
+      "type": "boolean"
+    },
+    "timestamp": {
+      "$ref": "./Timestamp.json",
+      "description": "Timestamp when the TestRun is finished"
+    }
+  },
+  "type": "object"
+}

@@ -1,0 +1,15 @@
+# Please update /.templates/javascript/.travis.yml in the cucumber/cucumber monorepo
+# and sync:
+#
+#     source scripts/functions.sh && rsync_files
+#
+sudo: false
+language: node_js
+node_js:
+  - "10"
+  - "9"
+  - "8"
+  - "6"
+  - "4"
+
+script: make default

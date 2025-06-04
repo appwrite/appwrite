@@ -1,0 +1,44 @@
+{
+  "name": "strip-outer",
+  "version": "1.0.1",
+  "description": "Strip a substring from the start/end of a string",
+  "license": "MIT",
+  "repository": "sindresorhus/strip-outer",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "xo && ava"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "strip",
+    "trim",
+    "remove",
+    "outer",
+    "str",
+    "string",
+    "substring",
+    "start",
+    "end",
+    "wrap",
+    "leading",
+    "trailing",
+    "regex",
+    "regexp"
+  ],
+  "dependencies": {
+    "escape-string-regexp": "^1.0.2"
+  },
+  "devDependencies": {
+    "ava": "*",
+    "xo": "*"
+  }
+}

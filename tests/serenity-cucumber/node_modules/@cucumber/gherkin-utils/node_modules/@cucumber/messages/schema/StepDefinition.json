@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "StepDefinition.json",
+  "additionalProperties": false,
+  "definitions": {
+    "StepDefinitionPattern": {
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "type"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CUCUMBER_EXPRESSION",
+            "REGULAR_EXPRESSION"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "id",
+    "pattern",
+    "sourceReference"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "pattern": {
+      "$ref": "#/definitions/StepDefinitionPattern"
+    },
+    "sourceReference": {
+      "$ref": "./SourceReference.json"
+    }
+  },
+  "type": "object"
+}

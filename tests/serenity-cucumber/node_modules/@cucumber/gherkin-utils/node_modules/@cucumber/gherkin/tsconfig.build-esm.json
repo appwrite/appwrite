@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "lib": ["ES2019"],
+    "target": "ES6",
+    "module": "ES6"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "knuth-shuffle-seeded",
+  "version": "1.0.6",
+  "main": "browser.js",
+  "dependencies": {},
+  "devDependencies": {}
+}

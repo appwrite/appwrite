@@ -1,0 +1,1 @@
+{"version":3,"file":"gherkin_step_keyword.js","sourceRoot":"","sources":["../../src/models/gherkin_step_keyword.ts"],"names":[],"mappings":"","sourcesContent":["export type GherkinStepKeyword = 'Unknown' | 'Given' | 'When' | 'Then'\n"]}

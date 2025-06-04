@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TestCaseStarted.json",
+  "additionalProperties": false,
+  "required": [
+    "attempt",
+    "id",
+    "testCaseId",
+    "timestamp"
+  ],
+  "properties": {
+    "attempt": {
+      "description": "*\n The first attempt should have value 0, and for each retry the value\n should increase by 1.",
+      "type": "integer"
+    },
+    "id": {
+      "description": "*\n Because a `TestCase` can be run multiple times (in case of a retry),\n we use this field to group messages relating to the same attempt.",
+      "type": "string"
+    },
+    "testCaseId": {
+      "type": "string"
+    },
+    "workerId": {
+      "description": "An identifier for the worker process running this test case, if test cases are being run in parallel. The identifier will be unique per worker, but no particular format is defined - it could be an index, uuid, machine name etc - and as such should be assumed that it's not human readable.",
+      "type": "string"
+    },
+    "timestamp": {
+      "$ref": "./Timestamp.json"
+    }
+  },
+  "type": "object"
+}

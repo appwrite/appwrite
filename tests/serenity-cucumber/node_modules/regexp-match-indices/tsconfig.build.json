@@ -1,0 +1,20 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": false
+    },
+    "files": [
+        "external.d.ts",
+        "auto.ts",
+        "config.ts",
+        "implementation.ts",
+        "index.ts",
+        "native.ts",
+        "polyfill.ts",
+        "shim.ts",
+        "types.ts",
+        "shim/types.ts"
+    ],
+    "include": [],
+    "exclude": ["__tests__/**/*.ts"]
+}
