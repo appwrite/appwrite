@@ -79,16 +79,16 @@ abstract class ScheduleBase extends Action
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
-        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
+        $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
 
         Console::success("Starting timers at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($pools, $dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
+            $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
         });
 
         while (true) {
@@ -103,7 +103,7 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
+    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
@@ -115,7 +115,7 @@ abstract class ScheduleBase extends Action
          * @throws Exception
          * @var Document $schedule
          */
-        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
+        $getSchedule = function (Document $schedule) use ($pools, $dbForPlatform, $getProjectDB): array {
             $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
 
             $resource = $getProjectDB($project)->getDocument(
