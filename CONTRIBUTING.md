@@ -163,6 +163,28 @@ Other containes should be named the same as their service, for example `redis` s
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)
 
+## Modules
+
+As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesnt contain all product's features such as workers or tasks. While there might still be some occurances of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
+
+### HTTP Endpoints
+
+Every endpoint file follows below structure, making it consistent with HTTP REST endpoint path:
+
+```
+src/Appwrite/Platform/Modules/[service]/Http/[resource]/[action].php
+```
+
+Tips and tricks:
+
+1. If endpoint doesn't have resource, use service name as resource name too
+> Example: `Modules/Sites/Http/Sites/Get.php`
+
+2. If there are multiple resources, use then all in folder structure
+> Example: `Modules/Sites/Http/Deployments/Builds/Create.php`
+
+3. Action can only be `Get`, `Create`, `Update`, `Delete` or `XList`
+
 ## Architecture
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures.
@@ -319,10 +341,13 @@ These are the current metrics we collect usage stats for:
 | users | Total number of users per project|
 | executions | Total number of executions per project           | 
 | databases | Total number of databases per project             | 
+| databases.storage | Total amount of storage used by all databases per project (in bytes) |
 | collections | Total number of collections per project | 
 | {databaseInternalId}.collections | Total number of collections per database| 
+| {databaseInternalId}.storage | Sum of database storage (in bytes) |
 | documents | Total number of documents per project             | 
 | {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
+| {databaseInternalId}.{collectionInternalId}.storage | Sum of database storage used by the collection (in bytes) |
 | buckets | Total number of buckets per project               | 
 | files | Total number of files per project                 |
 | {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |
@@ -364,7 +389,7 @@ In file `app/controllers/shared/api.php` On the database listener, add to an exi
 
 ```php
       case $document->getCollection() === 'teams':
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_TEAMS, $value); // per project
             break;
 ```
@@ -376,10 +401,10 @@ In that case you need also to handle children removal using addReduce() method c
 ```php
 
  case $document->getCollection() === 'buckets': //buckets
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_BUCKETS, $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForUsage
+                $queueForStatsUsage
                     ->addReduce($document);
             }
             break;
@@ -425,16 +450,16 @@ public function __construct()
       ->inject('dbForProject')
       ->inject('queueForFunctions')
       ->inject('queueForEvents')
-      ->inject('queueForUsage')
+      ->inject('queueForStatsUsage')
       ->inject('log')
-      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $log));
 }
 ```
 
 and then trigger the queue with the new metric like so: 
 
 ```php
-$queueForUsage
+$queueForStatsUsage
   ->addMetric(METRIC_BUILDS, 1)
   ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
   ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
@@ -609,6 +634,18 @@ If you need to clear the cache, you can do so by running the following command:
 ```bash
 docker compose exec redis redis-cli FLUSHALL
 ```
+
+## Using preview domains locally
+
+Appwrite Functions are automatically given a domain you can visit to execute the function. This domain has format `[SOMETHING].functions.localhost` unless you changed `_APP_DOMAIN_FUNCTIONS` environment variable. This default value works great when running Appwrite locally, but it can be impossible to use preview domains with Cloud woekspaces such as Gitpod or GitHub Codespaces.
+
+To use preview domains on Cloud workspaces, you can visit hostname provided by them, and supply function's preview domain as URL parameter:
+
+```
+https://8080-appwrite-appwrite-mjeb3ebilwv.ws-eu116.gitpod.io/ping?preview=672b3c7eab1ac523ccf5.functions.localhost
+```
+
+The path was set to `/ping` intentionally. Visiting `/` for preview domains might trigger Console background worker, and trigger redirect to Console without our preview URL param. Visiting different path ensures this doesnt happen.
 
 ## Tutorials
 

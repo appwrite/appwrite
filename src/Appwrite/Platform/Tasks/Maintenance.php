@@ -23,101 +23,71 @@ class Maintenance extends Action
     {
         $this
             ->desc('Schedules maintenance tasks and publishes them to our queues')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
+            ->inject('console')
             ->inject('queueForCertificates')
             ->inject('queueForDeletes')
-            ->callback(fn (Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes) => $this->action($dbForConsole, $queueForCertificates, $queueForDeletes));
+            ->callback([$this, 'action']);
     }
 
-    public function action(Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes): void
+    public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
-        // # of days in seconds (1 day = 86400s)
-        $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        $delay = (int) System::getEnv('_APP_MAINTENANCE_DELAY', '0');
+        $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
         $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
+        $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
 
-        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $queueForDeletes, $queueForCertificates) {
+        $now = new \DateTime();
+        $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
+        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $delay = $next->getTimestamp() - $now->getTimestamp();
+
+        /**
+         * If time passed for the target day.
+         */
+        if ($delay <= 0) {
+            $next->add(\DateInterval::createFromDateString('1 days'));
+            $delay = $next->getTimestamp() - $now->getTimestamp();
+        }
+
+        Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
+
+        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                $queueForDeletes->setProject($project);
+            $dbForPlatform->foreach(
+                'projects',
+                function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
+                    $queueForDeletes
+                        ->setType(DELETE_TYPE_MAINTENANCE)
+                        ->setProject($project)
+                        ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                        ->trigger();
+                },
+                [
+                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                    Query::limit(100),
+                ]
+            );
 
-                $this->notifyDeleteTargets($queueForDeletes);
-                $this->notifyDeleteExecutionLogs($queueForDeletes);
-                $this->notifyDeleteAbuseLogs($queueForDeletes);
-                $this->notifyDeleteAuditLogs($queueForDeletes);
-                $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
-                $this->notifyDeleteExpiredSessions($queueForDeletes);
-            });
+            $queueForDeletes
+                ->setType(DELETE_TYPE_MAINTENANCE)
+                ->setProject($console)
+                ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                ->trigger();
 
             $this->notifyDeleteConnections($queueForDeletes);
-            $this->renewCertificates($dbForConsole, $queueForCertificates);
+            $this->renewCertificates($dbForPlatform, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval, $delay);
-    }
-
-    protected function foreachProject(Database $dbForConsole, callable $callback): void
-    {
-        // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $sum = $limit;
-        $executionStart = \microtime(true);
-
-        while ($sum === $limit) {
-            $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
-
-            $chunk++;
-
-            /** @var string[] $projectIds */
-            $sum = count($projects);
-
-            foreach ($projects as $project) {
-                $callback($project);
-                $count++;
-            }
-        }
-
-        $executionEnd = \microtime(true);
-        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
-    }
-
-    private function notifyDeleteExecutionLogs(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_EXECUTIONS)
-            ->trigger();
-    }
-
-    private function notifyDeleteAbuseLogs(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_ABUSE)
-            ->trigger();
-    }
-
-    private function notifyDeleteAuditLogs(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_AUDIT)
-            ->trigger();
-    }
-
-    private function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_USAGE)
-            ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-            ->trigger();
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void
@@ -128,19 +98,13 @@ class Maintenance extends Action
             ->trigger();
     }
 
-    private function notifyDeleteExpiredSessions(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_SESSIONS)
-            ->trigger();
-    }
-
-    private function renewCertificates(Database $dbForConsole, Certificate $queueForCertificate): void
+    private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void
     {
         $time = DateTime::now();
 
-        $certificates = $dbForConsole->find('certificates', [
+        $certificates = $dbForPlatform->find('certificates', [
             Query::lessThan('attempts', 5), // Maximum 5 attempts
+            Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
@@ -174,13 +138,6 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_SCHEDULES)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
-            ->trigger();
-    }
-
-    private function notifyDeleteTargets(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_EXPIRED_TARGETS)
             ->trigger();
     }
 }

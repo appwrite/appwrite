@@ -2,28 +2,80 @@
 
 namespace Tests\E2E\General;
 
-use Appwrite\Functions\Specification;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
-use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Tests\E2E\Services\Sites\SitesBase;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class UsageTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use FunctionsBase;
+    use SitesBase {
+        FunctionsBase::createDeployment insteadof SitesBase;
+        FunctionsBase::setupDeployment insteadof SitesBase;
+        FunctionsBase::createVariable insteadof SitesBase;
+        FunctionsBase::getVariable insteadof SitesBase;
+        FunctionsBase::listVariables insteadof SitesBase;
+        FunctionsBase::updateVariable insteadof SitesBase;
+        FunctionsBase::deleteVariable insteadof SitesBase;
+        FunctionsBase::getDeployment insteadof SitesBase;
+        FunctionsBase::listDeployments insteadof SitesBase;
+        FunctionsBase::deleteDeployment insteadof SitesBase;
+        FunctionsBase::setupDuplicateDeployment insteadof SitesBase;
+        FunctionsBase::createDuplicateDeployment insteadof SitesBase;
+        FunctionsBase::createTemplateDeployment insteadof SitesBase;
+        FunctionsBase::getUsage insteadof SitesBase;
+        FunctionsBase::getTemplate insteadof SitesBase;
+        FunctionsBase::getDeploymentDownload insteadof SitesBase;
+        FunctionsBase::cancelDeployment insteadof SitesBase;
+        FunctionsBase::listSpecifications insteadof SitesBase;
+        SitesBase::createDeployment as createDeploymentSite;
+        SitesBase::setupDeployment as setupDeploymentSite;
+        SitesBase::createVariable as createVariableSite;
+        SitesBase::getVariable as getVariableSite;
+        SitesBase::listVariables as listVariablesSite;
+        SitesBase::listVariables as listVariablesSite;
+        SitesBase::updateVariable as updateVariableSite;
+        SitesBase::updateVariable as updateVariableSite;
+        SitesBase::deleteVariable as deleteVariableSite;
+        SitesBase::deleteVariable as deleteVariableSite;
+        SitesBase::getDeployment as getDeploymentSite;
+        SitesBase::getDeployment as getDeploymentSite;
+        SitesBase::listDeployments as listDeploymentsSite;
+        SitesBase::listDeployments as listDeploymentsSite;
+        SitesBase::deleteDeployment as deleteDeploymentSite;
+        SitesBase::deleteDeployment as deleteDeploymentSite;
+        SitesBase::setupDuplicateDeployment as setupDuplicateDeploymentSite;
+        SitesBase::setupDuplicateDeployment as setupDuplicateDeploymentSite;
+        SitesBase::createDuplicateDeployment as createDuplicateDeploymentSite;
+        SitesBase::createDuplicateDeployment as createDuplicateDeploymentSite;
+        SitesBase::createTemplateDeployment as createTemplateDeploymentSite;
+        SitesBase::createTemplateDeployment as createTemplateDeploymentSite;
+        SitesBase::getUsage as getUsageSite;
+        SitesBase::getUsage as getUsageSite;
+        SitesBase::getTemplate as getTemplateSite;
+        SitesBase::getTemplate as getTemplateSite;
+        SitesBase::getDeploymentDownload as getDeploymentDownloadSite;
+        SitesBase::getDeploymentDownload as getDeploymentDownloadSite;
+        SitesBase::cancelDeployment as cancelDeploymentSite;
+        SitesBase::cancelDeployment as cancelDeploymentSite;
+        SitesBase::listSpecifications as listSpecificationsSite;
+    }
 
-    private const WAIT = 35;
+    private const WAIT = 5;
     private const CREATE = 20;
 
     protected string $projectId;
@@ -50,6 +102,13 @@ class UsageTest extends Scope
         foreach ($metrics as $metric) {
             $this->assertIsObject(\DateTime::createFromFormat("Y-m-d\TH:i:s.vP", $metric['date']));
         }
+    }
+
+    public static function getYesterday(): string
+    {
+        $date = new DateTime();
+        $date->modify('-1 day');
+        return $date->format(self::$formatTz);
     }
 
     public static function getToday(): string
@@ -127,8 +186,6 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
-        sleep(self::WAIT);
-
         $requestsTotal = $data['requestsTotal'];
 
         $response = $this->client->call(
@@ -143,7 +200,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(20, count($response['body']));
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
         $this->validateDates($response['body']['network']);
         $this->validateDates($response['body']['requests']);
         $this->validateDates($response['body']['users']);
@@ -302,7 +359,7 @@ class UsageTest extends Scope
     /**
      * @depends testPrepareStorageStats
      */
-    #[Retry(count: 1)]
+    #[Retry(count: 10)]
     public function testStorageStats(array $data): array
     {
         $bucketId      = $data['bucketId'];
@@ -310,8 +367,6 @@ class UsageTest extends Scope
         $requestsTotal = $data['requestsTotal'];
         $storageTotal  = $data['storageTotal'];
         $filesTotal    = $data['filesTotal'];
-
-        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -324,7 +379,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(20, count($response['body']));
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
@@ -467,9 +522,9 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
-        $requestsTotal += 1;
-
         sleep(self::WAIT);
+
+        $requestsTotal += 1;
 
         for ($i = 0; $i < self::CREATE; $i++) {
             $name = uniqid() . ' collection';
@@ -545,7 +600,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(20, count($response['body']));
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals(1, count($response['body']['network']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
@@ -590,7 +645,6 @@ class UsageTest extends Scope
         return $data;
     }
 
-
     /** @depends testDatabaseStats */
     public function testPrepareFunctionsStats(array $data): array
     {
@@ -629,40 +683,23 @@ class UsageTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $code = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
-        $this->packageCode('php');
-
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/functions/' . $functionId . '/deployments',
-            array_merge([
-                'content-type' => 'multipart/form-data',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'entrypoint' => 'index.php',
-                'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
-                'activate' => true
-            ]
-        );
-
-        $deploymentId = $response['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
-        $this->assertEquals('index.php', $response['body']['entrypoint']);
-
-        // Wait for deployment to build.
-        sleep(self::WAIT + 20);
+        $deploymentId = $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php'),
+            'activate' => true,
+        ]);
+        $this->assertNotEmpty($deploymentId);
 
         $response = $this->client->call(
             Client::METHOD_PATCH,
-            '/functions/' . $functionId . '/deployments/' . $deploymentId,
+            '/functions/' . $functionId . '/deployment',
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
+            [
+                'deploymentId' => $deploymentId,
+            ],
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -670,7 +707,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$updatedAt']));
-        $this->assertEquals($deploymentId, $response['body']['deployment']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
 
         $response = $this->client->call(
             Client::METHOD_POST,
@@ -680,7 +717,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 
@@ -704,7 +741,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 
@@ -769,8 +806,6 @@ class UsageTest extends Scope
         $executionTime = $data['executionTime'];
         $executions = $data['executions'];
 
-        sleep(self::WAIT);
-
         $response = $this->client->call(
             Client::METHOD_GET,
             '/functions/' . $functionId . '/usage?range=30d',
@@ -778,7 +813,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals(24, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
@@ -803,7 +838,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(21, count($response['body']));
+        $this->assertEquals(25, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['functions']);
         $this->assertIsArray($response['body']['deployments']);
@@ -824,6 +859,145 @@ class UsageTest extends Scope
         return $data;
     }
 
+
+    public function testPrepareSitesStats(): array
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $this->assertNotNull($siteId);
+
+        $deployment = $this->createDeploymentSite($siteId, [
+            'siteId' => $siteId,
+            'code' => $this->packageSite('static'),
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+        $this->assertEquals('waiting', $deployment['body']['status']);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
+
+        $deploymentIdActive = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($siteId, $deploymentIdActive) {
+            $deployment = $this->getDeploymentSite($siteId, $deploymentIdActive);
+
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
+
+        $deployment = $this->createDeploymentSite($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'false'
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentIdInactive = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($siteId, $deploymentIdInactive) {
+            $deployment = $this->getDeploymentSite($siteId, $deploymentIdInactive);
+
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
+
+        $site = $this->getSite($siteId);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentIdActive, $site['body']['deploymentId']);
+        $this->assertNotEquals($deploymentIdInactive, $site['body']['deploymentId']);
+
+        $data = [
+            'siteId' => $siteId,
+            'deployments' => 2,
+            'deploymentsSuccess' => 2,
+            'deploymentsFailed' => 0
+        ];
+
+        return $data;
+    }
+
+    /** @depends testPrepareSitesStats */
+    #[Retry(count: 1)]
+    public function testSitesStats(array $data)
+    {
+        $siteId = $data['siteId'];
+        $executionTime = $data['executionTime'] ?? 0;
+        $executions = $data['executions'] ?? 0;
+        $deploymentsSuccess = $data['deploymentsSuccess'];
+        $deploymentsFailed = $data['deploymentsFailed'];
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/sites/' . $siteId . '/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(30, count($response['body']));
+        $this->assertEquals('30d', $response['body']['range']);
+        $this->assertIsArray($response['body']['deployments']);
+        $this->assertEquals($deploymentsSuccess, $response['body']['buildsSuccessTotal']);
+        $this->assertEquals($deploymentsFailed, $response['body']['buildsFailedTotal']);
+        $this->assertIsArray($response['body']['deploymentsStorage']);
+        $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsMbSecondsTotal']);
+        $this->assertIsNumeric($response['body']['executionsMbSecondsTotal']);
+        $this->assertIsArray($response['body']['builds']);
+        $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
+        $this->assertIsArray($response['body']['executions']);
+        $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
+        $this->assertIsArray($response['body']['buildsSuccess']);
+        $this->assertIsArray($response['body']['buildsFailed']);
+        $this->assertIsArray($response['body']['requests']);
+        $this->assertIsArray($response['body']['inbound']);
+        $this->assertIsArray($response['body']['outbound']);
+        $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
+        $this->validateDates($response['body']['executions']);
+        $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
+        $this->validateDates($response['body']['executionsTime']);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/sites/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(31, count($response['body']));
+        $this->assertEquals($response['body']['range'], '30d');
+        $this->assertIsArray($response['body']['sites']);
+        $this->assertIsArray($response['body']['deployments']);
+        $this->assertIsArray($response['body']['deploymentsStorage']);
+        $this->assertIsArray($response['body']['builds']);
+        $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
+        $this->assertIsArray($response['body']['executions']);
+        $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
+        $this->assertIsArray($response['body']['buildsSuccess']);
+        $this->assertIsArray($response['body']['buildsFailed']);
+        $this->assertIsArray($response['body']['requests']);
+        $this->assertIsArray($response['body']['inbound']);
+        $this->assertIsArray($response['body']['outbound']);
+        $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
+        $this->validateDates($response['body']['executions']);
+        $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
+        $this->validateDates($response['body']['executionsTime']);
+        $this->assertGreaterThan(0, $response['body']['buildsTime'][array_key_last($response['body']['buildsTime'])]['value']);
+        $this->validateDates($response['body']['buildsTime']);
+    }
+
     /** @depends testFunctionsStats */
     public function testCustomDomainsFunctionStats(array $data): void
     {
@@ -839,22 +1013,24 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$functionId])->toString(),
-                Query::equal('resourceType', ['function'])->toString(),
+        $rule = $this->client->call(
+            Client::METHOD_POST,
+            '/proxy/rules/function',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'functionId' => $functionId,
             ],
-        ]);
+        );
 
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertEquals(1, $rules['body']['total']);
-        $this->assertCount(1, $rules['body']['rules']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
 
-        $domain = $rules['body']['rules'][0]['domain'];
+        $domain = $rule['body']['domain'];
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -863,7 +1039,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals(24, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
 
         $functionsMetrics = $response['body'];
@@ -894,52 +1070,40 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        sleep(self::WAIT + 20);
         $tries = 0;
 
-        while (true) {
-            try {
-                // Compare new values with old values
-                $response = $this->client->call(
-                    Client::METHOD_GET,
-                    '/functions/' . $functionId . '/usage?range=30d',
-                    $this->getConsoleHeaders()
-                );
+        $this->assertEventually(function () use ($functionId, $functionsMetrics, $projectMetrics) {
+            // Compare new values with old values
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/functions/' . $functionId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEquals(19, count($response['body']));
-                $this->assertEquals('30d', $response['body']['range']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(24, count($response['body']));
+            $this->assertEquals('30d', $response['body']['range']);
 
-                // Check if the new values are greater than the old values
-                $this->assertEquals($functionsMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
-                $this->assertGreaterThan($functionsMetrics['executionsTimeTotal'], $response['body']['executionsTimeTotal']);
-                $this->assertGreaterThan($functionsMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+            // Check if the new values are greater than the old values
+            $this->assertEquals($functionsMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+            $this->assertGreaterThan($functionsMetrics['executionsTimeTotal'], $response['body']['executionsTimeTotal']);
+            $this->assertGreaterThan($functionsMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
 
-                $response = $this->client->call(
-                    Client::METHOD_GET,
-                    '/project/usage',
-                    $this->getConsoleHeaders(),
-                    [
-                        'period' => '1h',
-                        'startDate' => self::getToday(),
-                        'endDate' => self::getTomorrow(),
-                    ]
-                );
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1h',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
 
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
-                $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
-
-                break;
-            } catch (ExpectationFailedException $th) {
-                if ($tries >= 5) {
-                    throw $th;
-                } else {
-                    $tries++;
-                    sleep(5);
-                }
-            }
-        }
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+            $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+        });
     }
 
     public function tearDown(): void

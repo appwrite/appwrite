@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.9.3 AS final
+FROM appwrite/base:0.10.1 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -28,6 +28,8 @@ RUN \
     apk add boost boost-dev; \
   fi
 
+RUN apk add libwebp
+
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
@@ -42,12 +44,14 @@ COPY ./dev /usr/src/code/dev
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
+    mkdir -p /storage/imports && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
+    chown -Rf www-data.www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
@@ -66,6 +70,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
+    chmod +x /usr/local/bin/screenshot && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/vars && \
@@ -83,17 +88,18 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-usage && \
-    chmod +x /usr/local/bin/worker-usage-dump
+    chmod +x /usr/local/bin/worker-stats-usage && \
+    chmod +x /usr/local/bin/stats-resources && \
+    chmod +x /usr/local/bin/worker-stats-resources
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 # Enable Extensions
-RUN if [ "$DEBUG" == "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
-RUN if [ "$DEBUG" == "true" ]; then mkdir -p /tmp/xdebug; fi
+RUN if [ "$DEBUG" = "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
+RUN if [ "$DEBUG" = "true" ]; then mkdir -p /tmp/xdebug; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
-RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20220829/xdebug.so; fi
+RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20230831/xdebug.so; fi
 
 EXPOSE 80
 
