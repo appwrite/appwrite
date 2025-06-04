@@ -275,6 +275,7 @@ class Builds extends Action
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
         if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
             $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
             $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
         }
@@ -525,6 +526,7 @@ class Builds extends Action
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
             if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
             }
@@ -1056,6 +1058,7 @@ class Builds extends Action
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
             }
@@ -1072,6 +1075,28 @@ class Builds extends Action
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
+                // Check if current active deployment started later than this deployment
+                $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+                $currentActiveDeploymentId = $resource->getAttribute('deploymentId', '');
+                if (!empty($currentActiveDeploymentId)) {
+                    $currentActiveDeployment = $dbForProject->getDocument('deployments', $currentActiveDeploymentId);
+                    if (!$currentActiveDeployment->isEmpty()) {
+                        $currentActiveStartTime = $currentActiveDeployment->getAttribute('buildStartedAt', '');
+                        $currentActiveEndTime = $currentActiveDeployment->getAttribute('buildEndedAt', '');
+                        $deploymentStartTime = $deployment->getAttribute('buildStartedAt', '');
+                        $deploymentEndTime = $deployment->getAttribute('buildEndedAt', '');
+
+                        // Skip auto-activation if:
+                        // 1. Current active deployment started later than deployment that is being activated, AND
+                        // 2. Current active deployment finished earlier than deployment that is being activated
+                        if ((!empty($currentActiveStartTime) && !empty($deploymentStartTime) && $currentActiveStartTime > $deploymentStartTime) &&
+                            (!empty($currentActiveEndTime) && !empty($deploymentEndTime) && $currentActiveEndTime < $deploymentEndTime)) {
+                            Console::info('Skipping auto-activation as current deployment is more recent');
+                            return;
+                        }
+                    }
+                }
+
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
@@ -1248,6 +1273,7 @@ class Builds extends Action
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
             }
