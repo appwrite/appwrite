@@ -227,6 +227,36 @@ class Base extends Action
             ]))
         );
 
+        if (!empty($commitDetails['commitHash'])) {
+            $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
+            $ruleId = md5($domain);
+            try {
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+            } catch (Duplicate $err) {
+                // Ignore, rule already exists; will be updated by builds worker
+            }
+        }
+
         // VCS branch preview
         if (!empty($providerBranch)) {
             $branchPrefix = substr($providerBranch, 0, 16);
