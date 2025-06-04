@@ -1,0 +1,8 @@
+modules = ["nodejs-20", "php-8.2", "bash"]
+run = "node index.js"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "node index.js"]
