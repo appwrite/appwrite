@@ -99,12 +99,12 @@ class Get extends Action
         }
 
         if (!$device->exists($path)) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $response
             ->setContentType('application/gzip')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 

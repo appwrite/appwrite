@@ -107,7 +107,7 @@ class Get extends Action
             ->setContentType('application/gzip')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
