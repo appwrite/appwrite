@@ -1172,32 +1172,10 @@ App::delete('/v1/projects/:projectId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $interval = (int)System::getEnv('_APP_PROJECTS_DELETE_EXPIRATION','3600');
-        $expiration = new \DateTime();
-        $expiration->add(new \DateInterval('PT' . $interval . 'S'));
-        $cronPattern = sprintf('%d %d %d %d *',
-            (int)$expiration->format('i'), // minute
-            (int)$expiration->format('G'), // hour
-            (int)$expiration->format('j'), // day of month
-            (int)$expiration->format('n')  // month
-        );
-
-        $cronExpression = new CronExpression($cronPattern);
-        $scheduledAt =  $cronExpression->getExpression();
-
-        $schedule = $dbForPlatform->createDocument('schedules', new Document([
-            'region' => $project->getAttribute('region'),
-            'resourceType' => 'project',
-            'resourceId' => $project->getId(),
-            'resourceInternalId' => $project->getInternalId(),
-            'resourceUpdatedAt' => DateTime::now(),
-            'projectId' => $project->getId(),
-            'schedule' => $scheduledAt,
-            'active' => true,
-        ]));
-
-        $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('scheduleId', $schedule->getId()))
+        $expiration = System::getEnv('_APP_PROJECTS_DELETE_EXPIRATION','3600');
+        $deletedAt = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int)$expiration));
+        $dbForPlatform->updateDocument('projects', $project->getId(),
+            $project->setAttribute('_deletedAt', $deletedAt))
         ;
 
         $response->noContent();

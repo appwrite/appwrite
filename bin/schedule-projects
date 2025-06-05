@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec php /usr/src/code/app/cli.php schedule-projects $@
