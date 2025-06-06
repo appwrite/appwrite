@@ -107,6 +107,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         return false;
     }
 
+    // @luke implement START
     $projectId = $rule->getAttribute('projectId');
     $project = Authorization::skip(
         fn () => $dbForPlatform->getDocument('projects', $projectId)
@@ -126,6 +127,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED, view: $errorView);
         }
     }
+    // @luke implement END
 
     // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
     $path = ($swooleRequest->server['request_uri'] ?? '/');
@@ -136,6 +138,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $type = $rule->getAttribute('type', '');
 
     if ($type === 'deployment') {
+        // @luke implement START
         if (System::getEnv('_APP_OPTIONS_ROUTER_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https' && $request->getHostname() !== APP_HOSTNAME_INTERNAL) {
                 if ($request->getMethod() !== Request::METHOD_GET) {
@@ -144,6 +147,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
             }
         }
+        // @luke implement END
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
@@ -194,6 +198,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
             Authorization::skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
+        // @luke implement START
         $isPreview = $type === 'function' ? false : ($rule->getAttribute('trigger', '') !== 'manual');
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
@@ -275,6 +280,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 return true;
             }
         }
+        // @luke implement END
 
         $body = $swooleRequest->getContent() ?? '';
         $method = $swooleRequest->server['request_method'];
@@ -289,9 +295,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
         }
 
+        // @luke implement START
         if ($isResourceBlocked($project, $type === 'function' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
             throw new AppwriteException(AppwriteException::GENERAL_RESOURCE_BLOCKED, view: $errorView);
         }
+        // @luke implement END
 
         $version = match ($type) {
             'function' => $resource->getAttribute('version', 'v2'),
@@ -316,8 +324,10 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported', view: $errorView);
         }
 
+        // @luke implement START
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
+        // @luke implement END
             $status = $deployment->getAttribute('status');
 
             switch ($status) {
@@ -428,6 +438,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $vars = [];
 
         // V2 vars
+        // @luke implement START
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
@@ -436,6 +447,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
             ]);
         }
+        // @luke implement END
 
         // Shared vars
         foreach ($resource->getAttribute('varsProject', []) as $var) {
@@ -507,10 +519,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 'function' => $resource->getAttribute('version', 'v2'),
                 'site' => 'v5',
             };
+            // @luke implement START
             $entrypoint = match ($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
                 'site' => '',
             };
+            // @luke implement END
 
             if ($type === 'function') {
                 $runtimeEntrypoint = match ($version) {
@@ -587,6 +601,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
 
             // Branded error pages (when developer left body empty)
+            // @luke implement START
             if ($executionResponse['statusCode'] >= 400 && empty($executionResponse['body'])) {
                 $layout = new View($errorView);
                 $layout
@@ -603,6 +618,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                     }
                 }
             }
+            // @luke implement END
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
