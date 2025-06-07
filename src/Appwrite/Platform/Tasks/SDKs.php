@@ -46,7 +46,7 @@ class SDKs extends Action
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
             ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void

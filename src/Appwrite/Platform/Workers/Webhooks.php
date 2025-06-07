@@ -38,7 +38,7 @@ class Webhooks extends Action
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**

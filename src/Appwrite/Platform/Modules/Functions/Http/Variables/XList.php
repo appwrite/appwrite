@@ -53,7 +53,7 @@ class XList extends Base
             ->param('functionId', '', new UID(), 'Function unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $functionId, Response $response, Database $dbForProject)

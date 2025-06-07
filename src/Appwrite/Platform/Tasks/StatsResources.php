@@ -45,7 +45,7 @@ class StatsResources extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForStatsResources')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queue): void

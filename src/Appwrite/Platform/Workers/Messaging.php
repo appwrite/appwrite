@@ -72,7 +72,7 @@ class Messaging extends Action
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**

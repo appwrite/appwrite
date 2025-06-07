@@ -95,7 +95,7 @@ class StatsUsageDump extends Action
             ->inject('getProjectDB')
             ->inject('getLogsDB')
             ->inject('register')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
