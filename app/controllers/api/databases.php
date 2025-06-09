@@ -3654,7 +3654,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             if (! empty($selects)) {
                 // has selects, allow relationship on documents!
-                $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+                $documents = $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
             } else {
                 // has no selects, disable relationship looping on documents!
                 $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
@@ -3813,19 +3813,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        try {
-            $queries = Query::parseQueries($queries);
-            $selects = Query::groupByType($queries)['selections'] ?? [];
+        $selects = Query::groupByType($queries)['selections'] ?? [];
 
-            if (! empty($selects)) {
-                // has selects, allow relationship on documents!
-                $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
-            } else {
-                // has no selects, disable relationship looping on documents!
-                $document = $dbForProject->skipRelationships(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries));
-            }
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        if (! empty($selects)) {
+            // has selects, allow relationship on documents!
+            $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries);
+        } else {
+            // has no selects, disable relationship looping on documents!
+            $document = $dbForProject->skipRelationships(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries));
         }
 
         if ($document->isEmpty()) {
