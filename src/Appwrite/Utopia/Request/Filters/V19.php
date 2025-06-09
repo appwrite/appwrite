@@ -133,7 +133,7 @@ class V19 extends Filter
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $collection = $dbForProject->getDocument(
-            'database_' . $database->getInternalId(),
+            'database_' . $database->getSequence(),
             $collectionId
         );
 
