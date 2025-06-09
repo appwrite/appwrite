@@ -4499,6 +4499,14 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(10, $response['body']['documents']);
 
+        /**
+         * Wait for database to purge cache...
+         *
+         * This test specifically failed on 1.6.x response format,
+         * could be due to the slow or overworked machine, but being safe here!
+         */
+        sleep(5);
+
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
