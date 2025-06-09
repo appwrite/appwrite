@@ -4574,7 +4574,7 @@ trait DatabasesBase
             'queries' => [
                 Query::select([
                     '*',
-                    'libraries'
+                    'libraries.*'
                 ])->toString()
             ]
         ]);
