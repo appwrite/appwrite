@@ -3805,7 +3805,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {

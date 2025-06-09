@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
@@ -46,7 +47,7 @@ class V19 extends Filter
         return $content;
     }
 
-    public function convertQueryAttribute(array $content, string $old, string $new)
+    public function convertQueryAttribute(array $content, string $old, string $new): array
     {
         if (isset($content['queries']) && is_array($content['queries'])) {
             foreach ($content['queries'] as $index => $query) {
@@ -74,10 +75,17 @@ class V19 extends Filter
         $hasWildcard = false;
         if (! isset($content['queries'])) {
             $hasWildcard = true;
-            $content['queries'] = [Query::select(['*'])];
+            // only query, make it json encoded!
+            $content['queries'] = [Query::select(['*'])->toString()];
         }
 
-        $parsed = Query::parseQueries($content['queries']);
+        try {
+            $parsed = Query::parseQueries($content['queries']);
+        } catch (QueryException) {
+            // don't crash!
+            return $content;
+        }
+
         $selections = Query::groupByType($parsed)['selections'] ?? [];
 
         if (! $hasWildcard) {
@@ -107,7 +115,13 @@ class V19 extends Filter
             }
         }
 
-        $content['queries'] = $parsed;
+        $resolvedQueries = [];
+        foreach ($parsed as $query) {
+            // make em json encoded!
+            $resolvedQueries[] = $query->toString();
+        }
+
+        $content['queries'] = $resolvedQueries;
 
         return $content;
     }
