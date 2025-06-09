@@ -122,7 +122,7 @@ class Create extends Action
         if ($status === 'created') {
             $validators = [];
             $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-            if (!$targetCNAME->isKnown() || $targetCNAME->isTest()) {
+            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
                 $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
             }
             if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
@@ -153,7 +153,7 @@ class Create extends Action
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'api',
@@ -173,7 +173,8 @@ class Create extends Action
         if ($rule->getAttribute('status', '') === 'verifying') {
             $queueForCertificates
                 ->setDomain(new Document([
-                    'domain' => $rule->getAttribute('domain')
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
                 ->trigger();
         }

@@ -253,12 +253,29 @@ return [
         'adapters' => [
             'static' => [
                 'key' => 'static',
-                'buildCommand' => 'flutter build web',
-                'installCommand' => '',
+                'buildCommand' => 'flutter build web --release -t lib/main.dart',
+                'installCommand' => 'flutter pub get',
                 'outputDirectory' => './build/web',
                 'startCommand' => 'bash helpers/server.sh',
             ],
         ],
+    ],
+    'react-native' => [
+        'key' => 'react-native',
+        'name' => 'React Native',
+        'screenshotSleep' => 3000,
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'bash helpers/server.sh',
+                'fallbackFile' => 'index.html'
+            ]
+        ]
     ],
     'vite' => [
         'key' => 'vite',

@@ -1,5 +1,36 @@
+# Change Log
+
+## 16.1.1
+
+* Update `flutter_web_auth_2` dependency to version 4.1.0
+* Update `auth.html` example in README.md to align with `flutter_web_auth_2` documentation
+
+## 16.1.0
+
+* Add `setDevKey` method to Client service
+* Add `upsertDocument` method to Databases service
+
+## 16.0.0
+
+* Remove `Gif` from ImageFormat enum
+* Remove `search` param from `listExecutions` method
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Update default `quality` for `getFilePreview` from 0 to -1
+
+## 15.0.2
+
+* Avoid setting empty `User-Agent` header and only encode it when present.
+* Update doc examples to use new multi-region endpoint: `https://<REGION>.cloud.appwrite.io/v1`.
+
+## 15.0.1
+
+* Removed `Content-Type` header from GET and HEAD requests.
+* Add validation for setting endpoint in `setEndpoint` and `setEndPointRealtime` methods.
+* Include Figma in list of available OAuth providers.
+
 ## 15.0.0
 
+* Encode `User-Agent` header to fix invalid HTTP header field value error.
 * Breaking changes:
   * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
 

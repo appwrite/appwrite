@@ -607,6 +607,17 @@ class RealtimeConsoleClientTest extends Scope
             $this->assertContains("projects.{$projectId}", $response['data']['channels']);
             $this->assertArrayHasKey('buildLogs', $response['data']['payload']);
 
+            if (!empty($response['data']['payload']['buildEndedAt'])) {
+                $this->assertNotEmpty($response['data']['payload']['buildEndedAt']);
+                $this->assertNotEmpty($response['data']['payload']['buildStartedAt']);
+                $this->assertNotEmpty($response['data']['payload']['buildDuration']);
+                $this->assertNotEmpty($response['data']['payload']['buildPath']);
+                $this->assertNotEmpty($response['data']['payload']['buildSize']);
+                $this->assertNotEmpty($response['data']['payload']['totalSize']);
+                $this->assertNotEmpty($response['data']['payload']['buildLogs']);
+                break;
+            }
+
             // Ignore comparasion for first payload
             if ($previousBuildLogs !== null) {
                 $this->assertNotEquals($previousBuildLogs, $response['data']['payload']['buildLogs']);
@@ -615,17 +626,6 @@ class RealtimeConsoleClientTest extends Scope
             $previousBuildLogs = $response['data']['payload']['buildLogs'];
 
             $this->assertEquals('building', $response['data']['payload']['status']);
-
-            if (!empty($response['data']['payload']['buildEndAt'])) {
-                $this->assertNotEmpty($response['data']['payload']['buildEndAt']);
-                $this->assertNotEmpty($response['data']['payload']['buildStartAt']);
-                $this->assertNotEmpty($response['data']['payload']['buildDuration']);
-                $this->assertNotEmpty($response['data']['payload']['buildPath']);
-                $this->assertNotEmpty($response['data']['payload']['buildSize']);
-                $this->assertNotEmpty($response['data']['payload']['totalSize']);
-                $this->assertNotEmpty($response['data']['payload']['buildLogs']);
-                break;
-            }
         }
 
         $response = json_decode($client->receive(), true);

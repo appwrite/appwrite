@@ -12,7 +12,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -86,8 +85,8 @@ class Update extends Base
             ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
-                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
-                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Framework specification for the site and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')
@@ -174,8 +173,8 @@ class Update extends Base
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForPlatform->find('repositories', [
-                Query::equal('projectInternalId', [$project->getInternalId()]),
-                Query::equal('resourceInternalId', [$site->getInternalId()]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('resourceType', ['site']),
                 Query::limit(100),
             ]);
@@ -207,18 +206,18 @@ class Update extends Base
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $site->getId(),
-                'resourceInternalId' => $site->getInternalId(),
+                'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
             ]));
 
             $repositoryId = $repository->getId();
-            $repositoryInternalId = $repository->getInternalId();
+            $repositoryInternalId = $repository->getSequence();
         }
 
         $live = true;
@@ -257,7 +256,7 @@ class Update extends Base
             'buildCommand' => $buildCommand,
             'outputDirectory' => $outputDirectory,
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $repositoryId,
             'repositoryInternalId' => $repositoryInternalId,

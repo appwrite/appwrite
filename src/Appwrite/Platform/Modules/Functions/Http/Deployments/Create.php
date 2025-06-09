@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
@@ -68,7 +69,7 @@ class Create extends Action
                         model: Response::MODEL_DEPLOYMENT,
                     )
                 ],
-                requestType: 'multipart/form-data',
+                requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
@@ -85,6 +86,7 @@ class Create extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
+            ->inject('plan')
             ->callback([$this, 'action']);
     }
 
@@ -101,7 +103,8 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        Build $queueForBuilds
+        Build $queueForBuilds,
+        array $plan
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -134,8 +137,14 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
 
+        $functionSizeLimit = (int) System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
+
+        if (isset($plan['deploymentSize'])) {
+            $functionSizeLimit = $plan['deploymentSize'] * 1000 * 1000;
+        }
+
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000'));
+        $fileSizeValidator = new FileSize($functionSizeLimit);
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
@@ -173,7 +182,7 @@ class Create extends Action
             }
         }
 
-        if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
+        if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
             throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
         }
 
@@ -228,7 +237,7 @@ class Create extends Action
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -236,7 +245,6 @@ class Create extends Action
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
-                    'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type
@@ -244,7 +252,7 @@ class Create extends Action
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -266,7 +274,7 @@ class Create extends Action
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -276,7 +284,6 @@ class Create extends Action
                     'totalSize' => $fileSize,
                     'sourceChunksTotal' => $chunks,
                     'sourceChunksUploaded' => $chunksUploaded,
-                    'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type
@@ -284,7 +291,7 @@ class Create extends Action
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);

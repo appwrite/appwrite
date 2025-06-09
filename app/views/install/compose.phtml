@@ -61,6 +61,7 @@ $image = $this->getParam('image', '');
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -151,6 +152,7 @@ $image = $this->getParam('image', '');
       - _APP_LOGGING_CONFIG
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_DELAY
+      - _APP_MAINTENANCE_START_TIME
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
@@ -175,7 +177,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:5.2.58
+    image: <?php echo $organization; ?>/console:6.0.13
     restart: unless-stopped
     networks:
       - appwrite
@@ -615,6 +617,8 @@ $image = $this->getParam('image', '');
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - appwrite-imports:/storage/imports:rw
     depends_on:
       - mariadb
     environment:
@@ -681,11 +685,9 @@ $image = $this->getParam('image', '');
     container_name: appwrite-task-stats-resources
     entrypoint: stats-resources
     <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -849,7 +851,7 @@ $image = $this->getParam('image', '');
       - _APP_ASSISTANT_OPENAI_API_KEY
       
   appwrite-browser:
-    image: appwrite/browser:0.2.2
+    image: appwrite/browser:0.2.4
     container_name: appwrite-browser
     <<: *x-logging
     restart: unless-stopped
@@ -862,7 +864,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.13
+    image: openruntimes/executor:0.7.20
     networks:
       - appwrite
       - runtimes
@@ -962,6 +964,7 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-imports:
   appwrite-certificates:
   appwrite-functions:
   appwrite-sites:
