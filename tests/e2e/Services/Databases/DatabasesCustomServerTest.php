@@ -4481,6 +4481,14 @@ class DatabasesCustomServerTest extends Scope
 
         $createBulkDocuments();
 
+        /**
+         * Wait for database to purge cache...
+         *
+         * This test specifically failed on 1.6.x response format,
+         * could be due to the slow or overworked machine, but being safe here!
+         */
+        sleep(5);
+
         // TEST: Update all documents
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
