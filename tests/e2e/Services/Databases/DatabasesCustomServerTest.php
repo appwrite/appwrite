@@ -4017,7 +4017,9 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [Query::select(['*', 'level1.*'])->toString()]
+        ]);
 
         $this->assertArrayHasKey('level1', $level2Document['body']);
         $this->assertNotEmpty($level2Document['body']['level1']);
