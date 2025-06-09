@@ -3649,7 +3649,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
         try {
-
             $selects = Query::groupByType($queries)['selections'] ?? [];
 
             if (! empty($selects)) {
