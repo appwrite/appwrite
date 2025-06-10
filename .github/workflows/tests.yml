@@ -146,6 +146,7 @@ jobs:
           Avatars,
           Console,
           Databases,
+          Databases 1.6.x,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -191,11 +192,19 @@ jobs:
 
       - name: Run ${{ matrix.service }} tests with Project table mode
         run: |
-          echo "Using project tables"
+          if [[ "${{ matrix.service }}" == "Databases 1.6.x" ]]; then
+            echo "Using Database 1.6 format"
+            export _APP_SYSTEM_RESPONSE_FORMAT=1.6.0
+            service="Databases"
+          else
+            service="${{ matrix.service }}"
+          fi
+          
           export _APP_DATABASE_SHARED_TABLES=
           export _APP_DATABASE_SHARED_TABLES_V1=
 
           docker compose exec -T \
+            -e _APP_SYSTEM_RESPONSE_FORMAT \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude=devKeys
@@ -214,6 +223,7 @@ jobs:
             Avatars,
             Console,
             Databases,
+            Databases 1.6.x,
             Functions,
             FunctionsSchedule,
             GraphQL,
@@ -273,8 +283,18 @@ jobs:
             export _APP_DATABASE_SHARED_TABLES=database_db_main
             export _APP_DATABASE_SHARED_TABLES_V1=
           fi
+          
+          if [[ "${{ matrix.service }}" == "Databases 1.6.x" ]]; then
+            echo "Using Database 1.6 format"
+            export _APP_SYSTEM_RESPONSE_FORMAT=1.6.0
+            service="Databases"
+          else
+            export _APP_SYSTEM_RESPONSE_FORMAT=
+            service="${{ matrix.service }}"
+          fi
       
           docker compose exec -T \
+            -e _APP_SYSTEM_RESPONSE_FORMAT \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude=devKeys
