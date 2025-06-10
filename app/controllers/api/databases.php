@@ -4560,8 +4560,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
             )
         ],
         contentType: ContentType::JSON
