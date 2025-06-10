@@ -57,6 +57,7 @@ class Builds extends Action
     {
         $this
             ->desc('Builds worker')
+            ->groups(['builds'])
             ->inject('message')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -73,6 +74,7 @@ class Builds extends Action
             ->inject('deviceForFiles')
             ->inject('log')
             ->inject('executor')
+            ->inject('plan')
             ->callback([$this, 'action']);
     }
 
@@ -92,6 +94,7 @@ class Builds extends Action
      * @param Device $deviceForFiles
      * @param Log $log
      * @param Executor $executor
+     * @param array $plan
      * @return void
      * @throws \Utopia\Database\Exception
      */
@@ -111,7 +114,8 @@ class Builds extends Action
         callable $isResourceBlocked,
         Device $deviceForFiles,
         Log $log,
-        Executor $executor
+        Executor $executor,
+        array $plan
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -150,7 +154,8 @@ class Builds extends Action
                     $template,
                     $isResourceBlocked,
                     $log,
-                    $executor
+                    $executor,
+                    $plan
                 );
                 break;
 
@@ -177,6 +182,7 @@ class Builds extends Action
      * @param Document $template
      * @param Log $log
      * @param Executor $executor
+     * @param array $plan
      * @return void
      * @throws \Utopia\Database\Exception
      *
@@ -200,7 +206,8 @@ class Builds extends Action
         Document $template,
         callable $isResourceBlocked,
         Log $log,
-        Executor $executor
+        Executor $executor,
+        array $plan
     ): void {
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
@@ -476,8 +483,12 @@ class Builds extends Action
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
                 $sizeLimit = (int)System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
 
-                if ($directorySize > $sizeLimit) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / 1048576, 2) . ' MBs.');
+                if (isset($plan['deploymentSize'])) {
+                    $sizeLimit = (int) $plan['deploymentSize'] * 1000 * 1000;
+                }
+
+                if ($directorySize > $sizeLimit && $sizeLimit !== 0) {
+                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -659,6 +670,28 @@ class Builds extends Action
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
+                            if ($resource->getCollection() === 'sites') {
+                                $listFilesCommand = '';
+
+                                // Start separation, enter build folder
+                                $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
+
+                                // Enter output directory, if set
+                                if (!empty($resource->getAttribute('outputDirectory', ''))) {
+                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($resource->getAttribute('outputDirectory', ''));
+                                }
+
+                                // Print files, and end separation
+                                $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+
+                                // Use SSR file listing
+                                if (empty($command)) {
+                                    $command = $listFilesCommand;
+                                } else {
+                                    $command .= ' && ' . $listFilesCommand;
+                                }
+                            }
+
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
                         }
 
@@ -671,7 +704,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             timeout: $timeout,
-                            remove: false,
+                            remove:  true,
                             entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
@@ -684,11 +717,13 @@ class Builds extends Action
                 }),
                 Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $timeout, &$err, $queueForRealtime, &$isCanceled) {
                     try {
+                        $insideSeparation = false;
+
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
                             timeout: $timeout,
-                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime) {
+                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime, &$insideSeparation) {
                                 if ($isCanceled) {
                                     return;
                                 }
@@ -706,7 +741,29 @@ class Builds extends Action
                                     // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
+                                    // Do not stream logs added for SSR detection
+                                    if (!$insideSeparation) {
+                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
+                                        if ($separator !== false) {
+                                            $logs = \substr($logs, 0, $separator);
+                                            $insideSeparation = true;
+                                        }
+                                    } else {
+                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                                        if ($separator !== false) {
+                                            $logs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                                            $insideSeparation = false;
+                                        } else {
+                                            $logs = '';
+                                        }
+                                    }
+
+                                    if (empty($logs)) {
+                                        return;
+                                    }
+
                                     $currentLogs = $deployment->getAttribute('buildLogs', '');
+                                    $affected = false;
 
                                     $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
                                     foreach (\explode("\n", $streamLogs) as $streamLog) {
@@ -719,14 +776,20 @@ class Builds extends Action
 
                                         // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
                                         $currentLogs .= $streamParts[1];
+
+                                        if (!empty($streamParts[1])) {
+                                            $affected = true;
+                                        }
                                     }
 
-                                    $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
-                                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                                    if ($affected) {
+                                        $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
+                                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-                                    $queueForRealtime
-                                        ->setPayload($deployment->getArrayCopy())
-                                        ->trigger();
+                                        $queueForRealtime
+                                            ->setPayload($deployment->getArrayCopy())
+                                            ->trigger();
+                                    }
                                 }
                             }
                         );
@@ -751,47 +814,12 @@ class Builds extends Action
             $durationEnd = \microtime(true);
 
             $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
-            if ($response['size'] > $buildSizeLimit) {
-                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+            if (isset($plan['buildSize'])) {
+                $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
             }
-
-            if ($resource->getCollection() === 'sites') {
-                // TODO: Refactor with structured command in future, using utopia library (CLI)
-                $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory', './')) . " && find . -name 'node_modules' -prune -o -type f -print";
-                $command = $executor->createCommand(
-                    deploymentId: $deployment->getId(),
-                    projectId: $project->getId(),
-                    command: $listFilesCommand,
-                    timeout: 15
-                );
-
-                $files = \explode("\n", $command['output']); // Parse output
-                $files = \array_filter($files); // Remove empty
-                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
-                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
-
-                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
-                $detector
-                    ->addOption(new SSR())
-                    ->addOption(new XStatic());
-                $detection = $detector->detect();
-
-                $adapter = $resource->getAttribute('adapter', '');
-
-                if (empty($adapter)) {
-                    $resource->setAttribute('adapter', $detection->getName());
-                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-
-                    $deployment->setAttribute('adapter', $detection->getName());
-                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
-                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
-                }
+            if ($response['size'] > $buildSizeLimit && $buildSizeLimit !== 0) {
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
-
-            $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
 
             /** Update the build document */
             $deployment->setAttribute('buildStartedAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
@@ -806,12 +834,48 @@ class Builds extends Action
                 $logs .= $log['content'];
             }
 
+            // Separate logs for SSR detection
+            $detectionLogs = '';
+            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
+            if ($separator !== false) {
+                $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
+                $separatorEnd = \strpos($detectionLogs, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                $logs .= \substr($detectionLogs, $separatorEnd + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                $detectionLogs = \substr($detectionLogs, 0, $separatorEnd);
+                $logs = \substr($logs, 0, $separator);
+            }
+
             if ($resource->getCollection() === 'sites') {
                 $date = \date('H:i:s');
                 $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
             }
 
             $deployment->setAttribute('buildLogs', $logs);
+
+            if ($resource->getCollection() === 'sites' && !empty($detectionLogs)) {
+                $files = \explode("\n", $detectionLogs); // Parse output
+                $files = \array_filter($files); // Remove empty
+                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
+                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
+
+                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
+                $detector
+                    ->addOption(new SSR())
+                    ->addOption(new XStatic());
+                $detection = $detector->detect();
+
+                $adapter = $resource->getAttribute('adapter', '');
+                if (empty($adapter)) {
+                    $resource->setAttribute('adapter', $detection->getName());
+                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                    $deployment->setAttribute('adapter', $detection->getName());
+                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
+                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                }
+            }
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -1011,8 +1075,6 @@ class Builds extends Action
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
-                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
-
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
@@ -1024,26 +1086,20 @@ class Builds extends Action
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
+                            Query::equal("projectInternalId", [$project->getInternalId()])
                         ];
 
-                        if (empty($oldDeploymentInternalId)) {
-                            $queries[] =  Query::equal("deploymentInternalId", [""]);
-                        } else {
-                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-                        }
-
                         $rulesUpdated = false;
-                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
+                        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
                             $rulesUpdated = true;
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                        });
+                        }, $queries);
                         break;
                     case 'sites':
-                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
-
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
@@ -1056,20 +1112,16 @@ class Builds extends Action
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
+                            Query::equal("projectInternalId", [$project->getInternalId()])
                         ];
 
-                        if (empty($oldDeploymentInternalId)) {
-                            $queries[] =  Query::equal("deploymentInternalId", [""]);
-                        } else {
-                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-                        }
-
-                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                        });
+                        }, $queries);
 
                         break;
                 }
@@ -1080,7 +1132,13 @@ class Builds extends Action
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
                     $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                    $domain = "branch-{$branchName}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $branchPrefix = substr($branchName, 0, 16);
+                    if (strlen($branchName) > 16) {
+                        $remainingChars = substr($branchName, 16);
+                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+                    }
+                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
+                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
 
                     try {
@@ -1111,19 +1169,22 @@ class Builds extends Action
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                     }
 
-                    $this->listRules($project, [
+                    $queries = [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                         Query::equal('deploymentResourceType', ['site']),
                         Query::equal("deploymentVcsProviderBranch", [$branchName]),
                         Query::equal("trigger", ['manual']),
-                    ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        Query::equal("projectInternalId", [$project->getInternalId()])
+                    ];
+
+                    $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
                         $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                    });
+                    }, $queries);
                 }
             }
 
@@ -1161,13 +1222,29 @@ class Builds extends Action
                 $message = "[31m" . $message;
             }
 
+            $separator = \strpos($message, '{APPWRITE_DETECTION_SEPARATOR_START}');
+            if ($separator !== false) {
+                $error = \substr($message, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
+                $message = \substr($message, 0, $separator);
+                $message .= "\n[31m" . $error;
+            }
+
+            // Combine with previous logs if deployment got past build process
+            $previousLogs = '';
+            if (!empty($deployment->getAttribute('buildEndedAt', ''))) {
+                $previousLogs = $deployment->getAttribute('buildLogs', '');
+                if (!empty($previousLogs)) {
+                    $message = $previousLogs . "\n" . $message;
+                }
+            }
+
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $deployment->setAttribute('buildEndedAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
-            $deployment->setAttribute('buildLogs', $message);
 
+            $deployment->setAttribute('buildLogs', $message);
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
@@ -1409,39 +1486,5 @@ class Builds extends Action
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
-    }
-
-    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
-    {
-        $limit = 100;
-        $cursor = null;
-
-        do {
-            $queries = \array_merge([
-                Query::limit($limit),
-                Query::equal("projectInternalId", [$project->getInternalId()])
-            ], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
-            }
-
-            $results = $database->find('rules', $queries);
-
-            $total = \count($results);
-            if ($total > 0) {
-                $cursor = $results[$total - 1];
-            }
-
-            if ($total < $limit) {
-                $cursor = null;
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-            }
-        } while (!\is_null($cursor));
     }
 }

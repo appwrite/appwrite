@@ -214,11 +214,42 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $validators = [];
-        $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-        if (!$targetCNAME->isKnown() || $targetCNAME->isTest()) {
-            $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+        $targetCNAME = null;
+        switch ($rule->getAttribute('type', '')) {
+            case 'api':
+                // For example: fra.cloud.appwrite.io
+                $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+                break;
+            case 'redirect':
+                // For example: appwrite.network
+                $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
+                break;
+            case 'deployment':
+                switch ($rule->getAttribute('deploymentResourceType', '')) {
+                    case 'function':
+                        // For example: fra.appwrite.run
+                        $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_FUNCTIONS', ''));
+                        break;
+                    case 'site':
+                        // For example: appwrite.network
+                        $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
+                        break;
+                    default:
+                        break;
+                }
+                // no break
+            default:
+                break;
         }
+
+        $validators = [];
+
+        if (!is_null($targetCNAME)) {
+            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
+                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+            }
+        }
+
         if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
             $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
         }
@@ -260,7 +291,8 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         // Issue a TLS certificate when domain is verified
         $queueForCertificates
             ->setDomain(new Document([
-                'domain' => $rule->getAttribute('domain')
+                'domain' => $rule->getAttribute('domain'),
+                'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]))
             ->trigger();
 

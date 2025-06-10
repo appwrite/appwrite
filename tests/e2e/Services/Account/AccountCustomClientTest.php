@@ -2041,7 +2041,6 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['users'][0]['email'], $email);
     }
 
-    #[Retry(count: 2)]
     public function testCreatePhone(): array
     {
         $number = '+123456789';
@@ -2065,17 +2064,15 @@ class AccountCustomClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        \sleep(7);
-
-        $smsRequest = $this->getLastRequest();
-
-        $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
-        $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
-        $this->assertEquals('username', $smsRequest['headers']['X-Username']);
-        $this->assertEquals('password', $smsRequest['headers']['X-Key']);
-        $this->assertEquals('POST', $smsRequest['method']);
-        $this->assertEquals('+123456789', $smsRequest['data']['from']);
-        $this->assertEquals($number, $smsRequest['data']['to']);
+        $smsRequest = $this->assertLastRequest(function (array $request) use ($number) {
+            $this->assertEquals('http://request-catcher:5000/mock-sms', $request['url']);
+            $this->assertEquals('Appwrite Mock Message Sender', $request['headers']['User-Agent']);
+            $this->assertEquals('username', $request['headers']['X-Username']);
+            $this->assertEquals('password', $request['headers']['X-Key']);
+            $this->assertEquals('POST', $request['method']);
+            $this->assertEquals('+123456789', $request['data']['from']);
+            $this->assertEquals($number, $request['data']['to']);
+        });
 
         $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
@@ -2403,7 +2400,6 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
-    #[Retry(count: 3)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
@@ -2423,10 +2419,10 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
-        $smsRequest = $this->getLastRequest();
-
-        $message = $smsRequest['data']['message'];
-        $token = substr($message, 0, 6);
+        $smsRequest = $this->assertLastRequest(function ($request) {
+            $this->assertArrayHasKey('data', $request);
+            $this->assertArrayHasKey('message', $request['data']);
+        });
 
         /**
          * Test for FAILURE

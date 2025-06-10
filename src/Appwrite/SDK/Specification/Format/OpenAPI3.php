@@ -178,6 +178,7 @@ class OpenAPI3 extends Format
                     $desc = $method->getDescriptionFilePath();
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
+                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -308,6 +309,10 @@ class OpenAPI3 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
+                if (($param['deprecated'] ?? false) === true) {
+                    continue;
+                }
+
                 /**
                  * @var \Utopia\Validator $validator
                  */

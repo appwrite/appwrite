@@ -36,6 +36,7 @@ class Comment
         $this->builds[$id] = [
             'projectName' => $project->getAttribute('name'),
             'projectId' => $project->getId(),
+            'region' => $project->getAttribute('region', 'default'),
             'resourceName' => $resource->getAttribute('name'),
             'resourceId' => $resource->getId(),
             'resourceType' => $resourceType,
@@ -66,6 +67,7 @@ class Comment
             if ($build['resourceType'] === 'site') {
                 $projects[$build['projectId']]['site'][$build['resourceId']] = [
                     'name' => $build['resourceName'],
+                    'region' => $build['region'],
                     'status' => $build['buildStatus'],
                     'deploymentId' => $build['deploymentId'],
                     'action' => $build['action'],
@@ -74,6 +76,7 @@ class Comment
             } elseif ($build['resourceType'] === 'function') {
                 $projects[$build['projectId']]['function'][$build['resourceId']] = [
                     'name' => $build['resourceName'],
+                    'region' => $build['region'],
                     'status' => $build['buildStatus'],
                     'deploymentId' => $build['deploymentId'],
                     'action' => $build['action'],
@@ -84,7 +87,7 @@ class Comment
         $i = 0;
         foreach ($projects as $projectId => $project) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_DOMAIN');
+            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
 
             $text .= "## {$project['name']}\n\n";
             $text .= "Project ID: `{$projectId}`\n\n";
@@ -100,10 +103,12 @@ class Comment
                 $text .= "| :- | :-  | :-  | :-  | :- |\n";
 
                 foreach ($project['site'] as $siteId => $site) {
+                    $imageStatus = in_array($site['status'], ['processing', 'building']) ? 'building' : $site['status'];
+
                     $extension = $site['status'] === 'building' ? 'gif' : 'png';
 
-                    $pathLight = '/images/vcs/status-' . $site['status'] . '-light.' . $extension;
-                    $pathDark = '/images/vcs/status-' . $site['status'] . '-dark.' . $extension;
+                    $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
+                    $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
 
                     $status = match ($site['status']) {
                         'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
@@ -114,7 +119,7 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $site['region'] . '-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -146,12 +151,13 @@ class Comment
                 $text .= "| :- | :-  | :-  | :- |\n";
 
                 foreach ($project['function'] as $functionId => $function) {
-                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
+                    $imageStatus = in_array($function['status'], ['processing', 'building']) ? 'building' : $function['status'];
+                    $extension = $imageStatus === 'building' ? 'gif' : 'png';
 
-                    $pathLight = '/images/vcs/status-' . $site['status'] . '-light.' . $extension;
-                    $pathDark = '/images/vcs/status-' . $site['status'] . '-dark.' . $extension;
+                    $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
+                    $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
 
-                    $status = match ($site['status']) {
+                    $status = match ($function['status']) {
                         'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
                         'processing' => $this->generatImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
@@ -160,12 +166,13 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $function['region'] . '-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }
 
-                    $text .= "| &nbsp;**{$function['name']}**<br>`$functionId`";
+                    $text .= "| &nbsp;**{$function['name']}**";
+                    $text .= "| `{$functionId}`";
                     $text .= "| {$status}";
                     $text .= "| {$action}";
                     $text .= "|\n";
@@ -194,7 +201,7 @@ class Comment
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
 
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;

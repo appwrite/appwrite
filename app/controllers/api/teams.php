@@ -1091,14 +1091,20 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             // Quick check: fetch up to 2 owners to determine if only one exists
             $ownersCount = $dbForProject->count(
                 collection: 'memberships',
-                queries: [Query::contains('roles', ['owner'])],
+                queries: [
+                    Query::contains('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getInternalId()])
+                ],
                 max: 2
             );
 
+            // Is the role change being requested by the user on their own membership?
+            $isCurrentUserAnOwner =  $user->getInternalId() === $membership->getAttribute('userInternalId');
+
             // Prevent role change if there's only one owner left,
-            // the requester is that owner, and the new `$roles` no longer include 'owner'!
-            if ($ownersCount === 1 && $isOwner && !\in_array('owner', $roles)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'There must be at least one owner in the organization.');
+            // the requester is that owner, and the new `$roles` no longer include 'owner'
+            if ($ownersCount === 1 && $isOwner && $isCurrentUserAnOwner && !\in_array('owner', $roles)) {
+                throw new Exception(Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED, 'There must be at least one owner in the organization.');
             }
         }
 
@@ -1313,10 +1319,12 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->inject('user')
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -1324,9 +1332,9 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
-        $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $profile = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
-        if ($user->isEmpty()) {
+        if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
@@ -1340,6 +1348,29 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
+        if ($project->getId() === 'console') {
+            // Quick check:
+            // fetch up to 2 owners to determine if only one exists
+            $ownersCount = $dbForProject->count(
+                collection: 'memberships',
+                queries: [
+                    Query::contains('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getInternalId()])
+                ],
+                max: 2
+            );
+
+            // Is the deletion being requested by the user on their own membership and they are also the owner?
+            $isSelfOwner =
+                in_array('owner', $membership->getAttribute('roles')) &&
+                $membership->getAttribute('userInternalId') === $user->getInternalId();
+
+            if ($ownersCount === 1 && $isSelfOwner) {
+                /* Prevent removal if the user is the only owner. */
+                throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
+            }
+        }
+
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
@@ -1348,15 +1379,15 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
+            ->setParam('userId', $profile->getId())
             ->setParam('membershipId', $membership->getId())
             ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))
         ;

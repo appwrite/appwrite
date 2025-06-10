@@ -452,16 +452,33 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $endpoint = $protocol . '://' . $hostname . "/v1";
 
         // Appwrite vars
+        if ($type === 'function') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                'APPWRITE_FUNCTION_ID' => $resource->getId(),
+                'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
+                'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+                'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+                'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+                'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+            ]);
+        } elseif ($type === 'site') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
+                'APPWRITE_SITE_ID' => $resource->getId(),
+                'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
+                'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
+                'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
+                'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
+                'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_SITE_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                'APPWRITE_SITE_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+            ]);
+        }
+
         $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-            'APPWRITE_FUNCTION_ID' => $resource->getId(),
-            'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
-            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -732,12 +749,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         return false;
     } elseif ($type === 'redirect') {
         $url = $rule->getAttribute('redirectUrl', '');
-
-        $query = ($swooleRequest->server['query_string'] ?? '');
-        if (!empty($query)) {
-            $url .= '?' . $query;
-        }
-
         $response->redirect($url, \intval($rule->getAttribute('redirectStatusCode', 301)));
         return true;
     } else {
@@ -1030,7 +1041,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true');
@@ -1093,7 +1104,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -1160,35 +1171,11 @@ App::error()
                         break;
                 }
                 break;
-            case 'Utopia\Database\Exception\Conflict':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Timeout':
-                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Query':
-                $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Structure':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Duplicate':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
-                break;
-            case 'Utopia\Database\Exception\Restricted':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
-                break;
             case 'Utopia\Database\Exception\Authorization':
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;
-            case 'Utopia\Database\Exception\Relationship':
-                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
-                break;
-            case 'Utopia\Database\Exception\NotFound':
-                $error = new AppwriteException(AppwriteException::COLLECTION_NOT_FOUND, $error->getMessage(), previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Dependency':
-                $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, null, previous: $error);
+            case 'Utopia\Database\Exception\Timeout':
+                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
         }
 

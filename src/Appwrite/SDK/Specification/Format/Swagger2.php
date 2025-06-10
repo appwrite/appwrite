@@ -184,6 +184,7 @@ class Swagger2 extends Format
 
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
+                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -286,13 +287,13 @@ class Swagger2 extends Format
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
-                    /** @var \Appwrite\SDK\AuthType $security */
-                    if (array_key_exists($security->value, $this->keys)) {
+                    /** @var AuthType $security */
+                    if (\array_key_exists($security->value, $this->keys)) {
                         $securities[$security->value] = [];
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+                $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $this->authCount);
                 $temp['security'][] = $securities;
             }
 
@@ -313,6 +314,10 @@ class Swagger2 extends Format
             );
 
             foreach ($parameters as $name => $param) { // Set params
+                if (($param['deprecated'] ?? false) === true) {
+                    continue;
+                }
+
                 /** @var Validator $validator */
                 $validator = (\is_callable($param['validator']))
                     ? ($param['validator'])(...$this->app->getResources($param['injections']))

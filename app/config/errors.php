@@ -81,7 +81,7 @@ return [
     ],
     Exception::GENERAL_ROUTE_NOT_FOUND => [
         'name' => Exception::GENERAL_ROUTE_NOT_FOUND,
-        'description' => 'The requested route was not found. Please refer to the API docs and try again.',
+        'description' => 'Route not found. Please ensure the endpoint is configured correctly and that the API route is valid for this SDK version. Refer to the API docs for more details.',
         'code' => 404,
     ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
@@ -393,6 +393,16 @@ return [
         'description' => 'Membership is already confirmed.',
         'code' => 409,
     ],
+    Exception::MEMBERSHIP_DELETION_PROHIBITED => [
+        'name' => Exception::MEMBERSHIP_DELETION_PROHIBITED,
+        'description' => 'Membership deletion is prohibited.',
+        'code' => 400,
+    ],
+    Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED => [
+        'name' => Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED,
+        'description' => 'Membership role downgrade is prohibited.',
+        'code' => 400,
+    ],
 
     /** Avatars */
     Exception::AVATAR_SET_NOT_FOUND => [
@@ -498,6 +508,11 @@ return [
         'name' => Exception::TOKEN_EXPIRED,
         'description' => 'The requested file token has expired.',
         'code' => 401,
+    ],
+    Exception::TOKEN_RESOURCE_TYPE_INVALID => [
+        'name' => Exception::TOKEN_RESOURCE_TYPE_INVALID,
+        'description' => 'The resource type for the token is invalid.',
+        'code' => 400,
     ],
 
     /** VCS */

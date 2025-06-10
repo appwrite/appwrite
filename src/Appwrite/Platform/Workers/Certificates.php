@@ -54,7 +54,8 @@ class Certificates extends Action
             ->inject('queueForRealtime')
             ->inject('log')
             ->inject('certificates')
-            ->callback([$this, 'action']);
+            ->inject('plan')
+            ->callback($this->action(...));
     }
 
     /**
@@ -80,7 +81,8 @@ class Certificates extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime,
         Log $log,
-        CertificatesAdapter $certificates
+        CertificatesAdapter $certificates,
+        array $plan
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -94,11 +96,14 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck);
+        $domainType = $document->getAttribute('domainType');
+
+        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan);
     }
 
     /**
      * @param Domain $domain
+     * @param ?string $domainType
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Event $queueForEvents
@@ -106,12 +111,14 @@ class Certificates extends Action
      * @param Realtime $queueForRealtime
      * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
+     * @param array $plan
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
     private function execute(
         Domain $domain,
+        ?string $domainType,
         Database $dbForPlatform,
         Mail $queueForMails,
         Event $queueForEvents,
@@ -120,7 +127,8 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Log $log,
         CertificatesAdapter $certificates,
-        bool $skipRenewCheck = false
+        bool $skipRenewCheck = false,
+        array $plan = []
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -170,7 +178,7 @@ class Certificates extends Action
                 $this->validateDomain($domain, $isMainDomain, $log);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
-                if (!$certificates->isRenewRequired($domain->get(), $log)) {
+                if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
                     Console::info("Skipping, renew isn't required");
                     return;
                 }
@@ -178,7 +186,7 @@ class Certificates extends Action
 
             // Prepare unique cert name. Using this helps prevent miss-match in configuration when renewing certificates.
             $certName = ID::unique();
-            $renewDate = $certificates->issueCertificate($certName, $domain->get());
+            $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
             // Command succeeded, store all data into document
             $certificate->setAttribute('logs', 'Certificate successfully generated.');
@@ -202,7 +210,7 @@ class Certificates extends Action
             $certificate->setAttribute('renewDate', DateTime::now());
 
             // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails);
+            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails, $plan);
 
             throw $e;
         } finally {
@@ -296,7 +304,7 @@ class Certificates extends Action
 
             $validators = [];
             $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-            if (!$targetCNAME->isKnown() || $targetCNAME->isTest()) {
+            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
                 $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
             }
             if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
@@ -342,10 +350,11 @@ class Certificates extends Action
      * @param string $errorMessage Verbose error message
      * @param int $attempt How many times it failed already
      * @param Mail $queueForMails
+     * @param array $plan
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails, array $plan): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -357,6 +366,15 @@ class Certificates extends Action
         $template->setParam('{{domain}}', $domain);
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
+
+        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
+        $template->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR);
+        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
+        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
+        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
+        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
+        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
+
         $body = $template->render();
 
         $emailVariables = [

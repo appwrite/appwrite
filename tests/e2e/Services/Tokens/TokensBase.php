@@ -66,7 +66,7 @@ trait TokensBase
         return [
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'tokenId' => $token['body']['$id'],
+            'token' => $token['body'],
             'guestHeaders' => [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -143,22 +143,12 @@ trait TokensBase
      */
     public function testPreviewFileWithToken(array $data): array
     {
+        $token = $data['token'];
         $fileId = $data['fileId'];
-        $tokenId = $data['tokenId'];
         $bucketId = $data['bucketId'];
         $guestHeaders = $data['guestHeaders'];
-        $adminHeaders = array_merge($guestHeaders, ['x-appwrite-key' => $this->getProject()['apiKey']]);
 
-        // Generate JWT as an admin user.
-        $tokenJWT = $this->client->call(
-            Client::METHOD_GET,
-            '/tokens/' . $tokenId . '/jwt/',
-            $adminHeaders
-        );
-        $this->assertEquals(200, $tokenJWT['headers']['status-code']);
-        $this->assertArrayHasKey('jwt', $tokenJWT['body']);
-
-        $tokenJWT = $tokenJWT['body']['jwt'];
+        $tokenJWT = $token['secret'];
 
         // Generate a preview
         $filePreview = $this->client->call(

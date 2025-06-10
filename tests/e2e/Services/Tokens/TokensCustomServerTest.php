@@ -85,10 +85,11 @@ class TokensCustomServerTest extends Scope
 
         // Finite expiry
         $expiry = DateTime::addSeconds(new \DateTime(), 3600);
-        $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
+        $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'expire' => $expiry,
         ]);
 
@@ -109,16 +110,37 @@ class TokensCustomServerTest extends Scope
     }
 
     /**
+     * @depends testCreateToken
+     */
+    public function testListTokens(array $data): array
+    {
+        $res = $this->client->call(
+            Client::METHOD_GET,
+            '/tokens/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'],
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]
+        );
+
+        $this->assertIsArray($res['body']);
+        $this->assertEquals(200, $res['headers']['status-code']);
+        return $data;
+    }
+
+    /**
      * @depends testUpdateToken
      */
     public function testDeleteToken(array $data): array
     {
         $tokenId = $data['tokenId'];
 
-        $res = $this->client->call(Client::METHOD_DELETE, '/tokens/' . $tokenId, array_merge([
+        $res = $this->client->call(Client::METHOD_DELETE, '/tokens/' . $tokenId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
 
         $this->assertEquals(204, $res['headers']['status-code']);
         return $data;

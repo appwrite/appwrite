@@ -252,7 +252,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
-                'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
             ])));
 
@@ -294,7 +293,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $domain = "branch-{$providerBranch}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $branchPrefix = substr($providerBranch, 0, 16);
+                    if (strlen($providerBranch) > 16) {
+                        $remainingChars = substr($providerBranch, 16);
+                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+                    }
+                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
+                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
                         Authorization::skip(
@@ -325,7 +330,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS commit preview
                 if (!empty($providerCommitHash)) {
-                    $domain = "commit-{$providerCommitHash}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
                         Authorization::skip(
@@ -1210,6 +1215,7 @@ App::post('/v1/vcs/github/events')
 
             if ($event == $github::EVENT_PUSH) {
                 $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
+                $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
                 $providerBranch = $parsedPayload["branch"] ?? '';
                 $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
@@ -1231,8 +1237,8 @@ App::post('/v1/vcs/github/events')
                     Query::limit(100),
                 ]));
 
-                // create new deployment only on push and not when branch is created
-                if (!$providerBranchCreated) {
+                // create new deployment only on push and not when branch is created or deleted
+                if (!$providerBranchCreated && !$providerBranchDeleted) {
                     $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
