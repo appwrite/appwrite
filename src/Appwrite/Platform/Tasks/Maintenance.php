@@ -65,8 +65,8 @@ class Maintenance extends Action
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
             // Iterate through project only if it was accessed in last 24 hours
-            $interval  = DateInterval::createFromDateString('24 hours');
-            $before24h = (new DateTime())->sub($interval);
+            $dateInterval  = DateInterval::createFromDateString('24 hours');
+            $before24h = (new DateTime())->sub($dateInterval);
 
             $dbForPlatform->foreach(
                 'projects',
