@@ -2849,7 +2849,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
-    ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional:true)
+    ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
@@ -4479,7 +4479,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         group: 'documents',
         name: 'incrementDocumentAttribute',
         description: '/docs/references/databases/increment-document-attribute.md',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4556,7 +4556,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         group: 'documents',
         name: 'decrementDocumentAttribute',
         description: '/docs/references/databases/decrement-document-attribute.md',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
