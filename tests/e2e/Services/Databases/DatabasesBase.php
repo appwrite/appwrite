@@ -5302,7 +5302,7 @@ trait DatabasesBase
     /**
      * @throws \Exception
      */
-    public function testIncrementAttributeRoutes(): array
+    public function testIncrementAttribute(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -5337,10 +5337,9 @@ trait DatabasesBase
         ]), [
             'key' => 'count',
             'required' => true,
-            'default' => 0,
         ]);
 
-        \sleep(1);
+        \sleep(2);
 
         // Create document with initial count = 5
         $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -5348,7 +5347,9 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'documentId' => 'counter1',
-            'data' => ['count' => 5],
+            'data' => [
+                'count' => 5
+            ],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -5402,7 +5403,7 @@ trait DatabasesBase
         $this->assertEquals(404, $notFound['headers']['status-code']);
     }
 
-    public function testDecrementAttributeRoutes(array $data): void
+    public function testDecrementAttribute(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -5439,24 +5440,24 @@ trait DatabasesBase
         ]), [
             'key' => 'count',
             'required' => true,
-            'default' => 10,
         ]);
 
-        \sleep(1);
+        \sleep(2);
 
         // Create document with initial count = 10
-        $documentId = 'counter1';
         $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => $documentId,
+            'documentId' => ID::unique(),
             'data' => ['count' => 10],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
             ],
         ]);
+
+        $documentId = $doc['body']['$id'];
 
         // Decrement by default 1 (count = 10 -> 9)
         $dec = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/decrement', array_merge([
@@ -5495,7 +5496,7 @@ trait DatabasesBase
         ]), ['min' => 7]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
-        // Test type error on non-numeric attribute
+        // Test type error on non-numeric attribut
         $typeErr = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

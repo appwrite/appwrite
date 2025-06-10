@@ -4464,7 +4464,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:key/increment')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/increment')
     ->desc('Increment document attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
@@ -4541,7 +4541,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:key/decrement')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/decrement')
     ->desc('Decrement document attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].decrement')
