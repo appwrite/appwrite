@@ -4500,12 +4500,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->action(function (string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
-        $database = $dbForProject->getDocument('databases', $databaseId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
@@ -4577,12 +4577,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->action(function (string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
-        $database = $dbForProject->getDocument('databases', $databaseId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
