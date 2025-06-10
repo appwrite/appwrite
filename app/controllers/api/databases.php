@@ -4556,7 +4556,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         namespace: 'databases',
         group: 'documents',
         name: 'decrementDocumentAttribute',
-        description: '/docs/references/databases/increment-document-attribute.md',
+        description: '/docs/references/databases/decrement-document-attribute.md',
         auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
