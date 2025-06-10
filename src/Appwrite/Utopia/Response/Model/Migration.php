@@ -85,13 +85,6 @@ class Migration extends Model
                 'default' => [],
                 'example' => [],
             ])
-            ->addRule('error', [
-                'type' => self::TYPE_STRING,
-                'description' => 'A readable error message that occurred during the CSV migration process.',
-                'array' => false,
-                'default' => null,
-                'example' => '',
-            ])
         ;
     }
 
