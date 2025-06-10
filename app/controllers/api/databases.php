@@ -841,7 +841,7 @@ App::delete('/v1/databases/:databaseId')
         }
 
         $dbForProject->purgeCachedDocument('databases', $database->getId());
-        $dbForProject->purgeCachedCollection('databases_' . $database->getSequence());
+        $dbForProject->purgeCachedCollection('database_' . $database->getSequence());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_DATABASE)
