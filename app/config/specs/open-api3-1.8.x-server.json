@@ -8399,12 +8399,12 @@
                                 "type": "object",
                                 "properties": {
                                     "value": {
-                                        "type": "mixed",
+                                        "type": "number",
                                         "description": "Value to decrement the attribute by. The value must be a number.",
                                         "x-example": null
                                     },
                                     "min": {
-                                        "type": "mixed",
+                                        "type": "number",
                                         "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null
                                     }
@@ -8515,12 +8515,12 @@
                                 "type": "object",
                                 "properties": {
                                     "value": {
-                                        "type": "mixed",
+                                        "type": "number",
                                         "description": "Value to increment the attribute by. The value must be a number.",
                                         "x-example": null
                                     },
                                     "max": {
-                                        "type": "mixed",
+                                        "type": "number",
                                         "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null
                                     }
