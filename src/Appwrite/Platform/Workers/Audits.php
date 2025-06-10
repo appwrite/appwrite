@@ -132,7 +132,7 @@ class Audits extends Action
         }
 
         try {
-            foreach ($this->logs as $internalId => $projectLogs) {
+            foreach ($this->logs as $sequence => $projectLogs) {
                 $dbForProject = $getProjectDB($projectLogs['project']);
 
                 Console::log('Processing batch with ' . count($projectLogs['logs']) . ' events');
@@ -141,7 +141,7 @@ class Audits extends Action
                 $audit->logBatch($projectLogs['logs']);
                 Console::success('Audit logs processed successfully');
 
-                unset($this->logs[$internalId]);
+                unset($this->logs[$sequence]);
             }
         } catch (Throwable $e) {
             Console::error('Error processing audit logs: ' . $e->getMessage());

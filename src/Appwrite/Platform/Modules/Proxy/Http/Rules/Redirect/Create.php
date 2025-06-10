@@ -179,7 +179,7 @@ class Create extends Action
             'redirectStatusCode' => $statusCode,
             'deploymentResourceType' => $resourceType,
             'deploymentResourceId' => $resource->getId(),
-            'deploymentResourceInternalId' => $resource->getInternalId(),
+            'deploymentResourceInternalId' => $resource->getSequence(),
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get()]),
             'owner' => $owner,

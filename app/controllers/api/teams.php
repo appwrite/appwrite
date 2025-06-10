@@ -1098,7 +1098,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             );
 
             // Is the role change being requested by the user on their own membership?
-            $isCurrentUserAnOwner =  $user->getInternalId() === $membership->getAttribute('userInternalId');
+            $isCurrentUserAnOwner =  $user->getSequence() === $membership->getAttribute('userInternalId');
 
             // Prevent role change if there's only one owner left,
             // the requester is that owner, and the new `$roles` no longer include 'owner'
@@ -1354,7 +1354,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
                 collection: 'memberships',
                 queries: [
                     Query::contains('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getInternalId()])
+                    Query::equal('teamInternalId', [$team->getSequence()])
                 ],
                 max: 2
             );
@@ -1362,7 +1362,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             // Is the deletion being requested by the user on their own membership and they are also the owner?
             $isSelfOwner =
                 in_array('owner', $membership->getAttribute('roles')) &&
-                $membership->getAttribute('userInternalId') === $user->getInternalId();
+                $membership->getAttribute('userInternalId') === $user->getSequence();
 
             if ($ownersCount === 1 && $isSelfOwner) {
                 /* Prevent removal if the user is the only owner. */
