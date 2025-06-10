@@ -435,9 +435,10 @@ App::patch('/v1/projects/:projectId')
     ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
+    ->param('restore', null, new Boolean(), 'Restore project from being marked for deletion', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, bool $restore, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -445,7 +446,7 @@ App::patch('/v1/projects/:projectId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
+         $project
             ->setAttribute('name', $name)
             ->setAttribute('description', $description)
             ->setAttribute('logo', $logo)
@@ -456,7 +457,14 @@ App::patch('/v1/projects/:projectId')
             ->setAttribute('legalCity', $legalCity)
             ->setAttribute('legalAddress', $legalAddress)
             ->setAttribute('legalTaxId', $legalTaxId)
-            ->setAttribute('search', implode(' ', [$projectId, $name])));
+            ->setAttribute('search', implode(' ', [$projectId, $name]))
+         ;
+
+        if (!empty($restore)) {
+            $project->setAttribute('_deletedAt', null);
+        }
+
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
