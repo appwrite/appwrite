@@ -4523,9 +4523,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         } catch (NotFoundException) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
         } catch (LimitException) {
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute `' . $attribute . '` has reached the maximum value of ' . $max);
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the maximum value of ' . $max);
         } catch (TypeException) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute `' . $attribute . '` is not a number');
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
         }
 
         $queueForStatsUsage
