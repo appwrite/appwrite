@@ -3128,7 +3128,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
-
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key')
     ->desc('Delete index')
