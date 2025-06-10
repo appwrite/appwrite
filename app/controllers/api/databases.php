@@ -4467,7 +4467,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/increment')
     ->desc('Increment document attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].increment')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'documents.increment')
