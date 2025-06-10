@@ -1081,9 +1081,9 @@ class Builds extends Action
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getSequence()]),
-                            Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getSequence()]),
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),
@@ -1107,9 +1107,9 @@ class Builds extends Action
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getSequence()]),
-                            Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getSequence()]),
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),

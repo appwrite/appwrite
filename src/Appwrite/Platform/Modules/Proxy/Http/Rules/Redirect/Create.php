@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -65,15 +66,18 @@ class Create extends Action
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
+            ->param('resourceId', '', new UID(), 'ID of parent resource.')
+            ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.')
             ->inject('response')
             ->inject('project')
             ->inject('queueForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('dbForProject')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $domain, string $url, int $statusCode, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
     {
         $deniedDomains = [
             'localhost',
@@ -114,6 +118,15 @@ class Create extends Action
             $domain = new Domain($domain);
         } catch (\Throwable) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
+        }
+
+        $collection = match ($resourceType) {
+            'site' => 'sites',
+            'function' => 'functions'
+        };
+        $resource = $dbForProject->getDocument($collection, $resourceId);
+        if ($resource->isEmpty()) {
+            throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
         }
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
@@ -164,6 +177,9 @@ class Create extends Action
             'trigger' => 'manual',
             'redirectUrl' => $url,
             'redirectStatusCode' => $statusCode,
+            'deploymentResourceType' => $resourceType,
+            'deploymentResourceId' => $resource->getId(),
+            'deploymentResourceInternalId' => $resource->getSequence(),
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get()]),
             'owner' => $owner,
