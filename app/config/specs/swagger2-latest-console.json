@@ -25696,12 +25696,35 @@
                                         "Temporary Redirect 307",
                                         "Permanent Redirect 308"
                                     ]
+                                },
+                                "resourceId": {
+                                    "type": "string",
+                                    "description": "ID of parent resource.",
+                                    "default": null,
+                                    "x-example": "<RESOURCE_ID>"
+                                },
+                                "resourceType": {
+                                    "type": "string",
+                                    "description": "Type of parent resource.",
+                                    "default": null,
+                                    "x-example": "site",
+                                    "enum": [
+                                        "site",
+                                        "function"
+                                    ],
+                                    "x-enum-name": "ProxyResourceType",
+                                    "x-enum-keys": [
+                                        "Site",
+                                        "Function"
+                                    ]
                                 }
                             },
                             "required": [
                                 "domain",
                                 "url",
-                                "statusCode"
+                                "statusCode",
+                                "resourceId",
+                                "resourceType"
                             ]
                         }
                     }

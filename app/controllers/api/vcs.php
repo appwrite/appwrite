@@ -1215,6 +1215,7 @@ App::post('/v1/vcs/github/events')
 
             if ($event == $github::EVENT_PUSH) {
                 $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
+                $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
                 $providerBranch = $parsedPayload["branch"] ?? '';
                 $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
@@ -1236,8 +1237,8 @@ App::post('/v1/vcs/github/events')
                     Query::limit(100),
                 ]));
 
-                // create new deployment only on push and not when branch is created
-                if (!$providerBranchCreated) {
+                // create new deployment only on push and not when branch is created or deleted
+                if (!$providerBranchCreated && !$providerBranchDeleted) {
                     $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {

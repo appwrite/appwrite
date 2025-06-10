@@ -87,7 +87,7 @@ class Comment
         $i = 0;
         foreach ($projects as $projectId => $project) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_DOMAIN');
+            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
 
             $text .= "## {$project['name']}\n\n";
             $text .= "Project ID: `{$projectId}`\n\n";
@@ -103,10 +103,12 @@ class Comment
                 $text .= "| :- | :-  | :-  | :-  | :- |\n";
 
                 foreach ($project['site'] as $siteId => $site) {
+                    $imageStatus = in_array($site['status'], ['processing', 'building']) ? 'building' : $site['status'];
+
                     $extension = $site['status'] === 'building' ? 'gif' : 'png';
 
-                    $pathLight = '/images/vcs/status-' . $site['status'] . '-light.' . $extension;
-                    $pathDark = '/images/vcs/status-' . $site['status'] . '-dark.' . $extension;
+                    $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
+                    $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
 
                     $status = match ($site['status']) {
                         'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
@@ -149,10 +151,11 @@ class Comment
                 $text .= "| :- | :-  | :-  | :- |\n";
 
                 foreach ($project['function'] as $functionId => $function) {
-                    $extension = $function['status'] === 'building' ? 'gif' : 'png';
+                    $imageStatus = in_array($function['status'], ['processing', 'building']) ? 'building' : $function['status'];
+                    $extension = $imageStatus === 'building' ? 'gif' : 'png';
 
-                    $pathLight = '/images/vcs/status-' . $function['status'] . '-light.' . $extension;
-                    $pathDark = '/images/vcs/status-' . $function['status'] . '-dark.' . $extension;
+                    $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
+                    $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
 
                     $status = match ($function['status']) {
                         'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
@@ -168,7 +171,8 @@ class Comment
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }
 
-                    $text .= "| &nbsp;**{$function['name']}**<br>`$functionId`";
+                    $text .= "| &nbsp;**{$function['name']}**";
+                    $text .= "| `{$functionId}`";
                     $text .= "| {$status}";
                     $text .= "| {$action}";
                     $text .= "|\n";
@@ -197,7 +201,7 @@ class Comment
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
 
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;
