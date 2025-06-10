@@ -71,7 +71,6 @@ class Maintenance extends Action
             $dbForPlatform->foreach(
                 'projects',
                 function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                    Console::info('Project accessed at ' . $project->getId());
                     $queueForDeletes
                         ->setType(DELETE_TYPE_MAINTENANCE)
                         ->setProject($project)
