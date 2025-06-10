@@ -8016,6 +8016,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server",
                         "server"
@@ -8025,6 +8026,7 @@
                         {
                             "name": "createDocument",
                             "auth": {
+                                "Admin": [],
                                 "Session": [],
                                 "Key": [],
                                 "JWT": []
@@ -8053,6 +8055,7 @@
                         {
                             "name": "createDocuments",
                             "auth": {
+                                "Admin": [],
                                 "Key": []
                             },
                             "parameters": [
@@ -8178,6 +8181,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -8269,6 +8273,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -8362,6 +8367,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -8932,6 +8938,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client",
                         "server"
@@ -9046,6 +9053,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client",
                         "server"

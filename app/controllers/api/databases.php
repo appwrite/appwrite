@@ -3221,7 +3221,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 group: 'documents',
                 name: 'createDocument',
                 description: '/docs/references/databases/create-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -3242,7 +3242,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 group: 'documents',
                 name: 'createDocuments',
                 description: '/docs/references/databases/create-documents.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -4632,7 +4632,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         group: 'documents',
         name: 'updateDocuments',
         description: '/docs/references/databases/update-documents.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4742,7 +4742,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
         group: 'documents',
         name: 'upsertDocuments',
         description: '/docs/references/databases/upsert-documents.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4961,7 +4961,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         group: 'documents',
         name: 'deleteDocuments',
         description: '/docs/references/databases/delete-documents.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
