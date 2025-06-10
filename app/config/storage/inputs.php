@@ -7,4 +7,5 @@ return [
     "png" => "image/png",
     "heic" => "image/heic",
     "webp" => "image/webp",
+    "gif" => "image/gif",
 ];

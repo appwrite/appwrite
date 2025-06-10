@@ -87,7 +87,7 @@ class Comment
         $i = 0;
         foreach ($projects as $projectId => $project) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_DOMAIN');
+            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
 
             $text .= "## {$project['name']}\n\n";
             $text .= "Project ID: `{$projectId}`\n\n";
@@ -201,7 +201,7 @@ class Comment
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
 
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;
