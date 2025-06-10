@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use DateInterval;
-use DateTime;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
+use DateInterval;
+use DateTime;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
