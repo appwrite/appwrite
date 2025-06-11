@@ -13,9 +13,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -239,14 +239,14 @@ class Update extends Action
                     $newDocument
                 )
             );
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (ConflictException) {
+            throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
+        } catch (RelationshipException $e) {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getInvalidStructureException(), $e->getMessage());
-        } catch (NotFoundException) {
-            throw new Exception($this->getParentNotFoundException());
         }
 
         // Add $collectionId and $databaseId for all documents

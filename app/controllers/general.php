@@ -1174,14 +1174,6 @@ App::error()
                         break;
                 }
                 break;
-            case 'Utopia\Database\Exception\Conflict':
-                $error = new AppwriteException(
-                    $isTablesAPI
-                        ? AppwriteException::ROW_UPDATE_CONFLICT
-                        : AppwriteException::DOCUMENT_UPDATE_CONFLICT,
-                    previous: $error
-                );
-                break;
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
@@ -1203,19 +1195,8 @@ App::error()
                         ? AppwriteException::ROW_ALREADY_EXISTS
                         : AppwriteException::DOCUMENT_ALREADY_EXISTS
                 );
-                break;
-            case 'Utopia\Database\Exception\Restricted':
-                $error = new AppwriteException(
-                    $isTablesAPI
-                        ? AppwriteException::ROW_DELETE_RESTRICTED
-                        : AppwriteException::DOCUMENT_DELETE_RESTRICTED
-                );
-                break;
             case 'Utopia\Database\Exception\Authorization':
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
-                break;
-            case 'Utopia\Database\Exception\Relationship':
-                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\NotFound':
                 $error = new AppwriteException(

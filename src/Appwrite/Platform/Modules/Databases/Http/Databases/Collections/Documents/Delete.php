@@ -13,7 +13,8 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Conflict as ConflictException;
+use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -108,8 +109,10 @@ class Delete extends Action
                     $documentId
                 );
             });
-        } catch (NotFoundException) {
-            throw new Exception($this->getParentNotFoundException());
+        } catch (ConflictException) {
+            throw new Exception($this->getConflictException());
+        } catch (RestrictedException) {
+            throw new Exception($this->getRestrictedException());
         }
 
         // Add $collection and $databaseId for all documents

@@ -14,6 +14,8 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
@@ -122,6 +124,16 @@ abstract class Action extends UtopiaAction
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_ALREADY_EXISTS
             : Exception::COLUMN_ALREADY_EXISTS;
+    }
+
+    /**
+     * Get the correct invalid structure message.
+     */
+    final protected function getInvalidStructureException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_INVALID_STRUCTURE
+            : Exception::ROW_INVALID_STRUCTURE;
     }
 
     /**
@@ -541,8 +553,14 @@ abstract class Action extends UtopiaAction
                     newKey: $newKey,
                     onDelete: $primaryDocumentOptions['onDelete'],
                 );
-            } catch (NotFoundException) {
-                throw new Exception($this->getNotFoundException());
+            } catch (IndexException) {
+                throw new Exception(Exception::INDEX_INVALID);
+            } catch (LimitException) {
+                throw new Exception($this->getLimitException());
+            } catch (RelationshipException $e) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+            } catch (StructureException $e) {
+                throw new Exception($this->getInvalidStructureException(), $e->getMessage());
             }
 
             if ($primaryDocumentOptions['twoWay']) {

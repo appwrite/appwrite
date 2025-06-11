@@ -97,6 +97,25 @@ abstract class Action extends UtopiaAction
             : Exception::ROW_ALREADY_EXISTS;
     }
 
+    /**
+     * Get the appropriate conflict exception.
+     */
+    final protected function getConflictException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_UPDATE_CONFLICT
+            : Exception::ROW_UPDATE_CONFLICT;
+    }
+
+    /**
+     * Get the appropriate delete restricted exception.
+     */
+    final protected function getRestrictedException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_DELETE_RESTRICTED
+            : Exception::ROW_DELETE_RESTRICTED;
+    }
 
     /**
      * Get the correct invalid structure message.
