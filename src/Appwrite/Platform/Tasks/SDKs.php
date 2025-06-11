@@ -41,15 +41,15 @@ class SDKs extends Action
         $this
             ->desc('Generate Appwrite SDKs')
             ->param('platform', null, new Nullable(new Text(256)), 'Selected Platform', optional: true)
-            ->param('sdk', null, new Nullable(new Text(256)), 'Selected SDK', optional:true)
-            ->param('version', null, new Nullable(new Text(256)), 'Selected SDK', optional:true)
+            ->param('sdk', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
+            ->param('version', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
-            ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional:true)
-            ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional:true)
+            ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
+            ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
             ->callback([$this, 'action']);
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message)
+    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void
     {
         $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
         $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
@@ -64,7 +64,7 @@ class SDKs extends Action
             $message ??= Console::confirm('Please enter your commit message:');
         }
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', 'latest'])) {
+        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', '1.7.x', 'latest'])) {
             throw new \Exception('Unknown version given');
         }
 
@@ -250,7 +250,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '1.6.0',
+                        'X-Appwrite-Response-Format' => '1.7.0',
                     ]);
 
                 // Make sure we have a clean slate.
@@ -275,9 +275,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
-                        git init --initial-branch=' . $gitBranch . ' && \
+                        git init && \
                         git remote add origin ' . $gitUrl . ' && \
-                        git fetch origin ' . $gitBranch . ' && \
+                        git fetch origin && \
+                        git checkout main || git checkout -b main && \
+                        git pull origin main && \
+                        git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
+                        git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
                         rm -rf ' . $target . '/* && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
@@ -308,7 +312,5 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
             }
         }
-
-        Console::exit();
     }
 }

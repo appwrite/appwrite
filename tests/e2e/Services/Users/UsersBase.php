@@ -310,6 +310,22 @@ trait UsersBase
         $this->assertNotEmpty($session['secret']);
         $this->assertNotEmpty($session['expire']);
         $this->assertEquals('server', $session['provider']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
 
@@ -781,6 +797,97 @@ trait UsersBase
         $this->assertEquals($user['body']['code'], 404);
         $this->assertEquals($user['body']['message'], 'User with the requested ID could not be found.');
         $this->assertEquals($user['body']['type'], 'user_not_found');
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testListUserMemberships(array $data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        // create a new team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'unique()',
+            'name' => 'Test Team',
+        ]);
+
+        // create a new membership
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $data['userId'],
+            'roles' => ['new-role'],
+        ]);
+
+        // list the memberships
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['memberships'][0]['$id'], $membership['body']['$id']);
+        $this->assertEquals($response['body']['memberships'][0]['roles'], ['new-role']);
+        $this->assertEquals($response['body']['total'], 1);
+
+        // create another membership with a new role
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'unique()',
+            'name' => 'Test Team 2',
+        ]);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $data['userId'],
+            'roles' => ['new-role-2'],
+        ]);
+
+        // list out memberships and query by role
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('roles', ['new-role-2'])->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['memberships'][0]['$id'], $membership['body']['$id']);
+        $this->assertEquals($response['body']['memberships'][0]['roles'], ['new-role-2']);
+        $this->assertEquals($response['body']['total'], 1);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // query using equal on array field
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('roles', ['new-role-2'])->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['body']['code'], 400);
+        $this->assertEquals($response['body']['message'], 'Invalid `queries` param: Invalid query: Cannot query equal on attribute "roles" because it is an array.');
+        $this->assertEquals($response['body']['type'], 'general_argument_invalid');
 
         return $data;
     }
@@ -1498,6 +1605,7 @@ trait UsersBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
+        $this->assertEquals(false, $response['body']['expired']);
         return $response['body'];
     }
 
@@ -1510,6 +1618,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, \count($response['body']['targets']));
     }

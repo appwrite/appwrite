@@ -1,3 +1,29 @@
+# Change Log
+
+## 16.0.0
+
+* Add `<REGION>` to doc examples due to the new multi region endpoints
+* Add doc examples and methods for bulk api transactions: `createDocuments`, `deleteDocuments` etc.
+* Add doc examples, class and methods for new `Sites` service
+* Add doc examples, class and methods for new `Tokens` service
+* Add enums for `BuildRuntime `, `Adapter`, `Framework`, `DeploymentDownloadType` and `VCSDeploymentType`
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Add `queries` and `search` params to `listMemberships` method
+* Update enum for `runtimes` with Pythonml312, Dart219, Flutter327 and Flutter329
+* Remove `search` param from `listExecutions` method
+
+## 14.0.0
+
+* Breaking changes:
+  * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
+
+## 13.0.0
+
+* Fixed realtime pong response.
+* Fixed issues with `chunkedUpload` method.
+* Fixed type mismatch bug where `List<dynamic>` was incorrectly causing runtime type errors.
+* Updated return type of `updateMfaChallenge()` from raw data to properly typed `models.Session` object.
+
 ## 12.0.0
 
 * Support for Appwrite 1.6

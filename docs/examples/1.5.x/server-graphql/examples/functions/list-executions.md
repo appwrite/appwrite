@@ -28,6 +28,7 @@ query {
             logs
             errors
             duration
+            scheduledAt
         }
     }
 }

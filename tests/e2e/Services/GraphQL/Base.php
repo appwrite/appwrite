@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use CURLFile;
 use Utopia\CLI\Console;
 
 trait Base
@@ -1567,7 +1568,7 @@ trait Base
                         _id
                         buildId
                         entrypoint
-                        size
+                        buildSize
                         status
                         buildLogs
                     }
@@ -1619,7 +1620,7 @@ trait Base
                 }';
             case self::$RETRY_BUILD:
                 return 'mutation retryBuild($functionId: String!, $deploymentId: String!, $buildId: String!) {
-                    functionsCreateBuild(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId) {
+                    functionsCreateDuplicateDeployment(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId) {
                         status
                     }
                 }';
@@ -2496,8 +2497,17 @@ trait Base
     protected string $stdout = '';
     protected string $stderr = '';
 
-    protected function packageCode($folder): void
+    protected function packageFunction(string $function): CURLFile
     {
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
+        $tarPath = "$folderPath/code.tar.gz";
+
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+
+        if (filesize($tarPath) > 1024 * 1024 * 5) {
+            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
+        }
+
+        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
 }
