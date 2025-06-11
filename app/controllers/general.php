@@ -1159,9 +1159,6 @@ App::error()
             Console::error('[Error] Line: ' . $line);
         }
 
-        // routes like /tables, /tables/:tableId, etc.
-        $isTablesAPI = str_contains($route->getPath(), '/databases/:databaseId/tables');
-
         switch ($class) {
             case 'Utopia\Exception':
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
