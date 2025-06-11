@@ -107,7 +107,7 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
@@ -199,7 +199,7 @@ class Create extends Action
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
                 foreach ($relations as &$relation) {
@@ -213,7 +213,7 @@ class Create extends Action
                     }
                     if ($relation instanceof Document) {
                         $current = Authorization::skip(
-                            fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
+                            fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
 
                         if ($current->isEmpty()) {
@@ -244,7 +244,7 @@ class Create extends Action
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
         try {
-            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
+            $document = $dbForProject->createDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $document);
         } catch (StructureException $e) {
             throw new Exception($this->getInvalidStructureException(), $e->getMessage());
         } catch (DuplicateException) {
@@ -275,7 +275,7 @@ class Create extends Action
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
                 foreach ($related as $relation) {
@@ -290,7 +290,7 @@ class Create extends Action
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations); // per collection
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations); // per collection
 
         $response->addHeader('X-Debug-Operations', $operations);
 

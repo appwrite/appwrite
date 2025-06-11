@@ -89,9 +89,9 @@ class Create extends Action
         $permissions = Permission::aggregate($permissions) ?? [];
 
         try {
-            $collection = $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
+            $collection = $dbForProject->createDocument('database_' . $database->getSequence(), new Document([
                 '$id' => $collectionId,
-                'databaseInternalId' => $database->getInternalId(),
+                'databaseInternalId' => $database->getSequence(),
                 'databaseId' => $databaseId,
                 '$permissions' => $permissions,
                 'documentSecurity' => $documentSecurity,
@@ -100,7 +100,7 @@ class Create extends Action
                 'search' => \implode(' ', [$collectionId, $name]),
             ]));
 
-            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), permissions: $permissions, documentSecurity: $documentSecurity);
+            $dbForProject->createCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), permissions: $permissions, documentSecurity: $documentSecurity);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (LimitException) {

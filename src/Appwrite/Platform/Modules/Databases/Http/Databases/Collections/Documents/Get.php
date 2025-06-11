@@ -79,7 +79,7 @@ class Get extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
@@ -87,7 +87,7 @@ class Get extends Action
 
         try {
             $queries = Query::parseQueries($queries);
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+            $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
@@ -133,7 +133,7 @@ class Get extends Action
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
                 foreach ($related as $relation) {
@@ -148,7 +148,7 @@ class Get extends Action
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 

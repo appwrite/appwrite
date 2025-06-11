@@ -79,7 +79,7 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
@@ -108,7 +108,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -118,8 +118,8 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
         try {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+            $documents = $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
+            $total = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
@@ -165,7 +165,7 @@ class XList extends Action
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 // todo: Use local cache for this getDocument
-                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
                     if ($doc instanceof Document) {
@@ -191,7 +191,7 @@ class XList extends Action
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 

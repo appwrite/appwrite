@@ -101,7 +101,7 @@ class Update extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
@@ -109,7 +109,7 @@ class Update extends Action
 
         // Read permission should not be required for update
         /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException());
@@ -179,7 +179,7 @@ class Update extends Action
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
                 foreach ($relations as &$relation) {
@@ -194,7 +194,7 @@ class Update extends Action
                     }
                     if ($relation instanceof Document) {
                         $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
-                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
+                            'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
                         $relation->removeAttribute('$collectionId');
@@ -202,7 +202,7 @@ class Update extends Action
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
-                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId()
+                            'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence()
                         );
 
                         if ($oldDocument->isEmpty()) {
@@ -226,7 +226,7 @@ class Update extends Action
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 
@@ -234,7 +234,7 @@ class Update extends Action
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
                 fn () => $dbForProject->updateDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $document->getId(),
                     $newDocument
                 )
@@ -271,7 +271,7 @@ class Update extends Action
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
                 foreach ($related as $relation) {

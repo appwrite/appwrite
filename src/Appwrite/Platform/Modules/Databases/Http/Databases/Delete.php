@@ -73,7 +73,7 @@ class Delete extends Action
         }
 
         $dbForProject->purgeCachedDocument('databases', $database->getId());
-        $dbForProject->purgeCachedCollection('databases_' . $database->getInternalId());
+        $dbForProject->purgeCachedCollection('databases_' . $database->getSequence());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_DATABASE)

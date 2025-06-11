@@ -94,7 +94,7 @@ class XList extends Action
             }
 
             $collectionIdId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionIdId);
+            $cursorDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionIdId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, ucfirst($this->getContext()) . " '$collectionIdId' for the 'cursor' value not found.");
@@ -106,8 +106,8 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $collections = $dbForProject->find('database_' . $database->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+            $collections = $dbForProject->find('database_' . $database->getSequence(), $queries);
+            $total = $dbForProject->count('database_' . $database->getSequence(), $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';

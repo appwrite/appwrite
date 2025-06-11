@@ -287,7 +287,7 @@ abstract class Action extends UtopiaAction
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
@@ -310,7 +310,7 @@ abstract class Action extends UtopiaAction
 
         if ($type === Database::VAR_RELATIONSHIP) {
             $options['side'] = Database::RELATION_SIDE_PARENT;
-            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
+            $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection'] ?? '');
             if ($relatedCollection->isEmpty()) {
                 $parent = $this->isCollectionsAPI() ? 'collection' : 'table';
                 throw new Exception($this->getParentNotFoundException(), "The related $parent was not found.");
@@ -319,11 +319,11 @@ abstract class Action extends UtopiaAction
 
         try {
             $attribute = new Document([
-                '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
+                '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
                 'key' => $key,
-                'databaseInternalId' => $db->getInternalId(),
+                'databaseInternalId' => $db->getSequence(),
                 'databaseId' => $db->getId(),
-                'collectionInternalId' => $collection->getInternalId(),
+                'collectionInternalId' => $collection->getSequence(),
                 'collectionId' => $collectionId,
                 'type' => $type,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -345,13 +345,13 @@ abstract class Action extends UtopiaAction
         } catch (LimitException) {
             throw new Exception($this->getLimitException());
         } catch (Throwable $e) {
-            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
+            $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
             throw $e;
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
+        $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
         if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
             $twoWayKey = $options['twoWayKey'];
@@ -361,11 +361,11 @@ abstract class Action extends UtopiaAction
 
             try {
                 $twoWayAttribute = new Document([
-                    '$id' => ID::custom($db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $twoWayKey),
+                    '$id' => ID::custom($db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $twoWayKey),
                     'key' => $twoWayKey,
-                    'databaseInternalId' => $db->getInternalId(),
+                    'databaseInternalId' => $db->getSequence(),
                     'databaseId' => $db->getId(),
-                    'collectionInternalId' => $relatedCollection->getInternalId(),
+                    'collectionInternalId' => $relatedCollection->getSequence(),
                     'collectionId' => $relatedCollection->getId(),
                     'type' => $type,
                     'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -389,13 +389,13 @@ abstract class Action extends UtopiaAction
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
                 throw new Exception($this->getLimitException());
             } catch (Throwable $e) {
-                $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
-                $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+                $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
+                $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
                 throw $e;
             }
 
-            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }
 
         $queueForDatabase
@@ -434,13 +434,13 @@ abstract class Action extends UtopiaAction
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+        $attribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception($this->getNotFoundException());
@@ -466,7 +466,7 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
         }
 
-        $collectionId = 'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
+        $collectionId = 'database_' . $db->getSequence() . '_collection_' . $collection->getSequence();
 
         $attribute
             ->setAttribute('default', $default)
@@ -546,9 +546,9 @@ abstract class Action extends UtopiaAction
             }
 
             if ($primaryDocumentOptions['twoWay']) {
-                $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryDocumentOptions['relatedCollection']);
+                $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $primaryDocumentOptions['relatedCollection']);
 
-                $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
+                $relatedAttribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey']);
 
                 if (!empty($newKey) && $newKey !== $key) {
                     $options['twoWayKey'] = $newKey;
@@ -556,9 +556,9 @@ abstract class Action extends UtopiaAction
 
                 $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
                 $relatedAttribute->setAttribute('options', $relatedOptions);
-                $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
+                $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
 
-                $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+                $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
             }
         } else {
             try {
@@ -586,7 +586,7 @@ abstract class Action extends UtopiaAction
             $originalUid = $attribute->getId();
 
             $attribute
-                ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
+                ->setAttribute('$id', ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $newKey))
                 ->setAttribute('key', $newKey);
 
             $dbForProject->updateDocument('attributes', $originalUid, $attribute);
@@ -608,10 +608,10 @@ abstract class Action extends UtopiaAction
                 }
             }
         } else {
-            $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+            $attribute = $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key, $attribute);
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collection->getId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collection->getId());
 
         $queueForEvents
             ->setContext('database', $db)

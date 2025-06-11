@@ -78,7 +78,7 @@ class Update extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException());
         }
@@ -91,7 +91,7 @@ class Update extends Action
         $enabled ??= $collection->getAttribute('enabled', true);
 
         $collection = $dbForProject->updateDocument(
-            'database_' . $database->getInternalId(),
+            'database_' . $database->getSequence(),
             $collectionId,
             $collection
                 ->setAttribute('name', $name)
@@ -101,7 +101,7 @@ class Update extends Action
                 ->setAttribute('search', \implode(' ', [$collectionId, $name]))
         );
 
-        $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
+        $dbForProject->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
 
         $queueForEvents
             ->setContext('database', $database)

@@ -85,7 +85,7 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             // table or collection.
@@ -93,8 +93,8 @@ class Create extends Action
         }
 
         $count = $dbForProject->count('indexes', [
-            Query::equal('collectionInternalId', [$collection->getInternalId()]),
-            Query::equal('databaseInternalId', [$db->getInternalId()])
+            Query::equal('collectionInternalId', [$collection->getSequence()]),
+            Query::equal('databaseInternalId', [$db->getSequence()])
         ], 61);
 
         $limit = $dbForProject->getLimitForIndexes();
@@ -173,12 +173,12 @@ class Create extends Action
         }
 
         $index = new Document([
-            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
+            '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
             'status' => 'processing', // processing, available, failed, deleting, stuck
-            'databaseInternalId' => $db->getInternalId(),
+            'databaseInternalId' => $db->getSequence(),
             'databaseId' => $databaseId,
-            'collectionInternalId' => $collection->getInternalId(),
+            'collectionInternalId' => $collection->getSequence(),
             'collectionId' => $collectionId,
             'type' => $type,
             'attributes' => $attributes,
@@ -201,7 +201,7 @@ class Create extends Action
             throw new Exception($this->getDuplicateException());
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_CREATE_INDEX)

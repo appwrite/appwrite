@@ -93,14 +93,14 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
-        $relatedCollection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollectionDocument->getInternalId());
+        $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId);
+        $relatedCollection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollectionDocument->getSequence());
         if ($relatedCollection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }

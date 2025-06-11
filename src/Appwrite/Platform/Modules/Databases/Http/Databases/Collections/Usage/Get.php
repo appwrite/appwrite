@@ -67,8 +67,8 @@ class Get extends Action
     public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
-        $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
+        $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
 
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException());
@@ -78,7 +78,7 @@ class Get extends Action
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
+            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {

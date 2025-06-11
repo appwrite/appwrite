@@ -66,7 +66,7 @@ class Get extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException());

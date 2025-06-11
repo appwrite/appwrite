@@ -76,12 +76,12 @@ class Get extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+        $attribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $collection->getSequence() . '_' . $key);
         if ($attribute->isEmpty()) {
             throw new Exception($this->getNotFoundException());
         }

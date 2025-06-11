@@ -76,12 +76,12 @@ class Delete extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+        $attribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key);
         if ($attribute->isEmpty()) {
             throw new Exception($this->getNotFoundException());
         }
@@ -98,18 +98,18 @@ class Delete extends Action
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
+        $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
         if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
             $options = $attribute->getAttribute('options');
             if ($options['twoWay']) {
-                $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+                $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection']);
                 if ($relatedCollection->isEmpty()) {
                     throw new Exception($this->getParentNotFoundException());
                 }
 
-                $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                $relatedAttribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                 if ($relatedAttribute->isEmpty()) {
                     throw new Exception($this->getNotFoundException());
                 }
@@ -118,8 +118,8 @@ class Delete extends Action
                     $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
                 }
 
-                $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
-                $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+                $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $options['relatedCollection']);
+                $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
         }
 

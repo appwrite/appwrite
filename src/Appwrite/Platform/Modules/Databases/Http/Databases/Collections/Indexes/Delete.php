@@ -78,14 +78,14 @@ class Delete extends Action
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             // table or collection.
             throw new Exception($this->getGrandParentNotFoundException());
         }
 
-        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+        $index = $dbForProject->getDocument('indexes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key);
 
         if (empty($index->getId())) {
             throw new Exception($this->getNotFoundException());
@@ -96,7 +96,7 @@ class Delete extends Action
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_INDEX)

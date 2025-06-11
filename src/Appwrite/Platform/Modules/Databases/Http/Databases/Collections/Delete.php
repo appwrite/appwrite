@@ -72,17 +72,17 @@ class Delete extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException());
         }
 
-        if (!$dbForProject->deleteDocument('database_' . $database->getInternalId(), $collectionId)) {
+        if (!$dbForProject->deleteDocument('database_' . $database->getSequence(), $collectionId)) {
             $type = $this->getContext();
             throw new Exception(Exception::GENERAL_SERVER_ERROR, "Failed to remove $type from DB");
         }
 
-        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_COLLECTION)

@@ -73,7 +73,7 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             // table or collection.
@@ -104,8 +104,8 @@ class XList extends Action
 
             $indexId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
-                Query::equal('collectionInternalId', [$collection->getInternalId()]),
-                Query::equal('databaseInternalId', [$database->getInternalId()]),
+                Query::equal('collectionInternalId', [$collection->getSequence()]),
+                Query::equal('databaseInternalId', [$database->getSequence()]),
                 Query::equal('key', [$indexId]),
                 Query::limit(1)
             ]));

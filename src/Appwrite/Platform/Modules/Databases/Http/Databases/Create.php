@@ -109,7 +109,7 @@ class Create extends Action
                     'orders' => $index['orders'],
                 ]);
             }
-            $dbForProject->createCollection('database_' . $database->getInternalId(), $attributes, $indexes);
+            $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         }

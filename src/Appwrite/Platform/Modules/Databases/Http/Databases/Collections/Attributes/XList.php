@@ -69,7 +69,7 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
@@ -78,8 +78,8 @@ class XList extends Action
 
         \array_push(
             $queries,
-            Query::equal('databaseInternalId', [$database->getInternalId()]),
-            Query::equal('collectionInternalId', [$collection->getInternalId()])
+            Query::equal('databaseInternalId', [$database->getSequence()]),
+            Query::equal('collectionInternalId', [$collection->getSequence()])
         );
 
         $cursor = \array_filter(
@@ -97,8 +97,8 @@ class XList extends Action
             $attributeId = $cursor->getValue();
             $cursorDocument = Authorization::skip(
                 fn () => $dbForProject->find('attributes', [
-                    Query::equal('databaseInternalId', [$database->getInternalId()]),
-                    Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                    Query::equal('databaseInternalId', [$database->getSequence()]),
+                    Query::equal('collectionInternalId', [$collection->getSequence()]),
                     Query::equal('key', [$attributeId]),
                     Query::limit(1),
                 ])
