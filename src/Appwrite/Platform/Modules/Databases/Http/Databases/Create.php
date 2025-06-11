@@ -14,6 +14,9 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Index as IndexException;
+use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -76,42 +79,41 @@ class Create extends Action
                 'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
             ]));
-            $database = $dbForProject->getDocument('databases', $databaseId);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
+        } catch (StructureException $e) {
+            // TODO: @Jake, how do we handle this document/row?
+            // there's no context awareness at this level on what the api is.
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
 
-            $collections = (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [];
-            if (empty($collections)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
-            }
+        $database = $dbForProject->getDocument('databases', $databaseId);
 
-            $attributes = [];
-            $indexes = [];
+        $collections = (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [];
+        if (empty($collections)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
+        }
 
-            foreach ($collections['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
+        $attributes = [];
+        foreach ($collections['attributes'] as $attribute) {
+            $attributes[] = new Document($attribute);
+        }
 
-            foreach ($collections['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
+        $indexes = [];
+        foreach ($collections['indexes'] as $index) {
+            $indexes[] = new Document($index);
+        }
+
+        try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
+        } catch (IndexException) {
+            throw new Exception(Exception::INDEX_INVALID);
+        } catch (LimitException) {
+            // TODO: @Jake, how do we handle this collection/table?
+            // there's no context awareness at this level on what the api is.
+            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED);
         }
 
         $queueForEvents->setParam('databaseId', $database->getId());

@@ -1177,15 +1177,6 @@ App::error()
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
-            case 'Utopia\Database\Exception\Structure':
-                $error = new AppwriteException(
-                    $isTablesAPI
-                        ? AppwriteException::ROW_INVALID_STRUCTURE
-                        : AppwriteException::DOCUMENT_INVALID_STRUCTURE,
-                    $error->getMessage(),
-                    previous: $error
-                );
-                break;
             case 'Utopia\Database\Exception\Duplicate':
                 $error = new AppwriteException(
                     $isTablesAPI

@@ -228,8 +228,6 @@ class Update extends Action
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
-        $response->addHeader('X-Debug-Operations', $operations);
-
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,

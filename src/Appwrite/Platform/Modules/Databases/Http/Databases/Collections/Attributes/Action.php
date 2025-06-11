@@ -395,17 +395,20 @@ abstract class Action extends UtopiaAction
                 $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
-                $dbForProject->deleteDocument('attributes', $attribute->getId());
                 throw new Exception($this->getDuplicateException());
             } catch (LimitException) {
-                $dbForProject->deleteDocument('attributes', $attribute->getId());
                 throw new Exception($this->getLimitException());
+            } catch (StructureException) {
+                throw new Exception($this->getInvalidStructureException());
             } catch (Throwable $e) {
-                $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
-                $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
+                $dbForProject->deleteDocument('attributes', $attribute->getId());
                 throw $e;
+            } finally {
+                $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
+                $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
             }
 
+            // If operation succeeded, purge the cache for the related collection too
             $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
             $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }
