@@ -38,6 +38,7 @@ use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
+use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -62,6 +63,7 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\IP;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -839,7 +841,7 @@ App::delete('/v1/databases/:databaseId')
         }
 
         $dbForProject->purgeCachedDocument('databases', $database->getId());
-        $dbForProject->purgeCachedCollection('databases_' . $database->getSequence());
+        $dbForProject->purgeCachedCollection('database_' . $database->getSequence());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_DATABASE)
@@ -2847,7 +2849,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
-    ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional:true)
+    ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
@@ -3126,7 +3128,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
-
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key')
     ->desc('Delete index')
@@ -3220,7 +3221,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 group: 'documents',
                 name: 'createDocument',
                 description: '/docs/references/databases/create-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -3241,7 +3242,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 group: 'documents',
                 name: 'createDocuments',
                 description: '/docs/references/databases/create-documents.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -4490,6 +4491,160 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/increment')
+    ->desc('Increment document attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].increment')
+    ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('audits.event', 'documents.increment')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'documents',
+        name: 'incrementDocumentAttribute',
+        description: '/docs/references/databases/increment-document-attribute.md',
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('attribute', '', new Key(), 'Attribute key.')
+    ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
+    ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        try {
+            $document = $dbForProject->increaseDocumentAttribute(
+                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                id: $documentId,
+                attribute: $attribute,
+                value: $value,
+                max: $max
+            );
+        } catch (ConflictException) {
+            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+        } catch (NotFoundException) {
+            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        } catch (LimitException) {
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the maximum value of ' . $max);
+        } catch (TypeException) {
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        }
+
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1);
+
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collectionId)
+            ->setContext('collection', $collection)
+            ->setContext('database', $database);
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/decrement')
+    ->desc('Decrement document attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].decrement')
+    ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('audits.event', 'documents.decrement')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'documents',
+        name: 'decrementDocumentAttribute',
+        description: '/docs/references/databases/decrement-document-attribute.md',
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('attribute', '', new Key(), 'Attribute key.')
+    ->param('value', 1, new Numeric(), 'Value to decrement the attribute by. The value must be a number.', true)
+    ->param('min', null, new Numeric(), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        try {
+            $document = $dbForProject->decreaseDocumentAttribute(
+                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                id: $documentId,
+                attribute: $attribute,
+                value: $value,
+                min: $min
+            );
+        } catch (ConflictException) {
+            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+        } catch (NotFoundException) {
+            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        } catch (LimitException) {
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the minimum value of ' . $min);
+        } catch (TypeException) {
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        }
+
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1);
+
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collectionId)
+            ->setContext('collection', $collection)
+            ->setContext('database', $database);
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+    });
+
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('Update documents')
     ->groups(['api', 'database'])
@@ -4505,7 +4660,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         group: 'documents',
         name: 'updateDocuments',
         description: '/docs/references/databases/update-documents.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4615,7 +4770,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
         group: 'documents',
         name: 'upsertDocuments',
         description: '/docs/references/databases/upsert-documents.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4834,7 +4989,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         group: 'documents',
         name: 'deleteDocuments',
         description: '/docs/references/databases/delete-documents.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
