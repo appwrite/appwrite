@@ -129,7 +129,7 @@ return [
                 '$resource' => true,
                 '$description' => 'This event triggers on any columns event.',
                 'create' => [
-                    '$description' => 'This event triggers when an column is created.',
+                    '$description' => 'This event triggers when a column is created.',
                 ],
                 'delete' => [
                     '$description' => 'This event triggers when an column is deleted.'

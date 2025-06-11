@@ -69,9 +69,14 @@ return [
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
         'code' => 400,
     ],
-    Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
-        'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
-        'description' => 'Query limit exceeded for the current attribute/column. Usage of more than 100 query values on a single attribute/column is prohibited.',
+    Exception::GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED => [
+        'name' => Exception::GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED,
+        'description' => 'Query limit exceeded for the current attribute.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED => [
+        'name' => Exception::GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED,
+        'description' => 'Query limit exceeded for the current column.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_INVALID => [
@@ -813,7 +818,7 @@ return [
     ],
     Exception::ATTRIBUTE_INVALID_RESIZE => [
         'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
-        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
+        'description' => 'Existing data is too large for new size, truncate your existing data then try again.',
         'code' => 400,
     ],
 

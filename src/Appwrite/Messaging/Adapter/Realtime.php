@@ -312,12 +312,10 @@ class Realtime extends Adapter
                         throw new \Exception('Collection or the Table needs to be passed to Realtime for Document/Row events in the Database.');
                     }
 
-                    // 1.7.x - Tables API
                     $channels[] = 'rows';
                     $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
                     $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
 
-                    // 1.6.x - Collections API
                     $channels[] = 'documents';
                     $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
                     $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
