@@ -90,6 +90,7 @@ class Delete extends Action
             $collection->getAttribute('indexes'),
             $dbForProject->getAdapter()->getSupportForCastIndexArray(),
         );
+
         if (!$validator->isValid($attribute)) {
             throw new Exception($this->getIndexDependencyException());
         }

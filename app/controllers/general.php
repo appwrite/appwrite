@@ -1177,24 +1177,6 @@ App::error()
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
-            case 'Utopia\Database\Exception\NotFound':
-                $error = new AppwriteException(
-                    $isTablesAPI
-                        ? AppwriteException::TABLE_NOT_FOUND
-                        : AppwriteException::COLLECTION_NOT_FOUND,
-                    $error->getMessage(),
-                    previous: $error
-                );
-                break;
-            case 'Utopia\Database\Exception\Dependency':
-                $error = new AppwriteException(
-                    $isTablesAPI
-                        ? AppwriteException::COLUMN_INDEX_DEPENDENCY
-                        : AppwriteException::INDEX_DEPENDENCY,
-                    null,
-                    previous: $error
-                );
-                break;
         }
 
         $code = $error->getCode();
