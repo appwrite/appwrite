@@ -59,7 +59,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '16.1.0',
+                'version' => '17.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -77,7 +77,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '10.1.0',
+                'version' => '10.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '7.0.0',
+                'version' => '8.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -231,6 +231,11 @@ return [
                 'gitRepoName' => 'sdk-for-cli',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'exclude' => [
+                    'services' => [
+                        ['name' => 'assistant'],
+                    ],
+                ],
             ],
         ],
     ],
@@ -411,7 +416,7 @@ return [
             [
                 'key' => 'swift',
                 'name' => 'Swift',
-                'version' => '10.0.0',
+                'version' => '10.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-swift',
                 'package' => 'https://github.com/appwrite/sdk-for-swift',
                 'enabled' => true,
