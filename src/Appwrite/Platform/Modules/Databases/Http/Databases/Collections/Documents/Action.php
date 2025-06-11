@@ -18,6 +18,11 @@ abstract class Action extends UtopiaAction
     abstract protected function getResponseModel(): string;
 
     /**
+     * Get the response model used in the SDK and HTTP responses for bulk action.
+     */
+    abstract protected function getBulkResponseModel(): string;
+
+    /**
      * Set the context to either `row` or `document`.
      *
      * @throws \InvalidArgumentException If the context is invalid.
@@ -25,10 +30,20 @@ abstract class Action extends UtopiaAction
     final protected function setContext(string $context): void
     {
         if (!\in_array($context, [DATABASE_ROWS_CONTEXT, DATABASE_DOCUMENTS_CONTEXT], true)) {
-            throw new \InvalidArgumentException("Invalid context '{$context}'. Use `DATABASE_ROWS_CONTEXT` or `DATABASE_DOCUMENTS_CONTEXT`");
+            throw new \InvalidArgumentException("Invalid context '$context'. Use `DATABASE_ROWS_CONTEXT` or `DATABASE_DOCUMENTS_CONTEXT`");
         }
 
         $this->context = $context;
+    }
+
+    /**
+     * Get the plural of the given name.
+     *
+     * Used for endpoints with multiple sdk methods.
+     */
+    final protected function getBulkActionName(string $name): string
+    {
+        return "{$name}s";
     }
 
     /**
@@ -65,6 +80,14 @@ abstract class Action extends UtopiaAction
     final protected function getSdkNamespace(): string
     {
         return $this->isCollectionsAPI() ? 'collections' : 'tables';
+    }
+
+    /**
+     * Get the correct attribute/column structure context for errors.
+     */
+    final protected function getStructureContext(): string
+    {
+        return $this->isCollectionsAPI() ? 'attributes' : 'columns';
     }
 
     /**

@@ -6,6 +6,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Cre
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -14,6 +15,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 
 class Create extends DocumentCreate
@@ -28,6 +30,11 @@ class Create extends DocumentCreate
     protected function getResponseModel(): string
     {
         return UtopiaResponse::MODEL_ROW;
+    }
+
+    protected function getBulkResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_ROW_LIST;
     }
 
     public function __construct()
@@ -57,10 +64,36 @@ class Create extends DocumentCreate
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
-                            model: self::getResponseModel(),
+                            model: $this->getResponseModel(),
                         )
                     ],
-                    contentType: ContentType::JSON
+                    contentType: ContentType::JSON,
+                    parameters: [
+                        new Parameter('databaseId', optional: false),
+                        new Parameter('tableId', optional: false),
+                        new Parameter('rowId', optional: false),
+                        new Parameter('data', optional: false),
+                        new Parameter('permissions', optional: true),
+                    ]
+                ),
+                new Method(
+                    namespace: $this->getSdkNamespace(),
+                    group: $this->getSdkGroup(),
+                    name: $this->getBulkActionName(self::getName()),
+                    description: '/docs/references/databases/create-documents.md',
+                    auth: [AuthType::ADMIN, AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_CREATED,
+                            model: $this->getBulkResponseModel(),
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                    parameters: [
+                        new Parameter('databaseId', optional: false),
+                        new Parameter('tableId', optional: false),
+                        new Parameter('rows', optional: false),
+                    ]
                 )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -68,6 +101,7 @@ class Create extends DocumentCreate
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define columns before creating rows.')
             ->param('data', [], new JSON(), 'Row data as JSON object.')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('rows', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
