@@ -13,7 +13,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
-use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
@@ -592,14 +591,14 @@ abstract class Action extends UtopiaAction
                     formatOptions: $options,
                     newKey: $newKey ?? null
                 );
-            } catch (TruncateException) {
-                throw new Exception($this->getInvalidResizeException());
-            } catch (NotFoundException) {
-                throw new Exception($this->getNotFoundException());
-            } catch (LimitException) {
-                throw new Exception($this->getLimitException());
+            } catch (DuplicateException) {
+                throw new Exception($this->getDuplicateException());
             } catch (IndexException $e) {
                 throw new Exception($this->getInvalidIndexException(), $e->getMessage());
+            } catch (LimitException) {
+                throw new Exception($this->getLimitException());
+            } catch (TruncateException) {
+                throw new Exception($this->getInvalidResizeException());
             }
         }
 
@@ -610,7 +609,11 @@ abstract class Action extends UtopiaAction
                 ->setAttribute('$id', ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $newKey))
                 ->setAttribute('key', $newKey);
 
-            $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+            try {
+                $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+            } catch (DuplicateException) {
+                throw new Exception($this->getDuplicateException());
+            }
 
             /**
              * @var Document $index

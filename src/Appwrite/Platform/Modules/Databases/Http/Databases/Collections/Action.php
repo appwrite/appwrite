@@ -74,6 +74,16 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the appropriate index invalid exception.
+     */
+    final protected function getInvalidIndexException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::INDEX_INVALID
+            : Exception::COLUMN_INDEX_INVALID;
+    }
+
+    /**
      * Get the exception to throw when the resource is not found.
      */
     final protected function getNotFoundException(): string

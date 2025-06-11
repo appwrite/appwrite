@@ -16,6 +16,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -245,12 +246,14 @@ class Create extends Action
 
         try {
             $document = $dbForProject->createDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $document);
-        } catch (StructureException $e) {
-            throw new Exception($this->getInvalidStructureException(), $e->getMessage());
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (NotFoundException) {
             throw new Exception($this->getParentNotFoundException());
+        } catch (RelationshipException $e) {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+        } catch (StructureException $e) {
+            throw new Exception($this->getInvalidStructureException(), $e->getMessage());
         }
 
         // Add $collectionId and $databaseId for all documents

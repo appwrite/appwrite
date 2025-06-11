@@ -1177,13 +1177,6 @@ App::error()
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
-            case 'Utopia\Database\Exception\Duplicate':
-                $error = new AppwriteException(
-                    $isTablesAPI
-                        ? AppwriteException::ROW_ALREADY_EXISTS
-                        : AppwriteException::DOCUMENT_ALREADY_EXISTS
-                );
-                // no break
             case 'Utopia\Database\Exception\Authorization':
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;

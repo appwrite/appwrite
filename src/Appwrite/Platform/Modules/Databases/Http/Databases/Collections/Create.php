@@ -13,7 +13,9 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
@@ -86,6 +88,7 @@ class Create extends Action
 
         $collectionId = $collectionId === 'unique()' ? ID::unique() : $collectionId;
 
+        // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
 
         try {
@@ -103,6 +106,22 @@ class Create extends Action
             $dbForProject->createCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), permissions: $permissions, documentSecurity: $documentSecurity);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
+        } catch (LimitException) {
+            throw new Exception($this->getLimitException());
+        } catch (NotFoundException) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        try {
+            $dbForProject->createCollection(
+                id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                permissions: $permissions,
+                documentSecurity: $documentSecurity
+            );
+        } catch (DuplicateException) {
+            throw new Exception($this->getDuplicateException());
+        } catch (IndexException) {
+            throw new Exception($this->getInvalidIndexException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException());
         }
