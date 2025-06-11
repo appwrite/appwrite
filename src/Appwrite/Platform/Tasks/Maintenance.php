@@ -64,9 +64,9 @@ class Maintenance extends Action
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            // Iterate through project only if it was accessed in last 24 hours
-            $dateInterval  = DateInterval::createFromDateString('24 hours');
-            $before24h = (new DateTime())->sub($dateInterval);
+            // Iterate through project only if it was accessed in last 30 days
+            $dateInterval  = DateInterval::createFromDateString('30 days');
+            $before30days = (new DateTime())->sub($dateInterval);
 
             $dbForPlatform->foreach(
                 'projects',
@@ -80,7 +80,7 @@ class Maintenance extends Action
                 [
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                     Query::limit(100),
-                    Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before24h)),
+                    Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
                     Query::orderAsc('teamInternalId'),
                 ]
             );
