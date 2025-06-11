@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
@@ -74,7 +75,11 @@ class XList extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         \array_push(
             $queries,
@@ -95,33 +100,43 @@ class XList extends Action
             }
 
             $attributeId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(
-                fn () => $dbForProject->find('attributes', [
+            try {
+                $cursorDocument = $dbForProject->findOne('attributes', [
                     Query::equal('databaseInternalId', [$database->getSequence()]),
                     Query::equal('collectionInternalId', [$collection->getSequence()]),
                     Query::equal('key', [$attributeId]),
-                    Query::limit(1),
-                ])
-            );
+                ]);
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
 
-            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '$attributeId' for the 'cursor' value not found.");
             }
 
-            $cursor->setValue($cursorDocument[0]);
+            $cursor->setValue($cursorDocument);
         }
 
-        $filters = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
             $attributes = $dbForProject->find('attributes', $queries);
-            $total = $dbForProject->count('attributes', $filters, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+        } catch (QueryException) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID);
+        }
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
+                $filters = $attribute->getAttribute('filters', []);
+                $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
+            }
         }
 
         $response->dynamic(new Document([

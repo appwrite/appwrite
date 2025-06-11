@@ -77,19 +77,16 @@ class XList extends Action
     public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
 
         $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
-
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException());
         }

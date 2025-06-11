@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
@@ -98,7 +99,10 @@ class XList extends Action
             $total = $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
+        } catch (QueryException) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
+
         $response->dynamic(new Document([
             'databases' => $databases,
             'total' => $total,
