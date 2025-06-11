@@ -142,18 +142,17 @@ class Create extends Base
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getInternalId(),
+            'resourceInternalId' => $function->getSequence(),
             'resourceType' => 'functions',
             'entrypoint' => $function->getAttribute('entrypoint', ''),
             'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'manual',
-            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
             'activate' => $activate,
         ]));
 
         $function = $function
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);

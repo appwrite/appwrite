@@ -125,6 +125,8 @@ class Exception extends \Exception
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
     public const MEMBERSHIP_ALREADY_CONFIRMED      = 'membership_already_confirmed';
+    public const MEMBERSHIP_DELETION_PROHIBITED    = 'membership_deletion_prohibited';
+    public const MEMBERSHIP_DOWNGRADE_PROHIBITED   = 'membership_downgrade_prohibited';
 
     /** Avatars */
     public const AVATAR_SET_NOT_FOUND              = 'avatar_set_not_found';
@@ -356,7 +358,7 @@ class Exception extends \Exception
     /** Tokens */
     public const TOKEN_NOT_FOUND = 'token_not_found';
     public const TOKEN_EXPIRED = 'token_expired';
-
+    public const TOKEN_RESOURCE_TYPE_INVALID = 'token_resource_type_invalid';
 
     protected string $type = '';
     protected array $errors = [];

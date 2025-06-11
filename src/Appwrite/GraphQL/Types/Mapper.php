@@ -117,13 +117,19 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
-                $methodParameters = $method->getParameters();
+                $sdkParameters = $method->getParameters();
 
-                if (!empty($methodParameters)) {
-                    if (!array_key_exists($name, $methodParameters)) {
+                if (!empty($sdkParameters)) {
+                    $sdkMethodParameters = [];
+                    foreach ($sdkParameters as $sdkParameter) {
+                        $sdkMethodParameters[$sdkParameter->getName()] = $sdkParameter;
+                    }
+
+                    if (!\array_key_exists($name, $sdkMethodParameters)) {
                         continue;
                     }
-                    $optional = $methodParameters[$name]['optional'];
+
+                    $optional = $sdkMethodParameters[$name]->getOptional();
                 } else {
                     $optional = $parameter['optional'];
                 }

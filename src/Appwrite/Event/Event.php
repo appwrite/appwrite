@@ -286,13 +286,6 @@ class Event
         return $this;
     }
 
-    public function setParamSensitive(string $key): self
-    {
-        $this->sensitive[$key] = true;
-
-        return $this;
-    }
-
     /**
      * Get param of event.
      *
@@ -327,7 +320,7 @@ class Event
         if ($this->project) {
             $trimmed['project'] = new Document([
                 '$id' => $this->project->getId(),
-                '$internalId' => $this->project->getInternalId(),
+                '$sequence' => $this->project->getSequence(),
                 'database' => $this->project->getAttribute('database')
             ]);
         }

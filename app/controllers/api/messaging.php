@@ -2511,11 +2511,11 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
                 Permission::delete(Role::user($user->getId())),
             ],
             'topicId' => $topicId,
-            'topicInternalId' => $topic->getInternalId(),
+            'topicInternalId' => $topic->getSequence(),
             'targetId' => $targetId,
-            'targetInternalId' => $target->getInternalId(),
+            'targetInternalId' => $target->getSequence(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'providerType' => $target->getAttribute('providerType'),
             'search' => implode(' ', [
                 $subscriberId,
@@ -2597,7 +2597,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $queries[] = Query::equal('topicInternalId', [$topic->getInternalId()]);
+        $queries[] = Query::equal('topicInternalId', [$topic->getSequence()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -2947,7 +2947,7 @@ App::post('/v1/messaging/messages/email')
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
 
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
 
                 if ($file->isEmpty()) {
                     throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -2989,7 +2989,7 @@ App::post('/v1/messaging/messages/email')
                     'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
-                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
@@ -3112,7 +3112,7 @@ App::post('/v1/messaging/messages/sms')
                     'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
-                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
@@ -3232,7 +3232,7 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
             if ($file->isEmpty()) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
@@ -3330,7 +3330,7 @@ App::post('/v1/messaging/messages/push')
                     'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
-                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
@@ -3731,7 +3731,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 'region' => $project->getAttribute('region'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
-                'resourceInternalId' => $message->getInternalId(),
+                'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule' => $scheduledAt,
@@ -3796,7 +3796,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
 
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
 
                 if ($file->isEmpty()) {
                     throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -3933,7 +3933,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 'region' => $project->getAttribute('region'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
-                'resourceInternalId' => $message->getInternalId(),
+                'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule' => $scheduledAt,
@@ -4107,7 +4107,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 'region' => $project->getAttribute('region'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
-                'resourceInternalId' => $message->getInternalId(),
+                'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule' => $scheduledAt,
@@ -4210,7 +4210,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
             if ($file->isEmpty()) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }

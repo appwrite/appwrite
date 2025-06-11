@@ -15,7 +15,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
@@ -49,9 +48,9 @@ class Create extends Action
             group: 'files',
             name: 'createFileToken',
             description: <<<EOT
-            Create a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.
+            Create a new token. A token is linked to a file. Token can be passed as a request URL search parameter.
             EOT,
-            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
@@ -63,15 +62,13 @@ class Create extends Action
         ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
         ->param('fileId', '', new UID(), 'File unique ID.')
         ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
-        ->param('permissions', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
         ->inject('response')
         ->inject('dbForProject')
-        ->inject('user')
         ->inject('queueForEvents')
         ->callback([$this, 'action']);
     }
 
-    public function action(string $bucketId, string $fileId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents)
+    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents): void
     {
 
         /**
@@ -97,10 +94,9 @@ class Create extends Action
             '$id' => ID::unique(),
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
-            'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
+            'resourceInternalId' => $bucket->getSequence() . ':' . $file->getSequence(),
             'resourceType' => TOKENS_RESOURCE_TYPE_FILES,
             'expire' => $expire,
-            '$permissions' => $permissions
         ]));
 
         $queueForEvents

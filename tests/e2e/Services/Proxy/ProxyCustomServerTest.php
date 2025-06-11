@@ -6,8 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\App;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class ProxyCustomServerTest extends Scope
 {
@@ -131,7 +131,9 @@ class ProxyCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301);
+        $siteId = $this->setupSite()['siteId'];
+
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
         $this->assertNotEmpty($ruleId);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
@@ -147,7 +149,7 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
         $domain = \uniqid() . '-redirect-307.custom.localhost';
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307);
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307, 'site', $siteId);
         $this->assertNotEmpty($ruleId);
 
         $proxyClient = new Client();
@@ -158,6 +160,18 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(307, $response['headers']['status-code']);
         $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('type', ['redirect'])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
+                Query::equal('deploymentResourceType', ['site'])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(2, $rules['body']['total']);
+
+        $this->cleanupSite($siteId);
         $this->cleanupRule($ruleId);
     }
 
@@ -328,7 +342,7 @@ class ProxyCustomServerTest extends Scope
     public function testUpdateRule(): void
     {
         // Create function appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_FUNCTIONS');
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);
@@ -337,7 +351,7 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($rule['body']['$id']);
 
         // Create site appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . App::getEnv('_APP_DOMAIN_SITES');
+        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_SITES');
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);

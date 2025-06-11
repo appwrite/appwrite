@@ -106,6 +106,16 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist',
         'fallbackFile' => 'index.html',
     ],
+    'REACT_NATIVE' => [
+        'key' => 'react-native',
+        'name' => 'React Native',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist',
+        'fallbackFile' => '+not-found.html',
+    ],
     'ANGULAR' => [
         'key' => 'angular',
         'name' => 'Angular',
@@ -866,9 +876,8 @@ return [
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-native-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-native-light.png',
         'frameworks' => [
-            getFramework('REACT', [
+            getFramework('REACT_NATIVE', [
                 'providerRootDirectory' => './',
-                'fallbackFile' => '+not-found.html',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -1332,7 +1341,7 @@ return [
         'screenshotDark' => $url . '/images/sites/templates/playground-for-react-native-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/playground-for-react-native-light.png',
         'frameworks' => [
-            getFramework('REACT', [
+            getFramework('REACT_NATIVE', [
                 'providerRootDirectory' => './react-native/starter',
             ]),
         ],
@@ -1341,5 +1350,24 @@ return [
         'providerOwner' => 'appwrite',
         'providerVersion' => '0.3.*',
         'variables' => [],
+    ],
+    [
+        'key' => 'gallery-for-lynx',
+        'name' => 'Lynx gallery',
+        'tagline' => 'A Lynx website showcasing gallery with smooth animations.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/gallery-for-lynx-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/gallery-for-lynx-light.png',
+        'frameworks' => [
+            getFramework('LYNX', [
+                'providerRootDirectory' => './lynx/gallery',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
     ],
 ];

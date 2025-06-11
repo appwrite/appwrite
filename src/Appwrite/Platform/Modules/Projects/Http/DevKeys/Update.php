@@ -65,14 +65,13 @@ class Update extends Action
 
         $key = $dbForPlatform->getDocument('devKeys', $keyId);
 
-        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
         $key
             ->setAttribute('name', $name)
-            ->setAttribute('expire', $expire)
-            ->setAttribute('search', implode('', [$name, $project->getId(), $key->getId()]));
+            ->setAttribute('expire', $expire);
 
         $dbForPlatform->updateDocument('devKeys', $key->getId(), $key);
 

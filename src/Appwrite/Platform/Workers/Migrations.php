@@ -39,6 +39,13 @@ class Migrations extends Action
     protected Document $project;
 
     /**
+     * Cached for performance.
+     *
+     * @var array<string, int>
+     */
+    protected array $sourceReport = [];
+
+    /**
      * @var callable
      */
     protected $logError;
@@ -109,7 +116,7 @@ class Migrations extends Action
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
 
-        return match ($source) {
+        $migrationSource = match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
             ),
@@ -144,6 +151,10 @@ class Migrations extends Action
             ),
             default => throw new \Exception('Invalid source type'),
         };
+
+        $this->sourceReport = $migrationSource->report();
+
+        return $migrationSource;
     }
 
     /**
@@ -262,8 +273,6 @@ class Migrations extends Action
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration, $tempAPIKey);
 
-            $source->report();
-
             $transfer = new Transfer(
                 $source,
                 $destination
@@ -359,7 +368,7 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
             if ($migration->getAttribute('status', '') === 'failed') {
-                Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');
+                Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
                 if ($destination) {
                     $destination->error();

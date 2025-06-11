@@ -107,6 +107,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_SITES',
+                'description' => 'A domain to use for site preview URLs.',
+                'introduction' => '',
+                'default' => 'sites.localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_TARGET',
                 'description' => 'Deprecated since 1.7.0. A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',
@@ -854,7 +863,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'Deprecated since 1.7.0. The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'description' => 'Deprecated since 1.7.0. The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty or 0, CPU limit will be disabled',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -872,7 +881,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY',
-                'description' => 'Deprecated since 1.7.0. The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
+                'description' => 'Deprecated since 1.7.0. The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty or 0, memory limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -1154,9 +1163,18 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_DELAY',
-                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'description' => 'Deprecated with 1.6.2 use _APP_MAINTENANCE_START_TIME instead to run the maintenance at a specific time per day.',
                 'introduction' => '1.5.0',
                 'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_START_TIME',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'introduction' => '1.6.2',
+                'default' => '00:00',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
