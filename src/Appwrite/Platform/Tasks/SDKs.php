@@ -251,7 +251,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
                         'X-Appwrite-Response-Format' => '1.7.0',
-                    ]);
+                    ])
+                    ->setExclude($language['exclude'] ?? []);
 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
