@@ -1177,9 +1177,6 @@ App::error()
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
-            case 'Utopia\Database\Exception\Authorization':
-                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
-                break;
             case 'Utopia\Database\Exception\NotFound':
                 $error = new AppwriteException(
                     $isTablesAPI
