@@ -7,14 +7,14 @@ import (
 )
 
 func main() {
-    client := client.NewClient()
+    client := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        client.WithSession("") // The user session to authenticate with
+        client.WithKey("<YOUR_API_KEY>") // Your secret API key
+        client.WithJWT("<YOUR_JWT>") // Your secret JSON Web Token
+    )
 
-    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetSession("") // The user session to authenticate with
-    client.SetKey("<YOUR_API_KEY>") // Your secret API key
-    client.SetJWT("<YOUR_JWT>") // Your secret JSON Web Token
-
-    service := databases.NewDatabases(client)
+    service := databases.New(client)
     response, error := service.CreateDocument(
         "<DATABASE_ID>",
         "<COLLECTION_ID>",
