@@ -3781,7 +3781,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'queries' => [Query::select(['new_level_2.*'])->toString()]
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
         ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
@@ -3893,7 +3895,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'queries' => [Query::select(['new_level_2.*'])->toString()]
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
         ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
@@ -4005,7 +4009,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'queries' => [Query::select(['new_level_2.*'])->toString()]
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
         ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
@@ -4018,7 +4024,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'queries' => [Query::select(['*', 'level1.*'])->toString()]
+            'queries' => [
+                Query::select(['*', 'level1.*'])->toString()
+            ]
         ]);
 
         $this->assertArrayHasKey('level1', $level2Document['body']);
@@ -4119,7 +4127,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'queries' => [Query::select(['new_level_2.*'])->toString()]
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
         ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
@@ -4132,10 +4142,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'queries' => [Query::select([
-                '*',
-                'level1.*'
-            ])->toString()]
+            'queries' => [
+                Query::select(['*', 'level1.*'])->toString()
+            ]
         ]);
 
         $this->assertArrayHasKey('level1', $level2Document['body']);
