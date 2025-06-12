@@ -27,6 +27,8 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\UR
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\XList as ListAttributes;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CreateCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Delete as DeleteCollection;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute\Decrement as DecrementDocumentAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute\Increment as IncrementDocumentAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Delete as DeleteDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Update as UpdateDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Upsert as UpsertDocuments;
@@ -88,6 +90,9 @@ class Collections extends Base
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
+        $service->addAction(IncrementDocumentAttribute::getName(), new IncrementDocumentAttribute());
+        $service->addAction(DecrementDocumentAttribute::getName(), new DecrementDocumentAttribute());
+
     }
 
     private function registerAttributeActions(Service $service): void

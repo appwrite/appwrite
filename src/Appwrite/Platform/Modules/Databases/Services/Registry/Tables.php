@@ -36,6 +36,8 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Logs\XList as List
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk\Delete as DeleteRows;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk\Update as UpdateRows;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk\Upsert as UpsertRows;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Column\Decrement as DecrementRowColumn;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Column\Increment as IncrementRowColumn;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Create as CreateRow;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Delete as DeleteRow;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Get as GetRow;
@@ -146,5 +148,7 @@ class Tables extends Base
         $service->addAction(DeleteRows::getName(), new DeleteRows());
         $service->addAction(ListRows::getName(), new ListRows());
         $service->addAction(ListRowLogs::getName(), new ListRowLogs());
+        $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn());
+        $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn());
     }
 }

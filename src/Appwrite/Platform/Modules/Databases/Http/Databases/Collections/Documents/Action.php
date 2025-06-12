@@ -97,6 +97,16 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the appropriate attribute/column not found exception.
+     */
+    final protected function getStructureNotFoundException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_NOT_FOUND
+            : Exception::COLUMN_NOT_FOUND;
+    }
+
+    /**
      * Get the appropriate not found exception.
      */
     final protected function getNotFoundException(): string
@@ -154,6 +164,16 @@ abstract class Action extends UtopiaAction
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_MISSING_DATA
             : Exception::ROW_MISSING_DATA;
+    }
+
+    /**
+     * Get the exception to throw when the resource limit is exceeded.
+     */
+    final protected function getLimitException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_LIMIT_EXCEEDED
+            : Exception::COLUMN_LIMIT_EXCEEDED;
     }
 
     /**

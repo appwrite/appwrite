@@ -86,13 +86,17 @@ class Get extends Action
             throw new Exception($this->getNotFoundException());
         }
 
-        foreach ($attribute->getAttribute('options', []) as $optKey => $optVal) {
-            $attribute->setAttribute($optKey, $optVal);
-        }
-
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
+        $options = $attribute->getAttribute('options', []);
+        $filters = $attribute->getAttribute('filters', []);
+        foreach ($options as $key => $option) {
+            $attribute->setAttribute($key, $option);
+        }
+
         $model = $this->getCorrectModel($type, $format);
+
+        $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
 
         $response->dynamic($attribute, $model);
     }

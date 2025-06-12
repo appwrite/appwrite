@@ -1,55 +1,53 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk;
+namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Column;
 
-use Appwrite\Platform\Modules\Databases\Context;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Delete as DocumentsDelete;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute\Decrement as DecrementDocumentAttribute;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Text;
+use Utopia\Validator\Numeric;
 
-class Delete extends DocumentsDelete
+class Decrement extends DecrementDocumentAttribute
 {
     use HTTP;
 
     public static function getName(): string
     {
-        return 'deleteRows';
+        return 'decrementRowColumn';
     }
 
     protected function getResponseModel(): string
     {
-        return UtopiaResponse::MODEL_ROW_LIST;
+        return UtopiaResponse::MODEL_ROW;
     }
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_ROWS);
-
         $this
-            ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows')
-            ->desc('Delete rows')
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId/:column/decrement')
+            ->desc('Decrement row column')
             ->groups(['api', 'database'])
+            ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].decrement')
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('audits.event', 'rows.delete')
+            ->label('audits.event', 'rows.decrement')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/delete-documents.md',
+                description: '/docs/references/databases/decrement-document-attribute.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -60,12 +58,15 @@ class Delete extends DocumentsDelete
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+            ->param('tableId', '', new UID(), 'Table ID.')
+            ->param('rowId', '', new UID(), 'Row ID.')
+            ->param('column', '', new Key(), 'Column key.')
+            ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true)
+            ->param('min', null, new Numeric(), 'Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->inject('plan')
             ->callback($this->action(...));
     }
 }

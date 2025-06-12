@@ -24,6 +24,13 @@ class ColumnString extends Column
                 'required' => false,
                 'example' => 'default',
             ])
+            ->addRule('encrypt', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines whether this column is encrypted or not.',
+                'default' => false,
+                'required' => false,
+                'example' => false,
+            ])
         ;
     }
 
