@@ -38,6 +38,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Delete as Del
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Get as GetRow;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Logs\XList as ListRowLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Update as UpdateRow;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Upsert as UpsertRow;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\XList as ListRows;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Update as UpdateTable;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Usage\Get as GetTableUsage;
@@ -135,6 +136,7 @@ class Tables extends Base
         $service->addAction(CreateRow::getName(), new CreateRow());
         $service->addAction(GetRow::getName(), new GetRow());
         $service->addAction(UpdateRow::getName(), new UpdateRow());
+        $service->addAction(UpsertRow::getName(), new UpsertRow());
         $service->addAction(DeleteRow::getName(), new DeleteRow());
         $service->addAction(ListRows::getName(), new ListRows());
         $service->addAction(ListRowLogs::getName(), new ListRowLogs());

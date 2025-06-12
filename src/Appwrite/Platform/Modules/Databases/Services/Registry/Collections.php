@@ -31,6 +31,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Cre
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Get as GetDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Update as UpdateDocument;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList as ListDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Get as GetCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Create as CreateIndex;
@@ -78,6 +79,7 @@ class Collections extends Base
         $service->addAction(CreateDocument::getName(), new CreateDocument());
         $service->addAction(GetDocument::getName(), new GetDocument());
         $service->addAction(UpdateDocument::getName(), new UpdateDocument());
+        $service->addAction(UpsertDocument::getName(), new UpsertDocument());
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
     }
