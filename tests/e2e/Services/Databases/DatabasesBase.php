@@ -1905,10 +1905,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select([
-                    'fullName',
-                    'library.libraryName',
-                ])->toString(),
+                Query::select(['fullName', 'library.*'])->toString(),
                 Query::equal('library', ['library1'])->toString(),
             ],
         ]);
