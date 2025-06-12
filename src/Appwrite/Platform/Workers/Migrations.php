@@ -185,13 +185,33 @@ class Migrations extends Action
      */
     protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
+        $errorMessages = [];
+        $clonedMigrationDocument = clone $migration;
+
+        // we cannot use #sensitive because
+        // `errors` is nested which requires an override.
+        $errors = $clonedMigrationDocument->getAttribute('errors', []);
+
+        foreach ($errors as $error) {
+            $decoded = json_decode($error, true);
+
+            if (is_array($decoded) && isset($decoded['trace'])) {
+                unset($decoded['trace']);
+                $errorMessages[] = json_encode($decoded);
+            }
+        }
+
+        // set the errors back without trace
+        $clonedMigrationDocument->setAttribute('errors', $errorMessages);
+
+
         /** Trigger Realtime Events */
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
             ->setEvent('migrations.[migrationId].update')
             ->setParam('migrationId', $migration->getId())
-            ->setPayload($migration->getArrayCopy())
+            ->setPayload($clonedMigrationDocument->getArrayCopy(), ['options', 'credentials'])
             ->trigger();
 
         return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
@@ -305,14 +325,13 @@ class Migrations extends Action
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
-                    $errorMessages[] = $error->jsonSerialize();
+                    $errorMessages[] = json_encode($error);
                 }
                 foreach ($destinationErrors as $error) {
-                    $errorMessages[] = $error->jsonSerialize();
+                    $errorMessages[] = json_encode($error);
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
-                $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
                 return;
             }
@@ -342,10 +361,10 @@ class Migrations extends Action
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
-                    $errorMessages[] = $error->jsonSerialize();
+                    $errorMessages[] = json_encode($error);
                 }
                 foreach ($destinationErrors as $error) {
-                    $errorMessages[] = $error->jsonSerialize();
+                    $errorMessages[] = json_encode($error);
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
