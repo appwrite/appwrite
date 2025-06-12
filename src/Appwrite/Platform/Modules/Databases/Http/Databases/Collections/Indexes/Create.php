@@ -22,6 +22,8 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -70,6 +72,7 @@ class Create extends Action
             ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
             ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
+            ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
@@ -77,7 +80,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -103,7 +106,7 @@ class Create extends Action
             throw new Exception($this->getLimitException(), 'Index limit exceeded');
         }
 
-        // Convert Document[] to array of attribute metadata
+        // Convert Document array to array of attribute metadata
         $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
 
         $oldAttributes[] = [
@@ -137,9 +140,6 @@ class Create extends Action
             'default' => null,
             'size' => 0
         ];
-
-        // lengths hidden by default
-        $lengths = [];
 
         $contextType = $this->getParentContext();
         foreach ($attributes as $i => $attribute) {
@@ -191,6 +191,7 @@ class Create extends Action
             $dbForProject->getAdapter()->getMaxIndexLength(),
             $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
+
         if (!$validator->isValid($index)) {
             throw new Exception($this->getInvalidTypeException(), $validator->getDescription());
         }
