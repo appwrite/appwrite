@@ -47,7 +47,7 @@ class Upsert extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-            ->desc('Upsert document')
+            ->desc('Create or update a document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
             ->label('scope', 'documents.write')
