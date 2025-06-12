@@ -36,6 +36,31 @@ class V16Test extends TestCase
                     'buildStderr' => '',
                 ],
             ],
+            'size and buildSize' => [
+                [
+                    'size' => 20,
+                    'buildSize' => 40
+                ],
+                [
+                    'size' => 60
+                ],
+            ],
+
+            'size and buildSize missing' => [
+                [
+                    'size' => 20
+                ],
+                [
+                    'size' => 20
+                ],
+            ],
+
+            'empty no errors' => [
+                [
+                ],
+                [
+                ],
+            ],
         ];
     }
 

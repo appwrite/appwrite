@@ -1,0 +1,1 @@
+Reset a custom SMS template to its default value. This endpoint removes any custom message and restores the template to its original state. 

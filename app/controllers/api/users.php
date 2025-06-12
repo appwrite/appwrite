@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
@@ -8,14 +9,21 @@ use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
+use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
@@ -28,6 +36,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -35,10 +44,12 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -48,7 +59,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): Document
+function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
 {
     $plaintextPassword = $password;
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
@@ -61,7 +72,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
         ]);
-        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+        if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
     }
@@ -138,7 +149,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if($existingTarget) {
+                if (!$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -162,7 +173,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                if($existingTarget) {
+                if (!$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -173,25 +184,28 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         throw new Exception(Exception::USER_ALREADY_EXISTS);
     }
 
-    $queueForEvents->setParam('userId', $user->getId());
-
     return $user;
 }
 
 App::post('/v1/users')
     ->desc('Create user')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/users/create-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'create',
+        description: '/docs/references/users/create-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', null, new Email(), 'User email.', true)
     ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
@@ -200,10 +214,9 @@ App::post('/v1/users')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
-        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -212,17 +225,22 @@ App::post('/v1/users')
 App::post('/v1/users/bcrypt')
     ->desc('Create user with bcrypt password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createBcryptUser')
-    ->label('sdk.description', '/docs/references/users/create-bcrypt-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'createBcryptUser',
+        description: '/docs/references/users/create-bcrypt-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
@@ -230,10 +248,9 @@ App::post('/v1/users/bcrypt')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
-        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -243,17 +260,22 @@ App::post('/v1/users/bcrypt')
 App::post('/v1/users/md5')
     ->desc('Create user with MD5 password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createMD5User')
-    ->label('sdk.description', '/docs/references/users/create-md5-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'createMD5User',
+        description: '/docs/references/users/create-md5-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using MD5.')
@@ -261,10 +283,9 @@ App::post('/v1/users/md5')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
-        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -274,17 +295,22 @@ App::post('/v1/users/md5')
 App::post('/v1/users/argon2')
     ->desc('Create user with Argon2 password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createArgon2User')
-    ->label('sdk.description', '/docs/references/users/create-argon2-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'createArgon2User',
+        description: '/docs/references/users/create-argon2-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Argon2.')
@@ -292,10 +318,9 @@ App::post('/v1/users/argon2')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
-        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -305,17 +330,22 @@ App::post('/v1/users/argon2')
 App::post('/v1/users/sha')
     ->desc('Create user with SHA password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createSHAUser')
-    ->label('sdk.description', '/docs/references/users/create-sha-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'createSHAUser',
+        description: '/docs/references/users/create-sha-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using SHA.')
@@ -324,16 +354,15 @@ App::post('/v1/users/sha')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $options = '{}';
 
         if (!empty($passwordVersion)) {
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
+        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -343,17 +372,22 @@ App::post('/v1/users/sha')
 App::post('/v1/users/phpass')
     ->desc('Create user with PHPass password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createPHPassUser')
-    ->label('sdk.description', '/docs/references/users/create-phpass-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'createPHPassUser',
+        description: '/docs/references/users/create-phpass-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using PHPass.')
@@ -361,10 +395,9 @@ App::post('/v1/users/phpass')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
-        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -374,17 +407,22 @@ App::post('/v1/users/phpass')
 App::post('/v1/users/scrypt')
     ->desc('Create user with Scrypt password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createScryptUser')
-    ->label('sdk.description', '/docs/references/users/create-scrypt-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'createScryptUser',
+        description: '/docs/references/users/create-scrypt-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
@@ -397,9 +435,8 @@ App::post('/v1/users/scrypt')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $options = [
             'salt' => $passwordSalt,
             'costCpu' => $passwordCpu,
@@ -408,7 +445,7 @@ App::post('/v1/users/scrypt')
             'length' => $passwordLength
         ];
 
-        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
+        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -418,17 +455,22 @@ App::post('/v1/users/scrypt')
 App::post('/v1/users/scrypt-modified')
     ->desc('Create user with Scrypt modified password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createScryptModifiedUser')
-    ->label('sdk.description', '/docs/references/users/create-scrypt-modified-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'createScryptModifiedUser',
+        description: '/docs/references/users/create-scrypt-modified-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt Modified.')
@@ -439,10 +481,9 @@ App::post('/v1/users/scrypt-modified')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
-        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -450,19 +491,25 @@ App::post('/v1/users/scrypt-modified')
     });
 
 App::post('/v1/users/:userId/targets')
-    ->desc('Create User Target')
+    ->desc('Create user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
     ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('scope', 'targets.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createTarget')
-    ->label('sdk.description', '/docs/references/users/create-target.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'targets',
+        name: 'createTarget',
+        description: '/docs/references/users/create-target.md',
+        auth: [AuthType::KEY, AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TARGET,
+            )
+        ]
+    ))
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('providerType', '', new WhiteList([MESSAGE_TYPE_EMAIL, MESSAGE_TYPE_SMS, MESSAGE_TYPE_PUSH]), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
@@ -542,13 +589,19 @@ App::get('/v1/users')
     ->desc('List users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/users/list-users.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER_LIST)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'list',
+        description: '/docs/references/users/list-users.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Users(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -574,6 +627,12 @@ App::get('/v1/users')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $userId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('users', $userId);
 
@@ -585,10 +644,15 @@ App::get('/v1/users')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $users = $dbForProject->find('users', $queries);
+            $total = $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'users' => $dbForProject->find('users', $queries),
-            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
+            'users' => $users,
+            'total' => $total,
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -596,13 +660,19 @@ App::get('/v1/users/:userId')
     ->desc('Get user')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/users/get-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'get',
+        description: '/docs/references/users/get-user.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -621,13 +691,19 @@ App::get('/v1/users/:userId/prefs')
     ->desc('Get user preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'getPrefs')
-    ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'getPrefs',
+        description: '/docs/references/users/get-user-prefs.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -645,16 +721,22 @@ App::get('/v1/users/:userId/prefs')
     });
 
 App::get('/v1/users/:userId/targets/:targetId')
-    ->desc('Get User Target')
+    ->desc('Get user target')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'getTarget')
-    ->label('sdk.description', '/docs/references/users/get-user-target.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'targets',
+        name: 'getTarget',
+        description: '/docs/references/users/get-user-target.md',
+        auth: [AuthType::KEY, AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('response')
@@ -680,13 +762,19 @@ App::get('/v1/users/:userId/sessions')
     ->desc('List user sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listSessions')
-    ->label('sdk.description', '/docs/references/users/list-user-sessions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'sessions',
+        name: 'listSessions',
+        description: '/docs/references/users/list-user-sessions.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SESSION_LIST,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -721,23 +809,44 @@ App::get('/v1/users/:userId/memberships')
     ->desc('List user memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listMemberships')
-    ->label('sdk.description', '/docs/references/users/list-user-memberships.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'memberships',
+        name: 'listMemberships',
+        description: '/docs/references/users/list-user-memberships.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP_LIST,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
+    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, array $queries, string $search, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        if (!empty($search)) {
+            $queries[] = Query::search('search', $search);
+        }
+
+        // Set internal queries
+        $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
 
         $memberships = array_map(function ($membership) use ($dbForProject, $user) {
             $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
@@ -748,7 +857,7 @@ App::get('/v1/users/:userId/memberships')
                 ->setAttribute('userEmail', $user->getAttribute('email'));
 
             return $membership;
-        }, $user->getAttribute('memberships', []));
+        }, $dbForProject->find('memberships', $queries));
 
         $response->dynamic(new Document([
             'memberships' => $memberships,
@@ -760,13 +869,19 @@ App::get('/v1/users/:userId/logs')
     ->desc('List user logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listLogs')
-    ->label('sdk.description', '/docs/references/users/list-user-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'logs',
+        name: 'listLogs',
+        description: '/docs/references/users/list-user-logs.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -787,13 +902,15 @@ App::get('/v1/users/:userId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
 
         $output = [];
 
@@ -840,22 +957,28 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
 App::get('/v1/users/:userId/targets')
-    ->desc('List User Targets')
+    ->desc('List user targets')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listTargets')
-    ->label('sdk.description', '/docs/references/users/list-user-targets.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'targets',
+        name: 'listTargets',
+        description: '/docs/references/users/list-user-targets.md',
+        auth: [AuthType::KEY, AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET_LIST,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
@@ -884,6 +1007,11 @@ App::get('/v1/users/:userId/targets')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $targetId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('targets', $targetId);
 
@@ -893,24 +1021,35 @@ App::get('/v1/users/:userId/targets')
 
             $cursor->setValue($cursorDocument);
         }
-
+        try {
+            $targets = $dbForProject->find('targets', $queries);
+            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'targets' => $dbForProject->find('targets', $queries),
-            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
+            'targets' => $targets,
+            'total' => $total,
         ]), Response::MODEL_TARGET_LIST);
     });
 
 App::get('/v1/users/identities')
-    ->desc('List Identities')
+    ->desc('List identities')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listIdentities')
-    ->label('sdk.description', '/docs/references/users/list-identities.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_IDENTITY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'identities',
+        name: 'listIdentities',
+        description: '/docs/references/users/list-identities.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_IDENTITY_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -936,6 +1075,12 @@ App::get('/v1/users/identities')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $identityId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('identities', $identityId);
 
@@ -947,10 +1092,15 @@ App::get('/v1/users/identities')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $identities = $dbForProject->find('identities', $queries);
+            $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'identities' => $dbForProject->find('identities', $queries),
-            'total' => $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT),
+            'identities' => $identities,
+            'total' => $total,
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
@@ -962,13 +1112,19 @@ App::patch('/v1/users/:userId/status')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateStatus')
-    ->label('sdk.description', '/docs/references/users/update-user-status.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateStatus',
+        description: '/docs/references/users/update-user-status.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
     ->inject('response')
@@ -997,13 +1153,19 @@ App::put('/v1/users/:userId/labels')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateLabels')
-    ->label('sdk.description', '/docs/references/users/update-user-labels.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateLabels',
+        description: '/docs/references/users/update-user-labels.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_LABELS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_LABELS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
     ->inject('response')
@@ -1034,13 +1196,19 @@ App::patch('/v1/users/:userId/verification/phone')
     ->label('scope', 'users.write')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updatePhoneVerification')
-    ->label('sdk.description', '/docs/references/users/update-user-phone-verification.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updatePhoneVerification',
+        description: '/docs/references/users/update-user-phone-verification.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('phoneVerification', false, new Boolean(), 'User phone verification status.')
     ->inject('response')
@@ -1070,13 +1238,19 @@ App::patch('/v1/users/:userId/name')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateName')
-    ->label('sdk.description', '/docs/references/users/update-user-name.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateName',
+        description: '/docs/references/users/update-user-name.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('name', '', new Text(128, 0), 'User name. Max length: 128 chars.')
     ->inject('response')
@@ -1107,13 +1281,19 @@ App::patch('/v1/users/:userId/password')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updatePassword')
-    ->label('sdk.description', '/docs/references/users/update-user-password.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updatePassword',
+        description: '/docs/references/users/update-user-password.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
@@ -1184,13 +1364,19 @@ App::patch('/v1/users/:userId/email')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateEmail')
-    ->label('sdk.description', '/docs/references/users/update-user-email.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateEmail',
+        description: '/docs/references/users/update-user-email.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('email', '', new Email(allowEmpty: true), 'User email.')
     ->inject('response')
@@ -1212,7 +1398,7 @@ App::patch('/v1/users/:userId/email')
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
@@ -1278,13 +1464,19 @@ App::patch('/v1/users/:userId/phone')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updatePhone')
-    ->label('sdk.description', '/docs/references/users/update-user-phone.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updatePhone',
+        description: '/docs/references/users/update-user-phone.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('number', '', new Phone(allowEmpty: true), 'User phone number.')
     ->inject('response')
@@ -1362,13 +1554,19 @@ App::patch('/v1/users/:userId/verification')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('audits.userId', '{request.userId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateEmailVerification')
-    ->label('sdk.description', '/docs/references/users/update-user-email-verification.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateEmailVerification',
+        description: '/docs/references/users/update-user-email-verification.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('emailVerification', false, new Boolean(), 'User email verification status.')
     ->inject('response')
@@ -1394,13 +1592,19 @@ App::patch('/v1/users/:userId/prefs')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updatePrefs')
-    ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updatePrefs',
+        description: '/docs/references/users/update-user-prefs.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
@@ -1423,19 +1627,25 @@ App::patch('/v1/users/:userId/prefs')
     });
 
 App::patch('/v1/users/:userId/targets/:targetId')
-    ->desc('Update User target')
+    ->desc('Update user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
     ->label('event', 'users.[userId].targets.[targetId].update')
     ->label('scope', 'targets.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateTarget')
-    ->label('sdk.description', '/docs/references/users/update-target.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'targets',
+        name: 'updateTarget',
+        description: '/docs/references/users/update-target.md',
+        auth: [AuthType::KEY, AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
@@ -1483,7 +1693,9 @@ App::patch('/v1/users/:userId/targets/:targetId')
                     throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
             }
 
-            $target->setAttribute('identifier', $identifier);
+            $target
+                ->setAttribute('identifier', $identifier)
+                ->setAttribute('expired', false);
         }
 
         if ($providerId) {
@@ -1497,8 +1709,9 @@ App::patch('/v1/users/:userId/targets/:targetId')
                 throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
             }
 
-            $target->setAttribute('providerId', $provider->getId());
-            $target->setAttribute('providerInternalId', $provider->getInternalId());
+            $target
+                ->setAttribute('providerId', $provider->getId())
+                ->setAttribute('providerInternalId', $provider->getInternalId());
         }
 
         if ($name) {
@@ -1525,13 +1738,19 @@ App::patch('/v1/users/:userId/mfa')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateMfa')
-    ->label('sdk.description', '/docs/references/users/update-user-mfa.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateMfa',
+        description: '/docs/references/users/update-user-mfa.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
     ->inject('response')
@@ -1555,17 +1774,23 @@ App::patch('/v1/users/:userId/mfa')
     });
 
 App::get('/v1/users/:userId/mfa/factors')
-    ->desc('List Factors')
+    ->desc('List factors')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listMfaFactors')
-    ->label('sdk.description', '/docs/references/users/list-mfa-factors.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'mfa',
+        name: 'listMfaFactors',
+        description: '/docs/references/users/list-mfa-factors.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_FACTORS,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1588,17 +1813,23 @@ App::get('/v1/users/:userId/mfa/factors')
     });
 
 App::get('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Get MFA Recovery Codes')
+    ->desc('Get MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'getMfaRecoveryCodes')
-    ->label('sdk.description', '/docs/references/users/get-mfa-recovery-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'mfa',
+        name: 'getMfaRecoveryCodes',
+        description: '/docs/references/users/get-mfa-recovery-codes.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1623,7 +1854,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::patch('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Create MFA Recovery Codes')
+    ->desc('Create MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create.mfa.recovery-codes')
     ->label('scope', 'users.write')
@@ -1631,13 +1862,19 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createMfaRecoveryCodes')
-    ->label('sdk.description', '/docs/references/users/create-mfa-recovery-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'mfa',
+        name: 'createMfaRecoveryCodes',
+        description: '/docs/references/users/create-mfa-recovery-codes.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1669,7 +1906,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::put('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Regenerate MFA Recovery Codes')
+    ->desc('Update MFA recovery codes (regenerate)')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.mfa.recovery-codes')
     ->label('scope', 'users.write')
@@ -1677,13 +1914,19 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateMfaRecoveryCodes')
-    ->label('sdk.description', '/docs/references/users/update-mfa-recovery-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'mfa',
+        name: 'updateMfaRecoveryCodes',
+        description: '/docs/references/users/update-mfa-recovery-codes.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1714,7 +1957,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::delete('/v1/users/:userId/mfa/authenticators/:type')
-    ->desc('Delete Authenticator')
+    ->desc('Delete authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')
@@ -1722,13 +1965,20 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteMfaAuthenticator')
-    ->label('sdk.description', '/docs/references/users/delete-mfa-authenticator.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'mfa',
+        name: 'deleteMfaAuthenticator',
+        description: '/docs/references/users/delete-mfa-authenticator.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
@@ -1763,13 +2013,19 @@ App::post('/v1/users/:userId/sessions')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createSession')
-    ->label('sdk.description', '/docs/references/users/create-session.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'sessions',
+        name: 'createSession',
+        description: '/docs/references/users/create-session.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ]
+    ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->inject('request')
     ->inject('response')
@@ -1784,7 +2040,7 @@ App::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
@@ -1799,20 +2055,30 @@ App::post('/v1/users/:userId/sessions')
                 'provider' => Auth::SESSION_PROVIDER_SERVER,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'factors' => ['server'],
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire,
             ],
             $detector->getOS(),
             $detector->getClient(),
             $detector->getDevice()
         ));
 
+        $session->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
+
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session = $dbForProject->createDocument('sessions', $session);
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
         $session
-            ->setAttribute('secret', $secret)
-            ->setAttribute('expire', $expire)
+            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
@@ -1832,13 +2098,19 @@ App::post('/v1/users/:userId/tokens')
     ->label('scope', 'users.write')
     ->label('audits.event', 'tokens.create')
     ->label('audits.resource', 'user/{request.userId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createToken')
-    ->label('sdk.description', '/docs/references/users/create-token.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TOKEN)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'sessions',
+        name: 'createToken',
+        description: '/docs/references/users/create-token.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ]
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters', true)
     ->param('expire', Auth::TOKEN_EXPIRATION_GENERIC, new Range(60, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
@@ -1889,12 +2161,20 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('scope', 'users.write')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteSession')
-    ->label('sdk.description', '/docs/references/users/delete-user-session.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'sessions',
+        name: 'deleteSession',
+        description: '/docs/references/users/delete-user-session.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('sessionId', '', new UID(), 'Session ID.')
     ->inject('response')
@@ -1932,12 +2212,20 @@ App::delete('/v1/users/:userId/sessions')
     ->label('scope', 'users.write')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteSessions')
-    ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'sessions',
+        name: 'deleteSessions',
+        description: '/docs/references/users/delete-user-sessions.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1974,12 +2262,20 @@ App::delete('/v1/users/:userId')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{request.userId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/users/delete.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'delete',
+        description: '/docs/references/users/delete.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1997,6 +2293,8 @@ App::delete('/v1/users/:userId')
         $clone = clone $user;
 
         $dbForProject->deleteDocument('users', $userId);
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getInternalId()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getInternalId()]));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -2016,13 +2314,20 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->label('audits.resource', 'target/{request.$targetId}')
     ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('scope', 'targets.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteTarget')
-    ->label('sdk.description', '/docs/references/users/delete-target.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'targets',
+        name: 'deleteTarget',
+        description: '/docs/references/users/delete-target.md',
+        auth: [AuthType::KEY, AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('queueForEvents')
@@ -2067,12 +2372,20 @@ App::delete('/v1/users/identities/:identityId')
     ->label('scope', 'users.write')
     ->label('audits.event', 'identity.delete')
     ->label('audits.resource', 'identity/{request.$identityId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteIdentity')
-    ->label('sdk.description', '/docs/references/users/delete-identity.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'identities',
+        name: 'deleteIdentity',
+        description: '/docs/references/users/delete-identity.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE,
+    ))
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -2095,16 +2408,79 @@ App::delete('/v1/users/identities/:identityId')
         return $response->noContent();
     });
 
+App::post('/v1/users/:userId/jwts')
+    ->desc('Create user JWT')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.write')
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'sessions',
+        name: 'createJWT',
+        description: '/docs/references/users/create-user-jwt.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_JWT,
+            )
+        ]
+    ))
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('sessionId', '', new UID(), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true)
+    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $session = new Document();
+
+        if ($sessionId === 'recent') {
+            // Get most recent
+            $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
+        } else {
+            // Find by ID
+            foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
+                if ($loopSession->getId() == $sessionId) {
+                    $session = $loopSession;
+                    break;
+                }
+            }
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+                'userId' => $user->getId(),
+                'sessionId' => $session->isEmpty() ? '' : $session->getId()
+            ])]), Response::MODEL_JWT);
+    });
+
 App::get('/v1/users/usage')
     ->desc('Get users usage stats')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: null,
+        name: 'getUsage',
+        description: '/docs/references/users/get-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_USERS,
+            )
+        ]
+    ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')

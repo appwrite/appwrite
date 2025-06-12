@@ -290,6 +290,44 @@ trait UsersBase
         $this->assertArrayNotHasKey('secret', $token['body']);
     }
 
+    /**
+     * @depends testCreateUser
+     */
+    public function testCreateSession(array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['body'];
+        $this->assertEquals($data['userId'], $session['userId']);
+        $this->assertNotEmpty($session['secret']);
+        $this->assertNotEmpty($session['expire']);
+        $this->assertEquals('server', $session['provider']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
 
     /**
      * Tests all optional parameters of createUser (email, phone, anonymous..)
@@ -766,6 +804,97 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    public function testListUserMemberships(array $data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        // create a new team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'unique()',
+            'name' => 'Test Team',
+        ]);
+
+        // create a new membership
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $data['userId'],
+            'roles' => ['new-role'],
+        ]);
+
+        // list the memberships
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['memberships'][0]['$id'], $membership['body']['$id']);
+        $this->assertEquals($response['body']['memberships'][0]['roles'], ['new-role']);
+        $this->assertEquals($response['body']['total'], 1);
+
+        // create another membership with a new role
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'unique()',
+            'name' => 'Test Team 2',
+        ]);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $data['userId'],
+            'roles' => ['new-role-2'],
+        ]);
+
+        // list out memberships and query by role
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('roles', ['new-role-2'])->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['memberships'][0]['$id'], $membership['body']['$id']);
+        $this->assertEquals($response['body']['memberships'][0]['roles'], ['new-role-2']);
+        $this->assertEquals($response['body']['total'], 1);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // query using equal on array field
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('roles', ['new-role-2'])->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['body']['code'], 400);
+        $this->assertEquals($response['body']['message'], 'Invalid `queries` param: Invalid query: Cannot query equal on attribute "roles" because it is an array.');
+        $this->assertEquals($response['body']['type'], 'general_argument_invalid');
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
     public function testUpdateUserName(array $data): array
     {
         /**
@@ -977,6 +1106,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertEmpty($user['body']['password']);
+        sleep(5);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
@@ -986,7 +1116,7 @@ trait UsersBase
             'password' => 'password'
         ]);
 
-        $this->assertEquals($session['headers']['status-code'], 401);
+        $this->assertEquals(401, $session['headers']['status-code']);
 
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
@@ -1475,6 +1605,7 @@ trait UsersBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
+        $this->assertEquals(false, $response['body']['expired']);
         return $response['body'];
     }
 
@@ -1487,6 +1618,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, \count($response['body']['targets']));
     }
@@ -1551,6 +1683,180 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 404);
 
         return $data;
+    }
+
+    public function testUserJWT()
+    {
+        // Create user
+        $userId = ID::unique();
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $userId,
+            'email' => 'jwtuser@appwrite.io',
+            'password' => 'password',
+        ], false);
+        $this->assertEquals($user['headers']['status-code'], 201);
+
+        // Create JWT 0, with no session available
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt0 = $response['body']['jwt'];
+
+        // Ensure JWT 0 works
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt0,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
+
+        // Create two sessions
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'jwtuser@appwrite.io',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['userId']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $session1Id = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'jwtuser@appwrite.io',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['userId']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $session2Id = $response['body']['$id'];
+
+        // Create JWT 1 for older session by ID
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'sessionId' => $session1Id
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt1 = $response['body']['jwt'];
+
+        // Ensure JWT 1 works
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt1,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
+
+        // Create JWT 2 for latest session using 'current' param
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'duration' => 5,
+            'sessionId' => 'current'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt2 = $response['body']['jwt'];
+
+        // Ensure JWT 2 works
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt2,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
+
+        // Wait, ensure JWT 2 no longer works because of short duration
+
+        \sleep(10);
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt2,
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Delete session, ensure JWT 1 no longer works because of session missing
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'sessionId' => $session1Id
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt1,
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Ensure JWT 0 works still even with no sessions
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'sessionId' => $session2Id
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt0,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
+
+        // Cleanup after test
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 204);
     }
 
     // TODO add test for session delete

@@ -8,7 +8,10 @@ class Executions extends Base
         'trigger',
         'status',
         'responseStatusCode',
-        'duration'
+        'duration',
+        'requestMethod',
+        'requestPath',
+        'deploymentId'
     ];
 
     /**

@@ -39,6 +39,7 @@ class Exception extends \Exception
     public const GENERAL_UNKNOWN                   = 'general_unknown';
     public const GENERAL_MOCK                      = 'general_mock';
     public const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
+    public const GENERAL_RESOURCE_BLOCKED          = 'general_resource_blocked';
     public const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
     public const GENERAL_API_DISABLED              = 'general_api_disabled';
     public const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
@@ -107,14 +108,18 @@ class Exception extends \Exception
     public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
     public const USER_API_KEY_AND_SESSION_SET      = 'user_key_and_session_set';
 
+    public const API_KEY_EXPIRED      = 'api_key_expired';
+
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
-    public const TEAM_INVITE_ALREADY_EXISTS        = 'team_invite_already_exists';
     public const TEAM_INVITE_NOT_FOUND             = 'team_invite_not_found';
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
     public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
+
+    /** Console */
+    public const RESOURCE_ALREADY_EXISTS           = 'resource_already_exists';
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
@@ -149,11 +154,18 @@ class Exception extends \Exception
     public const PROVIDER_CONTRIBUTION_CONFLICT    = 'provider_contribution_conflict';
     public const GENERAL_PROVIDER_FAILURE          = 'general_provider_failure';
 
+    /** Sites */
+    public const SITE_NOT_FOUND                    = 'site_not_found';
+    public const SITE_TEMPLATE_NOT_FOUND           = 'site_template_not_found';
+
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
     public const FUNCTION_ENTRYPOINT_MISSING       = 'function_entrypoint_missing';
     public const FUNCTION_SYNCHRONOUS_TIMEOUT      = 'function_synchronous_timeout';
+    public const FUNCTION_TEMPLATE_NOT_FOUND       = 'function_template_not_found';
+    public const FUNCTION_RUNTIME_NOT_DETECTED     = 'function_runtime_not_detected';
+    public const FUNCTION_EXECUTE_PERMISSION_MISSING = 'function_execute_permission_missing';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -162,14 +174,22 @@ class Exception extends \Exception
     public const BUILD_NOT_FOUND                   = 'build_not_found';
     public const BUILD_NOT_READY                   = 'build_not_ready';
     public const BUILD_IN_PROGRESS                 = 'build_in_progress';
+    public const BUILD_ALREADY_COMPLETED           = 'build_already_completed';
+    public const BUILD_CANCELED                    = 'build_canceled';
+    public const BUILD_FAILED                      = 'build_failed';
 
     /** Execution */
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
+    public const EXECUTION_IN_PROGRESS             = 'execution_in_progress';
+
+    /** Log */
+    public const LOG_NOT_FOUND                     = 'log_not_found';
 
     /** Databases */
     public const DATABASE_NOT_FOUND                = 'database_not_found';
     public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';
     public const DATABASE_TIMEOUT                  = 'database_timeout';
+    public const DATABASE_QUERY_ORDER_NULL         = 'database_query_order_null';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
@@ -195,6 +215,7 @@ class Exception extends \Exception
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
+    public const ATTRIBUTE_INVALID_RESIZE          = 'attribute_invalid_resize';
 
     /** Relationship */
     public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
@@ -204,6 +225,7 @@ class Exception extends \Exception
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     public const INDEX_ALREADY_EXISTS              = 'index_already_exists';
     public const INDEX_INVALID                     = 'index_invalid';
+    public const INDEX_DEPENDENCY                  = 'index_dependency';
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
@@ -240,6 +262,7 @@ class Exception extends \Exception
     /** Variables */
     public const VARIABLE_NOT_FOUND                = 'variable_not_found';
     public const VARIABLE_ALREADY_EXISTS           = 'variable_already_exists';
+    public const VARIABLE_CANNOT_UNSET_SECRET      = 'variable_cannot_unset_secret';
 
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
@@ -296,19 +319,26 @@ class Exception extends \Exception
     /** Schedules */
     public const SCHEDULE_NOT_FOUND                = 'schedule_not_found';
 
+    /** Tokens */
+    public const TOKEN_NOT_FOUND = 'token_not_found';
+    public const TOKEN_EXPIRED = 'token_expired';
+    public const TOKEN_RESOURCE_TYPE_INVALID = 'token_resource_type_invalid';
 
     protected string $type = '';
     protected array $errors = [];
     protected bool $publish;
+    private array $ctas = [];
+    private ?string $view = null;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null, ?string $view = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
+        $this->view = $view;
         $this->code = $code ?? $this->errors[$type]['code'];
 
         // Mark string errors like HY001 from PDO as 500 errors
-        if(\is_string($this->code)) {
+        if (\is_string($this->code)) {
             if (\is_numeric($this->code)) {
                 $this->code = (int) $this->code;
             } else {
@@ -353,5 +383,24 @@ class Exception extends \Exception
     public function isPublishable(): bool
     {
         return $this->publish;
+    }
+
+    public function addCTA(string $label, ?string $url = null): self
+    {
+        $this->ctas[] = [
+            'label' => $label,
+            'url' => $url
+        ];
+        return $this;
+    }
+
+    public function getCTAs(): array
+    {
+        return $this->ctas;
+    }
+
+    public function getView(): ?string
+    {
+        return $this->view;
     }
 }

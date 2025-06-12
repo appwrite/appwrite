@@ -2,8 +2,11 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Auth\Auth;
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
 
@@ -27,13 +30,49 @@ class Request extends UtopiaRequest
     {
         $parameters = parent::getParams();
 
-        if ($this->hasFilters() && self::hasRoute()) {
-            $method = self::getRoute()->getLabel('sdk.method', 'unknown');
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . $method;
+        if (!$this->hasFilters() || !self::hasRoute()) {
+            return $parameters;
+        }
 
+        $methods = self::getRoute()->getLabel('sdk', null);
+
+        if (empty($methods)) {
+            return $parameters;
+        }
+
+        if (!\is_array($methods)) {
+            $id = $methods->getNamespace() . '.' . $methods->getMethodName();
             foreach ($this->getFilters() as $filter) {
-                $parameters = $filter->parse($parameters, $endpointIdentifier);
+                $parameters = $filter->parse($parameters, $id);
             }
+            return $parameters;
+        }
+
+        $matched = null;
+        foreach ($methods as $method) {
+            /** @var Method|null $method */
+            if ($method === null) {
+                continue;
+            }
+
+            // Find the method that matches the parameters passed
+            $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
+            $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
+
+            // No params defined, or all params are valid
+            if (empty($methodParamNames) || empty($invalidParams)) {
+                $matched = $method;
+                break;
+            }
+        }
+
+        $id = $matched !== null
+            ? $matched->getNamespace() . '.' . $matched->getMethodName()
+            : 'unknown.unknown';
+
+        // Apply filters
+        foreach ($this->getFilters() as $filter) {
+            $parameters = $filter->parse($parameters, $id);
         }
 
         return $parameters;
@@ -122,7 +161,11 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
-        $headers = $this->generateHeaders();
+        try {
+            $headers = $this->generateHeaders();
+        } catch (\Throwable) {
+            $headers = [];
+        }
 
         if (empty($this->swoole->cookie)) {
             return $headers;
@@ -153,5 +196,41 @@ class Request extends UtopiaRequest
     {
         $headers = $this->getHeaders();
         return $headers[$key] ?? $default;
+    }
+
+    /**
+    * Get User Agent
+    *
+    * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
+    *
+    * @param  string  $default
+    * @return string
+    */
+    public function getUserAgent(string $default = ''): string
+    {
+        $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
+        if (!empty($forwardedUserAgent)) {
+            $roles = Authorization::getRoles();
+            $isAppUser = Auth::isAppUser($roles);
+
+            if ($isAppUser) {
+                return $forwardedUserAgent;
+            }
+        }
+
+        return UtopiaRequest::getUserAgent($default);
+    }
+
+    /**
+     * Creates a unique stable cache identifier for this GET request.
+     * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
+     *
+     * @return string
+     */
+    public function cacheIdentifier(): string
+    {
+        $params = $this->getParams();
+        ksort($params);
+        return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }
 }

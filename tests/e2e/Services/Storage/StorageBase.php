@@ -13,6 +13,9 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
 {
+    /**
+     * @group fileTokens
+     */
     public function testCreateBucketFile(): array
     {
         /**
@@ -225,7 +228,7 @@ trait StorageBase
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
-            'maximumFileSize' => 200000000, //200MB
+            'maximumFileSize' => 6000000000, //6GB
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
                 Permission::read(Role::any()),

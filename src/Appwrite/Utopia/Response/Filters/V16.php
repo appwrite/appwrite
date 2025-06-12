@@ -33,9 +33,17 @@ class V16 extends Filter
 
     protected function parseDeployment(array $content)
     {
-        $content['buildStderr'] = '';
-        $content['buildStdout'] = $content['buildLogs'];
-        unset($content['buildLogs']);
+        if (isset($content['buildLogs'])) {
+            $content['buildStderr'] = '';
+            $content['buildStdout'] = $content['buildLogs'];
+            unset($content['buildLogs']);
+        }
+
+        if (isset($content['buildSize'])) {
+            $content['size'] += + $content['buildSize'] ?? 0;
+            unset($content['buildSize']);
+        }
+
         return $content;
     }
 

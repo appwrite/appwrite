@@ -24,6 +24,11 @@ return [
         'description' => 'Access to this API is forbidden.',
         'code' => 401,
     ],
+    Exception::GENERAL_RESOURCE_BLOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_BLOCKED,
+        'description' => 'Access to this resource is blocked.',
+        'code' => 401,
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
@@ -76,7 +81,7 @@ return [
     ],
     Exception::GENERAL_ROUTE_NOT_FOUND => [
         'name' => Exception::GENERAL_ROUTE_NOT_FOUND,
-        'description' => 'The requested route was not found. Please refer to the API docs and try again.',
+        'description' => 'Route not found. Please ensure the endpoint is configured correctly and that the API route is valid for this SDK version. Refer to the API docs for more details.',
         'code' => 404,
     ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
@@ -332,17 +337,17 @@ return [
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::API_KEY_EXPIRED => [
+        'name' => Exception::API_KEY_EXPIRED,
+        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'code' => 401,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
         'name' => Exception::TEAM_NOT_FOUND,
         'description' => 'Team with the requested ID could not be found.',
         'code' => 404,
-    ],
-    Exception::TEAM_INVITE_ALREADY_EXISTS => [
-        'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
-        'description' => 'User has already been invited or is already a member of this team',
-        'code' => 409,
     ],
     Exception::TEAM_INVITE_NOT_FOUND => [
         'name' => Exception::TEAM_INVITE_NOT_FOUND,
@@ -351,7 +356,7 @@ return [
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
-        'description' => 'The team invitation secret is invalid. Please request  a new invitation and try again.',
+        'description' => 'The team invitation secret is invalid. Please request a new invitation and try again.',
         'code' => 401,
     ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
@@ -367,6 +372,13 @@ return [
     Exception::TEAM_ALREADY_EXISTS => [
         'name' => Exception::TEAM_ALREADY_EXISTS,
         'description' => 'Team with requested ID already exists. Please choose a different ID and try again.',
+        'code' => 409,
+    ],
+
+    /** Console */
+    Exception::RESOURCE_ALREADY_EXISTS => [
+        'name' => Exception::RESOURCE_ALREADY_EXISTS,
+        'description' => 'Resource with the requested ID already exists. Please choose a different ID and try again.',
         'code' => 409,
     ],
 
@@ -476,6 +488,23 @@ return [
         'code' => 403,
     ],
 
+    /** Tokens */
+    Exception::TOKEN_NOT_FOUND => [
+        'name' => Exception::TOKEN_NOT_FOUND,
+        'description' => 'The requested file token could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOKEN_EXPIRED => [
+        'name' => Exception::TOKEN_EXPIRED,
+        'description' => 'The requested file token has expired.',
+        'code' => 401,
+    ],
+    Exception::TOKEN_RESOURCE_TYPE_INVALID => [
+        'name' => Exception::TOKEN_RESOURCE_TYPE_INVALID,
+        'description' => 'The resource type for the token is invalid.',
+        'code' => 400,
+    ],
+
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
         'name' => Exception::INSTALLATION_NOT_FOUND,
@@ -515,7 +544,7 @@ return [
         'code' => 404,
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
-        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'name' => Exception::FUNCTION_ENTRYPOINT_MISSING,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
@@ -523,6 +552,33 @@ return [
         'name' => Exception::FUNCTION_SYNCHRONOUS_TIMEOUT,
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
+    ],
+    Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
+        'description' => 'Function Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::FUNCTION_RUNTIME_NOT_DETECTED => [
+        'name' => Exception::FUNCTION_RUNTIME_NOT_DETECTED,
+        'description' => 'Function runtime could not be detected.',
+        'code' => 400,
+    ],
+    Exception::FUNCTION_EXECUTE_PERMISSION_MISSING => [
+        'name' => Exception::FUNCTION_EXECUTE_PERMISSION_MISSING,
+        'description' => 'To execute function using domain, execute permissions must include "any" or "guests".',
+        'code' => 401,
+    ],
+
+    /** Sites */
+    Exception::SITE_NOT_FOUND => [
+        'name' => Exception::SITE_NOT_FOUND,
+        'description' => 'Site with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SITE_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
+        'description' => 'Site Template with the requested ID could not be found.',
+        'code' => 404,
     ],
 
     /** Builds  */
@@ -541,6 +597,21 @@ return [
         'description' => 'Build with the requested ID is already in progress. Please wait before you can retry.',
         'code' => 400,
     ],
+    Exception::BUILD_ALREADY_COMPLETED => [
+        'name' => Exception::BUILD_ALREADY_COMPLETED,
+        'description' => 'Build with the requested ID is already completed and cannot be canceled.',
+        'code' => 400,
+    ],
+    Exception::BUILD_CANCELED => [
+        'name' => Exception::BUILD_CANCELED,
+        'description' => 'Build with the requested ID has been canceled.',
+        'code' => 400,
+    ],
+    Exception::BUILD_FAILED => [
+        'name' => Exception::BUILD_FAILED,
+        'description' => 'Build with the requested ID failed. Please check the logs for more information.',
+        'code' => 400,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -553,6 +624,19 @@ return [
     Exception::EXECUTION_NOT_FOUND => [
         'name' => Exception::EXECUTION_NOT_FOUND,
         'description' => 'Execution with the requested ID could not be found.',
+        'code' => 404,
+    ],
+
+    Exception::EXECUTION_IN_PROGRESS => [
+        'name' => Exception::EXECUTION_IN_PROGRESS,
+        'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
+        'code' => 400,
+    ],
+
+    /** Logs */
+    Exception::LOG_NOT_FOUND => [
+        'name' => Exception::LOG_NOT_FOUND,
+        'description' => 'Log with the requested ID could not be found.',
         'code' => 404,
     ],
 
@@ -571,6 +655,11 @@ return [
         'name' => Exception::DATABASE_TIMEOUT,
         'description' => 'Database timed out. Try adjusting your queries or adding an index.',
         'code' => 408
+    ],
+    Exception::DATABASE_QUERY_ORDER_NULL => [
+        'name' => Exception::DATABASE_QUERY_ORDER_NULL,
+        'description' => 'The order attribute had a null value. Cursor pagination requires all documents order attribute values are non-null.',
+        'code' => 400,
     ],
 
     /** Collections */
@@ -660,7 +749,7 @@ return [
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
         'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of attributes has been reached.',
+        'description' => 'The maximum number or size of attributes for this collection has been reached.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_VALUE_INVALID => [
@@ -676,6 +765,11 @@ return [
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
         'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
         'code' => 400,
     ],
 
@@ -699,6 +793,11 @@ return [
         'name' => Exception::INDEX_INVALID,
         'description' => 'Index invalid.',
         'code' => 400,
+    ],
+    Exception::INDEX_DEPENDENCY => [
+        'name' => Exception::INDEX_DEPENDENCY,
+        'description' => 'Attribute cannot be renamed or deleted. Please remove the associated index first.',
+        'code' => 409,
     ],
 
     /** Project Errors */
@@ -770,7 +869,7 @@ return [
     Exception::RULE_VERIFICATION_FAILED => [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
-        'code' => 401,
+        'code' => 400,
         'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
@@ -812,6 +911,11 @@ return [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
         'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::VARIABLE_CANNOT_UNSET_SECRET => [
+        'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
+        'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
+        'code' => 400,
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,

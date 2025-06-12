@@ -3,47 +3,37 @@
 namespace Appwrite\Migration;
 
 use Exception;
-use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Limit;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
+use Utopia\Database\PDO;
 use Utopia\Database\Validator\Authorization;
-use Utopia\System\System;
-
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 abstract class Migration
 {
-    /**
-     * @var int
-     */
     protected int $limit = 100;
 
-    /**
-     * @var Document
-     */
     protected Document $project;
 
-    /**
-     * @var Database
-     */
-    protected Database $projectDB;
+    protected Database $dbForProject;
+
+    protected Database $dbForPlatform;
 
     /**
-     * @var Database
+     * @var callable(Document): Database
      */
-    protected Database $consoleDB;
+    protected mixed $getProjectDB;
+
+    protected PDO $pdo;
 
     /**
-     * @var \PDO
-     */
-    protected \PDO $pdo;
-
-    /**
-     * @var array
+     * @var array<string, string>
      */
     public static array $versions = [
         '1.0.0-RC1' => 'V15',
@@ -86,10 +76,23 @@ abstract class Migration
         '1.5.5'  => 'V20',
         '1.5.6'  => 'V20',
         '1.5.7'  => 'V20',
+        '1.5.8'  => 'V20',
+        '1.5.9'  => 'V20',
+        '1.5.10' => 'V20',
+        '1.5.11' => 'V20',
+        '1.6.0' => 'V21',
+        '1.6.1' => 'V21',
+        '1.6.2' => 'V21',
+        '1.7.0-RC1' => 'V22',
+        '1.7.0' => 'V22',
+        '1.7.1' => 'V22',
+        '1.7.2' => 'V22',
+        '1.7.3' => 'V22',
+        '1.7.4' => 'V22',
     ];
 
     /**
-     * @var array
+     * @var array<string, array<string, mixed>>
      */
     protected array $collections;
 
@@ -100,38 +103,35 @@ abstract class Migration
 
         $this->collections = Config::getParam('collections', []);
 
-        $projectCollections = $this->collections['projects'];
+        $this->collections['projects']['_metadata'] = [
+            '$id' => ID::custom('_metadata'),
+            '$collection' => Database::METADATA,
+        ];
 
-        $this->collections['projects'] = array_merge([
-            '_metadata' => [
-                '$id' => ID::custom('_metadata'),
-                '$collection' => Database::METADATA
-            ],
-            'audit' => [
-                '$id' => ID::custom('audit'),
-                '$collection' => Database::METADATA
-            ],
-            'abuse' => [
-                '$id' => ID::custom('abuse'),
-                '$collection' => Database::METADATA
-            ]
-        ], $projectCollections);
+        $this->collections['projects']['audit'] = [
+            '$id' => ID::custom('audit'),
+            '$collection' => Database::METADATA,
+        ];
     }
 
     /**
      * Set project for migration.
      *
      * @param Document $project
-     * @param Database $projectDB
-     * @param Database $oldConsoleDB
-     *
+     * @param Database $dbForProject
+     * @param Database $dbForPlatform
      * @return self
      */
-    public function setProject(Document $project, Database $projectDB, Database $consoleDB): self
-    {
+    public function setProject(
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        ?callable $getProjectDB = null
+    ): self {
         $this->project = $project;
-        $this->projectDB = $projectDB;
-        $this->consoleDB = $consoleDB;
+        $this->dbForProject = $dbForProject;
+        $this->dbForPlatform = $dbForPlatform;
+        $this->getProjectDB = $getProjectDB;
 
         return $this;
     }
@@ -139,10 +139,10 @@ abstract class Migration
     /**
      * Set PDO for Migration.
      *
-     * @param \PDO $pdo
-     * @return \Appwrite\Migration\Migration
+     * @param PDO $pdo
+     * @return Migration
      */
-    public function setPDO(\PDO $pdo): self
+    public function setPDO(PDO $pdo): self
     {
         $this->pdo = $pdo;
 
@@ -153,93 +153,53 @@ abstract class Migration
      * Iterates through every document.
      *
      * @param callable $callback
+     * @throws Exception
      */
     public function forEachDocument(callable $callback): void
     {
-        $internalProjectId = $this->project->getInternalId();
+        $projectInternalId = $this->project->getInternalId();
 
-        $collections = match ($internalProjectId) {
+        $collections = match ($projectInternalId) {
             'console' => $this->collections['console'],
             default => $this->collections['projects'],
         };
 
         foreach ($collections as $collection) {
+            // Only migrate top-level collections
             if ($collection['$collection'] !== Database::METADATA) {
                 continue;
             }
 
-            Console::log('Migrating Collection ' . $collection['$id'] . ':');
+            Console::log('Migrating documents for collection "' . $collection['$id'] . '"');
 
-            \Co\run(function (array $collection, callable $callback) {
-                foreach ($this->documentsIterator($collection['$id']) as $document) {
-                    go(function (Document $document, callable $callback) {
-                        if (empty($document->getId()) || empty($document->getCollection())) {
-                            return;
-                        }
-
-                        $old = $document->getArrayCopy();
-                        $new = call_user_func($callback, $document);
-
-                        if (is_null($new) || $new->getArrayCopy() == $old) {
-                            return;
-                        }
-
-                        try {
-                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
-                        } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
-                            return;
-                        }
-                    }, $document, $callback);
+            $this->dbForProject->foreach($collection['$id'], function (Document $document) use ($collection, $callback) {
+                if (empty($document->getId()) || empty($document->getCollection())) {
+                    return;
                 }
-            }, $collection, $callback);
+
+                $old = $document->getArrayCopy();
+                $new = $callback($document);
+
+                if ($new === null || $new->getArrayCopy() == $old) {
+                    return;
+                }
+
+                try {
+                    $this->dbForProject->updateDocument(
+                        $document->getCollection(),
+                        $document->getId(),
+                        $document
+                    );
+                } catch (\Throwable $th) {
+                    Console::error("Failed to update document \"{$document->getId()}\" in collection \"{$collection['$id']}\":" . $th->getMessage());
+                    return;
+                }
+            });
         }
     }
 
     /**
-     * Provides an iterator for all documents on a collection.
-     *
-     * @param string $collectionId
-     * @return iterable<Document>
-     * @throws \Exception
-     */
-    public function documentsIterator(string $collectionId, $queries = []): iterable
-    {
-        $sum = 0;
-        $nextDocument = null;
-        $collectionCount = $this->projectDB->count($collectionId);
-        $queries[] = Query::limit($this->limit);
-
-        do {
-            if ($nextDocument !== null) {
-                $cursorQueryIndex = \array_search('cursorAfter', \array_map(fn (Query $query) => $query->getMethod(), $queries));
-
-                if ($cursorQueryIndex !== false) {
-                    $queries[$cursorQueryIndex] = Query::cursorAfter($nextDocument);
-                } else {
-                    $queries[] = Query::cursorAfter($nextDocument);
-                }
-            }
-
-            $documents = $this->projectDB->find($collectionId, $queries);
-            $count = count($documents);
-            $sum += $count;
-
-            Console::log($sum . ' / ' . $collectionCount);
-            foreach ($documents as $document) {
-                yield $document;
-            }
-
-            if ($count !== $this->limit) {
-                $nextDocument = null;
-            } else {
-                $nextDocument = end($documents);
-            }
-        } while (!is_null($nextDocument));
-    }
-
-    /**
-     * Creates colletion from the config collection.
+     * Creates collection from the config collection.
      *
      * @param string $id
      * @param string|null $name
@@ -255,54 +215,50 @@ abstract class Migration
             default => 'projects',
         };
 
-        if (!$this->projectDB->exists(System::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
-            $attributes = [];
-            $indexes = [];
-            $collection = $this->collections[$collectionType][$id];
+        if (!$this->dbForProject->getCollection($id)->isEmpty()) {
+            return;
+        }
 
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                ]);
-            }
+        $collection = $this->collections[$collectionType][$id];
 
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
+        $attributes = [];
+        foreach ($collection['attributes'] as $attribute) {
+            $attributes[] = new Document($attribute);
+        }
 
-            try {
-                $this->projectDB->createCollection($name, $attributes, $indexes);
-            } catch (\Throwable $th) {
-                throw $th;
-            }
+        $indexes = [];
+        foreach ($collection['indexes'] as $index) {
+            $indexes[] = new Document($index);
+        }
+
+        try {
+            $this->dbForProject->createCollection($name, $attributes, $indexes);
+        } catch (Duplicate) {
+            Console::warning('Failed to create collection "' . $name . '": Collection already exists');
         }
     }
 
     /**
-     * Creates attribute from collections.php
+     * Creates attributes from collections.php
      *
-     * @param \Utopia\Database\Database $database
+     * @param Database $database
      * @param string $collectionId
-     * @param string $attributeId
+     * @param array $attributeIds
+     * @param string|null $from
      * @return void
-     * @throws \Exception
-     * @throws \Utopia\Database\Exception\Duplicate
-     * @throws \Utopia\Database\Exception\Limit
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws Conflict
+     * @throws Duplicate
+     * @throws Limit
+     * @throws Structure
      */
-    public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId, string $from = null): void
-    {
+    public function createAttributesFromCollection(
+        Database $database,
+        string $collectionId,
+        array $attributeIds,
+        string $from = null
+    ): void {
         $from ??= $collectionId;
 
         $collectionType = match ($this->project->getInternalId()) {
@@ -316,13 +272,78 @@ abstract class Migration
 
         $collection = $this->collections[$collectionType][$from] ?? null;
 
-        if (is_null($collection)) {
+        if ($collection === null) {
+            throw new Exception("Collection {$from} not found");
+        }
+
+        $attributesToCreate = [];
+        $attributes = $collection['attributes'];
+        $attributeKeys = \array_column($collection['attributes'], '$id');
+
+        foreach ($attributeIds as $attributeId) {
+            $attributeKey = \array_search($attributeId, $attributeKeys);
+
+            if ($attributeKey === false) {
+                throw new Exception("Attribute {$attributeId} not found");
+            }
+
+            $attribute = $attributes[$attributeKey];
+            $attribute['filters'] ??= [];
+            $attribute['default'] ??= null;
+            $attribute['default'] = \in_array('json', $attribute['filters'])
+                ? \json_encode($attribute['default'])
+                : $attribute['default'];
+
+            $attributesToCreate[] = $attribute;
+        }
+
+        $database->createAttributes(
+            collection: $collectionId,
+            attributes: $attributesToCreate,
+        );
+    }
+
+    /**
+     * Creates attribute from collections.php
+     *
+     * @param Database $database
+     * @param string $collectionId
+     * @param string $attributeId
+     * @param string|null $from
+     * @return void
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws Conflict
+     * @throws Duplicate
+     * @throws Limit
+     * @throws Structure
+     */
+    public function createAttributeFromCollection(
+        Database $database,
+        string $collectionId,
+        string $attributeId,
+        string $from = null
+    ): void {
+        $from ??= $collectionId;
+
+        $collectionType = match ($this->project->getInternalId()) {
+            'console' => 'console',
+            default => 'projects',
+        };
+
+        if ($from === 'files') {
+            $collectionType = 'buckets';
+        }
+
+        $collection = $this->collections[$collectionType][$from] ?? null;
+
+        if ($collection === null) {
             throw new Exception("Collection {$from} not found");
         }
 
         $attributes = $collection['attributes'];
 
-        $attributeKey = array_search($attributeId, array_column($attributes, '$id'));
+        $attributeKey = \array_search($attributeId, \array_column($attributes, '$id'));
 
         if ($attributeKey === false) {
             throw new Exception("Attribute {$attributeId} not found");
@@ -337,9 +358,9 @@ abstract class Migration
             id: $attributeId,
             type: $attribute['type'],
             size: $attribute['size'],
-            required: $attribute['required'] ?? false,
-            default: in_array('json', $filters) ? json_encode($default) : $default,
-            signed: $attribute['signed'] ?? false,
+            required: $attribute['required'],
+            default: \in_array('json', $filters) ? \json_encode($default) : $default,
+            signed: $attribute['signed'] ?? true,
             array: $attribute['array'] ?? false,
             format: $attribute['format'] ?? '',
             formatOptions: $attribute['formatOptions'] ?? [],
@@ -350,14 +371,14 @@ abstract class Migration
     /**
      * Creates index from collections.php
      *
-     * @param \Utopia\Database\Database $database
+     * @param Database $database
      * @param string $collectionId
      * @param string $indexId
      * @param string|null $from
      * @return void
      * @throws \Exception
-     * @throws \Utopia\Database\Exception\Duplicate
-     * @throws \Utopia\Database\Exception\Limit
+     * @throws Duplicate
+     * @throws Limit
      */
     public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
     {
@@ -368,15 +389,19 @@ abstract class Migration
             default => 'projects',
         };
 
+        if ($from === 'files') {
+            $collectionType = 'buckets';
+        }
+
         $collection = $this->collections[$collectionType][$from] ?? null;
 
-        if (is_null($collection)) {
+        if ($collection === null) {
             throw new Exception("Collection {$collectionId} not found");
         }
 
         $indexes = $collection['indexes'];
 
-        $indexKey = array_search($indexId, array_column($indexes, '$id'));
+        $indexKey = \array_search($indexId, \array_column($indexes, '$id'));
 
         if ($indexKey === false) {
             throw new Exception("Index {$indexId} not found");
@@ -401,10 +426,11 @@ abstract class Migration
      * @param string $attribute
      * @param string $type
      * @return void
+     * @throws \Utopia\Database\Exception
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();
