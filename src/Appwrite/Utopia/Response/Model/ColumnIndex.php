@@ -42,6 +42,13 @@ class ColumnIndex extends Model
                 'example' => [],
                 'array' => true,
             ])
+            ->addRule('lengths', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Index columns length.',
+                'default' => [],
+                'example' => [],
+                'array' => true,
+            ])
             ->addRule('orders', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index orders.',
