@@ -19,9 +19,9 @@ class Executor
     public const METHOD_CONNECT = 'CONNECT';
     public const METHOD_TRACE = 'TRACE';
 
-    private bool $selfSigned = false;
+    protected bool $selfSigned = false;
 
-    private string $endpoint;
+    protected string $endpoint;
     protected array $headers;
 
     public function __construct()
