@@ -4556,10 +4556,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select([
-                    '*',
-                    'libraries.*'
-                ])->toString()
+                Query::select(['*', 'libraries.*'])->toString()
             ]
         ]);
 
@@ -4727,11 +4724,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select([
-                    '*',
-                    'artist.name',
-                    'artist.$permissions'
-                ])->toString()
+                Query::select(['*', 'artist.name', 'artist.$permissions'])->toString()
             ]
         ]);
 
@@ -4747,12 +4740,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select([
-                    '*',
-                    'albums.$id',
-                    'albums.name',
-                    'albums.$permissions',
-                ])->toString()
+                Query::select(['*', 'albums.$id', 'albums.name', 'albums.$permissions'])->toString()
             ]
         ]);
 
@@ -4897,11 +4885,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select([
-                    '*',
-                    'players.name',
-                    'players.$permissions',
-                ])->toString()
+                Query::select(['*', 'players.name', 'players.$permissions'])->toString()
             ]
         ]);
 
@@ -4919,12 +4903,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select([
-                    '*',
-                    'sports.$id',
-                    'sports.name',
-                    'sports.$permissions',
-                ])->toString()
+                Query::select(['*', 'sports.$id', 'sports.name', 'sports.$permissions'])->toString()
             ]
         ]);
 
