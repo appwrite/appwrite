@@ -3651,7 +3651,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $doc3['headers']['status-code']);
     }
 
-    public function createRelationshipCollections()
+    public function createRelationshipCollections(): void
     {
         // Prepare the database with collections and relationships
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -3700,7 +3700,7 @@ class DatabasesCustomServerTest extends Scope
         \sleep(2);
     }
 
-    public function cleanupRelationshipCollection()
+    public function cleanupRelationshipCollection(): void
     {
         $this->client->call(Client::METHOD_DELETE, '/databases/database1', [
             'content-type' => 'application/json',

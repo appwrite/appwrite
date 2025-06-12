@@ -1421,7 +1421,6 @@ trait DatabasesBase
         return $data;
     }
 
-
     /**
  * @depends testCreateAttributes
  */
@@ -2078,7 +2077,6 @@ trait DatabasesBase
         ], $this->getHeaders()));
         return ['documents' => $documents['body']['documents'], 'databaseId' => $databaseId];
     }
-
 
     /**
      * @depends testListDocuments
@@ -2830,7 +2828,7 @@ trait DatabasesBase
         return $data;
     }
 
-    public function testInvalidDocumentStructure()
+    public function testInvalidDocumentStructure(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -3693,7 +3691,7 @@ trait DatabasesBase
         $this->assertCount(1, $documentsUser2['body']['documents']);
     }
 
-    public function testEnforceCollectionPermissions()
+    public function testEnforceCollectionPermissions(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -3986,7 +3984,7 @@ trait DatabasesBase
     /**
      * @depends testUniqueIndexDuplicate
      */
-    public function testPersistantCreatedAt(array $data): array
+    public function testPersistentCreatedAt(array $data): array
     {
         $headers = $this->getSide() === 'client' ? array_merge([
             'content-type' => 'application/json',
@@ -5498,13 +5496,11 @@ trait DatabasesBase
         ]), ['min' => 7]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
-        // Test type error on non-numeric attribut
+        // Test type error on non-numeric attribute
         $typeErr = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), ['value' => 'not-a-number']);
         $this->assertEquals(400, $typeErr['headers']['status-code']);
     }
-
-
 }
