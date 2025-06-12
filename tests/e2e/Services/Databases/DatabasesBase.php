@@ -2003,9 +2003,9 @@ trait DatabasesBase
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
-        $this->assertFalse(array_key_exists('$sequence', $documents['body']['documents'][0]));
-        $this->assertFalse(array_key_exists('$sequence', $documents['body']['documents'][1]));
-        $this->assertFalse(array_key_exists('$sequence', $documents['body']['documents'][2]));
+        $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][0]));
+        $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][1]));
+        $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][2]));
         $this->assertCount(3, $documents['body']['documents']);
 
         foreach ($documents['body']['documents'] as $document) {
@@ -2098,7 +2098,7 @@ trait DatabasesBase
             $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
             $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
             $this->assertEquals($response['body']['birthDay'], $document['birthDay']);
-            $this->assertFalse(array_key_exists('$sequence', $response['body']));
+            $this->assertFalse(array_key_exists('$internalId', $response['body']));
             $this->assertFalse(array_key_exists('$tenant', $response['body']));
         }
     }
@@ -4361,8 +4361,8 @@ trait DatabasesBase
 
         $this->assertArrayNotHasKey('$collection', $person1['body']);
         $this->assertArrayNotHasKey('$collection', $person1['body']['library']);
-        $this->assertArrayNotHasKey('$sequence', $person1['body']);
-        $this->assertArrayNotHasKey('$sequence', $person1['body']['library']);
+        $this->assertArrayNotHasKey('$internalId', $person1['body']);
+        $this->assertArrayNotHasKey('$internalId', $person1['body']['library']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',

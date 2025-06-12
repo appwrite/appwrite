@@ -45,7 +45,7 @@ class V16 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
+            $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
                 case 'sessions':

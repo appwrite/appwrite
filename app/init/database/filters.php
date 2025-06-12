@@ -71,7 +71,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $attributes = $database->find('attributes', [
-            Query::equal('collectionInternalId', [$document->getSequence()]),
+            Query::equal('collectionInternalId', [$document->getInternalId()]),
             Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
             Query::limit($database->getLimitForAttributes()),
         ]);
@@ -107,7 +107,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                Query::equal('collectionInternalId', [$document->getSequence()]),
+                Query::equal('collectionInternalId', [$document->getInternalId()]),
                 Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
                 Query::limit($database->getLimitForIndexes()),
             ]);
@@ -122,7 +122,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                Query::equal('projectInternalId', [$document->getSequence()]),
+                Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
@@ -136,7 +136,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
-                Query::equal('projectInternalId', [$document->getSequence()]),
+                Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
@@ -150,7 +150,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('devKeys', [
-                Query::equal('projectInternalId', [$document->getSequence()]),
+                Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
@@ -164,7 +164,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
-                Query::equal('projectInternalId', [$document->getSequence()]),
+                Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
@@ -177,7 +177,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
-            Query::equal('userInternalId', [$document->getSequence()]),
+            Query::equal('userInternalId', [$document->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
     }
@@ -191,7 +191,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('tokens', [
-                Query::equal('userInternalId', [$document->getSequence()]),
+                Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
@@ -205,7 +205,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('challenges', [
-                Query::equal('userInternalId', [$document->getSequence()]),
+                Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
@@ -219,7 +219,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('authenticators', [
-                Query::equal('userInternalId', [$document->getSequence()]),
+                Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
@@ -233,7 +233,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('memberships', [
-                Query::equal('userInternalId', [$document->getSequence()]),
+                Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
@@ -247,7 +247,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('variables', [
-                Query::equal('resourceInternalId', [$document->getSequence()]),
+                Query::equal('resourceInternalId', [$document->getInternalId()]),
                 Query::equal('resourceType', ['function', 'site']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
@@ -325,7 +325,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('targets', [
-                Query::equal('userInternalId', [$document->getSequence()]),
+                Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY)
             ]));
     }
@@ -340,13 +340,13 @@ Database::addFilter(
         $targetIds = Authorization::skip(fn () => \array_map(
             fn ($document) => $document->getAttribute('targetInternalId'),
             $database->find('subscribers', [
-                Query::equal('topicInternalId', [$document->getSequence()]),
+                Query::equal('topicInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
             ])
         ));
         if (\count($targetIds) > 0) {
             return $database->skipValidation(fn () => $database->find('targets', [
-                Query::equal('$sequence', $targetIds)
+                Query::equal('$internalId', $targetIds)
             ]));
         }
         return [];

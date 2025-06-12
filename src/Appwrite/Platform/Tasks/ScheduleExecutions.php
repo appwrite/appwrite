@@ -39,7 +39,7 @@ class ScheduleExecutions extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                unset($this->schedules[$schedule['$sequence']]);
+                unset($this->schedules[$schedule['$internalId']]);
                 continue;
             }
 
@@ -81,7 +81,7 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             );
 
-            unset($this->schedules[$schedule['$sequence']]);
+            unset($this->schedules[$schedule['$internalId']]);
         }
     }
 }

@@ -29,9 +29,9 @@ class Action extends UtopiaAction
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         if ($fileSecurity) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {

@@ -63,7 +63,7 @@ class Get extends Action
 
         $key = $dbForPlatform->getDocument('devKeys', $keyId);
 
-        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getSequence()) {
+        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 

@@ -95,7 +95,7 @@ class V15 extends Migration
         $this->migrateStatsMetric('storage.files.delete', 'files.$all.requests.delete');
 
         foreach ($this->documentsIterator('buckets') as $bucket) {
-            $bucketTable = "bucket_{$bucket->getSequence()}";
+            $bucketTable = "bucket_{$bucket->getInternalId()}";
 
             $this->createPermissionsColumn($bucketTable);
             $this->migrateDateTimeAttribute($bucketTable, '_createdAt');
@@ -178,7 +178,7 @@ class V15 extends Migration
          * Migrate every Database.
          */
         foreach ($this->documentsIterator('databases') as $database) {
-            $databaseTable = "database_{$database->getSequence()}";
+            $databaseTable = "database_{$database->getInternalId()}";
             $this->createPermissionsColumn($databaseTable);
             $this->migrateDateTimeAttribute($databaseTable, '_createdAt');
             $this->migrateDateTimeAttribute($databaseTable, '_updatedAt');
@@ -216,7 +216,7 @@ class V15 extends Migration
              */
             Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
             foreach ($this->documentsIterator($databaseTable) as $collection) {
-                $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
+                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
                 $this->createPermissionsColumn($collectionTable);
                 $this->migrateDateTimeAttribute($collectionTable, '_createdAt');
                 $this->migrateDateTimeAttribute($collectionTable, '_updatedAt');
@@ -277,7 +277,7 @@ class V15 extends Migration
             $this->removeWritePermissions($databaseTable);
 
             try {
-                $this->dbForProject->deleteAttribute("database_{$database->getSequence()}", 'permission');
+                $this->dbForProject->deleteAttribute("database_{$database->getInternalId()}", 'permission');
             } catch (\Throwable $th) {
                 Console::warning("'permission' from {$databaseTable}: {$th->getMessage()}");
             }
@@ -293,7 +293,7 @@ class V15 extends Migration
     protected function removeWritePermissions(string $table): void
     {
         try {
-            $this->pdo->prepare("DELETE FROM `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}_perms` WHERE _type = 'write'")->execute();
+            $this->pdo->prepare("DELETE FROM `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _type = 'write'")->execute();
         } catch (\Throwable $th) {
             Console::warning("Remove 'write' permissions from {$table}: {$th->getMessage()}");
         }
@@ -309,7 +309,7 @@ class V15 extends Migration
      */
     protected function getSQLColumnTypes(string $table): array
     {
-        $query = $this->pdo->prepare("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '_{$this->project->getSequence()}_{$table}' AND table_schema = '{$this->dbForProject->getDatabase()}'");
+        $query = $this->pdo->prepare("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '_{$this->project->getInternalId()}_{$table}' AND table_schema = '{$this->dbForProject->getDatabase()}'");
         $query->execute();
 
         return array_reduce($query->fetchAll(), function (array $carry, array $item) {
@@ -331,8 +331,8 @@ class V15 extends Migration
 
         if ($columns[$attribute] === 'int') {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` MODIFY {$attribute} VARCHAR(64)")->execute();
-                $this->pdo->prepare("UPDATE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` SET {$attribute} = IF({$attribute} = 0, NULL, FROM_UNIXTIME({$attribute}))")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} VARCHAR(64)")->execute();
+                $this->pdo->prepare("UPDATE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` SET {$attribute} = IF({$attribute} = 0, NULL, FROM_UNIXTIME({$attribute}))")->execute();
                 $columns[$attribute] = 'varchar';
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
@@ -341,7 +341,7 @@ class V15 extends Migration
 
         if ($columns[$attribute] === 'varchar') {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` MODIFY {$attribute} DATETIME(3)")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} DATETIME(3)")->execute();
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
             }
@@ -387,7 +387,7 @@ class V15 extends Migration
 
         if (!array_key_exists('_permissions', $columns)) {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` ADD `_permissions` MEDIUMTEXT DEFAULT NULL")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` ADD `_permissions` MEDIUMTEXT DEFAULT NULL")->execute();
             } catch (\Throwable $th) {
                 Console::warning("Add '_permissions' column to '{$table}': {$th->getMessage()}");
             }
@@ -408,7 +408,7 @@ class V15 extends Migration
     {
         $table ??= $document->getCollection();
 
-        $query = $this->pdo->prepare("SELECT * FROM `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}_perms` WHERE _document = '{$document->getId()}'");
+        $query = $this->pdo->prepare("SELECT * FROM `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _document = '{$document->getId()}'");
         $query->execute();
         $results = $query->fetchAll();
         $permissions = [];
@@ -466,7 +466,7 @@ class V15 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
+            $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
                 case '_metadata':
@@ -746,7 +746,7 @@ class V15 extends Migration
                                     Permission::delete(Role::any()),
                                 ],
                                 'functionId' => $function->getId(),
-                                'functionInternalId' => $function->getSequence(),
+                                'functionInternalId' => $function->getInternalId(),
                                 'key' => (string) $key,
                                 'value' => (string) $value,
                                 'search' => implode(' ', [$variableId, $key, $function->getId()])
@@ -1470,9 +1470,9 @@ class V15 extends Migration
             $from = $this->pdo->quote($from);
             $to = $this->pdo->quote($to);
 
-            $this->pdo->prepare("UPDATE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
+            $this->pdo->prepare("UPDATE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
         } catch (\Throwable $th) {
-            Console::warning("Migrating steps from {$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_stats:" . $th->getMessage());
+            Console::warning("Migrating steps from {$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
     }
 

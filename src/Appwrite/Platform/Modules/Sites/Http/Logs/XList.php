@@ -75,7 +75,7 @@ class XList extends Base
         }
 
         // Set internal queries
-        $queries[] = Query::equal('resourceInternalId', [$site->getSequence()]);
+        $queries[] = Query::equal('resourceInternalId', [$site->getInternalId()]);
         $queries[] = Query::equal('resourceType', ['sites']);
 
         /**

@@ -126,7 +126,7 @@ class StatsUsageDump extends Action
                 continue;
             }
 
-            Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getSequence(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
+            Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
             try {
                 /** @var Database $dbForProject */
@@ -169,7 +169,7 @@ class StatsUsageDump extends Action
                     }
                 }
             } catch (\Exception $e) {
-                Console::error('[' . DateTime::now() . '] project [' . $project->getSequence() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+                Console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
         }
     }

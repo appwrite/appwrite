@@ -73,7 +73,7 @@ class StatsResources extends Action
                 $queue
                     ->setProject($project)
                     ->trigger();
-                Console::success('project: ' . $project->getId() . '(' . $project->getSequence() . ')' . ' queued');
+                Console::success('project: ' . $project->getId() . '(' . $project->getInternalId() . ')' . ' queued');
             });
         }, $interval);
 

@@ -246,7 +246,7 @@ class Create extends Action
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $site->getSequence(),
+                    'resourceInternalId' => $site->getInternalId(),
                     'resourceId' => $site->getId(),
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
@@ -263,7 +263,7 @@ class Create extends Action
 
                 $site = $site
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -278,15 +278,15 @@ class Create extends Action
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getSequence(),
+                        'projectInternalId' => $project->getInternalId(),
                         'domain' => $domain,
                         'type' => 'deployment',
                         'trigger' => 'deployment',
                         'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                        'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
                         'deploymentResourceType' => 'site',
                         'deploymentResourceId' => $site->getId(),
-                        'deploymentResourceInternalId' => $site->getSequence(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
                         'status' => 'verified',
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
@@ -312,7 +312,7 @@ class Create extends Action
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $site->getSequence(),
+                    'resourceInternalId' => $site->getInternalId(),
                     'resourceId' => $site->getId(),
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
@@ -331,7 +331,7 @@ class Create extends Action
 
                 $site = $site
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -343,7 +343,7 @@ class Create extends Action
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getSequence(),
+                        'projectInternalId' => $project->getInternalId(),
                         'domain' => $domain,
                         'type' => 'deployment',
                         'trigger' => 'deployment',
