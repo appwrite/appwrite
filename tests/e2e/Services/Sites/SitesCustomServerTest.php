@@ -1446,7 +1446,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertStringContainsString("Page not found", $response['body']); // Title
         $this->assertStringContainsString("Go to homepage", $response['body']); // Button
-        $this->assertStringContainsString("Powered by", $response['body']); // Brand
+        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
 
         $this->cleanupSite($siteId);
     }
@@ -1502,7 +1502,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Customized 404 page", $response['body']);
-        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
+        $this->assertStringNotContainsString("Powered by", $response['body']); //brand
 
         $this->cleanupSite($siteId);
     }

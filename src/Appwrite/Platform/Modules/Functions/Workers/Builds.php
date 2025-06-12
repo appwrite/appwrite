@@ -877,6 +877,10 @@ class Builds extends Action
                 }
             }
 
+            $deployment->setAttribute('buildLogs', $logs);
+
+            $this->afterBuildSuccess($dbForProject, $deployment);
+
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
             $queueForRealtime
@@ -1081,13 +1085,12 @@ class Builds extends Action
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getSequence()]),
-                            Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getSequence()]),
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),
-                            Query::equal("projectInternalId", [$project->getSequence()])
                         ];
 
                         $rulesUpdated = false;
@@ -1107,13 +1110,12 @@ class Builds extends Action
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getSequence()]),
-                            Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getSequence()]),
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),
-                            Query::equal("projectInternalId", [$project->getSequence()])
                         ];
 
                         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
@@ -1310,6 +1312,19 @@ class Builds extends Action
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
+    }
+
+    /**
+     * Hook to run after build success
+     *
+     * @param Database $dbForProject
+     * @param Document $deployment
+     * @return void
+     */
+    protected function afterBuildSuccess(Database $dbForProject, Document &$deployment): void
+    {
+        assert($dbForProject instanceof Database);
+        assert($deployment instanceof Document);
     }
 
     protected function getRuntime(Document $resource, string $version): array
