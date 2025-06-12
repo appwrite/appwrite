@@ -200,7 +200,7 @@ class Executor
         int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
-            $headers['host'] = System::getEnv('_APP_DOMAIN', '');
+            $headers['host'] = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
         }
 
         $runtimeId = "$projectId-$deploymentId";
