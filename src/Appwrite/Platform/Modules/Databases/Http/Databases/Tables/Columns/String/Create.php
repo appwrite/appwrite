@@ -70,6 +70,7 @@ class Create extends StringCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 }

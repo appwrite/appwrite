@@ -72,6 +72,7 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -87,8 +88,20 @@ class Create extends Action
         UtopiaResponse $response,
         Database       $dbForProject,
         EventDatabase  $queueForDatabase,
-        Event          $queueForEvents
+        Event          $queueForEvents,
+        array $plan
     ): void {
+        if ($encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string ' . $this->getSdkGroup() . ' are not available on your plan. Please upgrade to create encrypted string ' . $this->getSdkGroup() . '.');
+        }
+
+        if ($encrypt && $size < APP_DATABASE_ENCRYPT_SIZE_MIN) {
+            throw new Exception(
+                Exception::GENERAL_BAD_REQUEST,
+                "Size too small. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . " characters."
+            );
+        }
+
         // Ensure default fits in the given size
         $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
@@ -117,6 +130,8 @@ class Create extends Action
             $queueForDatabase,
             $queueForEvents
         );
+
+        $attribute->setAttribute('encrypt', $encrypt);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
