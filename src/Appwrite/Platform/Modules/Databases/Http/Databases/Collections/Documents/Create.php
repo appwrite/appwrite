@@ -369,12 +369,6 @@ class Create extends Action
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
-
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
             ->setContext('database', $database)
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
