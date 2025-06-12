@@ -34,6 +34,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Indexes\Get as Get
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Indexes\XList as ListColumnIndexes;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Logs\XList as ListTableLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk\Delete as DeleteRows;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk\Update as UpdateRows;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk\Upsert as UpsertRows;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Create as CreateRow;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Delete as DeleteRow;
@@ -138,6 +139,7 @@ class Tables extends Base
         $service->addAction(CreateRow::getName(), new CreateRow());
         $service->addAction(GetRow::getName(), new GetRow());
         $service->addAction(UpdateRow::getName(), new UpdateRow());
+        $service->addAction(UpdateRows::getName(), new UpdateRows());
         $service->addAction(UpsertRow::getName(), new UpsertRow());
         $service->addAction(UpsertRows::getName(), new UpsertRows());
         $service->addAction(DeleteRow::getName(), new DeleteRow());

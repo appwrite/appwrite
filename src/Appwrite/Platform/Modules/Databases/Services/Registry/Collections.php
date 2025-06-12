@@ -28,6 +28,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\XL
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CreateCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Delete as DeleteCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Delete as DeleteDocuments;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Update as UpdateDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Upsert as UpsertDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Delete as DeleteDocument;
@@ -81,6 +82,7 @@ class Collections extends Base
         $service->addAction(CreateDocument::getName(), new CreateDocument());
         $service->addAction(GetDocument::getName(), new GetDocument());
         $service->addAction(UpdateDocument::getName(), new UpdateDocument());
+        $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
         $service->addAction(UpsertDocument::getName(), new UpsertDocument());
         $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
