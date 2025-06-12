@@ -7,13 +7,13 @@ import (
 )
 
 func main() {
-    client := client.NewClient()
+    client := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
+        client.WithSession("") // The user session to authenticate with
+    )
 
-    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
-    client.SetSession("") // The user session to authenticate with
-
-    service := storage.NewStorage(client)
+    service := storage.New(client)
     response, error := service.CreateFile(
         "<BUCKET_ID>",
         "<FILE_ID>",
