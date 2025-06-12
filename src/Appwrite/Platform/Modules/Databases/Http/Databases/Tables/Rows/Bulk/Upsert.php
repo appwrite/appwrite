@@ -41,7 +41,7 @@ class Upsert extends DocumentsUpsert
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].create')
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('audits.event', 'document.create')
+            ->label('audits.event', 'row.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
