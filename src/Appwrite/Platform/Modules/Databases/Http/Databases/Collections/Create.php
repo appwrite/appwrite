@@ -102,8 +102,6 @@ class Create extends Action
                 'name' => $name,
                 'search' => \implode(' ', [$collectionId, $name]),
             ]));
-
-            $dbForProject->createCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), permissions: $permissions, documentSecurity: $documentSecurity);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (LimitException) {
