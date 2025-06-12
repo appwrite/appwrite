@@ -65,6 +65,6 @@ class Create extends BooleanCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

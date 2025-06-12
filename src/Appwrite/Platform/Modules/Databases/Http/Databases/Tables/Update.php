@@ -67,6 +67,6 @@ class Update extends CollectionUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

@@ -71,6 +71,6 @@ class Update extends StringUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

@@ -117,7 +117,7 @@ class Create extends Action
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage): void

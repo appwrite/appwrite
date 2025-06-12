@@ -68,6 +68,6 @@ class Create extends CollectionCreate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

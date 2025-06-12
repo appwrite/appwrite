@@ -65,7 +65,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage): void

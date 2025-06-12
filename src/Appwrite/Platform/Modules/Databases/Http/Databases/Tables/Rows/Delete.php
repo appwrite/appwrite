@@ -72,6 +72,6 @@ class Delete extends DocumentDelete
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

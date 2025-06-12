@@ -71,6 +71,6 @@ class Update extends EnumUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

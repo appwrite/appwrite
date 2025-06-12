@@ -108,6 +108,6 @@ class Create extends DocumentCreate
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

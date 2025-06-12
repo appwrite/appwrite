@@ -69,6 +69,6 @@ class Create extends EnumCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

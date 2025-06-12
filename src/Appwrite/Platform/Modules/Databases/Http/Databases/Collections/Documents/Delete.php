@@ -75,7 +75,7 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void

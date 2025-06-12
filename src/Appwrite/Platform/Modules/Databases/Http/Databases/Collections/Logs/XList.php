@@ -70,7 +70,7 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void

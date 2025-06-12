@@ -58,6 +58,6 @@ class Get extends IndexGet
             ->param('key', null, new Key(), 'Index Key.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

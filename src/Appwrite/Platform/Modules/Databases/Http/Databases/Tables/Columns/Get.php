@@ -67,6 +67,6 @@ class Get extends AttributesGet
             ->param('key', '', new Key(), 'Column Key.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

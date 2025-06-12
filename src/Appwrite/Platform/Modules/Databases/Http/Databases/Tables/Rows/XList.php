@@ -60,6 +60,6 @@ class XList extends DocumentXList
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 }

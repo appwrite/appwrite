@@ -66,7 +66,7 @@ class Get extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject): void

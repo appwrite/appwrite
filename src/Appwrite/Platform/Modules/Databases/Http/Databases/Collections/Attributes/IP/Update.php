@@ -67,7 +67,7 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
