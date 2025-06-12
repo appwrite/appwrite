@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Indexes;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Get as IndexGet;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -29,7 +30,7 @@ class Get extends IndexGet
 
     public function __construct()
     {
-        $this->setContext(DATABASE_COLUMN_INDEX_CONTEXT);
+        $this->setContext(Context::DATABASE_COLUMN_INDEX);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)

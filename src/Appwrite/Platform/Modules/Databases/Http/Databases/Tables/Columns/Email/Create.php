@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Email;
 
 use Appwrite\Network\Validator\Email;
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Email\Create as EmailCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -30,7 +31,7 @@ class Create extends EmailCreate
 
     public function __construct()
     {
-        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setContext(Context::DATABASE_COLUMNS);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)

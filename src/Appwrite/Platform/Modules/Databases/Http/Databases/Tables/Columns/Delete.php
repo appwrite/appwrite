@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Delete as AttributesDelete;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -30,7 +31,7 @@ class Delete extends AttributesDelete
 
     public function __construct()
     {
-        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setContext(Context::DATABASE_COLUMNS);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)

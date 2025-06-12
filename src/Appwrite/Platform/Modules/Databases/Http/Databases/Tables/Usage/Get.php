@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Usage;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Usage\Get as CollectionUsageGet;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -29,7 +30,7 @@ class Get extends CollectionUsageGet
 
     public function __construct()
     {
-        $this->setContext(DATABASE_TABLES_CONTEXT);
+        $this->setContext(Context::DATABASE_TABLES);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)

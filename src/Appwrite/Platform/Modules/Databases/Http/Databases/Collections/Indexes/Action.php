@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Context;
 use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
@@ -10,7 +11,7 @@ abstract class Action extends UtopiaAction
     /**
      * The current API context (either 'columnIndex' or 'index').
      */
-    private ?string $context = DATABASE_INDEX_CONTEXT;
+    private ?string $context = Context::DATABASE_INDEX;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
@@ -20,12 +21,12 @@ abstract class Action extends UtopiaAction
     /**
      * Set the current API context.
      *
-     * @param string $context Must be either `DATABASE_INDEX_CONTEXT` or `DATABASE_COLUMN_INDEX_CONTEXT`.
+     * @param string $context Must be either `DATABASE_INDEX` or `DATABASE_COLUMN_INDEX`.
      */
     final protected function setContext(string $context): void
     {
-        if (!\in_array($context, [DATABASE_INDEX_CONTEXT, DATABASE_COLUMN_INDEX_CONTEXT], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `DATABASE_COLUMN_INDEX_CONTEXT` or `DATABASE_INDEX_CONTEXT`.");
+        if (!\in_array($context, [Context::DATABASE_INDEX, Context::DATABASE_COLUMN_INDEX], true)) {
+            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `Context::DATABASE_COLUMN_INDEX` or `Context::DATABASE_INDEX`.");
         }
 
         $this->context = $context;
@@ -36,9 +37,9 @@ abstract class Action extends UtopiaAction
      */
     final protected function getParentContext(): string
     {
-        return $this->getContext() === DATABASE_INDEX_CONTEXT
-            ? DATABASE_ATTRIBUTES_CONTEXT
-            : DATABASE_COLUMNS_CONTEXT;
+        return $this->getContext() === Context::DATABASE_INDEX
+            ? Context::DATABASE_ATTRIBUTES
+            : Context::DATABASE_COLUMNS;
     }
 
     /**
@@ -54,7 +55,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function isCollectionsAPI(): bool
     {
-        return $this->getParentContext() === DATABASE_ATTRIBUTES_CONTEXT;
+        return $this->getParentContext() === Context::DATABASE_ATTRIBUTES;
     }
 
     /**

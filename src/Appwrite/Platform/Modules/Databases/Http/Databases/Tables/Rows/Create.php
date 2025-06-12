@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as DocumentCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -39,7 +40,7 @@ class Create extends DocumentCreate
 
     public function __construct()
     {
-        $this->setContext(DATABASE_ROWS_CONTEXT);
+        $this->setContext(Context::DATABASE_ROWS);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)

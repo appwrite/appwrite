@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList as DocumentXList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -30,7 +31,7 @@ class XList extends DocumentXList
 
     public function __construct()
     {
-        $this->setContext(DATABASE_ROWS_CONTEXT);
+        $this->setContext(Context::DATABASE_ROWS);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)

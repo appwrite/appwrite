@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Context;
 use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
@@ -10,17 +11,12 @@ abstract class Action extends UtopiaAction
     /**
      * @var string|null The current context (either 'row' or 'document')
      */
-    private ?string $context = DATABASE_DOCUMENTS_CONTEXT;
+    private ?string $context = Context::DATABASE_DOCUMENTS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
-
-    /**
-     * Get the response model used in the SDK and HTTP responses for bulk action.
-     */
-    abstract protected function getBulkResponseModel(): string;
 
     /**
      * Set the context to either `row` or `document`.
@@ -29,8 +25,8 @@ abstract class Action extends UtopiaAction
      */
     final protected function setContext(string $context): void
     {
-        if (!\in_array($context, [DATABASE_ROWS_CONTEXT, DATABASE_DOCUMENTS_CONTEXT], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Use `DATABASE_ROWS_CONTEXT` or `DATABASE_DOCUMENTS_CONTEXT`");
+        if (!\in_array($context, [Context::DATABASE_ROWS, Context::DATABASE_DOCUMENTS], true)) {
+            throw new \InvalidArgumentException("Invalid context '$context'. Use `Context::DATABASE_ROWS` or `Context::DATABASE_DOCUMENTS`");
         }
 
         $this->context = $context;
@@ -61,7 +57,7 @@ abstract class Action extends UtopiaAction
     {
         // rows in tables api context
         // documents in collections api context
-        return $this->getContext() === DATABASE_DOCUMENTS_CONTEXT;
+        return $this->getContext() === Context::DATABASE_DOCUMENTS;
     }
 
     /**

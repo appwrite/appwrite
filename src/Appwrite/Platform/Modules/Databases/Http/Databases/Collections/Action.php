@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Context;
 use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
@@ -10,7 +11,7 @@ abstract class Action extends UtopiaAction
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = DATABASE_COLLECTIONS_CONTEXT;
+    private ?string $context = Context::DATABASE_COLLECTIONS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
@@ -20,12 +21,12 @@ abstract class Action extends UtopiaAction
     /**
      * Set the current API context.
      *
-     * @param string $context Must be either `DATABASE_TABLES_CONTEXT` or `DATABASE_COLLECTIONS_CONTEXT`.
+     * @param string $context Must be either `Context::DATABASE_TABLES` or `Context::DATABASE_COLLECTIONS`.
      */
     final protected function setContext(string $context): void
     {
-        if (!\in_array($context, [DATABASE_TABLES_CONTEXT, DATABASE_COLLECTIONS_CONTEXT], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `DATABASE_TABLES_CONTEXT` or `DATABASE_COLLECTIONS_CONTEXT`.");
+        if (!\in_array($context, [Context::DATABASE_TABLES, Context::DATABASE_COLLECTIONS], true)) {
+            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `Context::DATABASE_TABLES` or `Context::DATABASE_COLLECTIONS`.");
         }
 
         $this->context = $context;
@@ -52,7 +53,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function isCollectionsAPI(): bool
     {
-        return $this->getContext() === DATABASE_COLLECTIONS_CONTEXT;
+        return $this->getContext() === Context::DATABASE_COLLECTIONS;
     }
 
     /**

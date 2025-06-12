@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Boolean;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Create as BooleanCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -29,7 +30,7 @@ class Create extends BooleanCreate
 
     public function __construct()
     {
-        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setContext(Context::DATABASE_COLUMNS);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)

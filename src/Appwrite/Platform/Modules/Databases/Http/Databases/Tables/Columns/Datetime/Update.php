@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Datetime;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Datetime\Update as DatetimeUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -33,7 +34,7 @@ class Update extends DatetimeUpdate
 
     public function __construct()
     {
-        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setContext(Context::DATABASE_COLUMNS);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)

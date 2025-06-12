@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CollectionCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -32,7 +33,7 @@ class Create extends CollectionCreate
 
     public function __construct()
     {
-        $this->setContext(DATABASE_TABLES_CONTEXT);
+        $this->setContext(Context::DATABASE_TABLES);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)

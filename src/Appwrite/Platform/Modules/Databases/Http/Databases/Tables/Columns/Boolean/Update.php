@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Boolean;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Update as BooleanUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -31,7 +32,7 @@ class Update extends BooleanUpdate
 
     public function __construct()
     {
-        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setContext(Context::DATABASE_COLUMNS);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
