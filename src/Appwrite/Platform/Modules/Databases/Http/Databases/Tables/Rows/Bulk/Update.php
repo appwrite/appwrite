@@ -21,7 +21,7 @@ class Update extends DocumentsUpdate
 
     public static function getName(): string
     {
-        return 'updateRow';
+        return 'updateRows';
     }
 
     protected function getResponseModel(): string
