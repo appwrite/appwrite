@@ -881,7 +881,7 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
     return Key::decode($project, $key);
 }, ['request', 'project']);
 
-App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+App::setResource('executor', fn () => new Executor());
 
 App::setResource('resourceToken', function ($project, $dbForProject, $request) {
     $tokenJWT = $request->getParam('token');
