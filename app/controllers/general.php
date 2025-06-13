@@ -511,17 +511,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 'function' => $deployment->getAttribute('entrypoint', ''),
                 'site' => '',
             };
+            $source = $deployment->getAttribute('buildPath', '');
+            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
 
-            if ($type === 'function') {
-                $runtimeEntrypoint = match ($version) {
-                    'v2' => '',
-                    default => 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"'
-                };
-            } elseif ($type === 'site') {
+            $startCommand = $runtime['startCommand'];
+            if ($type === 'site') {
                 $frameworks = Config::getParam('frameworks', []);
                 $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-
-                $startCommand = $runtime['startCommand'];
 
                 if (!is_null($framework)) {
                     $adapter = ($framework['adapters'] ?? [])[$deployment->getAttribute('adapter', '')] ?? null;
@@ -529,9 +525,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                         $startCommand = $adapter['startCommand'];
                     }
                 }
-
-                $runtimeEntrypoint = 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $startCommand . '"';
             }
+
+            $runtimeEntrypoint = match ($version) {
+                'v2' => '',
+                default => "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$startCommand\"",
+            };
 
             $entrypoint = match ($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
@@ -545,7 +544,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 variables: $vars,
                 timeout: $resource->getAttribute('timeout', 30),
                 image: $runtime['image'],
-                source: $deployment->getAttribute('buildPath', ''),
+                source: $source,
                 entrypoint: $entrypoint,
                 version: $version,
                 path: $path,

@@ -519,7 +519,9 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
+            $source = $deployment->getAttribute('buildPath', '');
+            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
+            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
@@ -527,7 +529,7 @@ class Functions extends Action
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $deployment->getAttribute('buildPath', ''),
+                source: $source,
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 version: $version,
                 path: $path,
