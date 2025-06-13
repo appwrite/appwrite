@@ -76,7 +76,7 @@ class Create extends Action
             APP_HOSTNAME_INTERNAL
         ];
 
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
         $deniedDomains[] = $mainDomain;
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');

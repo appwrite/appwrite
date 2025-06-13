@@ -43,8 +43,8 @@ App::get('/v1/console/variables')
     ))
     ->inject('response')
     ->action(function (Response $response) {
-        $validator = new Domain(System::getEnv('_APP_DOMAIN'));
-        $isDomainValid = !empty(System::getEnv('_APP_DOMAIN', '')) && $validator->isKnown() && !$validator->isTest();
+        $validator = new Domain(System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', '')));
+        $isDomainValid = !empty(System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''))) && $validator->isKnown() && !$validator->isTest();
 
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();

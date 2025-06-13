@@ -83,7 +83,7 @@ class ProjectsCustomServerTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
