@@ -108,11 +108,9 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         try {
             $collections = $dbForProject->find('database_' . $database->getSequence(), $queries);
-            $total = $dbForProject->count('database_' . $database->getSequence(), $filterQueries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('database_' . $database->getSequence(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL);
         } catch (QueryException) {

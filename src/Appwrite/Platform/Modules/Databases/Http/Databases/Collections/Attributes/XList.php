@@ -118,11 +118,9 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         try {
             $attributes = $dbForProject->find('attributes', $queries);
-            $total = $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('attributes', $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';

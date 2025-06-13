@@ -92,11 +92,9 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         try {
             $databases = $dbForProject->find('databases', $queries);
-            $total = $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('databases', $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
         } catch (QueryException) {
