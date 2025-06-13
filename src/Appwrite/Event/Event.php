@@ -320,7 +320,7 @@ class Event
         if ($this->project) {
             $trimmed['project'] = new Document([
                 '$id' => $this->project->getId(),
-                '$internalId' => $this->project->getInternalId(),
+                '$sequence' => $this->project->getSequence(),
                 'database' => $this->project->getAttribute('database')
             ]);
         }

@@ -25,7 +25,7 @@ class Base extends Queries
     {
         $config = Config::getParam('collections', []);
 
-        $collections = array_merge(
+        $collections = \array_merge(
             $config['projects'],
             $config['buckets'],
             $config['databases'],
@@ -34,7 +34,7 @@ class Base extends Queries
         );
 
         $collection = $collections[$collection];
-        // array for constant lookup time
+
         $allowedAttributesLookup = [];
         foreach ($allowedAttributes as $attribute) {
             $allowedAttributesLookup[$attribute] = true;
@@ -70,10 +70,9 @@ class Base extends Queries
             'type' => Database::VAR_DATETIME,
             'array' => false,
         ]);
-
-        $internalId = new Document([
-            'key' => '$internalId',
-            'type' => Database::VAR_STRING,
+        $attributes[] = new Document([
+            'key' => '$sequence',
+            'type' => Database::VAR_INTEGER,
             'array' => false,
         ]);
 
@@ -82,7 +81,7 @@ class Base extends Queries
             new Offset(),
             new Cursor(),
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
-            new Order([...$attributes, $internalId]),
+            new Order($attributes),
         ];
 
         parent::__construct($validators);

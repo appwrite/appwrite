@@ -68,7 +68,7 @@ class Get extends Base
         if (
             $variable === false ||
             $variable->isEmpty() ||
-            $variable->getAttribute('resourceInternalId') !== $function->getInternalId() ||
+            $variable->getAttribute('resourceInternalId') !== $function->getSequence() ||
             $variable->getAttribute('resourceType') !== 'function'
         ) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);

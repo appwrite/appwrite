@@ -154,7 +154,7 @@ class Create extends Base
             'search' => implode(' ', [$siteId, $name, $framework]),
             'fallbackFile' => $fallbackFile,
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => '',
             'repositoryInternalId' => '',
@@ -180,18 +180,18 @@ class Create extends Base
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $site->getId(),
-                'resourceInternalId' => $site->getInternalId(),
+                'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
             ]));
 
             $site->setAttribute('repositoryId', $repository->getId());
-            $site->setAttribute('repositoryInternalId', $repository->getInternalId());
+            $site->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
         $site = $dbForProject->updateDocument('sites', $site->getId(), $site);

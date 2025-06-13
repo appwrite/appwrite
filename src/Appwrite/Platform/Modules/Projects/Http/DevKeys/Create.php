@@ -76,7 +76,7 @@ class Create extends Action
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
             'expire' => $expire,

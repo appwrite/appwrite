@@ -279,20 +279,21 @@ class Migrations extends Action
             );
 
             /** Start Transfer */
-            $migration->setAttribute('stage', 'migrating');
-            $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
+            if (empty($source->getErrors())) {
+                $migration->setAttribute('stage', 'migrating');
+                $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
-            $transfer->run(
-                $migration->getAttribute('resources'),
-                function () use ($migration, $transfer, $projectDocument, $queueForRealtime) {
-                    $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
-                    $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                    $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
-                },
-                $migration->getAttribute('resourceId'),
-                $migration->getAttribute('resourceType')
-            );
-
+                $transfer->run(
+                    $migration->getAttribute('resources'),
+                    function () use ($migration, $transfer, $projectDocument, $queueForRealtime) {
+                        $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
+                        $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+                        $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
+                    },
+                    $migration->getAttribute('resourceId'),
+                    $migration->getAttribute('resourceType')
+                );
+            }
             $destination->shutDown();
             $source->shutDown();
 
@@ -368,7 +369,7 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
             if ($migration->getAttribute('status', '') === 'failed') {
-                Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');
+                Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
                 if ($destination) {
                     $destination->error();

@@ -71,7 +71,7 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
+        $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
 
         $keys = $dbForPlatform->find('devKeys', $queries);
 
