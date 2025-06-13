@@ -99,14 +99,28 @@ trait Base
     public static string $GET_DOCUMENTS = 'list_documents';
     public static string $GET_DOCUMENT = 'get_document';
     public static string $UPDATE_DOCUMENT = 'update_document';
+    public static string $UPSERT_DOCUMENT  = 'upsert_document';
     public static string $DELETE_DOCUMENT = 'delete_document';
+
+    // Documents Bulk APIs
+    public static string $CREATE_DOCUMENTS = 'create_documents_rest';
+    public static string $UPDATE_DOCUMENTS = 'update_documents';
+    public static string $UPSERT_DOCUMENTS = 'upsert_documents';
+    public static string $DELETE_DOCUMENTS = 'delete_documents';
 
     // Rows
     public static string $CREATE_ROW = 'create_row_rest';
     public static string $GET_ROWS = 'list_rows';
     public static string $GET_ROW = 'get_row';
     public static string $UPDATE_ROW = 'update_row';
+    public static string $UPSERT_ROW  = 'upsert_row';
     public static string $DELETE_ROW = 'delete_row';
+
+    // Rows Bulk APIs
+    public static string $CREATE_ROWS = 'create_rows_rest';
+    public static string $UPDATE_ROWS = 'update_rows';
+    public static string $UPSERT_ROWS = 'upsert_rows';
+    public static string $DELETE_ROWS = 'delete_rows';
 
     // Custom Entities
     public static string $CREATE_CUSTOM_ENTITY = 'create_custom_entity';
@@ -1100,6 +1114,28 @@ trait Base
                         _permissions
                     }
                 }';
+            case self::$CREATE_DOCUMENTS:
+                return 'mutation createDocuments($databaseId: String!, $collectionId: String!, $documents: [Json!]!) {
+                    collectionsCreateDocuments(databaseId: $databaseId, collectionId: $collectionId, documents: $documents) {
+                        documents {
+                            _id
+                            _collectionId
+                            _permissions
+                            data
+                        }
+                    }
+                }';
+            case self::$CREATE_ROWS:
+                return 'mutation createRows($databaseId: String!, $tableId: String!, $rows: [Json!]!) {
+                    tablesCreateRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
+                        rows {
+                            _id
+                            _tableId
+                            _permissions
+                            data
+                        }
+                    }
+                }';
             case self::$GET_ROW:
                 return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!) {
                     tablesGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
@@ -1110,11 +1146,12 @@ trait Base
                     }
                 }';
             case self::$GET_ROWS:
-                return 'query listRows($databaseId: String!, $tableId: String!) {
-                    tablesListRows(databaseId: $databaseId, tableId: $tableId) {
+                return 'query listRows($databaseId: String!, $tableId: String!, $queries: [String!] = []) {
+                    tablesListRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
                         total
                         rows {
                             _id
+                            _databaseId
                             _tableId
                             _permissions
                             data
@@ -1196,6 +1233,53 @@ trait Base
                         data
                     }
                 }';
+            case self::$UPSERT_DOCUMENT:
+                return 'mutation upsertDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!] = []) {
+                    collectionsUpsertDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
+                        _id
+                        _databaseId
+                        _collectionId
+                        data
+                    }
+                }';
+            case self::$UPDATE_DOCUMENTS:
+                return 'mutation updateDocuments($databaseId: String!, $collectionId: String!, $data: Json!, $queries: [String!]) {
+                    collectionsUpdateDocuments(databaseId: $databaseId, collectionId: $collectionId, data: $data, queries: $queries) {
+                        total
+                        documents {
+                            _id
+                            _databaseId
+                            _collectionId
+                            _permissions
+                            data
+                        }
+                    }
+                }';
+            case self::$UPSERT_DOCUMENTS:
+                return 'mutation upsertDocuments($databaseId: String!, $collectionId: String!, $documents: [Json!]!) {
+                    collectionsUpsertDocuments(databaseId: $databaseId, collectionId: $collectionId, documents: $documents) {
+                        total
+                        documents {
+                            _id
+                            _databaseId
+                            _collectionId
+                            _permissions
+                            data
+                        }
+                    }
+                }';
+            case self::$DELETE_DOCUMENTS:
+                return 'mutation deleteDocuments($databaseId: String!, $collectionId: String!, $queries: [String!] = []) {
+                    collectionsDeleteDocuments(databaseId: $databaseId, collectionId: $collectionId, queries: $queries) {
+                        total
+                        documents {
+                            _id
+                            _databaseId
+                            _collectionId
+                            data
+                        }
+                    }
+                }';
             case self::$DELETE_DOCUMENT:
                 return 'mutation deleteDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
                     collectionsDeleteDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
@@ -1210,10 +1294,57 @@ trait Base
                         data
                     }
                 }';
+            case self::$UPSERT_ROW:
+                return 'mutation upsertRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!] = []) {
+                    tablesUpsertRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                        _id
+                        _databaseId
+                        _tableId
+                        data
+                    }
+                }';
             case self::$DELETE_ROW:
                 return 'mutation deleteRow($databaseId: String!, $tableId: String!, $rowId: String!) {
                     tablesDeleteRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
                         status
+                    }
+                }';
+            case self::$UPDATE_ROWS:
+                return 'mutation updateRows($databaseId: String!, $tableId: String!, $data: Json!, $queries: [String!]) {
+                    tablesUpdateRows(databaseId: $databaseId, tableId: $tableId, data: $data, queries: $queries) {
+                        total
+                        rows {
+                            _id
+                            _databaseId
+                            _tableId
+                            _permissions
+                            data
+                        }
+                    }
+                }';
+            case self::$UPSERT_ROWS:
+                return 'mutation upsertRows($databaseId: String!, $tableId: String!, $rows: [Json!]!) {
+                    tablesUpsertRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
+                        total
+                        rows {
+                            _id
+                            _databaseId
+                            _tableId
+                            _permissions
+                            data
+                        }
+                    }
+                }';
+            case self::$DELETE_ROWS:
+                return 'mutation deleteRows($databaseId: String!, $tableId: String!, $queries: [String!] = []) {
+                    tablesDeleteRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
+                        total
+                        rows {
+                            _id
+                            _databaseId
+                            _tableId
+                            data
+                        }
                     }
                 }';
             case self::$GET_USER:

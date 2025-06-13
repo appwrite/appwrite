@@ -134,6 +134,7 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        // TODO: @itznotabug - check for `encrypt` attribute in string column's response body as well!
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['collectionsCreateStringAttribute']);

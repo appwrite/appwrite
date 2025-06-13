@@ -303,4 +303,180 @@ class DatabaseClientTest extends Scope
         $this->assertIsNotArray($document['body']);
         $this->assertEquals(204, $document['headers']['status-code']);
     }
+
+    /**
+     * @throws \Exception
+     */
+    public function testBulkCreateDocuments(): array
+    {
+        $project = $this->getProject();
+        $projectId = $project['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        // Step 1: Create database
+        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $payload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => 'bulk',
+                'name' => 'Bulk',
+            ],
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $databaseId = $res['body']['data']['databasesCreate']['_id'];
+
+        // Step 2: Create collection
+        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $payload['query'] = $query;
+        $payload['variables'] = [
+            'databaseId' => $databaseId,
+            'collectionId' => 'operations',
+            'name' => 'Operations',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $collectionId = $res['body']['data']['databasesCreateCollection']['_id'];
+
+        // Step 3: Create attribute
+        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $payload['query'] = $query;
+        $payload['variables'] = [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        sleep(1);
+
+        // Step 4: Create documents
+        $query = $this->getQuery(self::$CREATE_DOCUMENTS);
+        $documents = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $documents[] = ['$id' => 'doc' . $i, 'name' => 'Doc #' . $i];
+        }
+
+        $payload['query'] = $query;
+        $payload['variables'] = [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'documents' => $documents,
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $this->assertCount(10, $res['body']['data']['collectionsCreateDocuments']['documents']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'projectId' => $projectId,
+        ];
+    }
+
+    /**
+     * @depends testBulkCreateDocuments
+     */
+    public function testBulkUpdateDocuments(array $data): array
+    {
+        $userId = $this->getUser()['$id'];
+        $permissions = [
+            Permission::read(Role::user($userId)),
+            Permission::update(Role::user($userId)),
+            Permission::delete(Role::user($userId)),
+        ];
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $query = $this->getQuery(self::$UPDATE_DOCUMENTS);
+        $payload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['databaseId'],
+                'collectionId' => $data['collectionId'],
+                'data' => [
+                    'name' => 'Docs Updated',
+                    '$permissions' => $permissions,
+                ],
+            ],
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $this->assertCount(10, $res['body']['data']['collectionsUpdateDocuments']['documents']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testBulkUpdateDocuments
+     */
+    public function testBulkUpsertDocuments(array $data): array
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Upsert: Update one, insert one
+        $query = $this->getQuery(self::$UPSERT_DOCUMENTS);
+        $payload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['databaseId'],
+                'collectionId' => $data['collectionId'],
+                'documents' => [
+                    ['$id' => 'doc10', 'name' => 'Doc #1000'],
+                    ['name' => 'Doc #11'],
+                ],
+            ],
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $this->assertCount(2, $res['body']['data']['collectionsUpsertDocuments']['documents']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testBulkUpsertDocuments
+     */
+    public function testBulkDeleteDocuments(array $data): array
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $query = $this->getQuery(self::$DELETE_DOCUMENTS);
+        $payload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['databaseId'],
+                'collectionId' => $data['collectionId'],
+            ],
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $this->assertCount(11, $res['body']['data']['collectionsDeleteDocuments']['documents']);
+
+        return $data;
+    }
 }

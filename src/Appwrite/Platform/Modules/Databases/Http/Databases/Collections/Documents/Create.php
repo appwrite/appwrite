@@ -418,6 +418,13 @@ class Create extends Action
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
+        // BIG TODO: @itznotabug - need to check what to do for bulk api because there's not just one `[document/rowId]`.
+        $queueForEvents
+            ->setParam('documentId', $documents[0]->getId())
+            ->setParam('rowId', $documents[0]->getId())
+            // TODO: @itznotabug - check if the events mirroring works here!
+            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
+
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($documents),
@@ -426,12 +433,6 @@ class Create extends Action
 
             return;
         }
-
-        $queueForEvents
-            ->setParam('documentId', $documents[0]->getId())
-            ->setParam('rowId', $documents[0]->getId())
-            // TODO: @itznotabug - check if the events mirroring works here!
-            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
 
         $response->dynamic(
             $documents[0],
