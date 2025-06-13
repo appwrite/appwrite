@@ -4584,16 +4584,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.10.4",
+            "version": "0.10.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "f635b368909eb3c3fe57344fe43525e74e8fdc03"
+                "reference": "b358439dc387f6097019eb83ebb9fc258fe9da05"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/f635b368909eb3c3fe57344fe43525e74e8fdc03",
-                "reference": "f635b368909eb3c3fe57344fe43525e74e8fdc03",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/b358439dc387f6097019eb83ebb9fc258fe9da05",
+                "reference": "b358439dc387f6097019eb83ebb9fc258fe9da05",
                 "shasum": ""
             },
             "require": {
@@ -4627,9 +4627,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.10.4"
+                "source": "https://github.com/utopia-php/vcs/tree/0.10.5"
             },
-            "time": "2025-06-02T09:18:36+00:00"
+            "time": "2025-06-10T15:01:16+00:00"
         },
         {
             "name": "utopia-php/websocket",
