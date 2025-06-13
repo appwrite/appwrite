@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Bulk;
 
+use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Update as DocumentsUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -31,6 +32,8 @@ class Update extends DocumentsUpdate
 
     public function __construct()
     {
+        $this->setContext(Context::DATABASE_ROWS);
+
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows')
