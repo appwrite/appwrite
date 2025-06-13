@@ -168,7 +168,7 @@ class DatabasesPermissionsMemberTest extends Scope
 
         $doconly = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', $this->getServerHeader(), [
             'tableId' => ID::unique(),
-            'name' => 'Document Only Movies',
+            'name' => 'Row Only Movies',
             'permissions' => [],
             'rowSecurity' => true,
         ]);
@@ -196,7 +196,7 @@ class DatabasesPermissionsMemberTest extends Scope
      * @dataProvider permissionsProvider
      * @depends      testSetupDatabase
      */
-    public function testReadDocuments($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
+    public function testReadRows($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
     {
         $users = $data['users'];
         $tables = $data['tables'];
@@ -230,7 +230,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
-         * Check "any" permission collection
+         * Check "any" permission table
          */
         $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $tables['public'] . '/rows', [
             'origin' => 'http://localhost',
@@ -243,7 +243,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals($anyCount, $rows['body']['total']);
 
         /**
-         * Check "users" permission collection
+         * Check "users" permission table
          */
         $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $tables['private'] . '/rows', [
             'origin' => 'http://localhost',
@@ -256,7 +256,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals($usersCount, $rows['body']['total']);
 
         /**
-         * Check "user:user1" document only permission collection
+         * Check "user:user1" row only permission table
          */
         $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $tables['doconly'] . '/rows', [
             'origin' => 'http://localhost',
