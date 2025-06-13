@@ -877,6 +877,10 @@ class Builds extends Action
                 }
             }
 
+            $deployment->setAttribute('buildLogs', $logs);
+
+            $this->afterBuildSuccess($dbForProject, $deployment);
+
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
             $queueForRealtime
@@ -1311,6 +1315,19 @@ class Builds extends Action
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
+    }
+
+    /**
+     * Hook to run after build success
+     *
+     * @param Database $dbForProject
+     * @param Document $deployment
+     * @return void
+     */
+    protected function afterBuildSuccess(Database $dbForProject, Document &$deployment): void
+    {
+        assert($dbForProject instanceof Database);
+        assert($deployment instanceof Document);
     }
 
     protected function getRuntime(Document $resource, string $version): array
