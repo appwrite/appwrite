@@ -81,11 +81,17 @@ class RealtimeCustomClientTest extends Scope
             'files',
             'files.1',
             'collections',
+            'tables',
             'collections.1.documents',
             'collections.2.documents',
+            'tables.1.rows',
+            'tables.2.rows',
             'documents',
+            'rows',
             'collections.1.documents.1',
             'collections.2.documents.2',
+            'tables.1.rows.1',
+            'tables.2.rows.2',
         ], $headers);
 
         $response = json_decode($client->receive(), true);
@@ -95,17 +101,22 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertNotEmpty($response['data']['user']);
-        $this->assertCount(10, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains('files.1', $response['data']['channels']);
         $this->assertContains('collections', $response['data']['channels']);
+        $this->assertContains('tables', $response['data']['channels']);
         $this->assertContains('collections.1.documents', $response['data']['channels']);
         $this->assertContains('collections.2.documents', $response['data']['channels']);
+        $this->assertContains('tables.1.rows', $response['data']['channels']);
+        $this->assertContains('tables.2.rows', $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('collections.1.documents.1', $response['data']['channels']);
         $this->assertContains('collections.2.documents.2', $response['data']['channels']);
+        $this->assertContains('tables.1.rows.1', $response['data']['channels']);
+        $this->assertContains('tables.2.rows.2', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
 
         $client->close();
