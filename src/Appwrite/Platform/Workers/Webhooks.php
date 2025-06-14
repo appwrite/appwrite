@@ -219,6 +219,7 @@ class Webhooks extends Action
         ]);
 
         $projectId = $project->getId();
+        $region = $project->getAttribute('region', 'default');
         $webhookId = $webhook->getId();
 
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
@@ -227,7 +228,7 @@ class Webhooks extends Action
         $template->setParam('{{project}}', $project->getAttribute('name'));
         $template->setParam('{{url}}', $webhook->getAttribute('url'));
         $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{path}}', "/console/project-$projectId/settings/webhooks/$webhookId");
+        $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
         $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
