@@ -97,7 +97,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
