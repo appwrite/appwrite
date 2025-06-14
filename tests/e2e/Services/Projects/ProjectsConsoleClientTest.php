@@ -951,6 +951,31 @@ class ProjectsConsoleClientTest extends Scope
         return ['projectId' => $projectId];
     }
 
+    /** @depends testCreateProject */
+    public function testUpdateProjectOnPasswordChange($data): array
+    {
+        $id = $data['projectId'];
+
+        // Check defaults
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['onPasswordChange']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-change', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'onPasswordChange' => true,
+        ]);
+        $this->assertTrue($response['body']['onPasswordChange']);
+
+        return $data;
+    }
+
     /**
      * @depends testCreateProject
      */
