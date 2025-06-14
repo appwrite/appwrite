@@ -9,3 +9,8 @@ reviews:
       - main
       - 1.6.x
       - 1.7.x
+  high_level_summary: false
+  poem: false
+  sequence_diagrams: false
+  collapse_walkthrough: true
+  changed_files_summary: false
