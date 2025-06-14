@@ -284,5 +284,6 @@ $cli
 
 $cli->shutdown()->action(fn () => Timer::clearAll());
 
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+// Enable coroutines, but disable TCP hooks. These don't work until we use `\Utopia\Cache\Adapter\Pool` and `\Utopia\Database\Adapter\Pool`.
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
 run($cli->run(...));
