@@ -30,6 +30,13 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+    "minimum-stability": "dev",
+    "repositories": [
+      {
+        "type": "vcs",
+        "url": "git@github.com:appwrite-labs/php-amqplib.git"
+      }
+    ],
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
@@ -64,10 +71,10 @@
         "utopia-php/messaging": "0.17.*",
         "utopia-php/migration": "0.9.*",
         "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "0.7.*",
+        "utopia-php/platform": "feat-amqp-swoole-dev",
         "utopia-php/pools": "0.8.*",
         "utopia-php/preloader": "0.2.*",
-        "utopia-php/queue": "0.10.*",
+        "utopia-php/queue": "feat-amqp-swoole-dev",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.8.*",
