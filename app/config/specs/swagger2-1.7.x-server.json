@@ -7671,7 +7671,7 @@
                                     "model": "#\/definitions\/documentList"
                                 }
                             ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -7757,7 +7757,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create or update Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
+                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "200": {
                         "description": "Documents List",
@@ -7846,7 +7846,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update all documents that match your queries, if no queries are submitted then all documents are updated. You can pass only specific fields to be updated.",
+                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nUpdate all documents that match your queries, if no queries are submitted then all documents are updated. You can pass only specific fields to be updated.",
                 "responses": {
                     "200": {
                         "description": "Documents List",
@@ -7938,7 +7938,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Bulk delete documents using queries, if no queries are passed then all documents are deleted.",
+                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nBulk delete documents using queries, if no queries are passed then all documents are deleted.",
                 "responses": {
                     "200": {
                         "description": "Documents List",
@@ -8116,7 +8116,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "200": {
                         "description": "Document",
@@ -8927,6 +8927,7 @@
                                         "dart-3.1",
                                         "dart-3.3",
                                         "dart-3.5",
+                                        "dart-3.8",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -8952,7 +8953,8 @@
                                         "static-1",
                                         "flutter-3.24",
                                         "flutter-3.27",
-                                        "flutter-3.29"
+                                        "flutter-3.29",
+                                        "flutter-3.32"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -9340,6 +9342,7 @@
                                         "dart-3.1",
                                         "dart-3.3",
                                         "dart-3.5",
+                                        "dart-3.8",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -9365,7 +9368,8 @@
                                         "static-1",
                                         "flutter-3.24",
                                         "flutter-3.27",
-                                        "flutter-3.29"
+                                        "flutter-3.29",
+                                        "flutter-3.32"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -17792,6 +17796,7 @@
                                         "dart-3.1",
                                         "dart-3.3",
                                         "dart-3.5",
+                                        "dart-3.8",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -17817,7 +17822,8 @@
                                         "static-1",
                                         "flutter-3.24",
                                         "flutter-3.27",
-                                        "flutter-3.29"
+                                        "flutter-3.29",
+                                        "flutter-3.32"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -18221,6 +18227,7 @@
                                         "dart-3.1",
                                         "dart-3.3",
                                         "dart-3.5",
+                                        "dart-3.8",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -18246,7 +18253,8 @@
                                         "static-1",
                                         "flutter-3.24",
                                         "flutter-3.27",
-                                        "flutter-3.29"
+                                        "flutter-3.29",
+                                        "flutter-3.32"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -20935,7 +20943,8 @@
                             "png",
                             "webp",
                             "heic",
-                            "avif"
+                            "avif",
+                            "gif"
                         ],
                         "x-enum-name": "ImageFormat",
                         "x-enum-keys": [],
