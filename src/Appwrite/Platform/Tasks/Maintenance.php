@@ -9,6 +9,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
@@ -87,7 +88,26 @@ class Maintenance extends Action
             $this->renewCertificates($dbForPlatform, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-        }, $interval, $delay);
+            Console::warning("Deleting projects that there delete date smaller then ".DateTime::now());
+            $dbForPlatform->foreach(
+                'projects',
+                function (Document $project) use ($dbForPlatform, $queueForDeletes) {
+
+                    $queueForDeletes
+                        ->setProject($project)
+                        ->setType(DELETE_TYPE_DOCUMENT)
+                        ->setDocument($project)
+                        ->trigger();
+
+                    Authorization::skip(fn () => $dbForPlatform->deleteDocument('projects', $project->getId()));
+                }, [
+                    Query::lessThan('_deletedAt', DateTime::now()),
+                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                ]
+            );
+
+
+        }, $interval, 0);
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void

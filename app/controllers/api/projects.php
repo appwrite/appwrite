@@ -19,7 +19,6 @@ use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Cron\CronExpression;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
 use Utopia\Audit\Audit;
@@ -358,8 +357,17 @@ App::get('/v1/projects')
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
             }
 
+            if(!empty($cursorDocument->getAttribute('_deletedAt')) && $cursorDocument->getAttribute('_deletedAt') < DateTime::now()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
+            }
+
             $cursor->setValue($cursorDocument);
         }
+
+        $queries[] = query::or([
+            query::isNull('_deletedAt'),
+            query::lessThan('_deletedAt', DateTime::now())
+        ]);
 
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
@@ -402,6 +410,10 @@ App::get('/v1/projects/:projectId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
@@ -435,10 +447,9 @@ App::patch('/v1/projects/:projectId')
     ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
-    ->param('restore', null, new Boolean(), 'Restore project from being marked for deletion', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, bool $restore, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -446,7 +457,12 @@ App::patch('/v1/projects/:projectId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-         $project
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
             ->setAttribute('name', $name)
             ->setAttribute('description', $description)
             ->setAttribute('logo', $logo)
@@ -457,14 +473,42 @@ App::patch('/v1/projects/:projectId')
             ->setAttribute('legalCity', $legalCity)
             ->setAttribute('legalAddress', $legalAddress)
             ->setAttribute('legalTaxId', $legalTaxId)
-            ->setAttribute('search', implode(' ', [$projectId, $name]))
-         ;
+            ->setAttribute('search', implode(' ', [$projectId, $name])));
 
-        if (!empty($restore)) {
-            $project->setAttribute('_deletedAt', null);
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/restore')
+    ->desc('Restore project from being a candidate for deletion')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'projects',
+        name: 'restore',
+        description: '/docs/references/projects/restore.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(),
+            $project->setAttribute('_deletedAt', null)
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -496,6 +540,10 @@ App::patch('/v1/projects/:projectId/team')
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -574,6 +622,10 @@ App::patch('/v1/projects/:projectId/service')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $services = $project->getAttribute('services', []);
         $services[$service] = $status;
 
@@ -608,6 +660,10 @@ App::patch('/v1/projects/:projectId/service/all')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -653,6 +709,10 @@ App::patch('/v1/projects/:projectId/api')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $apis = $project->getAttribute('apis', []);
         $apis[$api] = $status;
 
@@ -687,6 +747,10 @@ App::patch('/v1/projects/:projectId/api/all')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -731,6 +795,10 @@ App::patch('/v1/projects/:projectId/oauth2')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -782,6 +850,10 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $auths = $project->getAttribute('auths', []);
         $auths['sessionAlerts'] = $alerts;
 
@@ -818,6 +890,10 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -862,6 +938,10 @@ App::patch('/v1/projects/:projectId/auth/limit')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $auths = $project->getAttribute('auths', []);
         $auths['limit'] = $limit;
 
@@ -897,6 +977,10 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -942,6 +1026,10 @@ App::patch('/v1/projects/:projectId/auth/:method')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $auths = $project->getAttribute('auths', []);
         $auths[$authKey] = $status;
 
@@ -976,6 +1064,10 @@ App::patch('/v1/projects/:projectId/auth/password-history')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1017,6 +1109,10 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $auths = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
 
@@ -1055,6 +1151,10 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $auths = $project->getAttribute('auths', []);
         $auths['personalDataCheck'] = $enabled;
 
@@ -1090,6 +1190,10 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1139,6 +1243,10 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $auths = $project->getAttribute('auths', []);
 
         $auths['mockNumbers'] = $numbers;
@@ -1170,13 +1278,16 @@ App::delete('/v1/projects/:projectId')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
-    ->inject('user')
     ->inject('dbForPlatform')
     ->inject('queueForDeletes')
-    ->action(function (string $projectId, Response $response, Document $user, Database $dbForPlatform, Delete $queueForDeletes) {
+    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1223,6 +1334,10 @@ App::post('/v1/projects/:projectId/webhooks')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1284,6 +1399,10 @@ App::get('/v1/projects/:projectId/webhooks')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $webhooks = $dbForPlatform->find('webhooks', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
@@ -1321,6 +1440,10 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1369,6 +1492,10 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1431,6 +1558,10 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -1475,6 +1606,10 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1524,6 +1659,10 @@ App::post('/v1/projects/:projectId/keys')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1581,6 +1720,10 @@ App::get('/v1/projects/:projectId/keys')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $keys = $dbForPlatform->find('keys', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
@@ -1618,6 +1761,10 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1662,6 +1809,10 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1716,6 +1867,10 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -1764,6 +1919,10 @@ App::post('/v1/projects/:projectId/jwts')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $response
@@ -1807,6 +1966,10 @@ App::post('/v1/projects/:projectId/platforms')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -1903,6 +2066,10 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -1944,6 +2111,10 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -2001,6 +2172,10 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -2053,6 +2228,10 @@ App::patch('/v1/projects/:projectId/smtp')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -2154,6 +2333,10 @@ App::post('/v1/projects/:projectId/smtp/tests')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $replyToEmail = !empty($replyTo) ? $replyTo : $senderEmail;
 
         $subject = 'Custom SMTP email sample';
@@ -2223,6 +2406,10 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $templates = $project->getAttribute('templates', []);
         $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
 
@@ -2266,6 +2453,10 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -2331,6 +2522,10 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $templates = $project->getAttribute('templates', []);
         $templates['sms.' . $type . '-' . $locale] = [
             'message' => $message
@@ -2377,6 +2572,10 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
@@ -2435,6 +2634,10 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $templates = $project->getAttribute('templates', []);
         $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
 
@@ -2481,6 +2684,10 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 

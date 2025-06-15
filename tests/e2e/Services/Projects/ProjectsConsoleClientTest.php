@@ -3876,7 +3876,25 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $project['headers']['status-code']);
+        var_dump(['before restore' => $response['headers']['status-code']]);
+        // restore from deletion
 
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/restore', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        var_dump(['restore' => $response['headers']['status-code']]);
+
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $project['headers']['status-code']);
+        var_dump(['after restore' => $response['headers']['status-code']]);
         return $data;
     }
 

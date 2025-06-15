@@ -31,6 +31,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -293,6 +294,10 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     }
 
     $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+
+    if(!empty($project->getAttribute('_deletedAt')) && $project->getAttribute('_deletedAt') < DateTime::now()) {
+        $project = new Document([]);
+    }
 
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
