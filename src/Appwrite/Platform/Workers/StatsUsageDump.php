@@ -70,9 +70,9 @@ class StatsUsageDump extends Action
     ];
 
     /**
-     * @var callable
+     * @var callable(Document): Database
      */
-    protected mixed $getLogsDB;
+    protected $getLogsDB;
 
     protected array $periods = [
         '1h' => 'Y-m-d H:00',
@@ -126,10 +126,10 @@ class StatsUsageDump extends Action
                 continue;
             }
 
-            console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
+            Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
             try {
-                /** @var \Utopia\Database\Database $dbForProject */
+                /** @var Database $dbForProject */
                 $dbForProject = $getProjectDB($project);
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
@@ -169,7 +169,7 @@ class StatsUsageDump extends Action
                     }
                 }
             } catch (\Exception $e) {
-                console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+                Console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
         }
     }
@@ -190,8 +190,7 @@ class StatsUsageDump extends Action
             }
         }
 
-        /** @var \Utopia\Database\Database $dbForLogs*/
-        $dbForLogs = call_user_func($this->getLogsDB, $project);
+        $dbForLogs = ($this->getLogsDB)($project);
 
         try {
             $dbForLogs->createOrUpdateDocumentsWithIncrease(
@@ -203,7 +202,5 @@ class StatsUsageDump extends Action
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
         }
-
-        $this->register->get('pools')->get('logs')->reclaim();
     }
 }
