@@ -10,6 +10,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
+use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
@@ -118,6 +119,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $project->setAttribute('accessedAt', DateTime::now());
             Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
         }
+        /**
+         * Override project resource to update hooks, since x-appwrite-project is not available when executing custom domain function
+         */
+        App::setResource('project', fn () => $project);
+
     }
 
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
@@ -1136,6 +1142,12 @@ App::error()
     ->inject('queueForStatsUsage')
     ->inject('devKey')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
+
+        var_dump([
+            'location' => 'error hook',
+             'project' => $project->getId(),
+        ]);
+
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
