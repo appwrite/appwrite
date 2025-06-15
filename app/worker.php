@@ -402,7 +402,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
     };
 }, ['register', 'project']);
 
-Server::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+Server::setResource('executor', fn () => new Executor());
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

@@ -251,7 +251,7 @@ CLI::setResource('logError', function (Registry $register) {
     };
 }, ['register']);
 
-CLI::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+CLI::setResource('executor', fn () => new Executor());
 
 CLI::setResource('telemetry', fn () => new NoTelemetry());
 
