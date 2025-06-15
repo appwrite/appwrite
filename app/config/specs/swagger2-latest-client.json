@@ -4636,6 +4636,29 @@
                                 }
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                        },
+                        {
+                            "name": "createDocuments",
+                            "auth": {
+                                "Key": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/documentList"
+                                }
+                            ],
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -6729,7 +6752,8 @@
                             "png",
                             "webp",
                             "heic",
-                            "avif"
+                            "avif",
+                            "gif"
                         ],
                         "x-enum-name": "ImageFormat",
                         "x-enum-keys": [],
