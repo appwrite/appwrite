@@ -141,6 +141,7 @@ class Swagger2 extends Format
                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
+            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace() ?? 'default';
 
             $desc ??= '';
