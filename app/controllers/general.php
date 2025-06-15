@@ -118,6 +118,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $project->setAttribute('accessedAt', DateTime::now());
             Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
         }
+        /**
+         * Override project resource to update hooks, since x-appwrite-project is not available when executing custom domain function
+         */
+        App::setResource('project', fn () => $project);
+
     }
 
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
