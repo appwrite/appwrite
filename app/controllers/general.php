@@ -1142,11 +1142,6 @@ App::error()
     ->inject('devKey')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
 
-        var_dump([
-            'location' => 'error hook',
-             'project' => $project->getId(),
-        ]);
-
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
