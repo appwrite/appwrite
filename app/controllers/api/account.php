@@ -3882,7 +3882,7 @@ App::patch('/v1/account/mfa')
             if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
                 $factors[] = Type::PHONE;
             }
-            $factors = \array_unique($factors);
+            $factors = \array_values(\array_unique($factors));
 
             $session->setAttribute('factors', $factors);
             $dbForProject->updateDocument('sessions', $session->getId(), $session);
@@ -4067,7 +4067,7 @@ App::put('/v1/account/mfa/authenticators/:type')
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
-        $factors = \array_unique($factors);
+        $factors = \array_values(\array_unique($factors));
 
         $session->setAttribute('factors', $factors);
         $dbForProject->updateDocument('sessions', $session->getId(), $session);
@@ -4551,7 +4551,7 @@ App::put('/v1/account/mfa/challenge')
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
-        $factors = \array_unique($factors);
+        $factors = \array_values(\array_unique($factors));
 
         $session
             ->setAttribute('factors', $factors)

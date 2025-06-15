@@ -8844,6 +8844,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -8869,7 +8870,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -9244,6 +9246,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -9269,7 +9272,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -17490,6 +17494,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -17515,7 +17520,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -17906,6 +17912,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -17931,7 +17938,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -20646,7 +20654,8 @@
                                 "png",
                                 "webp",
                                 "heic",
-                                "avif"
+                                "avif",
+                                "gif"
                             ],
                             "x-enum-name": "ImageFormat",
                             "x-enum-keys": [],
