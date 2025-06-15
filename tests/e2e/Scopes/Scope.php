@@ -37,8 +37,39 @@ abstract class Scope extends TestCase
             if ($limit === 1) {
                 return end($emails);
             } else {
-                $lastEmails = array_slice($emails, -1 * $limit);
-                return $lastEmails;
+                return array_slice($emails, -1 * $limit);
+            }
+        }
+
+        return [];
+    }
+
+    protected function extractQueryParamsFromEmailLink(string $html): array
+    {
+        foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
+            $linkStart = strpos($html, $prefix);
+            if ($linkStart !== false) {
+                $hrefStart = strrpos(substr($html, 0, $linkStart), 'href="');
+                if ($hrefStart === false) {
+                    continue;
+                }
+
+                $hrefStart += 6;
+                $hrefEnd = strpos($html, '"', $hrefStart);
+                if ($hrefEnd === false || $hrefStart >= $hrefEnd) {
+                    continue;
+                }
+
+                $link = substr($html, $hrefStart, $hrefEnd - $hrefStart);
+                $link = strtok($link, '#'); // Remove `#title`
+                $queryStart = strpos($link, '?');
+                if ($queryStart === false) {
+                    continue;
+                }
+
+                $queryString = substr($link, $queryStart + 1);
+                parse_str(html_entity_decode($queryString), $queryParams);
+                return $queryParams;
             }
         }
 
