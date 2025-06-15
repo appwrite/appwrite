@@ -76,7 +76,7 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         foreach ($delayedExecutions as $delay => $schedules) {
-            \go(function () use ($delay, $schedules, $dbForPlatform) {
+            \go(function () use ($delay, $schedules, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
                 foreach ($schedules as $delayConfig) {
