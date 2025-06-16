@@ -105,7 +105,7 @@ if (!function_exists('getProjectDB')) {
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getSequence())
+                ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database

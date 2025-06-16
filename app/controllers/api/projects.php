@@ -230,7 +230,7 @@ App::post('/v1/projects')
             if ($sharedTables) {
                 $dbForProject
                     ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? $project->getSequence() : null)
+                    ->setTenant($sharedTablesV1 ? (int)$project->getSequence() : null)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $dbForProject
