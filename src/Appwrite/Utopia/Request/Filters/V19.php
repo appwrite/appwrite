@@ -39,7 +39,7 @@ class V19 extends Filter
         return $content;
     }
 
-    public function convertQueryAttribute(array $content, string $old, string $new): array
+    public function convertQueryAttribute(array $content, string $old, string $new)
     {
         if (isset($content['queries']) && is_array($content['queries'])) {
             foreach ($content['queries'] as $index => $query) {
