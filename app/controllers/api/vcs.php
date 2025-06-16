@@ -614,11 +614,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
+    ->param('providerReference', '', new Text(256, 0), 'Git reference (branch, tag, commit) to get contents from', true)
     ->inject('gitHub')
     ->inject('response')
     ->inject('project')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, string $providerReference, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
@@ -640,7 +641,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $contents = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
+        $contents = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory, $providerReference);
 
         $vcsContents = [];
         foreach ($contents as $content) {
