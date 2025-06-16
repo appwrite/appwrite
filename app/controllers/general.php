@@ -76,7 +76,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 
     $errorView = __DIR__ . '/../views/general/error.phtml';
-    $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_DOMAIN', '');
+    $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
     if ($rule->isEmpty()) {
         $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
