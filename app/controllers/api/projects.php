@@ -2502,38 +2502,38 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     });
 
 App::patch('/v1/projects/:projectId/auth/session-invalidation')
-->desc('Update invalidate session option of the project')
-->groups(['api', 'projects'])
-->label('scope', 'projects.write')
-->label('sdk', new Method(
-    namespace: 'projects',
-    group: 'auth',
-    name: 'updateInvalidateSessions',
-    description: '/docs/references/projects/session-invalidation.md',
-    auth: [AuthType::ADMIN],
-    responses: [
-        new SDKResponse(
-            code: Response::STATUS_CODE_OK,
-            model: Response::MODEL_PROJECT,
-        )
-    ]
-))
-->param('projectId', '', new UID(), 'Project unique ID.')
-->param('invalidateSessions', false, new Boolean(), 'Auth option to allow invalidating existing sessions')
-->inject('response')
-->inject('dbForPlatform')
-->action(function (string $projectId, bool $invalidateSessions, Response $response, Database $dbForPlatform) {
+    ->desc('Update invalidate session option of the project')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateInvalidateSessions',
+        description: '/docs/references/projects/session-invalidation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('invalidateSessions', false, new Boolean(), 'Auth option to allow invalidating existing sessions')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $invalidateSessions, Response $response, Database $dbForPlatform) {
 
-    $project = $dbForPlatform->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
-    if ($project->isEmpty()) {
-        throw new Exception(Exception::PROJECT_NOT_FOUND);
-    }
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
 
-    $auths = $project->getAttribute('auths', []);
-    $auths['invalidateSessions'] = $invalidateSessions;
-    $dbForPlatform->updateDocument('projects', $project->getId(), $project
-    ->setAttribute('auths', $auths));
+        $auths = $project->getAttribute('auths', []);
+        $auths['invalidateSessions'] = $invalidateSessions;
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+        ->setAttribute('auths', $auths));
 
-    $response->dynamic($project, Response::MODEL_PROJECT);
-});
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
