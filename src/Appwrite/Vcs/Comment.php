@@ -88,6 +88,7 @@ class Comment
         foreach ($projects as $projectId => $project) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+            var_dump("hostname: $hostname");
 
             $text .= "## {$project['name']}\n\n";
             $text .= "Project ID: `{$projectId}`\n\n";
@@ -166,6 +167,8 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
+                        var_dump("in view logs");
+                        var_dump("hostname: $hostname");
                         $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $function['region'] . '-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';

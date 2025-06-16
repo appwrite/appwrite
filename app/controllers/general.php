@@ -262,7 +262,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
 
             if (!$authorized) {
-                $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . "://" . System::getEnv('_APP_DOMAIN');
+                $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . "://" . System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
