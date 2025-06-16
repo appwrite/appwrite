@@ -94,14 +94,13 @@ App::post('/v1/projects')
     ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
-    ->param('onPasswordChange', false, new Boolean(), 'Auth option to allow invalidating existing sessions', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForPlatform')
     ->inject('cache')
     ->inject('pools')
     ->inject('hooks')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, $onPasswordChange, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks) {
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks) {
 
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -128,7 +127,7 @@ App::post('/v1/projects')
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
-            'onPasswordChange' => $onPasswordChange
+            'invalidateSessions' => true
         ];
 
         foreach ($auth as $method) {
@@ -2502,15 +2501,15 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-change')
-->desc('Update on password change of the project')
+App::patch('/v1/projects/:projectId/auth/session-invalidation')
+->desc('Update invalidate session option of the project')
 ->groups(['api', 'projects'])
 ->label('scope', 'projects.write')
 ->label('sdk', new Method(
     namespace: 'projects',
     group: 'auth',
-    name: 'updateOnPasswordChange',
-    description: '/docs/references/projects/update-auth-on-password-change.md',
+    name: 'updateInvalidateSessions',
+    description: '/docs/references/projects/session-invalidation.md',
     auth: [AuthType::ADMIN],
     responses: [
         new SDKResponse(
@@ -2520,10 +2519,10 @@ App::patch('/v1/projects/:projectId/auth/password-change')
     ]
 ))
 ->param('projectId', '', new UID(), 'Project unique ID.')
-->param('onPasswordChange', false, new Boolean(), 'Auth option to allow invalidating existing sessions')
+->param('invalidateSessions', false, new Boolean(), 'Auth option to allow invalidating existing sessions')
 ->inject('response')
 ->inject('dbForPlatform')
-->action(function (string $projectId, bool $onPasswordChange, Response $response, Database $dbForPlatform) {
+->action(function (string $projectId, bool $invalidateSessions, Response $response, Database $dbForPlatform) {
 
     $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -2532,7 +2531,7 @@ App::patch('/v1/projects/:projectId/auth/password-change')
     }
 
     $auths = $project->getAttribute('auths', []);
-    $auths['onPasswordChange'] = $onPasswordChange;
+    $auths['invalidateSessions'] = $invalidateSessions;
     $dbForPlatform->updateDocument('projects', $project->getId(), $project
     ->setAttribute('auths', $auths));
 

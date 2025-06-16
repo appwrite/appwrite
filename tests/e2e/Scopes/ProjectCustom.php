@@ -200,15 +200,15 @@ trait ProjectCustom
 
         return $key['body']['secret'];
     }
-    public function updateProjectOnPasswordChangeProperty(bool $value)
+    public function updateProjectinvalidateSessionsProperty(bool $value)
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . self::$project['$id'] . '/auth/password-change', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . self::$project['$id'] . '/auth/session-invalidation', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ]), [
-            'onPasswordChange' => $value,
+            'invalidateSessions' => $value,
         ]);
 
         return $response['headers']['status-code'];

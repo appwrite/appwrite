@@ -1352,8 +1352,8 @@ App::patch('/v1/users/:userId/password')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $sessions = $user->getAttribute('sessions', []);
-        $onPasswordChange = $project->getAttribute('auths', [])['onPasswordChange'];
-        if ($onPasswordChange) {
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate) {
             foreach ($sessions as $session) {
                 /** @var Document $session */
                 $dbForProject->deleteDocument('sessions', $session->getId());

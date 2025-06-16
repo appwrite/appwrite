@@ -952,7 +952,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /** @depends testCreateProject */
-    public function testUpdateProjectOnPasswordChange($data): array
+    public function testUpdateProjectInvalidateSessions($data): array
     {
         $id = $data['projectId'];
 
@@ -963,15 +963,15 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['onPasswordChange']);
+        $this->assertFalse($response['body']['invalidateSessions']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-change', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/session-invalidation', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'onPasswordChange' => true,
+            'invalidateSessions' => true,
         ]);
-        $this->assertTrue($response['body']['onPasswordChange']);
+        $this->assertTrue($response['body']['invalidateSessions']);
 
         return $data;
     }

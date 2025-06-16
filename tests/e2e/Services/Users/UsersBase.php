@@ -1117,7 +1117,7 @@ trait UsersBase
         ]);
 
         $this->assertEquals(401, $session['headers']['status-code']);
-        $this->updateProjectOnPasswordChangeProperty(true);
+        $this->updateProjectinvalidateSessionsProperty(true);
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1147,7 +1147,7 @@ trait UsersBase
         ]);
 
         $this->assertEquals($session['headers']['status-code'], 201);
-        $this->updateProjectOnPasswordChangeProperty(false);
+        $this->updateProjectinvalidateSessionsProperty(false);
         return $data;
     }
 

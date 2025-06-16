@@ -271,7 +271,7 @@ class Project extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('onPasswordChange', [
+            ->addRule('invalidateSessions', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'For invalidating all sessions',
                 'default' => false,
@@ -382,7 +382,7 @@ class Project extends Model
         $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
         $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? true);
         $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
-        $document->setAttribute('onPasswordChange', $authValues['onPasswordChange'] ?? false);
+        $document->setAttribute('invalidateSessions', $authValues['invalidateSessions'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

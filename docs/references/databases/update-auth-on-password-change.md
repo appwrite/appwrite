@@ -1,1 +1,0 @@
-On password change. Should be an optional auth security setting for projects, and enabled by default for console project.
