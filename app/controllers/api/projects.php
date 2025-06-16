@@ -2508,8 +2508,8 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
     ->label('sdk', new Method(
         namespace: 'projects',
         group: 'auth',
-        name: 'updateInvalidateSessions',
-        description: '/docs/references/projects/session-invalidation.md',
+        name: 'updateSessionInvalidation',
+        description: '/docs/references/projects/update-session-invalidation.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -2519,7 +2519,7 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('invalidateSessions', false, new Boolean(), 'Auth option to allow invalidating existing sessions')
+    ->param('enabled', false, new Boolean(), 'Update authentication session invalidation status. Use this endpoint to enable or disable session invalidation on password change')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $invalidateSessions, Response $response, Database $dbForPlatform) {

@@ -169,6 +169,12 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('authInvalidateSessions', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not all existing sessions should be invalidated on password change',
+                'default' => false,
+                'example' => self::TYPE_BOOLEAN,
+            ])
             ->addRule('oAuthProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
@@ -270,12 +276,6 @@ class Project extends Model
                 'description' => 'Last ping datetime in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
-            ->addRule('invalidateSessions', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'For invalidating all sessions',
-                'default' => false,
-                'example' => self::TYPE_BOOLEAN,
             ])
         ;
 
@@ -382,7 +382,7 @@ class Project extends Model
         $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
         $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? true);
         $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
-        $document->setAttribute('invalidateSessions', $authValues['invalidateSessions'] ?? false);
+        $document->setAttribute('authInvalidateSessions', $authValues['invalidateSessions'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

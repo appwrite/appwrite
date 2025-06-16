@@ -208,7 +208,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ]), [
-            'invalidateSessions' => $value,
+            'enabled' => $value,
         ]);
 
         return $response['headers']['status-code'];
