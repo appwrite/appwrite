@@ -146,7 +146,6 @@ jobs:
           Avatars,
           Console,
           Databases,
-          Databases 1.6.2,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -192,21 +191,14 @@ jobs:
 
       - name: Run ${{ matrix.service }} tests with Project table mode
         run: |
-          if [[ "${{ matrix.service }}" == "Databases 1.6.2" ]]; then
-            echo "Using Database 1.6.2 format"
-            export _APP_SYSTEM_RESPONSE_FORMAT=1.6.2
-            service="Databases"
-          else
-            service="${{ matrix.service }}"
-          fi
-
+          echo "Using project tables"
           export _APP_DATABASE_SHARED_TABLES=
           export _APP_DATABASE_SHARED_TABLES_V1=
 
           docker compose exec -T \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
-            appwrite test /usr/src/code/tests/e2e/Services/$service --debug --exclude-group devKeys
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group devKeys
 
   e2e_shared_mode_test:
     name: E2E Shared Mode Service Test
@@ -222,7 +214,6 @@ jobs:
             Avatars,
             Console,
             Databases,
-            Databases 1.6.2,
             Functions,
             FunctionsSchedule,
             GraphQL,
@@ -282,20 +273,11 @@ jobs:
             export _APP_DATABASE_SHARED_TABLES=database_db_main
             export _APP_DATABASE_SHARED_TABLES_V1=
           fi
-          
-          if [[ "${{ matrix.service }}" == "Databases 1.6.2" ]]; then
-            echo "Using Database 1.6.2 format"
-            export _APP_SYSTEM_RESPONSE_FORMAT=1.6.2
-            service="Databases"
-          else
-            export _APP_SYSTEM_RESPONSE_FORMAT=
-            service="${{ matrix.service }}"
-          fi
       
           docker compose exec -T \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
-            appwrite test /usr/src/code/tests/e2e/Services/$service --debug --exclude-group devKeys
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group devKeys
 
   e2e_dev_keys:
     name: E2E Service Test (Dev Keys)
