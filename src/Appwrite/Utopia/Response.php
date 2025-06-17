@@ -105,6 +105,7 @@ use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Topic;
+use Appwrite\Utopia\Response\Model\Transaction;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -515,6 +516,7 @@ class Response extends SwooleResponse
             ->setModel(new TemplateVariable())
             ->setModel(new Token())
             ->setModel(new Topic())
+            ->setModel(new Transaction())
             ->setModel(new UsageBuckets())
             ->setModel(new UsageCollection())
             ->setModel(new UsageDatabase())

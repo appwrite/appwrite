@@ -2651,9 +2651,9 @@ return [
                 'orders'     => [],
             ],
             [
-                '$id'        => ID::custom('_key_db_coll'),
+                '$id'        => ID::custom('_key_internal_path'),
                 'type'       => Database::INDEX_KEY,
-                'attributes' => ['databaseId', 'collectionId'],
+                'attributes' => ['databaseInternalId', 'collectionInternalId'],
                 'lengths'    => [],
                 'orders'     => [],
             ],

@@ -4442,10 +4442,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         if (!empty($transactionId)) {
-            $dbForProject->createDocument('transactionLog', new Document([
-                'transactionInternalId' => $transaction->getSequence(),
+            $dbForProject->createDocument('transactionLogs', new Document([
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $document->getId(),
                 'data' => $newDocument->getArrayCopy(),
                 'action' => 'update',
@@ -4700,10 +4700,10 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         if (!empty($transactionId)) {
-            $dbForProject->createDocument('transactionLog', new Document([
-                'transactionInternalId' => $transaction->getSequence(),
+            $dbForProject->createDocument('transactionLogs', new Document([
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
                 'action' => 'update',
                 'data' => $newDocument->getArrayCopy(),
             ]));
@@ -4841,7 +4841,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
             }
 
-            $dbForProject->createDocument('transactionLog', new Document([
+            $dbForProject->createDocument('transactionLogs', new Document([
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -4958,7 +4958,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
             }
 
-            $dbForProject->createDocument('transactionLog', new Document([
+            $dbForProject->createDocument('transactionLogs', new Document([
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -5097,6 +5097,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $documents = [];
+
+        if (!empty($transactionId)) {
+            $dbForProject->createDocument('transactionLogs', new Document([
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'action' => 'bulkUpdate',
+                'data' => \compact('data', 'queries'),
+            ]));
+        }
 
         try {
             $modified = $dbForProject->updateDocuments(
@@ -5315,7 +5325,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
             }
 
-            $dbForProject->createDocument('transactionLog', new Document([
+            $dbForProject->createDocument('transactionLogs', new Document([
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -5471,12 +5481,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = [];
 
         if (!empty($transactionId)) {
-            $dbForProject->createDocument('transactionLog', new Document([
+            $dbForProject->createDocument('transactionLogs', new Document([
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
-                'action' => 'delete',
-                'data' => [$queries],
+                'action' => 'bulkDelete',
+                'data' => ['queries' => $queries],
             ]));
 
             $modified = 0;

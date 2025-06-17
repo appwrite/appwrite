@@ -8,12 +8,21 @@ class Operation extends Validator
 {
     private string $description = '';
 
-    /** @var string[] */
+    /** @var array<string> */
+    private array $required = [
+        'databaseId',
+        'collectionId',
+        'action',
+    ];
+
+    /** @var array<string> */
     private array $actions = [
         'create',
         'update',
+        'bulkUpdate',
         'upsert',
-        'delete'
+        'delete',
+        'bulkDelete',
     ];
 
     public function getDescription(): string
@@ -38,16 +47,15 @@ class Operation extends Validator
         }
 
         // Mandatory keys
-        $required = ['databaseId', 'collectionId', 'action'];
-        foreach ($required as $key) {
+        foreach ($this->required as $key) {
             if (!\array_key_exists($key, $value)) {
                 $this->description = "Missing required key: {$key}";
                 return false;
             }
         }
 
-        // databaseId / collectionId / action must be non‑empty strings
-        foreach (['databaseId', 'collectionId', 'action'] as $key) {
+        // Required keys must be non‑empty
+        foreach ($this->required as $key) {
             if (!\is_string($value[$key]) || \trim($value[$key]) === '') {
                 $this->description = "Key '{$key}' must be a non‑empty string";
                 return false;
@@ -60,9 +68,9 @@ class Operation extends Validator
             return false;
         }
 
-        // Payload must be array (can be empty)
-        if (!\is_array($value['payload'])) {
-            $this->description = "Key 'payload' must be an array";
+        // Data must be array (can be empty)
+        if (!\is_array($value['data'])) {
+            $this->description = "Key 'data' must be an array";
             return false;
         }
 
