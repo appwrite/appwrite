@@ -5199,7 +5199,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $operations = [];
             foreach ($documents as $doc) {
-                 $operations[] = new Document([
+                $operations[] = new Document([
                     'transactionInternalId' => $transaction->getSequence(),
                     'databaseInternalId' => $database->getSequence(),
                     'collectionInternalId' => $collection->getSequence(),
