@@ -119,12 +119,19 @@ class Migration extends Model
         foreach ($errors as $error) {
             $decoded = json_decode($error, true);
 
+            // frontend doesn't need too many details.
             if (is_array($decoded) && isset($decoded['trace'])) {
-                unset($decoded['trace']);
+                unset(
+                    $decoded['trace'],
+                    $decoded['resourceId'],
+                    $decoded['resourceName'],
+                    $decoded['resourceGroup']
+                );
                 $errors[] = json_encode($decoded);
             }
         }
 
+        // errors now only have code and message.
         $document->setAttribute('errors', $errors);
 
         return $document;
