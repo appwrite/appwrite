@@ -186,7 +186,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/console/project-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
+            $exception->addCTA('View deployments', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
             throw $exception;
         }
 
@@ -319,21 +319,22 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             $status = $deployment->getAttribute('status');
+            $region = $project->getAttribute('region', 'default');
 
             switch ($status) {
                 case 'failed':
                     $exception = new AppwriteException(AppwriteException::BUILD_FAILED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments';
+                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments';
                     $exception->addCTA('View deployments', $url . $ctaUrl);
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
-                    $ctaUrl = '/console/project-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
                     $exception->addCTA('Reload', '/');
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
@@ -345,7 +346,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
-                $exception->addCTA('View settings', $url . '/console/project-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
+                $exception->addCTA('View settings', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
                 throw $exception;
             }
         }
