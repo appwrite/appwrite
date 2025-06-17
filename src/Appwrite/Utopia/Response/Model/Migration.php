@@ -116,18 +116,19 @@ class Migration extends Model
             return $document;
         }
 
-        foreach ($errors as $error) {
+        foreach ($errors as $index => $error) {
             $decoded = json_decode($error, true);
 
             // frontend doesn't need too many details.
-            if (is_array($decoded) && isset($decoded['trace'])) {
+            if (is_array($decoded)) {
                 unset(
                     $decoded['trace'],
                     $decoded['resourceId'],
                     $decoded['resourceName'],
                     $decoded['resourceGroup']
                 );
-                $errors[] = json_encode($decoded);
+
+                $errors[$index] = json_encode($decoded);
             }
         }
 
