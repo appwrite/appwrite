@@ -38,7 +38,7 @@ class Operation extends Validator
         }
 
         // Mandatory keys
-        $required = ['databaseId', 'collectionId', 'action', 'payload'];
+        $required = ['databaseId', 'collectionId', 'action'];
         foreach ($required as $key) {
             if (!\array_key_exists($key, $value)) {
                 $this->description = "Missing required key: {$key}";
