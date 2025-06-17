@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
@@ -3492,17 +3493,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ]
     )
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
+    ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('data', [], new JSON(), 'Document data as JSON object.', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging operation.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $permissions, ?array $documents, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, ?string $documentId, string|array|null $data, ?array $permissions, ?array $documents, ?string $transactionId, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -3563,6 +3565,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         if ($isBulk && $hasRelationships) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
+        }
+
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
         }
 
         $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk) {
@@ -3727,26 +3739,46 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             return $document;
         }, $documents);
 
-        try {
-            $dbForProject->createDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $documents
-            );
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (NotFoundException) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        } catch (RelationshipException $e) {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
-        } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
-        }
+        if (!empty($transactionId)) {
+            $operations = [];
+            foreach ($documents as $document) {
+                $operations[] = new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'action' => 'create',
+                    'documentId' => $document->getId(),
+                    'data' => $document->getArrayCopy(),
+                ]);
+            }
 
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
+            try {
+                $dbForProject->createDocuments('transactionLogs', $operations);
+            } catch (DuplicateException) {
+                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            } catch (NotFoundException) {
+                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            } catch (RelationshipException $e) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+            } catch (StructureException $e) {
+                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            }
+        } else {
+            try {
+                $dbForProject->createDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $documents
+                );
+            } catch (DuplicateException) {
+                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            } catch (NotFoundException) {
+                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            } catch (RelationshipException $e) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+            } catch (StructureException $e) {
+                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            }
+        }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
@@ -3786,11 +3818,19 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+
+        if (empty($transactionId)) {
+            $queueForEvents
+                ->setParam('databaseId', $databaseId)
+                ->setParam('collectionId', $collection->getId())
+                ->setContext('collection', $collection)
+                ->setContext('database', $database);
+        }
+
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
-
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
         if ($isBulk) {
             $response->dynamic(new Document([
@@ -3801,9 +3841,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             return;
         }
 
-        $queueForEvents
-            ->setParam('documentId', $documents[0]->getId())
-            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
+        if (empty($transactionId)) {
+            $queueForEvents
+                ->setParam('documentId', $documents[0]->getId())
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
+        }
 
         $response->dynamic(
             $documents[0],
@@ -4244,12 +4286,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('documentId', '', new UID(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging operation.', true)
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -4267,6 +4310,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
         }
 
         // Read permission should not be required for update
@@ -4388,20 +4441,31 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
-        try {
-            $document = $dbForProject->updateDocument(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $document->getId(),
-                $newDocument
-            );
-        } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (RelationshipException $e) {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
-        } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        if (!empty($transactionId)) {
+            $dbForProject->createDocument('transactionLog', new Document([
+                'transactionInternalId' => $transaction->getSequence(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'documentId' => $document->getId(),
+                'data' => $newDocument->getArrayCopy(),
+                'action' => 'update',
+            ]));
+        } else {
+            try {
+                $document = $dbForProject->updateDocument(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $document->getId(),
+                    $newDocument
+                );
+            } catch (ConflictException) {
+                throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+            } catch (DuplicateException) {
+                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            } catch (RelationshipException $e) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+            } catch (StructureException $e) {
+                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            }
         }
 
         // Add $collectionId and $databaseId for all documents
@@ -4447,13 +4511,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             )
         );
 
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database)
-            ->setPayload($response->getPayload(), sensitive: $relationships);
+        if (empty($transactionId)) {
+            $queueForEvents
+                ->setParam('databaseId', $databaseId)
+                ->setParam('collectionId', $collection->getId())
+                ->setParam('documentId', $document->getId())
+                ->setContext('collection', $collection)
+                ->setContext('database', $database)
+                ->setPayload($response->getPayload(), sensitive: $relationships);
+        }
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -4488,12 +4554,13 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('documentId', '', new CustomId(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging operation.', true)
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -4511,6 +4578,16 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
         }
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -4622,26 +4699,36 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
-        $upserted = [];
-        try {
-            $modified = $dbForProject->createOrUpdateDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                [$newDocument],
-                onNext: function (Document $document) use (&$upserted) {
-                    $upserted[] = $document;
-                },
-            );
-        } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (RelationshipException $e) {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
-        } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        if (!empty($transactionId)) {
+            $dbForProject->createDocument('transactionLog', new Document([
+                'transactionInternalId' => $transaction->getSequence(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'action' => 'update',
+                'data' => $newDocument->getArrayCopy(),
+            ]));
+
+            $upserted = $newDocument;
+        } else {
+            try {
+                $dbForProject->createOrUpdateDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    [$newDocument],
+                    onNext: function (Document $document) use (&$upserted) {
+                        $upserted = $document;
+                    },
+                );
+            } catch (ConflictException) {
+                throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+            } catch (DuplicateException) {
+                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            } catch (RelationshipException $e) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+            } catch (StructureException $e) {
+                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            }
         }
 
-        $document = $upserted[0];
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->setAttribute('$databaseId', $database->getId());
@@ -4675,7 +4762,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             }
         };
 
-        $processDocument($collection, $document);
+        $processDocument($collection, $upserted);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
@@ -4685,15 +4772,17 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             )
         );
 
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database)
-            ->setPayload($response->getPayload(), sensitive: $relationships);
+        if (!empty($transactionId)) {
+            $queueForEvents
+                ->setParam('databaseId', $databaseId)
+                ->setParam('collectionId', $collection->getId())
+                ->setParam('documentId', $upserted->getId())
+                ->setContext('collection', $collection)
+                ->setContext('database', $database)
+                ->setPayload($response->getPayload(), sensitive: $relationships);
+        }
 
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($upserted, Response::MODEL_DOCUMENT);
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/increment')
@@ -4727,11 +4816,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('attribute', '', new Key(), 'Attribute key.')
     ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
     ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging operation.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, ?string $transactionId, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -4742,33 +4832,60 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        try {
-            $document = $dbForProject->increaseDocumentAttribute(
-                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                id: $documentId,
-                attribute: $attribute,
-                value: $value,
-                max: $max
-            );
-        } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (NotFoundException) {
-            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
-        } catch (LimitException) {
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the maximum value of ' . $max);
-        } catch (TypeException) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
+
+            $dbForProject->createDocument('transactionLog', new Document([
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'increment',
+                'data' => [
+                    'attribute' => $attribute,
+                    'value' => $value,
+                    'max' => $max,
+                ]
+            ]));
+
+            $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+        } else {
+            try {
+                $document = $dbForProject->increaseDocumentAttribute(
+                    collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    id: $documentId,
+                    attribute: $attribute,
+                    value: $value,
+                    max: $max
+                );
+            } catch (ConflictException) {
+                throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+            } catch (NotFoundException) {
+                throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+            } catch (LimitException) {
+                throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the maximum value of ' . $max);
+            } catch (TypeException) {
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+            }
         }
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1);
 
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collectionId)
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
+        if (!empty($transactionId)) {
+            $queueForEvents
+                ->setParam('databaseId', $databaseId)
+                ->setParam('collectionId', $collectionId)
+                ->setContext('collection', $collection)
+                ->setContext('database', $database);
+        }
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -4804,11 +4921,24 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('attribute', '', new Key(), 'Attribute key.')
     ->param('value', 1, new Numeric(), 'Value to decrement the attribute by. The value must be a number.', true)
     ->param('min', null, new Numeric(), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true)
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging operation.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (
+        string $databaseId,
+        string $collectionId,
+        string $documentId,
+        string $attribute,
+        int|float $value,
+        int|float|null $min,
+        ?string $transactionId,
+        Response $response,
+        Database $dbForProject,
+        Event $queueForEvents,
+        StatsUsage $queueForStatsUsage
+    ) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -4819,33 +4949,64 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        try {
-            $document = $dbForProject->decreaseDocumentAttribute(
-                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                id: $documentId,
-                attribute: $attribute,
-                value: $value,
-                min: $min
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
+
+            $dbForProject->createDocument('transactionLog', new Document([
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'decrement',
+                'data' => [
+                    'attribute' => $attribute,
+                    'value'     => $value,
+                    'min'       => $min,
+                ],
+            ]));
+
+            // Fetch current document for response without mutating
+            $document = $dbForProject->getDocument(
+                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                $documentId
             );
-        } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (NotFoundException) {
-            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
-        } catch (LimitException) {
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the minimum value of ' . $min);
-        } catch (TypeException) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        } else {
+            try {
+                $document = $dbForProject->decreaseDocumentAttribute(
+                    collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    id: $documentId,
+                    attribute: $attribute,
+                    value: $value,
+                    min: $min
+                );
+            } catch (ConflictException) {
+                throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+            } catch (NotFoundException) {
+                throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+            } catch (LimitException) {
+                throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the minimum value of ' . $min);
+            } catch (TypeException) {
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+            }
         }
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1);
 
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collectionId)
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
+        if (empty($transactionId)) {
+            $queueForEvents
+                ->setParam('databaseId', $databaseId)
+                ->setParam('collectionId', $collectionId)
+                ->setContext('collection', $collection)
+                ->setContext('database', $database);
+        }
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -4878,12 +5039,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging operation.', true)
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
+    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?string $transactionId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -4909,6 +5071,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         if ($hasRelationships) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk update is not supported for collections with relationship attributes');
+        }
+
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
         }
 
         try {
@@ -4987,11 +5159,12 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging operation.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $databaseId, string $collectionId, array $documents, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
+    ->action(function (string $databaseId, string $collectionId, array $documents, ?string $transactionId, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -5015,26 +5188,52 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
             $documents[$key] = new Document($document);
         }
 
-        $upserted = [];
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
 
-        try {
-            $modified = $dbForProject->createOrUpdateDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $documents,
-                onNext: function (Document $document) use ($plan, &$upserted) {
-                    if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                        $upserted[] = $document;
-                    }
-                },
-            );
-        } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (RelationshipException $e) {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
-        } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            $operations = [];
+            foreach ($documents as $doc) {
+                 $operations[] = new Document([
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'action' => 'upsert',
+                    'data' => $doc->getArrayCopy(),
+                ]);
+            }
+
+            $dbForProject->createDocuments('transactionLogs', $operations);
+
+            $modified  = \count($documents);
+            $upserted  = $documents;
+        } else {
+            $upserted = [];
+
+            try {
+                $modified = $dbForProject->createOrUpdateDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $documents,
+                    onNext: function (Document $document) use ($plan, &$upserted) {
+                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                            $upserted[] = $document;
+                        }
+                    },
+                );
+            } catch (ConflictException) {
+                throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+            } catch (DuplicateException) {
+                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            } catch (RelationshipException $e) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
+            } catch (StructureException $e) {
+                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            }
         }
 
         foreach ($upserted as $document) {
@@ -5081,12 +5280,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?string $transactionId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -5106,15 +5306,33 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        try {
-            $dbForProject->deleteDocument(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $documentId
-            );
-        } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (RestrictedException) {
-            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
+
+            $dbForProject->createDocument('transactionLog', new Document([
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $document->getId(),
+                'action' => 'delete',
+            ]));
+        } else {
+            try {
+                $dbForProject->deleteDocument(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $documentId
+                );
+            } catch (ConflictException) {
+                throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+            } catch (RestrictedException) {
+                throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+            }
         }
 
         $operations = 0;
@@ -5160,21 +5378,23 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
-        $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
-            \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            )
-        );
+        if (!empty($transactionId)) {
+            $relationships = \array_map(
+                fn ($document) => $document->getAttribute('key'),
+                \array_filter(
+                    $collection->getAttribute('attributes', []),
+                    fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                )
+            );
 
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database)
-            ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
+            $queueForEvents
+                ->setParam('databaseId', $databaseId)
+                ->setParam('collectionId', $collection->getId())
+                ->setParam('documentId', $document->getId())
+                ->setContext('collection', $collection)
+                ->setContext('database', $database)
+                ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
+        }
 
         $response->noContent();
     });
@@ -5206,12 +5426,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?string $transactionId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -5231,6 +5452,16 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk delete is not supported for collections with relationship attributes');
         }
 
+        if (!empty($transactionId)) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
+            }
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -5239,20 +5470,32 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $documents = [];
 
-        try {
-            $modified = $dbForProject->deleteDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $queries,
-                onNext: function (Document $document) use ($plan, &$documents) {
-                    if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                        $documents[] = $document;
-                    }
-                },
-            );
-        } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
-        } catch (RestrictedException) {
-            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+        if (!empty($transactionId)) {
+            $dbForProject->createDocument('transactionLog', new Document([
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'action' => 'delete',
+                'data' => [$queries],
+            ]));
+
+            $modified = 0;
+        } else {
+            try {
+                $modified = $dbForProject->deleteDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $queries,
+                    onNext: function (Document $document) use ($plan, &$documents) {
+                        if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                            $documents[] = $document;
+                        }
+                    },
+                );
+            } catch (ConflictException) {
+                throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+            } catch (RestrictedException) {
+                throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+            }
         }
 
         foreach ($documents as $document) {
