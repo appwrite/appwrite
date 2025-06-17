@@ -247,40 +247,11 @@ class Update extends Action
             throw new Exception($this->getInvalidStructureException(), $e->getMessage());
         }
 
+        $collectionsCache = [];
+        $context = compact('database', 'dbForProject', 'collectionsCache');
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $table, Document $row) use (&$processDocument, $dbForProject, $database) {
-            $row->setAttribute('$databaseId', $database->getId());
-            $row->setAttribute('$collectionId', $table->getId());
-
-            $relationships = \array_filter(
-                $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $row->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $related = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
-                );
-
-                foreach ($related as $relation) {
-                    if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
-                    }
-                }
-            }
-        };
-
-        $processDocument($collection, $document);
+        $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
 
         $response->dynamic($document, $this->getResponseModel());
 

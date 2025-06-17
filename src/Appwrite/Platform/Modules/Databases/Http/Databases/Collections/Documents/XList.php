@@ -130,66 +130,18 @@ class XList extends Action
         }
 
         $operations = 0;
+        $collectionsCache = [];
+        $trackOperations = true;
+        $removeCollection = true;
+        $context = compact('database', 'dbForProject', 'operations', 'collectionsCache', 'removeCollection', 'trackOperations');
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
-            if ($document->isEmpty()) {
-                return false;
-            }
-
-            $operations++;
-
-            $document->removeAttribute('$collection');
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    if (\in_array(\gettype($related), ['array', 'object'])) {
-                        $operations++;
-                    }
-
-                    continue;
-                }
-
-                if (!\is_array($related)) {
-                    $relations = [$related];
-                } else {
-                    $relations = $related;
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                // todo: Use local cache for this getDocument
-                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId));
-
-                foreach ($relations as $index => $doc) {
-                    if ($doc instanceof Document) {
-                        if (!$processDocument($relatedCollection, $doc)) {
-                            unset($relations[$index]);
-                        }
-                    }
-                }
-
-                if (\is_array($related)) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                } elseif (empty($relations)) {
-                    $document->setAttribute($relationship->getAttribute('key'), null);
-                }
-            }
-
-            return true;
-        });
-
-        foreach ($documents as $row) {
-            $processDocument($collection, $row);
+        foreach ($documents as $document) {
+            $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
         }
+
+        // get updated from the context
+        $operations = $context['operations'];
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))

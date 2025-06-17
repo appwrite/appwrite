@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Context;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
@@ -192,5 +195,95 @@ abstract class Action extends UtopiaAction
     final protected function getCollectionsEventsContext(): string
     {
         return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
+
+    /**
+     * Resolves relationships in a document and attaches metadata.
+     */
+    final protected function resolveDocumentRelations(Document $document, Document $collection, array &$context): bool
+    {
+        /* @type Document $database */
+        $database = $context['database'];
+
+        /* @type Database $dbForProject */
+        $dbForProject = $context['dbForProject'];
+
+        /* remove `$collection` if needed */
+        $removeCollection = $context['removeCollection'] ?? false;
+
+        /* count operations and use `continue` inside loop */
+        $trackOperations = array_key_exists('trackOperations', $context);
+
+        if (!$trackOperations) {
+            $context['operations'] ??= 0;
+        } elseif ($document->isEmpty()) {
+            return false;
+        }
+
+        $operations = &$context['operations'];
+        $collectionsCache = &$context['collectionsCache'];
+
+        $operations++;
+        $collectionId = $collection->getId();
+
+        $document->setAttribute('$databaseId', $database->getId());
+        $document->setAttribute('$collectionId', $collectionId);
+
+        if ($removeCollection) {
+            $document->removeAttribute('$collection');
+        }
+
+        $relationships = $collectionsCache[$collectionId] ??= \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
+        );
+
+        foreach ($relationships as $relationship) {
+            $key = $relationship->getAttribute('key');
+            $related = $document->getAttribute($key);
+
+            if (empty($related)) {
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $operations++;
+                }
+                continue;
+            }
+
+            $relations = \is_array($related) ? $related : [$related];
+            $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+
+            if (!isset($collectionsCache[$relatedCollectionId])) {
+                $relatedCollectionDoc = Authorization::skip(
+                    fn () => $dbForProject->getDocument(
+                        'database_' . $database->getSequence(),
+                        $relatedCollectionId
+                    )
+                );
+
+                $collectionsCache[$relatedCollectionId] = \array_filter(
+                    $relatedCollectionDoc->getAttribute('attributes', []),
+                    fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
+                );
+            }
+
+            foreach ($relations as $index => $relation) {
+                if ($relation instanceof Document) {
+                    $relatedCollection = new Document([
+                        '$id' => $relatedCollectionId,
+                        'attributes' => $collectionsCache[$relatedCollectionId],
+                    ]);
+
+                    $this->resolveDocumentRelations(document: $relation, collection: $relatedCollection, context: $context);
+                }
+            }
+
+            if (\is_array($related)) {
+                $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+            } elseif (empty($relations)) {
+                $document->setAttribute($relationship->getAttribute('key'), null);
+            }
+        }
+
+        return true;
     }
 }

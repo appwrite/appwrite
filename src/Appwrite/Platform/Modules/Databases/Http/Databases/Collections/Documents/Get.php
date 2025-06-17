@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -101,52 +100,15 @@ class Get extends Action
         }
 
         $operations = 0;
+        $collectionsCache = [];
+        $trackOperations = true;
+        $context = compact('database', 'dbForProject', 'operations', 'trackOperations', 'collectionsCache');
 
-        // Add $collectionId and $databaseId for all rows
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
-            if ($document->isEmpty()) {
-                return;
-            }
+        // Add $collectionId and $databaseId for all documents
+        $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
 
-            $operations++;
-
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    if (\in_array(\gettype($related), ['array', 'object'])) {
-                        $operations++;
-                    }
-
-                    continue;
-                }
-
-                if (!\is_array($related)) {
-                    $related = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
-                );
-
-                foreach ($related as $relation) {
-                    if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
-                    }
-                }
-            }
-        };
-
-        $processDocument($collection, $document);
+        // get updated from the context
+        $operations = $context['operations'];
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
