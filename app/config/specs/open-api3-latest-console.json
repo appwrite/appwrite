@@ -35112,6 +35112,17 @@
                             "default": ""
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "providerReference",
+                        "description": "Git reference (branch, tag, commit) to get contents from",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROVIDER_REFERENCE>",
+                            "default": ""
+                        },
+                        "in": "query"
                     }
                 ]
             }
