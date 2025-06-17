@@ -2537,26 +2537,6 @@ return [
                 'array'    => false,
                 'filters'  => ['datetime'],
             ],
-            [
-                '$id'      => ID::custom('committedAt'),
-                'type'     => Database::VAR_DATETIME,
-                'size'     => 0,
-                'signed'   => true,
-                'required' => false,
-                'default'  => null,
-                'array'    => false,
-                'filters'  => ['datetime'],
-            ],
-            [
-                '$id'      => ID::custom('rolledBackAt'),
-                'type'     => Database::VAR_DATETIME,
-                'size'     => 0,
-                'signed'   => true,
-                'required' => false,
-                'default'  => null,
-                'array'    => false,
-                'filters'  => ['datetime'],
-            ],
         ],
         'indexes' => [
             [
