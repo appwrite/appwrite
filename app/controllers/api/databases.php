@@ -1536,6 +1536,239 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
+App::post('/v1/databases/transactions')
+    ->desc('Create transaction')
+    ->groups(['api', 'database', 'transactions'])
+    ->label('scope', 'transactions.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'transactions',
+        name: 'createTransaction',
+        description: '/docs/references/databases/create-transaction.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TRANSACTION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('ttl', 300, new Integer(), 'Seconds before the transaction expires.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (int $ttl, Response $response, Database $dbForProject) {
+        $transaction = $dbForProject->createDocument('transactions', new Document([
+            '$id' => ID::unique(),
+            'status' => 'pending',
+            'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),
+        ]));
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($transaction, Response::MODEL_TRANSACTION);
+    });
+
+App::post('/v1/databases/transactions/:transactionId/operations')
+    ->desc('Add operations to transaction')
+    ->groups(['api', 'database', 'transactions'])
+    ->label('scope', 'transactions.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'transactions',
+        name: 'createOperations',
+        description: '/docs/references/databases/create-operations.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TRANSACTION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('transactionId', '', new UID(), 'Transaction ID.')
+    ->param('operations', [], new ArrayList(new Operation()), 'Array of staged operations.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $transactionId, array $operations, Response $response, Database $dbForProject) {
+        $transaction = $dbForProject->getDocument('transactions', $transactionId);
+
+        if ($transaction->isEmpty() || $transaction['status'] !== 'pending') {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+        }
+
+        $staged = [];
+        foreach ($operations as $op) {
+            $staged[] = new Document([
+                '$id' => ID::unique(),
+                'transactionId' => $transactionId,
+                'databaseId' => $op['databaseId'] ?? null,
+                'collectionId' => $op['collectionId'] ?? null,
+                'documentId' => $op['documentId'] ?? null,
+                'action' => $op['action'],
+                'data' => $op['data'] ?? [],
+            ]);
+        }
+
+        $dbForProject->createDocuments('transactionLogs', $staged);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($transaction, Response::MODEL_TRANSACTION);
+    });
+
+App::get('/v1/databases/transactions/:transactionId')
+    ->desc('Get transaction')
+    ->groups(['api', 'database', 'transactions'])
+    ->label('scope', 'transactions.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'transactions',
+        name: 'getTransaction',
+        description: '/docs/references/databases/get-transaction.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TRANSACTION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('transactionId', '', new UID(), 'Transaction ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $transactionId, Response $response, Database $dbForProject) {
+        $transaction = $dbForProject->getDocument('transactions', $transactionId);
+
+        if ($transaction->isEmpty()) {
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($transaction, Response::MODEL_TRANSACTION);
+    });
+
+App::patch('/v1/databases/transactions/:transactionId')
+    ->desc('Update transaction (commit / rollback)')
+    ->groups(['api', 'database', 'transactions'])
+    ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'transactions',
+        name: 'updateTransaction',
+        description: '/docs/references/databases/update-transaction.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TRANSACTION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('transactionId', '', new UID(), 'Transaction ID.')
+    ->param('action', '', new WhiteList(['commit','rollback']), 'Action to take, commit or rollback.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->action(function (string $transactionId, string $action, ?string $reason, Response $response, Database $dbForProject, Document $project) {
+        $transaction = $dbForProject->getDocument('transactions', $transactionId);
+
+        if ($transaction->isEmpty()) {
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+        }
+
+        if ($transaction->getAttribute('status', '') !== 'pending') {
+            throw new Exception(Exception::TRANSACTION_NOT_READY);
+        }
+
+        switch ($action) {
+            case 'commit':
+                // Get staged operations
+                $operations = $dbForProject->find('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc('$sequence'),
+                ]);
+
+                $creates = $updates = $deletes = [];
+
+                foreach ($operations as $operation) {
+                    $databaseId = $operation['databaseInternalId'];
+                    $collectionId = $operation['collectionInternalId'];
+                    $documentId = $operation['documentInternalId'];
+
+                    switch ($operation['action']) {
+                        case 'create':
+                            $creates[$databaseId][$collectionId][] = new Document([
+                                '$id' => $documentId ?? ID::unique(),
+                                ...$operation['data']
+                            ]);
+                            break;
+                        case 'update':
+                        case 'upsert':
+                            $updates[$databaseId][$collectionId][] = new Document([
+                                '$id' => $documentId,
+                                ...$operation['data'],
+                            ]);
+                            break;
+                        case 'delete':
+                            $deletes[$databaseId][$collectionId][] = $documentId;
+                            break;
+                    }
+                }
+
+                unset($databaseId, $collectionId);
+
+                $dbForProject->withTransaction(function () use ($dbForProject, $creates, $updates, $deletes) {
+                    foreach ($creates as $databaseId => $collectionDocs) {
+                        foreach ($collectionDocs as $collectionId => $docs) {
+                            $dbForProject->createDocuments("database_{$databaseId}_collection_{$collectionId}", $docs);
+                        }
+                    }
+                    foreach ($updates as $databaseId => $collectionDocs) {
+                        foreach ($collectionDocs as $collectionId => $docs) {
+                            $dbForProject->updateDocuments("database_{$databaseId}_collection_{$collectionId}", $docs);
+                        }
+                    }
+                    foreach ($deletes as $databaseId => $collectionDocs) {
+                        foreach ($collectionDocs as $collectionId => $docs) {
+                            $dbForProject->deleteDocuments("database_{$databaseId}_collection_{$collectionId}", $docs);
+                        }
+                    }
+                });
+
+                $transaction = $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'committed',
+                ]));
+
+                break;
+
+            case 'rollback':
+                $dbForProject->deleteDocuments('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc('$sequence'),
+                ]);
+
+                $transaction = $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'rolled_back',
+                    'rolledBackAt' => DateTime::now(),
+                    'reason' => $reason ?? 'user_request',
+                ]));
+                break;
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($transaction, Response::MODEL_TRANSACTION);
+    });
+
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->alias('/v1/database/collections/:collectionId/attributes/url')
     ->desc('Create URL attribute')
