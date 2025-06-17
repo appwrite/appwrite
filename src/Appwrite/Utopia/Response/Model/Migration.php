@@ -121,14 +121,10 @@ class Migration extends Model
 
             // frontend doesn't need too many details.
             if (is_array($decoded)) {
-                unset(
-                    $decoded['trace'],
-                    $decoded['resourceId'],
-                    $decoded['resourceName'],
-                    $decoded['resourceGroup']
-                );
-
-                $errors[$index] = json_encode($decoded);
+                $errors[$index] = json_encode([
+                    'code' => $decoded['code'] ?? 0,
+                    'message' => $decoded['message'] ?? null,
+                ]);
             }
         }
 
