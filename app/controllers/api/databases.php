@@ -1556,7 +1556,7 @@ App::post('/v1/databases/transactions')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('ttl', 300, new Integer(), 'Seconds before the transaction expires.', true)
+    ->param('ttl', APP_DATABASE_TXN_TTL_DEFAULT, new Range(min: APP_DATABASE_TXN_TTL_MIN, max: APP_DATABASE_TXN_TTL_MAX), 'Seconds before the transaction expires.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (int $ttl, Response $response, Database $dbForProject) {
