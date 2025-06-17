@@ -211,7 +211,7 @@ abstract class Action extends UtopiaAction
         /* remove `$collection` if needed */
         $removeCollection = $context['removeCollection'] ?? false;
 
-        /* count operations and use `continue` inside loop */
+        /* count operations inside loop */
         $trackOperations = array_key_exists('trackOperations', $context);
 
         if (!$trackOperations) {
