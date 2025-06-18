@@ -34,6 +34,12 @@ class Transaction extends Model
                 'default' => 'pending',
                 'example' => 'pending',
             ])
+            ->addRule('operations', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of operations in the transaction.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule('expiresAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Expiration time in ISO 8601 format.',

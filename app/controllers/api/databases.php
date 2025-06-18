@@ -1752,118 +1752,114 @@ App::patch('/v1/databases/transactions/:transactionId')
         }
 
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
-
         if ($transaction->isEmpty()) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND);
         }
-
         if ($transaction->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::TRANSACTION_NOT_READY);
         }
 
         $now = new \DateTime();
-        $expiresAt = new \DateTime($transaction->getAttribute('expiresAt'));
+        $expiresAt = new \DateTime($transaction->getAttribute('expiresAt', 'now'));
         if ($now > $expiresAt) {
             throw new Exception(Exception::TRANSACTION_EXPIRED);
         }
 
         if ($commit) {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $transactionId, $transaction, $requestTimestamp) {
-                $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $transaction, $requestTimestamp) {
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $transaction, $requestTimestamp) {
+                $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'committing',
+                ]));
+
+                $operations = $dbForProject->find('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                ]);
+
+                $creates = $updates = $deletes = $bulkUpdates = $bulkDeletes = [];
+
+                foreach ($operations as $operation) {
+                    $databaseInternalId = $operation['databaseInternalId'];
+                    $collectionInternalId = $operation['collectionInternalId'];
+                    $documentId = $operation['documentId'];
+
+                    switch ($operation['action']) {
+                        case 'create':
+                            $creates[$databaseInternalId][$collectionInternalId][] = new Document([
+                                '$id' => $documentId ?? ID::unique(),
+                                ...$operation['data']
+                            ]);
+                            break;
+                        case 'update':
+                        case 'upsert':
+                            $updates[$databaseInternalId][$collectionInternalId][] = new Document([
+                                '$id' => $documentId,
+                                ...$operation['data'],
+                            ]);
+                            break;
+                        case 'delete':
+                            $deletes[$databaseInternalId][$collectionInternalId][] = $documentId;
+                            break;
+                        case 'bulkUpdate':
+                            $bulkUpdates[$databaseInternalId][$collectionInternalId][] = [
+                                'data' => $operation['data'] ?? null,
+                                'queries' => $operation['queries'] ?? [],
+                            ];
+                            break;
+                        case 'bulkDelete':
+                            $bulkDeletes[$databaseInternalId][$collectionInternalId][] = [
+                                'queries' => $operation['queries'] ?? [],
+                            ];
+                            break;
+                    }
+                }
+
+                try {
+                    foreach ($creates as $dbId => $cols) {
+                        foreach ($cols as $colId => $docs) {
+                            $dbForProject->createDocuments("database_{$dbId}_collection_{$colId}", $docs);
+                        }
+                    }
+                    foreach ($updates as $dbId => $cols) {
+                        foreach ($cols as $colId => $docs) {
+                            $dbForProject->createOrUpdateDocuments("database_{$dbId}_collection_{$colId}", $docs);
+                        }
+                    }
+                    foreach ($deletes as $dbId => $cols) {
+                        foreach ($cols as $colId => $ids) {
+                            $dbForProject->deleteDocuments("database_{$dbId}_collection_{$colId}", [
+                                Query::equal('$id', $ids),
+                            ]);
+                        }
+                    }
+                    foreach ($bulkUpdates as $dbId => $cols) {
+                        foreach ($cols as $colId => $updates) {
+                            foreach ($updates as $update) {
+                                $dbForProject->updateDocuments("database_{$dbId}_collection_{$colId}", $update['data'], $update['queries']);
+                            }
+                        }
+                    }
+                    foreach ($bulkDeletes as $dbId => $cols) {
+                        foreach ($cols as $colId => $deletes) {
+                            foreach ($deletes as $delete) {
+                                $dbForProject->deleteDocuments("database_{$dbId}_collection_{$colId}", $delete['queries']);
+                            }
+                        }
+                    }
+
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'committing',
+                        'status' => 'committed',
                     ]));
 
-                    $operations = $dbForProject->find('transactionLogs', [
+                    $dbForProject->deleteDocuments('transactionLogs', [
                         Query::equal('transactionInternalId', [$transaction->getSequence()]),
                     ]);
+                } catch (DuplicateException|ConflictException) {
+                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                        'status' => 'failed',
+                    ]));
 
-                    $creates = $updates = $deletes = $bulkUpdates = $bulkDeletes = [];
-
-                    foreach ($operations as $operation) {
-                        $databaseInternalId = $operation['databaseInternalId'];
-                        $collectionInternalId = $operation['collectionInternalId'];
-                        $documentId = $operation['documentId'];
-
-                        switch ($operation['action']) {
-                            case 'create':
-                                $creates[$databaseInternalId][$collectionInternalId][] = new Document([
-                                    '$id' => $documentId ?? ID::unique(),
-                                    ...$operation['data']
-                                ]);
-                                break;
-                            case 'update':
-                            case 'upsert':
-                                $updates[$databaseInternalId][$collectionInternalId][] = new Document([
-                                    '$id' => $documentId,
-                                    ...$operation['data'],
-                                ]);
-                                break;
-                            case 'delete':
-                                $deletes[$databaseInternalId][$collectionInternalId][] = $documentId;
-                                break;
-                            case 'bulkUpdate':
-                                $bulkUpdates[$databaseInternalId][$collectionInternalId][] = [
-                                    'data' => $operation['data'] ?? null,
-                                    'queries' => $operation['queries'] ?? [],
-                                ];
-                                break;
-                            case 'bulkDelete':
-                                $bulkDeletes[$databaseInternalId][$collectionInternalId][] = [
-                                    'queries' => $operation['queries'] ?? [],
-                                ];
-                                break;
-                        }
-                    }
-
-                    try {
-                        foreach ($creates as $dbId => $cols) {
-                            foreach ($cols as $colId => $docs) {
-                                $dbForProject->createDocuments("database_{$dbId}_collection_{$colId}", $docs);
-                            }
-                        }
-                        foreach ($updates as $dbId => $cols) {
-                            foreach ($cols as $colId => $docs) {
-                                $dbForProject->createOrUpdateDocuments("database_{$dbId}_collection_{$colId}", $docs);
-                            }
-                        }
-                        foreach ($deletes as $dbId => $cols) {
-                            foreach ($cols as $colId => $ids) {
-                                $dbForProject->deleteDocuments("database_{$dbId}_collection_{$colId}", [
-                                    Query::equal('$id', $ids),
-                                ]);
-                            }
-                        }
-                        foreach ($bulkUpdates as $dbId => $cols) {
-                            foreach ($cols as $colId => $updates) {
-                                foreach ($updates as $update) {
-                                    $dbForProject->updateDocuments("database_{$dbId}_collection_{$colId}", $update['data'], $update['queries']);
-                                }
-                            }
-                        }
-                        foreach ($bulkDeletes as $dbId => $cols) {
-                            foreach ($cols as $colId => $deletes) {
-                                foreach ($deletes as $delete) {
-                                    $dbForProject->deleteDocuments("database_{$dbId}_collection_{$colId}", $delete['queries']);
-                                }
-                            }
-                        }
-
-                        $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                            'status' => 'committed',
-                        ]));
-
-                        $dbForProject->deleteDocuments('transactionLogs', [
-                            Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                        ]);
-                    } catch (DuplicateException|ConflictException) {
-                        $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                            'status' => 'failed',
-                        ]));
-
-                        throw new Exception(Exception::TRANSACTION_CONFLICT);
-                    }
-                });
+                    throw new Exception(Exception::TRANSACTION_CONFLICT);
+                }
             });
 
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
