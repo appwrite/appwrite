@@ -454,11 +454,11 @@ class Swagger2 extends Format
                         $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['x-example'] = $validator->getMin();
                         break;
-                    case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\Integer':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'int32';
                         break;
+                    case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\FloatValidator':
                         $node['type'] = 'number';
                         $node['format'] = 'float';
