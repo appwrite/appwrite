@@ -1691,7 +1691,7 @@ App::get('/v1/databases/transactions/:transactionId')
     });
 
 App::patch('/v1/databases/transactions/:transactionId')
-    ->desc('Update transaction (commit / rollback)')
+    ->desc('Update transaction')
     ->groups(['api', 'database', 'transactions'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
@@ -1710,11 +1710,20 @@ App::patch('/v1/databases/transactions/:transactionId')
         contentType: ContentType::JSON
     ))
     ->param('transactionId', '', new UID(), 'Transaction ID.')
-    ->param('action', '', new WhiteList(['commit','rollback']), 'Action to take, commit or rollback.')
+    ->param('commit', false, new Boolean(), 'Commit transaction?', true)
+    ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
+    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function (string $transactionId, string $action, ?string $reason, Response $response, Database $dbForProject, Document $project) {
+    ->action(function (string $transactionId, bool $commit, bool $rollback, ?\DateTime $requestTimestamp, ?string $reason, Response $response, Database $dbForProject, Document $project) {
+        if (!$commit && !$rollback) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
+        }
+        if ($commit && $rollback) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot commit and rollback at the same time');
+        }
+
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
         if ($transaction->isEmpty()) {
