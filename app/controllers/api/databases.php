@@ -1638,9 +1638,12 @@ App::post('/v1/databases/transactions/:transactionId/operations')
 
         $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
             $dbForProject->createDocuments('transactionLogs', $staged);
-            $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                'operations' => $existing + \count($operations),
-            ]));
+            $dbForProject->increaseDocumentAttribute(
+                'transactions',
+                $transactionId,
+                'operations',
+                \count($operations)
+            );
         });
 
         $response
@@ -1775,7 +1778,14 @@ App::patch('/v1/databases/transactions/:transactionId')
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                 ]);
 
-                $creates = $updates = $deletes = $bulkUpdates = $bulkDeletes = [];
+                $creates
+                    = $updates
+                    = $deletes
+                    = $increments
+                    = $decrements
+                    = $bulkUpdates
+                    = $bulkDeletes
+                    = [];
 
                 foreach ($operations as $operation) {
                     $databaseInternalId = $operation['databaseInternalId'];
@@ -1799,15 +1809,29 @@ App::patch('/v1/databases/transactions/:transactionId')
                         case 'delete':
                             $deletes[$databaseInternalId][$collectionInternalId][] = $documentId;
                             break;
+                        case 'increment':
+                            $increments[$databaseInternalId][$collectionInternalId][] = [
+                                'attribute' => $operation['data']['attribute'],
+                                'value' => $operation['data']['value'] ?? 1,
+                                'max' => $operation['data']['max'] ?? null,
+                            ];
+                            break;
+                        case 'decrement':
+                            $decrements[$databaseInternalId][$collectionInternalId][] = [
+                                'attribute' => $operation['data']['attribute'],
+                                'value' => $operation['data']['value'] ?? 1,
+                                'min' => $operation['data']['min'] ?? null,
+                            ];
+                            break;
                         case 'bulkUpdate':
                             $bulkUpdates[$databaseInternalId][$collectionInternalId][] = [
-                                'data' => $operation['data'] ?? null,
-                                'queries' => $operation['queries'] ?? [],
+                                'data' => $operation['data']['data'] ?? null,
+                                'queries' => $operation['data']['queries'] ?? [],
                             ];
                             break;
                         case 'bulkDelete':
                             $bulkDeletes[$databaseInternalId][$collectionInternalId][] = [
-                                'queries' => $operation['queries'] ?? [],
+                                'queries' => $operation['data']['queries'] ?? [],
                             ];
                             break;
                     }
@@ -1829,6 +1853,30 @@ App::patch('/v1/databases/transactions/:transactionId')
                             $dbForProject->deleteDocuments("database_{$dbId}_collection_{$colId}", [
                                 Query::equal('$id', $ids),
                             ]);
+                        }
+                    }
+                    foreach ($increments as $dbId => $cols) {
+                        foreach ($cols as $colId => $increments) {
+                            foreach ($increments as $increment) {
+                                $dbForProject->increaseDocumentAttribute(
+                                    "database_{$dbId}_collection_{$colId}",
+                                    $increment['attribute'],
+                                    $increment['value'],
+                                    $increment['max']
+                                );
+                            }
+                        }
+                    }
+                    foreach ($decrements as $dbId => $cols) {
+                        foreach ($cols as $colId => $decrements) {
+                            foreach ($decrements as $decrement) {
+                                $dbForProject->decreaseDocumentAttribute(
+                                    "database_{$dbId}_collection_{$colId}",
+                                    $decrement['attribute'],
+                                    $decrement['value'],
+                                    $decrement['min']
+                                );
+                            }
                         }
                     }
                     foreach ($bulkUpdates as $dbId => $cols) {
@@ -3654,7 +3702,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, ?string $documentId, string|array|null $data, ?array $permissions, ?array $documents, ?string $transactionId, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->inject('plan')
+    ->action(function (string $databaseId, string $collectionId, ?string $documentId, string|array|null $data, ?array $permissions, ?array $documents, ?string $transactionId, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -3903,7 +3952,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
 
             try {
-                $dbForProject->createDocuments('transactionLogs', $operations);
+                $dbForProject->withTransaction(function () use ($dbForProject, $plan, $transactionId, $operations) {
+                    $dbForProject->createDocuments('transactionLogs', $operations);
+                    $dbForProject->increaseDocumentAttribute(
+                        collection: 'transactions',
+                        id: $transactionId,
+                        attribute:'operations',
+                        value: \count($operations),
+                        max: $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH,
+                    );
+                });
             } catch (DuplicateException) {
                 throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
             } catch (NotFoundException) {
@@ -4442,7 +4500,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->inject('plan')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -4592,14 +4651,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         if (!empty($transactionId)) {
-            $dbForProject->createDocument('transactionLogs', new Document([
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $document->getId(),
-                'action' => 'update',
-                'data' => $newDocument->getArrayCopy(),
-            ]));
+            $dbForProject->withTransaction(function () use ($dbForProject, $plan, $transactionId, $database, $collection, $transaction, $document, $newDocument) {
+                $dbForProject->createDocument('transactionLogs', new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $document->getId(),
+                    'action' => 'update',
+                    'data' => $newDocument->getArrayCopy(),
+                ]));
+                $dbForProject->increaseDocumentAttribute(
+                    collection:'transactions',
+                    id: $transactionId,
+                    attribute: 'operations',
+                    max: $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH,
+                );
+            });
         } else {
             try {
                 $document = $dbForProject->updateDocument(
@@ -4850,13 +4917,21 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         if (!empty($transactionId)) {
-            $dbForProject->createDocument('transactionLogs', new Document([
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'action' => 'update',
-                'data' => $newDocument->getArrayCopy(),
-            ]));
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $database, $collection, $transaction, $newDocument) {
+                $dbForProject->createDocument('transactionLogs', new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'action' => 'update',
+                    'data' => $newDocument->getArrayCopy(),
+                ]));
+                $dbForProject->increaseDocumentAttribute(
+                    collection: 'transactions',
+                    id: $transactionId,
+                    attribute: 'operations',
+                    max: $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH,
+                );
+            });
 
             $upserted = $newDocument;
         } else {
@@ -4991,18 +5066,25 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
             }
 
-            $dbForProject->createDocument('transactionLogs', new Document([
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $documentId,
-                'action' => 'increment',
-                'data' => [
-                    'attribute' => $attribute,
-                    'value' => $value,
-                    'max' => $max,
-                ]
-            ]));
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $database, $collection, $transaction, $documentId, $attribute, $value, $max) {
+                $dbForProject->createDocument('transactionLogs', new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $documentId,
+                    'action' => 'increment',
+                    'data' => [
+                        'attribute' => $attribute,
+                        'value' => $value,
+                        'max' => $max,
+                    ]
+                ]));
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                );
+            });
 
             $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
         } else {
@@ -5108,18 +5190,25 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
             }
 
-            $dbForProject->createDocument('transactionLogs', new Document([
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $documentId,
-                'action' => 'decrement',
-                'data' => [
-                    'attribute' => $attribute,
-                    'value'     => $value,
-                    'min'       => $min,
-                ],
-            ]));
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $database, $collection, $transaction, $documentId, $attribute, $value, $min) {
+                $dbForProject->createDocument('transactionLogs', new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $documentId,
+                    'action' => 'decrement',
+                    'data' => [
+                        'attribute' => $attribute,
+                        'value' => $value,
+                        'min' => $min,
+                    ],
+                ]));
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                );
+            });
 
             // Fetch current document for response without mutating
             $document = $dbForProject->getDocument(
@@ -5249,13 +5338,21 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = [];
 
         if (!empty($transactionId)) {
-            $dbForProject->createDocument('transactionLogs', new Document([
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'action' => 'bulkUpdate',
-                'data' => \compact('data', 'queries'),
-            ]));
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $database, $collection, $transaction, $data, $queries) {
+                $dbForProject->createDocument('transactionLogs', new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'action' => 'bulkUpdate',
+                    'data' => \compact('data', 'queries'),
+                ]));
+                $dbForProject->increaseDocumentAttribute(
+                    collection: 'transactions',
+                    id: $transactionId,
+                    attribute: 'operations',
+                    max: $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH,
+                );
+            });
         }
 
         try {
@@ -5368,10 +5465,19 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ]);
             }
 
-            $dbForProject->createDocuments('transactionLogs', $operations);
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $database, $collection, $transaction, $operations) {
+                $dbForProject->createDocuments('transactionLogs', $operations);
+                $dbForProject->increaseDocumentAttribute(
+                    collection: 'transactions',
+                    id: $transactionId,
+                    attribute: 'operations',
+                    value: \count($operations),
+                    max: $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH,
+                );
+            });
 
-            $modified  = \count($documents);
-            $upserted  = $documents;
+            $modified = \count($documents);
+            $upserted = $documents;
         } else {
             $upserted = [];
 
@@ -5475,13 +5581,21 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 throw new Exception(Exception::TRANSACTION_INVALID, 'Transaction is not pending');
             }
 
-            $dbForProject->createDocument('transactionLogs', new Document([
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $document->getId(),
-                'action' => 'delete',
-            ]));
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $database, $collection, $transaction, $document) {
+                $dbForProject->createDocument('transactionLogs', new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $document->getId(),
+                    'action' => 'delete',
+                ]));
+                $dbForProject->increaseDocumentAttribute(
+                    collection: 'transactions',
+                    id: $transactionId,
+                    attribute: 'operations',
+                    max: $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH,
+                );
+            });
         } else {
             try {
                 $dbForProject->deleteDocument(
@@ -5631,13 +5745,21 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = [];
 
         if (!empty($transactionId)) {
-            $dbForProject->createDocument('transactionLogs', new Document([
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'action' => 'bulkDelete',
-                'data' => ['queries' => $queries],
-            ]));
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $database, $collection, $transaction, $queries) {
+                $dbForProject->createDocument('transactionLogs', new Document([
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'action' => 'bulkDelete',
+                    'data' => ['queries' => $queries],
+                ]));
+                $dbForProject->increaseDocumentAttribute(
+                    collection: 'transactions',
+                    id: $transactionId,
+                    attribute: 'operations',
+                    max: $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH,
+                );
+            });
 
             $modified = 0;
         } else {
