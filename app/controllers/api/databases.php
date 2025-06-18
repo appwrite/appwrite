@@ -1621,6 +1621,41 @@ App::post('/v1/databases/transactions/:transactionId/operations')
             ->dynamic($transaction, Response::MODEL_TRANSACTION);
     });
 
+App::get('/v1/databases/transactions')
+    ->desc('List transactions')
+    ->groups(['api', 'database', 'transactions'])
+    ->label('scope', 'transactions.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'transactions',
+        name: 'listTransactions',
+        description: '/docs/references/databases/list-transactions.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TRANSACTION_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('queries', [], new Transactions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries).', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (array $queries, Response $response, Database $dbForProject) {
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $response->dynamic(new Document([
+            'transactions' => $dbForProject->find('transactions', $queries),
+            'total' => $dbForProject->count('transactions', $queries),
+        ]), Response::MODEL_TRANSACTION_LIST);
+    });
+
 App::get('/v1/databases/transactions/:transactionId')
     ->desc('Get transaction')
     ->groups(['api', 'database', 'transactions'])

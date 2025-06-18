@@ -19,9 +19,9 @@ class Operation extends Validator
     private array $actions = [
         'create',
         'update',
-        'bulkUpdate',
         'upsert',
         'delete',
+        'bulkUpdate',
         'bulkDelete',
     ];
 
