@@ -173,7 +173,7 @@ class Project extends Model
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not all existing sessions should be invalidated on password change',
                 'default' => false,
-                'example' => self::TYPE_BOOLEAN,
+                'example' => true,
             ])
             ->addRule('oAuthProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
