@@ -1564,6 +1564,7 @@ App::post('/v1/databases/transactions')
         $transaction = $dbForProject->createDocument('transactions', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
+            'operations' => 0,
             'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),
         ]));
 
@@ -1598,11 +1599,19 @@ App::post('/v1/databases/transactions/:transactionId/operations')
     ->inject('plan')
     ->action(function (string $transactionId, array $operations, Response $response, Database $dbForProject, array $plan) {
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
-
-        if ($transaction->isEmpty() || $transaction['status'] !== 'pending') {
+        if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
         }
 
+        $maxBatch = $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH;
+        $existing = $transaction->getAttribute('operations', 0);
+
+        if (($existing + \count($operations)) > $maxBatch) {
+            throw new Exception(
+                Exception::TRANSACTION_LIMIT_EXCEEDED,
+                'Transaction already has ' . $existing . ' operations, adding ' . \count($operations) . ' would exceed the maximum of ' . $maxBatch
+            );
+        }
 
         $databases = $collections = $staged = [];
         foreach ($operations as $operation) {
@@ -1627,7 +1636,12 @@ App::post('/v1/databases/transactions/:transactionId/operations')
             ]);
         }
 
-        $dbForProject->createDocuments('transactionLogs', $staged);
+        $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
+            $dbForProject->createDocuments('transactionLogs', $staged);
+            $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                'operations' => $existing + \count($operations),
+            ]));
+        });
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

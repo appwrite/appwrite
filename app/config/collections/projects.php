@@ -2528,6 +2528,16 @@ return [
                 'filters'  => [],
             ],
             [
+                '$id'      => ID::custom('operations'),
+                'type'     => Database::VAR_INTEGER,
+                'size'     => 0,
+                'signed'   => false,
+                'required' => true,
+                'default'  => 0,
+                'array'    => false,
+                'filters'  => [],
+            ],
+            [
                 '$id'      => ID::custom('expiresAt'),
                 'type'     => Database::VAR_DATETIME,
                 'size'     => 0,
