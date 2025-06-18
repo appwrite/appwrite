@@ -645,6 +645,18 @@ class AccountCustomClientTest extends Scope
             }
         }
 
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $newPassword,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+
         /**
          * Test for FAILURE
          */
