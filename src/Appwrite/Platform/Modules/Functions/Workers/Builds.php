@@ -1441,10 +1441,11 @@ class Builds extends Action
             $hostname = System::getEnv('_APP_DOMAIN');
 
             $projectId = $project->getId();
+            $region = $project->getAttribute('region', 'default');
             $resourceId = $resource->getId();
             $providerTargetUrl = match ($resource->getCollection()) {
-                'functions' => "{$protocol}://{$hostname}/console/project-{$projectId}/functions/function-{$resourceId}",
-                'sites' => "{$protocol}://{$hostname}/console/project-{$projectId}/sites/site-{$resourceId}",
+                'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
+                'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
                 default => throw new \Exception('Invalid resource type')
             };
 

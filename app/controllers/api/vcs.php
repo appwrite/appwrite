@@ -363,6 +363,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                 $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
+                $region = $project->getAttribute('region', 'default');
                 $name = "{$resourceName} ({$projectName})";
                 $message = 'Starting...';
 
@@ -377,7 +378,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
                 $owner = $github->getOwnerName($providerInstallationId);
 
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/$resourceCollection/$resourceType-$resourceId";
+                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
@@ -476,16 +477,6 @@ App::get('/v1/vcs/github/callback')
         $state = \json_decode($state, true);
         $projectId = $state['projectId'] ?? '';
 
-        $defaultState = [
-            'success' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations",
-            'failure' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations",
-        ];
-
-        $state = \array_merge($defaultState, $state ?? []);
-
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
-
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -501,6 +492,18 @@ App::get('/v1/vcs/github/callback')
 
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
+
+        $region = $project->getAttribute('region', 'default');
+
+        $defaultState = [
+            'success' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$region-$projectId/settings/git-installations",
+            'failure' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$region-$projectId/settings/git-installations",
+        ];
+
+        $state = \array_merge($defaultState, $state ?? []);
+
+        $redirectSuccess = $state['success'] ?? '';
+        $redirectFailure = $state['failure'] ?? '';
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
