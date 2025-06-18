@@ -157,7 +157,7 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        $projectInternalId = $this->project->getInternalId();
+        $projectInternalId = $this->project->getSequence();
 
         $collections = match ($projectInternalId) {
             'console' => $this->collections['console'],
@@ -210,7 +210,7 @@ abstract class Migration
     {
         $name ??= $id;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -261,7 +261,7 @@ abstract class Migration
     ): void {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -326,7 +326,7 @@ abstract class Migration
     ): void {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -384,7 +384,7 @@ abstract class Migration
     {
         $from ??= $collectionId;
 
-        $collectionType = match ($this->project->getInternalId()) {
+        $collectionType = match ($this->project->getSequence()) {
             'console' => 'console',
             default => 'projects',
         };
@@ -430,7 +430,7 @@ abstract class Migration
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();
