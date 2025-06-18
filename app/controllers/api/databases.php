@@ -18,6 +18,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
+use Appwrite\Utopia\Database\Validator\Queries\Transactions;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -1594,23 +1595,35 @@ App::post('/v1/databases/transactions/:transactionId/operations')
     ->param('operations', [], new ArrayList(new Operation()), 'Array of staged operations.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $transactionId, array $operations, Response $response, Database $dbForProject) {
+    ->inject('plan')
+    ->action(function (string $transactionId, array $operations, Response $response, Database $dbForProject, array $plan) {
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
         if ($transaction->isEmpty() || $transaction['status'] !== 'pending') {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
         }
 
-        $staged = [];
-        foreach ($operations as $op) {
+
+        $databases = $collections = $staged = [];
+        foreach ($operations as $operation) {
+            $database = $databases[$operation['databaseId']] ??= $dbForProject->getDocument('databases', $operation['databaseId']);
+            if ($database->isEmpty()) {
+                throw new Exception(Exception::DATABASE_NOT_FOUND);
+            }
+
+            $collection = $collections[$operation['collectionId']] ??= $dbForProject->getDocument('database_' . $database->getSequence(), $operation['collectionId']);
+            if ($collection->isEmpty()) {
+                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            }
+
             $staged[] = new Document([
                 '$id' => ID::unique(),
-                'transactionId' => $transactionId,
-                'databaseId' => $op['databaseId'] ?? null,
-                'collectionId' => $op['collectionId'] ?? null,
-                'documentId' => $op['documentId'] ?? null,
-                'action' => $op['action'],
-                'data' => $op['data'] ?? [],
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $operation['documentId'] ?? ID::unique(),
+                'action' => $operation['action'],
+                'data' => $operation['data'] ?? new \stdClass(),
             ]);
         }
 
