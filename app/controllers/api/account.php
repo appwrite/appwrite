@@ -2845,10 +2845,13 @@ App::patch('/v1/account/password')
 
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
-        foreach ($sessions as $session) {
-            /** @var Document $session */
-            if ($session->getId() !== $current) {
-                $dbForProject->deleteDocument('sessions', $session->getId());
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate && !empty($current)) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                if ($session->getId() !== $current) {
+                    $dbForProject->deleteDocument('sessions', $session->getId());
+                }
             }
         }
 
