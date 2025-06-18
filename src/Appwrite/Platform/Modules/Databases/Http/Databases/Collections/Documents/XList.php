@@ -131,17 +131,16 @@ class XList extends Action
 
         $operations = 0;
         $collectionsCache = [];
-        $trackOperations = true;
-        $removeCollection = true;
-        $context = compact('database', 'dbForProject', 'operations', 'collectionsCache', 'removeCollection', 'trackOperations');
-
-        // Add $collectionId and $databaseId for all documents
         foreach ($documents as $document) {
-            $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
+            $this->processDocument(
+                database: $database,
+                collection: $collection,
+                document: $document,
+                dbForProject: $dbForProject,
+                collectionsCache: $collectionsCache,
+                operations: $operations,
+            );
         }
-
-        // get updated from the context
-        $operations = $context['operations'];
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))

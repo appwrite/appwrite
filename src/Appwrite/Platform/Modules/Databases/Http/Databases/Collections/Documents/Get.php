@@ -101,14 +101,14 @@ class Get extends Action
 
         $operations = 0;
         $collectionsCache = [];
-        $trackOperations = true;
-        $context = compact('database', 'dbForProject', 'operations', 'trackOperations', 'collectionsCache');
-
-        // Add $collectionId and $databaseId for all documents
-        $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
-
-        // get updated from the context
-        $operations = $context['operations'];
+        $this->processDocument(
+            database: $database,
+            collection: $collection,
+            document: $document,
+            dbForProject: $dbForProject,
+            collectionsCache: $collectionsCache,
+            operations: $operations
+        );
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))

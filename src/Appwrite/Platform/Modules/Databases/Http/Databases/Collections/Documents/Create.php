@@ -374,12 +374,14 @@ class Create extends Action
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $collectionsCache = [];
-        $removeCollection = true;
-        $context = compact('database', 'dbForProject', 'collectionsCache', 'removeCollection');
-
         foreach ($documents as $document) {
-            // Add $collectionId and $databaseId for all documents
-            $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
+            $this->processDocument(
+                database: $database,
+                collection: $collection,
+                document: $document,
+                dbForProject: $dbForProject,
+                collectionsCache: $collectionsCache,
+            );
         }
 
         $queueForStatsUsage

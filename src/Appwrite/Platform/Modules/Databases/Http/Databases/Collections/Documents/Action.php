@@ -200,38 +200,30 @@ abstract class Action extends UtopiaAction
     /**
      * Resolves relationships in a document and attaches metadata.
      */
-    final protected function resolveDocumentRelations(Document $document, Document $collection, array &$context): bool
-    {
-        /* @type Document $database */
-        $database = $context['database'];
+    final protected function processDocument(
+        /* database */
+        Document $database,
+        Document $collection,
+        Document $document,
+        Database $dbForProject,
 
-        /* @type Database $dbForProject */
-        $dbForProject = $context['dbForProject'];
+        /* options */
+        array &$collectionsCache,
+        ?int &$operations = null,
+    ): bool {
 
-        /* remove `$collection` if needed */
-        $removeCollection = $context['removeCollection'] ?? false;
-
-        /* count operations inside loop */
-        $trackOperations = array_key_exists('trackOperations', $context);
-
-        if (!$trackOperations) {
-            $context['operations'] ??= 0;
-        } elseif ($document->isEmpty()) {
+        if ($operations !== null && $document->isEmpty()) {
             return false;
         }
 
-        $operations = &$context['operations'];
-        $collectionsCache = &$context['collectionsCache'];
+        if ($operations !== null) {
+            $operations++;
+        }
 
-        $operations++;
         $collectionId = $collection->getId();
-
+        $document->removeAttribute('$collection');
         $document->setAttribute('$databaseId', $database->getId());
         $document->setAttribute('$collectionId', $collectionId);
-
-        if ($removeCollection) {
-            $document->removeAttribute('$collection');
-        }
 
         $relationships = $collectionsCache[$collectionId] ??= \array_filter(
             $collection->getAttribute('attributes', []),
@@ -243,7 +235,7 @@ abstract class Action extends UtopiaAction
             $related = $document->getAttribute($key);
 
             if (empty($related)) {
-                if (\in_array(\gettype($related), ['array', 'object'])) {
+                if (\in_array(\gettype($related), ['array', 'object']) && $operations !== null) {
                     $operations++;
                 }
                 continue;
@@ -266,14 +258,21 @@ abstract class Action extends UtopiaAction
                 );
             }
 
-            foreach ($relations as $index => $relation) {
+            foreach ($relations as $relation) {
                 if ($relation instanceof Document) {
                     $relatedCollection = new Document([
                         '$id' => $relatedCollectionId,
                         'attributes' => $collectionsCache[$relatedCollectionId],
                     ]);
 
-                    $this->resolveDocumentRelations(document: $relation, collection: $relatedCollection, context: $context);
+                    $this->processDocument(
+                        database: $database,
+                        collection: $relatedCollection,
+                        document: $relation,
+                        dbForProject: $dbForProject,
+                        collectionsCache: $collectionsCache,
+                        operations: $operations
+                    );
                 }
             }
 

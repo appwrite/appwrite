@@ -115,10 +115,13 @@ class Delete extends Action
         }
 
         $collectionsCache = [];
-        $context = compact('database', 'dbForProject', 'collectionsCache');
-
-        // Add $collection and $databaseId for all documents
-        $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
+        $this->processDocument(
+            database: $database,
+            collection: $collection,
+            document: $document,
+            dbForProject: $dbForProject,
+            collectionsCache: $collectionsCache,
+        );
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)

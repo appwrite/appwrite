@@ -237,10 +237,13 @@ class Upsert extends Action
 
         $collectionsCache = [];
         $document = $upserted[0];
-        $context = compact('database', 'dbForProject', 'collectionsCache');
-
-        // Add $collectionId and $databaseId for all documents
-        $this->resolveDocumentRelations(document: $document, collection: $collection, context: $context);
+        $this->processDocument(
+            database: $database,
+            collection: $collection,
+            document: $document,
+            dbForProject: $dbForProject,
+            collectionsCache: $collectionsCache,
+        );
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
