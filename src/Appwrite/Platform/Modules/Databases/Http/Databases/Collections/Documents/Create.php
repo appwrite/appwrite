@@ -373,42 +373,15 @@ class Create extends Action
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $table, Document $document) use (&$processDocument, $dbForProject, $database) {
-            $document->removeAttribute('$collection');
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $table->getId());
-
-            $relationships = \array_filter(
-                $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $related = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
-                );
-
-                foreach ($related as $relation) {
-                    if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
-                    }
-                }
-            }
-        };
-
+        $collectionsCache = [];
         foreach ($documents as $document) {
-            $processDocument($collection, $document);
+            $this->processDocument(
+                database: $database,
+                collection: $collection,
+                document: $document,
+                dbForProject: $dbForProject,
+                collectionsCache: $collectionsCache,
+            );
         }
 
         $queueForStatsUsage
