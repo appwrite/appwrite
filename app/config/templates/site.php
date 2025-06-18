@@ -6,7 +6,7 @@ use Utopia\System\System;
  * List of Appwrite Sites templates
  */
 
-$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
 $url = $protocol . '://' . $hostname;
