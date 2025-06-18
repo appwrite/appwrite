@@ -2843,6 +2843,15 @@ App::patch('/v1/account/password')
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
+        $sessions = $user->getAttribute('sessions', []);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        foreach ($sessions as $session) {
+            /** @var Document $session */
+            if ($session->getId() !== $current) {
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
+
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());

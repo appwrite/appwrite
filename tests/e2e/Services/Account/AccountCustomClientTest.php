@@ -480,6 +480,20 @@ class AccountCustomClientTest extends Scope
         $password = $data['password'] ?? '';
         $session = $data['session'] ?? '';
 
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $email,
+                'password' => $password,
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            sleep(1);
+        }
+
         /**
          * Test for SUCCESS
          */
@@ -499,6 +513,21 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
+
+        // checking for all non active sessions are cleared
+        $sessionId = $data['sessionId'] ?? '';
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        // checking the current session or not
+        $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
