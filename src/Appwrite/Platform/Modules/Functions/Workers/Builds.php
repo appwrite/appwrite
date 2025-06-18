@@ -1032,6 +1032,7 @@ class Builds extends Action
                     $date = \date('H:i:s');
                     $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n";
 
+                    $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     $queueForRealtime
@@ -1046,6 +1047,7 @@ class Builds extends Action
                     $date = \date('H:i:s');
                     $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n";
 
+                    $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
             }
