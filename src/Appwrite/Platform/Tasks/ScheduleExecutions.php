@@ -29,9 +29,7 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queue = $pools->get('publisher')->pop();
-        $connection = $queue->getResource();
-        $queueForFunctions = new Func($connection);
+        $queueForFunctions = new Func($this->publisher);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
@@ -41,7 +39,7 @@ class ScheduleExecutions extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                unset($this->schedules[$schedule['$internalId']]);
+                unset($this->schedules[$schedule['$sequence']]);
                 continue;
             }
 
@@ -83,9 +81,7 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             );
 
-            unset($this->schedules[$schedule['$internalId']]);
+            unset($this->schedules[$schedule['$sequence']]);
         }
-
-        $queue->reclaim();
     }
 }

@@ -48,7 +48,7 @@ class Create extends Action
             group: 'files',
             name: 'createFileToken',
             description: <<<EOT
-            Create a new token. A token is linked to a file. Token can be passed as a header or request get parameter.
+            Create a new token. A token is linked to a file. Token can be passed as a request URL search parameter.
             EOT,
             auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
@@ -94,7 +94,7 @@ class Create extends Action
             '$id' => ID::unique(),
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
-            'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
+            'resourceInternalId' => $bucket->getSequence() . ':' . $file->getSequence(),
             'resourceType' => TOKENS_RESOURCE_TYPE_FILES,
             'expire' => $expire,
         ]));

@@ -12,6 +12,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class V22 extends Migration
 {
@@ -49,7 +50,7 @@ class V22 extends Migration
      */
     private function migrateCollections(): void
     {
-        $projectInternalId = $this->project->getInternalId();
+        $projectInternalId = $this->project->getSequence();
 
         if (empty($projectInternalId)) {
             throw new Exception('Project ID is null');
@@ -149,9 +150,9 @@ class V22 extends Migration
                     ];
                     foreach ($indexes as $index) {
                         try {
-                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            $this->dbForProject->deleteIndex($id, $index);
                         } catch (Throwable $th) {
-                            Console::warning("Failed to create index \"$index\" from {$id}: {$th->getMessage()}");
+                            Console::warning("Failed to delete index \"$index\" from {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -324,7 +325,9 @@ class V22 extends Migration
                 4. Fill "trigger" with "manual"
                 5. Fill "deploymentResourceType". If "resourceType" is "function", set "deploymentResourceType" to "function"
                 6. Fill "search" with "{$id} {domain}"
-                7. Fill "deploymentId" and "deploymentInternalId". If "deploymentResourceType" is "function", get project DB, and find function with ID "resourceId". Then fill rule's "deploymentId" with function's "deployment", and "deploymentId" as backup
+                7. Set "region" to project region
+                8. Fill "owner" with "Appwrite" if "domain" ends with "functions" or "sites"
+                9. Fill "deploymentId" and "deploymentInternalId". If "deploymentResourceType" is "function", get project DB, and find function with ID "resourceId". Then fill rule's "deploymentId" with function's "deployment", and "deploymentId" as backup
                 */
 
                 $deploymentResourceType = null;
@@ -346,11 +349,38 @@ class V22 extends Migration
                     ->setAttribute('deploymentResourceType', $document->getAttribute('deploymentResourceType', $deploymentResourceType))
                     ->setAttribute('search', \implode(' ', [$document->getId(), $document->getAttribute('domain', '')]));
 
+                $project = $this->dbForProject->getDocument('projects', $document->getAttribute('projectId'));
+
+                if ($project->isEmpty()) {
+                    Console::warning("Project \"{$document->getAttribute('projectId')}\" not found for rule \"{$document->getId()}\"");
+                    $document->setAttribute('region', System::getEnv('_APP_REGION', 'default'));
+                    break;
+                }
+
+                $document->setAttribute('region', $project->getAttribute('region', System::getEnv('_APP_REGION', 'default')));
+
+                $domain = $document->getAttribute('domain', '');
+                $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $owner = $document->getAttribute('owner', '');
+                if (
+                    empty($owner) &&
+                    (!empty($functionsDomain) && \str_ends_with($domain, $functionsDomain)) ||
+                    (!empty($sitesDomain) && \str_ends_with($domain, $sitesDomain))
+                ) {
+                    $document->setAttribute('owner', 'Appwrite');
+                }
+
                 if ($deploymentResourceType === 'function') {
-                    $project = $this->dbForProject->getDocument('projects', $document->getAttribute('projectId'));
                     $dbForOwnerProject = ($this->getProjectDB)($project);
                     $function = $dbForOwnerProject->getDocument('functions', $resourceId);
-                    $deploymentId = $function->getAttribute('deployment', $function->getAttribute('deploymentId', $document->getAttribute('deploymentId')));
+
+                    if ($function->isEmpty()) {
+                        Console::warning("Function \"{$resourceId}\" not found for rule \"{$document->getId()}\"");
+                        break;
+                    }
+
+                    $deploymentId = $function->getAttribute('deployment', $function->getAttribute('deploymentId', $document->getAttribute('deploymentId', '')));
                     $deploymentInternalId = $function->getAttribute('deploymentInternalId', $document->getAttribute('deploymentInternalId', ''));
 
                     $document
@@ -382,16 +412,23 @@ class V22 extends Migration
                 2. Fill "deploymentCreatedAt" with deployment's "$createdAt"
                 --- Fetch latestDeployment using find()
                 3. Fill latestDeploymentId with latestDeployment's "$id"
-                4. Fill latestDeploymentInternalId with latestDeployment's "$internalId"
+                4. Fill latestDeploymentInternalId with latestDeployment's "$sequence"
                 5. Fill latestDeploymentCreatedAt with latestDeployment's "$createdAt"
                 6. Fill latestDeploymentStatus with latestDeployment's build's "status"
                 */
-                if ($document->getAttribute('deployment')) {
-                    $document->setAttribute('deploymentId', $document->getAttribute('deployment', $document->getAttribute('deploymentId', '')));
+                if (empty($document->getAttribute('deployment'))) {
+                    break;
                 }
 
+                $document->setAttribute('deploymentId', $document->getAttribute('deployment', $document->getAttribute('deploymentId', '')));
                 $deploymentId = $document->getAttribute('deploymentId');
                 $deployment = $this->dbForProject->getDocument('deployments', $deploymentId);
+
+                if ($deployment->isEmpty()) {
+                    Console::warning("Deployment \"{$deploymentId}\" not found for function \"{$document->getId()}\"");
+                    break;
+                }
+
                 $document->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
 
                 $latestDeployment = $this->dbForProject->findOne('deployments', [
@@ -400,11 +437,21 @@ class V22 extends Migration
                     Query::equal('resourceType', ['functions']),
                 ]);
 
+                if ($latestDeployment->isEmpty()) {
+                    Console::warning("Latest deployment not found for function \"{$document->getId()}\"");
+                    break;
+                }
+
                 $latestBuild = $this->dbForProject->getDocument('builds', $latestDeployment->getAttribute('buildId', ''));
+
+                if ($latestBuild->isEmpty()) {
+                    Console::warning("Build \"{$latestDeployment->getAttribute('buildId')}\" not found for deployment \"{$latestDeployment->getId()}\"");
+                    break;
+                }
 
                 $document
                     ->setAttribute('latestDeploymentId', $latestDeployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $latestDeployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $latestDeployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $latestBuild->getAttribute('status', $document->getAttribute('latestDeploymentStatus', '')));
                 break;
@@ -468,7 +515,7 @@ class V22 extends Migration
 
     private function cleanCollections(): void
     {
-        $projectInternalId = $this->project->getInternalId();
+        $projectInternalId = $this->project->getSequence();
 
         $collectionType = match ($projectInternalId) {
             'console' => 'console',

@@ -24,6 +24,7 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -181,7 +182,7 @@ App::post('/v1/projects')
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'name' => $name,
-                'teamInternalId' => $team->getInternalId(),
+                'teamInternalId' => $team->getSequence(),
                 'teamId' => $team->getId(),
                 'region' => $region,
                 'description' => $description,
@@ -223,19 +224,19 @@ App::post('/v1/projects')
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         if (!$sharedTablesV2) {
-            $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+            $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
 
             if ($sharedTables) {
                 $dbForProject
                     ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? $project->getInternalId() : null)
+                    ->setTenant($sharedTablesV1 ? $project->getSequence() : null)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $dbForProject
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
 
             $create = true;
@@ -503,12 +504,12 @@ App::patch('/v1/projects/:projectId/team')
 
         $project
             ->setAttribute('teamId', $teamId)
-            ->setAttribute('teamInternalId', $team->getInternalId())
+            ->setAttribute('teamInternalId', $team->getSequence())
             ->setAttribute('$permissions', $permissions);
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project);
 
         $installations = $dbForPlatform->find('installations', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($installations as $installation) {
             $installation->getAttribute('$permissions', $permissions);
@@ -516,7 +517,7 @@ App::patch('/v1/projects/:projectId/team')
         }
 
         $repositories = $dbForPlatform->find('repositories', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($repositories as $repository) {
             $repository->getAttribute('$permissions', $permissions);
@@ -524,7 +525,7 @@ App::patch('/v1/projects/:projectId/team')
         }
 
         $vcsComments = $dbForPlatform->find('vcsComments', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($vcsComments as $vcsComment) {
             $vcsComment->getAttribute('$permissions', $permissions);
@@ -1228,7 +1229,7 @@ App::post('/v1/projects/:projectId/webhooks')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
             'events' => $events,
@@ -1278,7 +1279,7 @@ App::get('/v1/projects/:projectId/webhooks')
         }
 
         $webhooks = $dbForPlatform->find('webhooks', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1319,7 +1320,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1369,7 +1370,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1426,7 +1427,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1473,7 +1474,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1527,7 +1528,7 @@ App::post('/v1/projects/:projectId/keys')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
@@ -1575,7 +1576,7 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForPlatform->find('keys', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1616,7 +1617,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1660,7 +1661,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1711,7 +1712,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1810,7 +1811,7 @@ App::post('/v1/projects/:projectId/platforms')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'type' => $type,
             'name' => $name,
@@ -1857,7 +1858,7 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForPlatform->find('platforms', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1898,7 +1899,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($platform->isEmpty()) {
@@ -1942,7 +1943,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($platform->isEmpty()) {
@@ -1996,7 +1997,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($platform->isEmpty()) {

@@ -24,10 +24,12 @@ use Appwrite\Utopia\Request;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
@@ -38,6 +40,7 @@ use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
@@ -74,10 +77,10 @@ App::setResource('localeCodes', function () {
 
 // Queues
 App::setResource('publisher', function (Group $pools) {
-    return $pools->get('publisher')->pop()->getResource();
+    return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 App::setResource('consumer', function (Group $pools) {
-    return $pools->get('consumer')->pop()->getResource();
+    return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
@@ -331,12 +334,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $dbAdapter = $pools
-        ->get($dsn->getHost())
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, $cache);
+    $adapter = new DatabasePool($pools->get($dsn->getHost()));
+    $database = new Database($adapter, $cache);
 
     $database
         ->setMetadata('host', \gethostname())
@@ -349,25 +348,21 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getInternalId())
+            ->setTenant($project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
             ->setSharedTables(false)
             ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
+            ->setNamespace('_' . $project->getSequence());
     }
 
     return $database;
 }, ['pools', 'dbForPlatform', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, $cache);
+    $adapter = new DatabasePool($pools->get('console'));
+    $database = new Database($adapter, $cache);
 
     $database
         ->setNamespace('_console')
@@ -380,7 +375,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+    $databases = [];
 
     return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -406,13 +401,13 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
         });
 
@@ -422,12 +417,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $adapter = new DatabasePool($pools->get($dsn->getHost()));
+        $database = new Database($adapter, $cache);
         $databases[$dsn->getHost()] = $database;
         $configure($database);
 
@@ -437,21 +428,15 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
 App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
-    return function (?Document $project = null) use ($pools, $cache, $database) {
+
+    return function (?Document $project = null) use ($pools, $cache, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get('logs')
-            ->pop()
-            ->getResource();
-
-        $database = new Database(
-            $dbAdapter,
-            $cache
-        );
+        $adapter = new DatabasePool($pools->get('logs'));
+        $database = new Database($adapter, $cache);
 
         $database
             ->setSharedTables(true)
@@ -461,7 +446,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
@@ -470,19 +455,18 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
 App::setResource('telemetry', fn () => new NoTelemetry());
 
-App::setResource('cache', function (Group $pools) {
+App::setResource('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource();
+        $adapters[] = new CachePool($pools->get($value));
     }
 
-    return new Cache(new Sharding($adapters));
-}, ['pools']);
+    $cache = new Cache(new Sharding($adapters));
+    $cache->setTelemetry($telemetry);
+    return $cache;
+}, ['pools', 'telemetry']);
 
 App::setResource('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
@@ -506,24 +490,23 @@ App::setResource('timelimit', function (\Redis $redis) {
 }, ['redis']);
 
 App::setResource('deviceForLocal', function (Telemetry $telemetry) {
-    return new Local();
+    return new Device\Telemetry($telemetry, new Local());
 }, ['telemetry']);
-
-App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForSites', function ($project) {
-    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForImports', function ($project) {
-    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForSites', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForImports', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForBuilds', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
 function getDevice(string $root, string $connection = ''): Device
 {
@@ -552,7 +535,8 @@ function getDevice(string $root, string $connection = ''): Device
         switch ($device) {
             case Storage::DEVICE_S3:
                 if (!empty($url)) {
-                    return new S3($root, $accessKey, $accessSecret, $url, $region, $acl);
+                    $bucketRoot = (!empty($bucket) ? $bucket . '/' : '') . \ltrim($root, '/');
+                    return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl);
                 } else {
                     return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 }
@@ -584,7 +568,8 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Acl = 'private';
                 $s3EndpointUrl = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
                 if (!empty($s3EndpointUrl)) {
-                    return new S3($root, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
+                    $bucketRoot = (!empty($s3Bucket) ? $s3Bucket . '/' : '') . \ltrim($root, '/');
+                    return new S3($bucketRoot, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
                 } else {
                     return new AWS($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
                 }
@@ -854,7 +839,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
 
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
         return $dbForPlatform->findOne('teams', [
-            Query::equal('$internalId', [$teamInternalId]),
+            Query::equal('$sequence', [$teamInternalId]),
         ]);
     });
 
@@ -895,7 +880,7 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
     return Key::decode($project, $key);
 }, ['request', 'project']);
 
-App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+App::setResource('executor', fn () => new Executor());
 
 App::setResource('resourceToken', function ($project, $dbForProject, $request) {
     $tokenJWT = $request->getParam('token');
@@ -933,10 +918,10 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
 
         return match ($token->getAttribute('resourceType')) {
             TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject) {
-                $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
+                $sequences = explode(':', $token->getAttribute('resourceInternalId'));
                 $ids = explode(':', $token->getAttribute('resourceId'));
 
-                if (count($internalIds) !== 2 || count($ids) !== 2) {
+                if (count($sequences) !== 2 || count($ids) !== 2) {
                     return new Document([]);
                 }
 
@@ -949,8 +934,8 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
                 return new Document([
                     'bucketId' => $ids[0],
                     'fileId' => $ids[1],
-                    'bucketInternalId' => $internalIds[0],
-                    'fileInternalId' => $internalIds[1],
+                    'bucketInternalId' => $sequences[0],
+                    'fileInternalId' => $sequences[1],
                 ]);
             })(),
 

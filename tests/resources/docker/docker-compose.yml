@@ -35,7 +35,7 @@ services:
         - VERSION=dev
     restart: unless-stopped
     ports:
-      - 9501:80
+      - "9501:80"
     networks:
       - appwrite
     labels:
@@ -52,15 +52,12 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./debug:/tmp
     depends_on:
       - mariadb
       - redis
-      # - clamav
     environment:
       - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_ENV
@@ -352,33 +349,6 @@ services:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
-
-  # clamav:
-  #   image: appwrite/clamav:1.2.0
-  #   container_name: appwrite-clamav
-  #   restart: unless-stopped
-  #   networks:
-  #     - appwrite
-  #   volumes:
-  #     - appwrite-uploads:/storage/uploads
-
-
-  # redis-commander:
-  #   image: rediscommander/redis-commander:latest
-  #   restart: unless-stopped
-  #   networks:
-  #   - appwrite
-  #   environment:
-  #   - REDIS_HOSTS=redis
-  #   ports:
-  #   - "8081:8081"
-
-  # webgrind:
-  #   image: 'jokkedk/webgrind:latest'
-  #   volumes:
-  #     - './debug:/tmp'
-  #   ports:
-  #     - '3001:80'
 
 networks:
   gateway:

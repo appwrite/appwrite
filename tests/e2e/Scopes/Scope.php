@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Scopes;
 
+use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
@@ -10,6 +11,7 @@ use Utopia\Database\Helpers\ID;
 abstract class Scope extends TestCase
 {
     use Retryable;
+    use Async;
 
     protected ?Client $client = null;
     protected string $endpoint = 'http://localhost/v1';
@@ -41,6 +43,18 @@ abstract class Scope extends TestCase
         }
 
         return [];
+    }
+
+    protected function assertLastRequest(callable $probe, $timeoutMs = 20_000, $waitMs = 500): array
+    {
+        $this->assertEventually(function () use (&$request, $probe) {
+            $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+            $request['data'] = json_decode($request['data'], true);
+
+            call_user_func($probe, $request);
+        }, $timeoutMs, $waitMs);
+
+        return $request;
     }
 
     protected function getLastRequest(): array

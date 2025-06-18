@@ -214,7 +214,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:6.0.7
+    image: appwrite/console:6.0.32
     restart: unless-stopped
     networks:
       - appwrite
@@ -969,7 +969,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.16
+    image: openruntimes/executor:0.7.20
     restart: unless-stopped
     networks:
       - appwrite
@@ -1057,7 +1057,7 @@ services:
     command: "mysqld --innodb-flush-method=fsync"
 
   postgresql:
-    image: postgres:15
+    image: postgres:17.5
     container_name: appwrite-postgresql
     <<: *x-logging
     networks:

@@ -391,9 +391,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => [],
-            'resourceInternalId' => $resource->getInternalId(),
+            'resourceInternalId' => $resource->getSequence(),
             'resourceId' => $resource->getId(),
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'responseStatusCode' => 0,
             'responseHeaders' => [],
@@ -692,11 +692,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         }
 
         $metricTypeExecutions = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS);
-        $metricTypeIdExecutions = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
+        $metricTypeIdExecutions = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
         $metricTypeExecutionsCompute = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE);
-        $metricTypeIdExecutionsCompute = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE);
+        $metricTypeIdExecutionsCompute = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE);
         $metricTypeExecutionsMbSeconds = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS);
-        $metricTypeIdExecutionsMBSeconds = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
+        $metricTypeIdExecutionsMBSeconds = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
         if ($deployment->getAttribute('resourceType') === 'sites') {
             $queueForStatsUsage
                 ->disableMetric(METRIC_NETWORK_REQUESTS)
@@ -719,9 +719,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 ->addMetric(METRIC_SITES_REQUESTS, 1)
                 ->addMetric(METRIC_SITES_INBOUND, $request->getSize() + $fileSize)
                 ->addMetric(METRIC_SITES_OUTBOUND, $response->getSize())
-                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_REQUESTS), 1)
-                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_INBOUND), $request->getSize() + $fileSize)
-                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_OUTBOUND), $response->getSize())
+                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_REQUESTS), 1)
+                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_INBOUND), $request->getSize() + $fileSize)
+                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_OUTBOUND), $response->getSize())
             ;
         }
 
@@ -749,12 +749,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         return false;
     } elseif ($type === 'redirect') {
         $url = $rule->getAttribute('redirectUrl', '');
-
-        $query = ($swooleRequest->server['query_string'] ?? '');
-        if (!empty($query)) {
-            $url .= '?' . $query;
-        }
-
         $response->redirect($url, \intval($rule->getAttribute('redirectStatusCode', 301)));
         return true;
     } else {
@@ -914,7 +908,7 @@ App::init()
                             'type' => 'api',
                             'status' => 'verifying',
                             'projectId' => $console->getId(),
-                            'projectInternalId' => $console->getInternalId(),
+                            'projectInternalId' => $console->getSequence(),
                             'search' => implode(' ', [$ruleId, $domain->get()]),
                             'owner' => $owner,
                             'region' => $console->getAttribute('region')
@@ -964,7 +958,7 @@ App::init()
                 )[0] ?? new Document();
             }
 
-            if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getInternalId()) {
+            if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
                 $refDomainOrigin = $origin;
             }
         }
@@ -1047,7 +1041,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true');
@@ -1110,7 +1104,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')

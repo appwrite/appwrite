@@ -1446,7 +1446,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertStringContainsString("Page not found", $response['body']); // Title
         $this->assertStringContainsString("Go to homepage", $response['body']); // Button
-        $this->assertStringContainsString("Powered by", $response['body']); // Brand
+        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
 
         $this->cleanupSite($siteId);
     }
@@ -1502,7 +1502,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Customized 404 page", $response['body']);
-        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
+        $this->assertStringNotContainsString("Powered by", $response['body']); //brand
 
         $this->cleanupSite($siteId);
     }
@@ -2648,6 +2648,48 @@ class SitesCustomServerTest extends Scope
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             $this->assertStringContainsString('No such file or directory', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testBuildErrorLogs(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro SSR site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'echo "custom error" && npm install',
+            'adapter' => 'ssr',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro-static'),
+            'activate' => true
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status is failed, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertStringContainsString('custom error', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Adapter mismatch', $deployment['body']['buildLogs']);
 
         $this->cleanupSite($siteId);
     }
