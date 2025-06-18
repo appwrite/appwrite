@@ -3451,7 +3451,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3576,7 +3575,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3707,7 +3705,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3770,7 +3767,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4257,7 +4253,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4340,7 +4335,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4431,7 +4425,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4522,7 +4515,6 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4605,7 +4597,6 @@
                     "platforms": [
                         "console",
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4745,7 +4736,6 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4835,7 +4825,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4940,7 +4929,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5037,7 +5025,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5333,7 +5320,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5407,7 +5393,6 @@
                     "scope": "execution.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5524,7 +5509,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5596,8 +5580,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5670,8 +5653,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5742,7 +5724,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5794,7 +5775,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5846,7 +5826,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5898,7 +5877,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5950,7 +5928,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6002,7 +5979,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6054,7 +6030,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6106,7 +6081,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6161,8 +6135,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -6246,8 +6219,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -6316,7 +6288,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6399,7 +6370,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6489,7 +6459,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6559,7 +6528,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6648,7 +6616,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6718,7 +6685,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6797,7 +6763,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7004,7 +6969,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7083,7 +7047,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7158,7 +7121,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7248,7 +7210,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7310,7 +7271,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7385,7 +7345,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7447,7 +7406,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7530,7 +7488,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7643,7 +7600,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7713,7 +7669,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7799,7 +7754,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
