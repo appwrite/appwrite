@@ -77,7 +77,7 @@ class Update extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getInternalId() || $variable->getAttribute('resourceType') !== 'site') {
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getSequence() || $variable->getAttribute('resourceType') !== 'site') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

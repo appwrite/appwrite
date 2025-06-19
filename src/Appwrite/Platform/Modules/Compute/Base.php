@@ -68,13 +68,13 @@ class Base extends Action
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getInternalId(),
+            'resourceInternalId' => $function->getSequence(),
             'resourceType' => 'functions',
             'entrypoint' => $entrypoint,
             'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $function->getAttribute('repositoryId', ''),
             'repositoryInternalId' => $function->getAttribute('repositoryInternalId', ''),
@@ -94,7 +94,7 @@ class Base extends Action
 
         $function = $function
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -165,7 +165,7 @@ class Base extends Action
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $site->getId(),
-            'resourceInternalId' => $site->getInternalId(),
+            'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
             'buildCommands' => implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
@@ -173,7 +173,7 @@ class Base extends Action
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $site->getAttribute('repositoryId', ''),
             'repositoryInternalId' => $site->getAttribute('repositoryInternalId', ''),
@@ -193,7 +193,7 @@ class Base extends Action
 
         $site = $site
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -208,15 +208,15 @@ class Base extends Action
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'domain' => $domain,
                 'trigger' => 'deployment',
                 'type' => 'deployment',
                 'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentInternalId' => $deployment->getSequence(),
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getInternalId(),
+                'deploymentResourceInternalId' => $site->getSequence(),
                 'deploymentVcsProviderBranch' => $providerBranch,
                 'status' => 'verified',
                 'certificateId' => '',
