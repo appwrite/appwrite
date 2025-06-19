@@ -3070,7 +3070,7 @@ trait Base
                         _id
                         name
                     }
-                    databasesCreateTable(databaseId: $databaseId, tableId: $tableId, name: $tableName, rowSecurity: $rowSecurity, permissions: $tablePermissions) {
+                    tablesCreate(databaseId: $databaseId, tableId: $tableId, name: $tableName, rowSecurity: $rowSecurity, permissions: $tablePermissions) {
                         _id
                         _createdAt
                         _updatedAt
