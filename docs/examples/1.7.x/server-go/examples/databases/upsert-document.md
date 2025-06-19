@@ -10,13 +10,16 @@ func main() {
     client := client.New(
         client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
         client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithKey("<YOUR_API_KEY>") // Your secret API key
+        client.WithSession("") // The user session to authenticate with
     )
 
     service := databases.New(client)
-    response, error := service.DeleteCollection(
+    response, error := service.UpsertDocument(
         "<DATABASE_ID>",
         "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        map[string]interface{}{},
+        databases.WithUpsertDocumentPermissions(interface{}{"read("any")"}),
     )
 
     if error != nil {
