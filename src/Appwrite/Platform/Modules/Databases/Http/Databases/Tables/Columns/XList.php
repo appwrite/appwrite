@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\XList as AttributesXList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -10,13 +9,10 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Columns;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends AttributesXList
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'listColumns';
@@ -29,8 +25,6 @@ class XList extends AttributesXList
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_COLUMNS);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns')

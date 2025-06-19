@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Integer;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Integer\Create as IntegerCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -10,15 +9,12 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 
 class Create extends IntegerCreate
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createIntegerColumn';
@@ -31,8 +27,6 @@ class Create extends IntegerCreate
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_COLUMNS);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/integer')

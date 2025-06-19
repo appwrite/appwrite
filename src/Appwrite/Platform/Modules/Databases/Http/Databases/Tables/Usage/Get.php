@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Usage;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Usage\Get as CollectionUsageGet;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -10,14 +9,11 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\WhiteList;
 
 class Get extends CollectionUsageGet
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'getTableUsage';
@@ -30,8 +26,6 @@ class Get extends CollectionUsageGet
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_TABLES);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/usage')

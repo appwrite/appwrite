@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases;
 
+require_once __DIR__ . '/Constants.php';
+
 use Appwrite\Platform\Modules\Databases\Services\Http;
 use Appwrite\Platform\Modules\Databases\Services\Workers;
 use Utopia\Platform;

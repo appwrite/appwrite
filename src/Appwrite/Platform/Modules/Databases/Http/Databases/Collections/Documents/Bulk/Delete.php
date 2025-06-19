@@ -17,15 +17,12 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
 class Delete extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'deleteDocuments';

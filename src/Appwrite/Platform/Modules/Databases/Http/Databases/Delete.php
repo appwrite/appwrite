@@ -13,13 +13,10 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class Delete extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'deleteDatabase';

@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Context;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -14,25 +13,20 @@ abstract class Action extends UtopiaAction
     /**
      * @var string|null The current context (either 'row' or 'document')
      */
-    private ?string $context = Context::DATABASE_DOCUMENTS;
+    private ?string $context = DOCUMENTS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
 
-    /**
-     * Set the context to either `row` or `document`.
-     *
-     * @throws \InvalidArgumentException If the context is invalid.
-     */
-    final protected function setContext(string $context): void
+    public function setHttpPath(string $path): UtopiaAction
     {
-        if (!\in_array($context, [Context::DATABASE_ROWS, Context::DATABASE_DOCUMENTS], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Use `Context::DATABASE_ROWS` or `Context::DATABASE_DOCUMENTS`");
+        if (str_contains($path, '/:databaseId/tables')) {
+            $this->context = ROWS;
         }
 
-        $this->context = $context;
+        return parent::setHttpPath($path);
     }
 
     /**
@@ -60,7 +54,7 @@ abstract class Action extends UtopiaAction
     {
         // rows in tables api context
         // documents in collections api context
-        return $this->getContext() === Context::DATABASE_DOCUMENTS;
+        return $this->getContext() === DOCUMENTS;
     }
 
     /**

@@ -17,14 +17,11 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Text;
 
 class XList extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'listCollections';
@@ -68,6 +65,11 @@ class XList extends Action
 
     public function action(string $databaseId, array $queries, string $search, UtopiaResponse $response, Database $dbForProject): void
     {
+        print_r(json_encode([
+            'context' => $this->getContext(),
+            'model' => $this->getResponseModel()
+        ], JSON_PRETTY_PRINT));
+
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {

@@ -16,13 +16,10 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class Delete extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'deleteDocument';

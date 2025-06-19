@@ -19,14 +19,11 @@ use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Numeric;
 
 class Increment extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'incrementDocumentAttribute';

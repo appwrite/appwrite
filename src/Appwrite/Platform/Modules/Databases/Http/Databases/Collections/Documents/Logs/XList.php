@@ -23,13 +23,10 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'listDocumentLogs';

@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attribu
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
@@ -29,25 +28,20 @@ abstract class Action extends UtopiaAction
     /**
      * @var string|null The current context (either 'column' or 'attribute')
      */
-    private ?string $context = Context::DATABASE_ATTRIBUTES;
+    private ?string $context = ATTRIBUTES;
 
     /**
      * Get the correct response model.
      */
     abstract protected function getResponseModel(): string|array;
 
-    /**
-     * Set the context to either `column` or `attribute`.
-     *
-     * @throws \InvalidArgumentException If the context is invalid.
-     */
-    final protected function setContext(string $context): void
+    public function setHttpPath(string $path): UtopiaAction
     {
-        if (!\in_array($context, [Context::DATABASE_COLUMNS, Context::DATABASE_ATTRIBUTES], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Use `Context::DATABASE_COLUMNS` or `Context::DATABASE_ATTRIBUTES`");
+        if (str_contains($path, '/:databaseId/tables')) {
+            $this->context = COLUMNS;
         }
 
-        $this->context = $context;
+        return parent::setHttpPath($path);
     }
 
     /**
@@ -65,7 +59,7 @@ abstract class Action extends UtopiaAction
     {
         // columns in tables context
         // attributes in collections context
-        return $this->getContext() === Context::DATABASE_ATTRIBUTES;
+        return $this->getContext() === ATTRIBUTES;
     }
 
     /**

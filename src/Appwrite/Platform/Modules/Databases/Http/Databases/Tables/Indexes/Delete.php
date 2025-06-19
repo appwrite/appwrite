@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Indexes;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Delete as IndexDelete;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,13 +10,10 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class Delete extends IndexDelete
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'updateColumnIndex';
@@ -34,8 +30,6 @@ class Delete extends IndexDelete
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_COLUMN_INDEX);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes/:key')

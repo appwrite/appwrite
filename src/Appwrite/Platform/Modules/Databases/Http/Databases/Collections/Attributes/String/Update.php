@@ -12,7 +12,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
@@ -22,8 +21,6 @@ use Utopia\Validator\Text;
 
 class Update extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'updateStringAttribute';
