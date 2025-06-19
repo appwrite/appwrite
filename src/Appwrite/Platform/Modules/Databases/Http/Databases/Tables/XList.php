@@ -44,7 +44,7 @@ class XList extends CollectionXList
                 namespace: 'databases',
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/list-collections.md',
+                description: '/docs/references/databases/list-tables.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

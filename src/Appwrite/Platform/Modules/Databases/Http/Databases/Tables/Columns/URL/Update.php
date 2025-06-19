@@ -49,7 +49,7 @@ class Update extends URLUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-url-attribute.md',
+                description: '/docs/references/databases/update-url-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

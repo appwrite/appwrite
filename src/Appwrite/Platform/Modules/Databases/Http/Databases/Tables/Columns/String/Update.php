@@ -51,7 +51,7 @@ class Update extends StringUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-string-attribute.md',
+                description: '/docs/references/databases/update-string-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

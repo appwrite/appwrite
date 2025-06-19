@@ -49,7 +49,7 @@ class Delete extends DocumentsDelete
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/delete-documents.md',
+                description: '/docs/references/databases/delete-rows.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

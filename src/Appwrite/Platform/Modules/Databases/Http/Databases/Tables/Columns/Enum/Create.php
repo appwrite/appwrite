@@ -49,7 +49,7 @@ class Create extends EnumCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-attribute-enum.md',
+                description: '/docs/references/databases/create-enum-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

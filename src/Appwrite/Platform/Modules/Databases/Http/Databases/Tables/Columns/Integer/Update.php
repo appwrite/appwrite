@@ -49,7 +49,7 @@ class Update extends IntegerUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-integer-attribute.md',
+                description: '/docs/references/databases/update-integer-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

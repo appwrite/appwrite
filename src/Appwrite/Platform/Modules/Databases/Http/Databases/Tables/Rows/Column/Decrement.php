@@ -50,7 +50,7 @@ class Decrement extends DecrementDocumentAttribute
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/decrement-document-attribute.md',
+                description: '/docs/references/databases/decrement-row-column.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

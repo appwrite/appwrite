@@ -47,7 +47,7 @@ class Create extends URLCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-url-attribute.md',
+                description: '/docs/references/databases/create-url-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

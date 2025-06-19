@@ -43,7 +43,7 @@ class Get extends CollectionUsageGet
                 namespace: 'databases',
                 group: null,
                 name: self::getName(),
-                description: '/docs/references/databases/get-collection-usage.md',
+                description: '/docs/references/databases/get-table-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

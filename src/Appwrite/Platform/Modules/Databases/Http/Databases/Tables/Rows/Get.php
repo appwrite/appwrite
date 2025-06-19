@@ -44,7 +44,7 @@ class Get extends DocumentGet
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/get-document.md',
+                description: '/docs/references/databases/get-row.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(

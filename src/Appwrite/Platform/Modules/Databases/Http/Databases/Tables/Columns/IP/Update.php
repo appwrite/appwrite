@@ -49,7 +49,7 @@ class Update extends IPUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-ip-attribute.md',
+                description: '/docs/references/databases/update-ip-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

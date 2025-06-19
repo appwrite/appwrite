@@ -50,7 +50,7 @@ class Update extends DocumentsUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-documents.md',
+                description: '/docs/references/databases/update-rows.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

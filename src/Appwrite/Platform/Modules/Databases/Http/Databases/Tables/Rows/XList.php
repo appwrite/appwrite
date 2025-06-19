@@ -44,7 +44,7 @@ class XList extends DocumentXList
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/list-documents.md',
+                description: '/docs/references/databases/list-rows.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(

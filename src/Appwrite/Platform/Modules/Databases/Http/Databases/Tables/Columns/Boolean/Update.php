@@ -48,7 +48,7 @@ class Update extends BooleanUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-boolean-attribute.md',
+                description: '/docs/references/databases/update-boolean-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

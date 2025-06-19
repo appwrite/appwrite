@@ -49,7 +49,7 @@ class Create extends StringCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-string-attribute.md',
+                description: '/docs/references/databases/create-string-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -39,7 +39,7 @@ class XList extends DocumentLogXList
                 namespace: $this->getSdkNamespace(),
                 group: 'logs',
                 name: self::getName(),
-                description: '/docs/references/databases/get-document-logs.md',
+                description: '/docs/references/databases/get-row-logs.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

@@ -46,7 +46,7 @@ class Create extends BooleanCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-boolean-attribute.md',
+                description: '/docs/references/databases/create-boolean-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

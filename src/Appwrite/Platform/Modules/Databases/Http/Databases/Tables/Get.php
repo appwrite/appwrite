@@ -42,7 +42,7 @@ class Get extends CollectionGet
                 namespace: 'databases',
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/get-collection.md',
+                description: '/docs/references/databases/get-table.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

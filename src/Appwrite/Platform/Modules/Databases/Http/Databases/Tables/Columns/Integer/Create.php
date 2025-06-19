@@ -47,7 +47,7 @@ class Create extends IntegerCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-integer-attribute.md',
+                description: '/docs/references/databases/create-integer-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -59,7 +59,7 @@ class Create extends DocumentCreate
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: self::getName(),
-                    description: '/docs/references/databases/create-document.md',
+                    description: '/docs/references/databases/create-row.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
@@ -80,7 +80,7 @@ class Create extends DocumentCreate
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: $this->getBulkActionName(self::getName()),
-                    description: '/docs/references/databases/create-documents.md',
+                    description: '/docs/references/databases/create-rows.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
