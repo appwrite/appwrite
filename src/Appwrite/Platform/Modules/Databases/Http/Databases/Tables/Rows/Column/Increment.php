@@ -44,7 +44,7 @@ class Increment extends IncrementDocumentAttribute
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/increment-document-attribute.md',
+                description: '/docs/references/databases/increment-row-column.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

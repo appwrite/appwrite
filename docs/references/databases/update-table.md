@@ -1,0 +1,1 @@
+Update a table by its unique ID.

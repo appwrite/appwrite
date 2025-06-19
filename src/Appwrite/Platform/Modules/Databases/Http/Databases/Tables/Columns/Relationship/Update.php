@@ -42,7 +42,7 @@ class Update extends RelationshipUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-relationship-attribute.md',
+                description: '/docs/references/databases/update-relationship-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -39,7 +39,7 @@ class Delete extends CollectionDelete
                 namespace: $this->getSdkNamespace(),
                 group: null,
                 name: self::getName(),
-                description: '/docs/references/databases/delete-collection.md',
+                description: '/docs/references/databases/delete-table.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

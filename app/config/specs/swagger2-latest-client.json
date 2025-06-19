@@ -4510,7 +4510,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 110,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4592,7 +4592,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 109,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4603,7 +4603,6 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
-                        "console",
                         "client",
                         "server",
                         "server"
@@ -4613,7 +4612,6 @@
                         {
                             "name": "createDocument",
                             "auth": {
-                                "Admin": [],
                                 "Session": [],
                                 "Key": [],
                                 "JWT": []
@@ -4642,6 +4640,7 @@
                         {
                             "name": "createDocuments",
                             "auth": {
+                                "Admin": [],
                                 "Key": []
                             },
                             "parameters": [
@@ -4756,7 +4755,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 111,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4823,7 +4822,7 @@
                 ]
             },
             "put": {
-                "summary": "Upsert document",
+                "summary": "Create or update a document",
                 "operationId": "databasesUpsertDocument",
                 "consumes": [
                     "application\/json"
@@ -4836,7 +4835,7 @@
                 ],
                 "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Document",
                         "schema": {
                             "$ref": "#\/definitions\/document"
@@ -4846,7 +4845,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 114,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4862,6 +4861,25 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "upsertDocument",
+                            "auth": {
+                                "Session": [],
+                                "Key": [],
+                                "JWT": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/document"
+                                }
+                            ],
+                            "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4951,7 +4969,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 113,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5048,7 +5066,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 119,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5103,45 +5121,42 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
-            "patch": {
-                "summary": "Decrement document attribute",
-                "operationId": "databasesDecrementDocumentAttribute",
-                "consumes": [
-                    "application\/json"
-                ],
+        "\/databases\/{databaseId}\/tables\/{tableId}\/rows": {
+            "get": {
+                "summary": "List rows",
+                "operationId": "tablesListRows",
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "databases"
+                    "tables"
                 ],
-                "description": "Decrement a specific attribute of a document by a given value.",
+                "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
-                        "description": "Document",
+                        "description": "Rows List",
                         "schema": {
-                            "$ref": "#\/definitions\/document"
+                            "$ref": "#\/definitions\/rowList"
                         }
                     }
                 },
                 "x-appwrite": {
-                    "method": "decrementDocumentAttribute",
-                    "group": "documents",
-                    "weight": 116,
+                    "method": "listRows",
+                    "group": "rows",
+                    "weight": 413,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "databases\/decrement-document-attribute.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "demo": "tables\/list-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-rows.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "documents.read",
                     "platforms": [
-                        "console",
-                        "server",
                         "client",
+                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5166,26 +5181,147 @@
                         "in": "path"
                     },
                     {
-                        "name": "collectionId",
-                        "description": "Collection ID.",
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
                         "required": true,
                         "type": "string",
-                        "x-example": "<COLLECTION_ID>",
+                        "x-example": "<TABLE_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "documentId",
-                        "description": "Document ID.",
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create row",
+                "operationId": "tablesCreateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tables"
+                ],
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createRow",
+                    "group": "rows",
+                    "weight": 405,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "tables\/create-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createRow",
+                            "auth": {
+                                "Session": [],
+                                "Key": [],
+                                "JWT": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
+                        },
+                        {
+                            "name": "createRows",
+                            "auth": {
+                                "Admin": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rows"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rows"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/rowList"
+                                }
+                            ],
+                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
                         "required": true,
                         "type": "string",
-                        "x-example": "<DOCUMENT_ID>",
+                        "x-example": "<DATABASE_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "attribute",
-                        "description": "Attribute key.",
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection). Make sure to define columns before creating rows.",
                         "required": true,
                         "type": "string",
+                        "x-example": "<TABLE_ID>",
                         "in": "path"
                     },
                     {
@@ -5194,17 +5330,35 @@
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "value": {
-                                    "type": "number",
-                                    "description": "Value to decrement the attribute by. The value must be a number.",
-                                    "default": 1,
-                                    "x-example": null
+                                "rowId": {
+                                    "type": "string",
+                                    "description": "Row ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "default": "",
+                                    "x-example": "<ROW_ID>"
                                 },
-                                "min": {
-                                    "type": "number",
-                                    "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "rows": {
+                                    "type": "array",
+                                    "description": "Array of documents data as JSON objects.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
                                 }
                             }
                         }
@@ -5212,45 +5366,42 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
-            "patch": {
-                "summary": "Increment document attribute",
-                "operationId": "databasesIncrementDocumentAttribute",
-                "consumes": [
-                    "application\/json"
-                ],
+        "\/databases\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}": {
+            "get": {
+                "summary": "Get row",
+                "operationId": "tablesGetRow",
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "databases"
+                    "tables"
                 ],
-                "description": "Increment a specific attribute of a document by a given value.",
+                "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
                 "responses": {
                     "200": {
-                        "description": "Document",
+                        "description": "Row",
                         "schema": {
-                            "$ref": "#\/definitions\/document"
+                            "$ref": "#\/definitions\/row"
                         }
                     }
                 },
                 "x-appwrite": {
-                    "method": "incrementDocumentAttribute",
-                    "group": "documents",
-                    "weight": 115,
+                    "method": "getRow",
+                    "group": "rows",
+                    "weight": 406,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "databases\/increment-document-attribute.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "demo": "tables\/get-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "documents.read",
                     "platforms": [
-                        "console",
-                        "server",
                         "client",
+                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5275,26 +5426,128 @@
                         "in": "path"
                     },
                     {
-                        "name": "collectionId",
-                        "description": "Collection ID.",
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
                         "required": true,
                         "type": "string",
-                        "x-example": "<COLLECTION_ID>",
+                        "x-example": "<TABLE_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "documentId",
-                        "description": "Document ID.",
+                        "name": "rowId",
+                        "description": "Row ID.",
                         "required": true,
                         "type": "string",
-                        "x-example": "<DOCUMENT_ID>",
+                        "x-example": "<ROW_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "attribute",
-                        "description": "Attribute key.",
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Create or update a row",
+                "operationId": "tablesUpsertRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tables"
+                ],
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "upsertRow",
+                    "group": "rows",
+                    "weight": 409,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "tables\/upsert-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "upsertRow",
+                            "auth": {
+                                "Session": [],
+                                "Key": [],
+                                "JWT": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
                         "required": true,
                         "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
                         "in": "path"
                     },
                     {
@@ -5303,20 +5556,198 @@
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "value": {
-                                    "type": "number",
-                                    "description": "Value to increment the attribute by. The value must be a number.",
-                                    "default": 1,
-                                    "x-example": null
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
+                                    "default": [],
+                                    "x-example": "{}"
                                 },
-                                "max": {
-                                    "type": "number",
-                                    "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update row",
+                "operationId": "tablesUpdateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tables"
+                ],
+                "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateRow",
+                    "group": "rows",
+                    "weight": 407,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "tables\/update-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete row",
+                "operationId": "tablesDeleteRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "tables"
+                ],
+                "description": "Delete a row by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteRow",
+                    "group": "rows",
+                    "weight": 411,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "tables\/delete-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-row.md",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
                     }
                 ]
             }
@@ -5344,7 +5775,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 394,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5418,7 +5849,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 392,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5535,7 +5966,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 393,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5607,7 +6038,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 308,
+                    "weight": 255,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5681,7 +6112,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 307,
+                    "weight": 254,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5753,7 +6184,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 124,
+                    "weight": 70,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5805,7 +6236,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 125,
+                    "weight": 71,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5857,7 +6288,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 129,
+                    "weight": 75,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5909,7 +6340,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 126,
+                    "weight": 72,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5961,7 +6392,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 127,
+                    "weight": 73,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6013,7 +6444,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 128,
+                    "weight": 74,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6065,7 +6496,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 130,
+                    "weight": 76,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6117,7 +6548,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 131,
+                    "weight": 77,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6171,7 +6602,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 354,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6256,7 +6687,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 358,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6327,7 +6758,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 214,
+                    "weight": 161,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6410,7 +6841,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 213,
+                    "weight": 160,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -6500,7 +6931,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 215,
+                    "weight": 162,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6570,7 +7001,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 220,
+                    "weight": 167,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6659,7 +7090,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 221,
+                    "weight": 168,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6729,7 +7160,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 217,
+                    "weight": 164,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6808,7 +7239,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 216,
+                    "weight": 163,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -7015,7 +7446,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 218,
+                    "weight": 165,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -7094,7 +7525,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 225,
+                    "weight": 172,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7169,7 +7600,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 224,
+                    "weight": 171,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7259,7 +7690,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 226,
+                    "weight": 173,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7321,7 +7752,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 228,
+                    "weight": 175,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7396,7 +7827,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 230,
+                    "weight": 177,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7458,7 +7889,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 232,
+                    "weight": 179,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7541,7 +7972,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 231,
+                    "weight": 178,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7654,7 +8085,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 233,
+                    "weight": 180,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7724,7 +8155,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 234,
+                    "weight": 181,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7810,7 +8241,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 236,
+                    "weight": 183,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7882,7 +8313,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 235,
+                    "weight": 182,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7976,7 +8407,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 227,
+                    "weight": 174,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8037,7 +8468,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 229,
+                    "weight": 176,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8170,13 +8601,38 @@
             "type": "object",
             "additionalProperties": true
         },
+        "rowList": {
+            "description": "Rows List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of rows rows that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "rows": {
+                    "type": "array",
+                    "description": "List of rows.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/row"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "rows"
+            ]
+        },
         "documentList": {
             "description": "Documents List",
             "type": "object",
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of documents documents that matched your query.",
+                    "description": "Total number of documents rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8201,7 +8657,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of sessions documents that matched your query.",
+                    "description": "Total number of sessions rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8226,7 +8682,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of identities documents that matched your query.",
+                    "description": "Total number of identities rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8251,7 +8707,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of logs documents that matched your query.",
+                    "description": "Total number of logs rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8276,7 +8732,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of files documents that matched your query.",
+                    "description": "Total number of files rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8301,7 +8757,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of teams documents that matched your query.",
+                    "description": "Total number of teams rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8326,7 +8782,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of memberships documents that matched your query.",
+                    "description": "Total number of memberships rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8351,7 +8807,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of executions documents that matched your query.",
+                    "description": "Total number of executions rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8376,7 +8832,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of countries documents that matched your query.",
+                    "description": "Total number of countries rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8401,7 +8857,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of continents documents that matched your query.",
+                    "description": "Total number of continents rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8426,7 +8882,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of languages documents that matched your query.",
+                    "description": "Total number of languages rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8451,7 +8907,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of currencies documents that matched your query.",
+                    "description": "Total number of currencies rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8476,7 +8932,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of phones documents that matched your query.",
+                    "description": "Total number of phones rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8501,7 +8957,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of localeCodes documents that matched your query.",
+                    "description": "Total number of localeCodes rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8518,6 +8974,63 @@
             "required": [
                 "total",
                 "localeCodes"
+            ]
+        },
+        "row": {
+            "description": "Row",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Row ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "$sequence": {
+                    "type": "integer",
+                    "description": "Row automatically incrementing ID.",
+                    "x-example": 1,
+                    "format": "int32"
+                },
+                "$tableId": {
+                    "type": "string",
+                    "description": "Table ID.",
+                    "x-example": "5e5ea5c15117e"
+                },
+                "$databaseId": {
+                    "type": "string",
+                    "description": "Database ID.",
+                    "x-example": "5e5ea5c15117e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Row creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Row update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$permissions": {
+                    "type": "array",
+                    "description": "Row permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "read(\"any\")"
+                    ]
+                }
+            },
+            "additionalProperties": true,
+            "required": [
+                "$id",
+                "$sequence",
+                "$tableId",
+                "$databaseId",
+                "$createdAt",
+                "$updatedAt",
+                "$permissions"
             ]
         },
         "document": {
