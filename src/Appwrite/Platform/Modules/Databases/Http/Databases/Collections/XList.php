@@ -65,11 +65,6 @@ class XList extends Action
 
     public function action(string $databaseId, array $queries, string $search, UtopiaResponse $response, Database $dbForProject): void
     {
-        print_r(json_encode([
-            'context' => $this->getContext(),
-            'model' => $this->getResponseModel()
-        ], JSON_PRETTY_PRINT));
-
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
