@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3230eea9e592f0b712e78c1ef5f5e244",
+    "content-hash": "1557e469b3074a6478a0b2fd522e1a2a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1874,16 +1874,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.43",
+            "version": "3.0.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "709ec107af3cb2f385b9617be72af8cf62441d02"
+                "reference": "1d0b5e7e1434678411787c5a0535e68907cf82d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/709ec107af3cb2f385b9617be72af8cf62441d02",
-                "reference": "709ec107af3cb2f385b9617be72af8cf62441d02",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/1d0b5e7e1434678411787c5a0535e68907cf82d9",
+                "reference": "1d0b5e7e1434678411787c5a0535e68907cf82d9",
                 "shasum": ""
             },
             "require": {
@@ -1964,7 +1964,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.43"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.44"
             },
             "funding": [
                 {
@@ -1980,7 +1980,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-14T21:12:59+00:00"
+            "time": "2025-06-15T09:59:26+00:00"
         },
         {
             "name": "psr/container",
@@ -3490,16 +3490,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.69.7",
+            "version": "0.71.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "3db51ec544b3f287511209e34bab3f5ec85fa56e"
+                "reference": "2bd87acc40af087fc0fdcccc47c43141dff0be5c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/3db51ec544b3f287511209e34bab3f5ec85fa56e",
-                "reference": "3db51ec544b3f287511209e34bab3f5ec85fa56e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/2bd87acc40af087fc0fdcccc47c43141dff0be5c",
+                "reference": "2bd87acc40af087fc0fdcccc47c43141dff0be5c",
                 "shasum": ""
             },
             "require": {
@@ -3540,9 +3540,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.69.7"
+                "source": "https://github.com/utopia-php/database/tree/0.71.6"
             },
-            "time": "2025-05-30T14:41:25+00:00"
+            "time": "2025-06-16T16:48:37+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -3990,16 +3990,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.9.3",
+            "version": "0.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "e518d39eb550fde36bc5cf06c9bd7b2faf5dbedd"
+                "reference": "ea1c585df7ec5f346f061a11581fc9a91679966f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e518d39eb550fde36bc5cf06c9bd7b2faf5dbedd",
-                "reference": "e518d39eb550fde36bc5cf06c9bd7b2faf5dbedd",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ea1c585df7ec5f346f061a11581fc9a91679966f",
+                "reference": "ea1c585df7ec5f346f061a11581fc9a91679966f",
                 "shasum": ""
             },
             "require": {
@@ -4040,9 +4040,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.9.3"
+                "source": "https://github.com/utopia-php/migration/tree/0.10.1"
             },
-            "time": "2025-05-01T05:41:26+00:00"
+            "time": "2025-05-26T15:29:19+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -4807,16 +4807,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.41.4",
+            "version": "0.41.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "07804269131f411576aac60c795a5ebc3afaa48a"
+                "reference": "d8c7bb26ea32ab378faf4e0dfa62fd15fe37c57b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/07804269131f411576aac60c795a5ebc3afaa48a",
-                "reference": "07804269131f411576aac60c795a5ebc3afaa48a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d8c7bb26ea32ab378faf4e0dfa62fd15fe37c57b",
+                "reference": "d8c7bb26ea32ab378faf4e0dfa62fd15fe37c57b",
                 "shasum": ""
             },
             "require": {
@@ -4852,9 +4852,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.4"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.7"
             },
-            "time": "2025-06-10T08:28:11+00:00"
+            "time": "2025-06-13T17:05:57+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5147,16 +5147,16 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.73",
+            "version": "1.3.74",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "cb7a9297b4ab070909cefade30ee95054d4ae87a"
+                "reference": "a2593286a4135d03c6a6a9e9aeded5d41e931ce4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/cb7a9297b4ab070909cefade30ee95054d4ae87a",
-                "reference": "cb7a9297b4ab070909cefade30ee95054d4ae87a",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/a2593286a4135d03c6a6a9e9aeded5d41e931ce4",
+                "reference": "a2593286a4135d03c6a6a9e9aeded5d41e931ce4",
                 "shasum": ""
             },
             "require": {
@@ -5167,8 +5167,7 @@
             "require-dev": {
                 "friendsofphp/php-cs-fixer": ">=2.0",
                 "matthiasmullie/scrapbook": ">=1.3",
-                "phpunit/phpunit": ">=4.8",
-                "squizlabs/php_codesniffer": ">=3.0"
+                "phpunit/phpunit": ">=4.8"
             },
             "suggest": {
                 "psr/cache-implementation": "Cache implementation to use with Minify::cache"
@@ -5206,7 +5205,7 @@
             ],
             "support": {
                 "issues": "https://github.com/matthiasmullie/minify/issues",
-                "source": "https://github.com/matthiasmullie/minify/tree/1.3.73"
+                "source": "https://github.com/matthiasmullie/minify/tree/1.3.74"
             },
             "funding": [
                 {
@@ -5214,7 +5213,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-03-15T10:27:10+00:00"
+            "time": "2025-06-12T08:06:04+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
