@@ -1370,4 +1370,87 @@ return [
         'providerVersion' => '0.3.*',
         'variables' => []
     ],
+    [
+        'key' => 'template-for-react-admin-dashboard',
+        'name' => 'React Admin Dashboard',
+        'tagline' => 'A React-based admin dashboard template with order management features.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER], // TODO: Check if this needs to have a new category
+        'screenshotDark' => $url . '/images/sites/templates/gallery-for-lynx-dark.png', // TODO: Update this
+        'screenshotLight' => $url . '/images/sites/templates/gallery-for-lynx-light.png', // TODO: Update this
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/react-admin',
+                'outputDirectory' => './dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.4.*',
+        'variables' => [
+            [
+                'name' => 'APPWRITE_SITE_API_ENDPOINT',  // TODO: Update this
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_SITE_PROJECT_ID', // TODO: Update this
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME', // TODO: Update this
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'template-for-formspree',
+        'name' => 'Formspree template',
+        'tagline' => 'A simple form submission template using Formspree.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],// TODO: Check if this needs to have a new category
+        'screenshotDark' => $url . '/images/sites/templates/gallery-for-lynx-dark.png', // TODO: Update this
+        'screenshotLight' => $url . '/images/sites/templates/gallery-for-lynx-light.png', // TODO: Update this
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/formspree',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.4.*',
+        'variables' => [] // TODO: Add env vars once added to template
+    ],
+    [
+        'key' => 'template-for-clerk',
+        'name' => 'Clerk template',
+        'tagline' => 'A simple auth and user-management template using Clerk',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],// TODO: Check if this needs to have a new category
+        'screenshotDark' => $url . '/images/sites/templates/gallery-for-lynx-dark.png', // TODO: Update this
+        'screenshotLight' => $url . '/images/sites/templates/gallery-for-lynx-light.png', // TODO: Update this
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/clerk',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.4.*',
+        'variables' => [] // TODO: Add the relevant variables for Clerk
+    ]
 ];
