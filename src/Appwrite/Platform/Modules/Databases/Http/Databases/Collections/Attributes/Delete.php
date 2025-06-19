@@ -138,7 +138,7 @@ class Delete extends Action
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
 
-        $model = $this->getCorrectModel($type, $format);
+        $model = $this->getModel($type, $format);
 
         $queueForEvents
             ->setContext('database', $db)

@@ -221,7 +221,7 @@ abstract class Action extends UtopiaAction
     /**
      *  Get the proper column/attribute type based on set context.
      */
-    final protected function getCorrectModel(string $type, string $format): string
+    final protected function getModel(string $type, string $format): string
     {
         $isCollections = $this->isCollectionsAPI();
 

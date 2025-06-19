@@ -91,7 +91,7 @@ class Get extends Action
             $attribute->setAttribute($key, $option);
         }
 
-        $model = $this->getCorrectModel($type, $format);
+        $model = $this->getModel($type, $format);
 
         $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
 
