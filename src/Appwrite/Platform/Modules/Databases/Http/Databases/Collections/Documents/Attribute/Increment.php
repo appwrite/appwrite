@@ -99,7 +99,6 @@ class Increment extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException) {
-            // todo: @itznotabug what do we name this exception now?
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSdkNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
