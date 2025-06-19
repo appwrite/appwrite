@@ -17,15 +17,12 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 
 class Upsert extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'upsertDocuments';

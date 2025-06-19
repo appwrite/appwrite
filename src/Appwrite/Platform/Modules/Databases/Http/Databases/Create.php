@@ -19,15 +19,12 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createDatabase';

@@ -19,7 +19,6 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
@@ -27,8 +26,6 @@ use Utopia\Validator\Text;
 
 class Update extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'updateDocuments';

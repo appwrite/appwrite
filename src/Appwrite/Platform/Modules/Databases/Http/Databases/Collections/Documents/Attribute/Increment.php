@@ -19,14 +19,11 @@ use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Numeric;
 
 class Increment extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'incrementDocumentAttribute';
@@ -102,7 +99,6 @@ class Increment extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException) {
-            // todo: @itznotabug what do we name this exception now?
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSdkNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);

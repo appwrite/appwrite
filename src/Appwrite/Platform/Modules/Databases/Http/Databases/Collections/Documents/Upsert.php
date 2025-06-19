@@ -24,14 +24,11 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\JSON;
 
 class Upsert extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'upsertDocument';
@@ -235,41 +232,15 @@ class Upsert extends Action
             throw new Exception($this->getInvalidStructureException(), $e->getMessage());
         }
 
+        $collectionsCache = [];
         $document = $upserted[0];
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $table, Document $document) use (&$processDocument, $dbForProject, $database) {
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $table->getId());
-
-            $relationships = \array_filter(
-                $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $related = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
-                );
-
-                foreach ($related as $relation) {
-                    if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
-                    }
-                }
-            }
-        };
-
-        $processDocument($collection, $document);
+        $this->processDocument(
+            database: $database,
+            collection: $collection,
+            document: $document,
+            dbForProject: $dbForProject,
+            collectionsCache: $collectionsCache,
+        );
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),

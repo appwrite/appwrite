@@ -3,7 +3,9 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Context;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
@@ -11,25 +13,20 @@ abstract class Action extends UtopiaAction
     /**
      * @var string|null The current context (either 'row' or 'document')
      */
-    private ?string $context = Context::DATABASE_DOCUMENTS;
+    private ?string $context = DOCUMENTS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
 
-    /**
-     * Set the context to either `row` or `document`.
-     *
-     * @throws \InvalidArgumentException If the context is invalid.
-     */
-    final protected function setContext(string $context): void
+    public function setHttpPath(string $path): UtopiaAction
     {
-        if (!\in_array($context, [Context::DATABASE_ROWS, Context::DATABASE_DOCUMENTS], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Use `Context::DATABASE_ROWS` or `Context::DATABASE_DOCUMENTS`");
+        if (str_contains($path, '/:databaseId/tables')) {
+            $this->context = ROWS;
         }
 
-        $this->context = $context;
+        return parent::setHttpPath($path);
     }
 
     /**
@@ -57,7 +54,7 @@ abstract class Action extends UtopiaAction
     {
         // rows in tables api context
         // documents in collections api context
-        return $this->getContext() === Context::DATABASE_DOCUMENTS;
+        return $this->getContext() === DOCUMENTS;
     }
 
     /**
@@ -75,7 +72,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'collections' : 'tables';
+        return $this->isCollectionsAPI() ? 'databases' : 'tables';
     }
 
     /**
@@ -192,5 +189,94 @@ abstract class Action extends UtopiaAction
     final protected function getCollectionsEventsContext(): string
     {
         return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
+
+    /**
+     * Resolves relationships in a document and attaches metadata.
+     */
+    final protected function processDocument(
+        /* database */
+        Document $database,
+        Document $collection,
+        Document $document,
+        Database $dbForProject,
+
+        /* options */
+        array &$collectionsCache,
+        ?int &$operations = null,
+    ): bool {
+
+        if ($operations !== null && $document->isEmpty()) {
+            return false;
+        }
+
+        if ($operations !== null) {
+            $operations++;
+        }
+
+        $collectionId = $collection->getId();
+        $document->removeAttribute('$collection');
+        $document->setAttribute('$databaseId', $database->getId());
+        $document->setAttribute('$collectionId', $collectionId);
+
+        $relationships = $collectionsCache[$collectionId] ??= \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
+        );
+
+        foreach ($relationships as $relationship) {
+            $key = $relationship->getAttribute('key');
+            $related = $document->getAttribute($key);
+
+            if (empty($related)) {
+                if (\in_array(\gettype($related), ['array', 'object']) && $operations !== null) {
+                    $operations++;
+                }
+                continue;
+            }
+
+            $relations = \is_array($related) ? $related : [$related];
+            $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+
+            if (!isset($collectionsCache[$relatedCollectionId])) {
+                $relatedCollectionDoc = Authorization::skip(
+                    fn () => $dbForProject->getDocument(
+                        'database_' . $database->getSequence(),
+                        $relatedCollectionId
+                    )
+                );
+
+                $collectionsCache[$relatedCollectionId] = \array_filter(
+                    $relatedCollectionDoc->getAttribute('attributes', []),
+                    fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
+                );
+            }
+
+            foreach ($relations as $relation) {
+                if ($relation instanceof Document) {
+                    $relatedCollection = new Document([
+                        '$id' => $relatedCollectionId,
+                        'attributes' => $collectionsCache[$relatedCollectionId],
+                    ]);
+
+                    $this->processDocument(
+                        database: $database,
+                        collection: $relatedCollection,
+                        document: $relation,
+                        dbForProject: $dbForProject,
+                        collectionsCache: $collectionsCache,
+                        operations: $operations
+                    );
+                }
+            }
+
+            if (\is_array($related)) {
+                $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+            } elseif (empty($relations)) {
+                $document->setAttribute($relationship->getAttribute('key'), null);
+            }
+        }
+
+        return true;
     }
 }

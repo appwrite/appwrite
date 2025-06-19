@@ -18,15 +18,12 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
 class XList extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'listDocuments';
@@ -130,65 +127,16 @@ class XList extends Action
         }
 
         $operations = 0;
-
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
-            if ($document->isEmpty()) {
-                return false;
-            }
-
-            $operations++;
-
-            $document->removeAttribute('$collection');
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+        $collectionsCache = [];
+        foreach ($documents as $document) {
+            $this->processDocument(
+                database: $database,
+                collection: $collection,
+                document: $document,
+                dbForProject: $dbForProject,
+                collectionsCache: $collectionsCache,
+                operations: $operations,
             );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    if (\in_array(\gettype($related), ['array', 'object'])) {
-                        $operations++;
-                    }
-
-                    continue;
-                }
-
-                if (!\is_array($related)) {
-                    $relations = [$related];
-                } else {
-                    $relations = $related;
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                // todo: Use local cache for this getDocument
-                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId));
-
-                foreach ($relations as $index => $doc) {
-                    if ($doc instanceof Document) {
-                        if (!$processDocument($relatedCollection, $doc)) {
-                            unset($relations[$index]);
-                        }
-                    }
-                }
-
-                if (\is_array($related)) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                } elseif (empty($relations)) {
-                    $document->setAttribute($relationship->getAttribute('key'), null);
-                }
-            }
-
-            return true;
-        });
-
-        foreach ($documents as $row) {
-            $processDocument($collection, $row);
         }
 
         $queueForStatsUsage

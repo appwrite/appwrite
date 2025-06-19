@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Logs;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Logs\XList as CollectionLogXList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,13 +11,10 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends CollectionLogXList
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'listTableLogs';
@@ -26,8 +22,6 @@ class XList extends CollectionLogXList
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_TABLES);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/logs')

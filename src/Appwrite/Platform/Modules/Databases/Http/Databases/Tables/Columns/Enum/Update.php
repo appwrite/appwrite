@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Columns\Enum;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Enum\Update as EnumUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,7 +11,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -21,8 +19,6 @@ use Utopia\Validator\Text;
 
 class Update extends EnumUpdate
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'updateEnumColumn';
@@ -35,8 +31,6 @@ class Update extends EnumUpdate
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_COLUMNS);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/enum/:key')

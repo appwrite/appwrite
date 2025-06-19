@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Update as CollectionUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,18 +10,15 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class Update extends CollectionUpdate
 {
-    use HTTP;
-
     public static function getName(): string
     {
-        return 'updateTable';
+        return 'update';
     }
 
     protected function getResponseModel(): string
@@ -32,8 +28,6 @@ class Update extends CollectionUpdate
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_TABLES);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId')
@@ -45,8 +39,8 @@ class Update extends CollectionUpdate
             ->label('audits.event', 'table.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: 'databases',
-                group: $this->getSdkGroup(),
+                namespace: $this->getSdkNamespace(),
+                group: null,
                 name: self::getName(),
                 description: '/docs/references/databases/update-table.md',
                 auth: [AuthType::KEY],
@@ -60,7 +54,7 @@ class Update extends CollectionUpdate
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID.')
-            ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
+            ->param('name', null, new Text(128), 'Table name. Max length: 128 chars.')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('rowSecurity', false, new Boolean(true), 'Enables configuring permissions for individual rows. A user needs one of row or table level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is table enabled? When set to \'disabled\', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.', true)

@@ -15,13 +15,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\IndexDependency as IndexDependencyValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class Delete extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'deleteAttribute';
@@ -29,7 +26,6 @@ class Delete extends Action
 
     protected function getResponseModel(): string|array
     {
-        // we should correctly & carefully set the context later.
         return UtopiaResponse::MODEL_NONE;
     }
 
@@ -141,7 +137,7 @@ class Delete extends Action
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
 
-        $model = $this->getCorrectModel($type, $format);
+        $model = $this->getModel($type, $format);
 
         $queueForEvents
             ->setContext('database', $db)

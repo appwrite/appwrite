@@ -75,7 +75,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertIsArray($table['body']['data']);
         $this->assertArrayNotHasKey('errors', $table['body']);
-        $table = $table['body']['data']['databasesCreateTable'];
+        $table = $table['body']['data']['tablesCreate'];
         $this->assertEquals('Actors', $table['name']);
 
         return [
@@ -349,7 +349,7 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $tableId = $res['body']['data']['databasesCreateTable']['_id'];
+        $tableId = $res['body']['data']['tablesCreate']['_id'];
 
         // Step 3: Create column
         $query = $this->getQuery(self::$CREATE_STRING_COLUMN);

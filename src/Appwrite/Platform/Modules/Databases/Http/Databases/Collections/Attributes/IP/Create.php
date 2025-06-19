@@ -13,15 +13,12 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\IP;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createIpAttribute';

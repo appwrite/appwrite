@@ -11,13 +11,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class Get extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'getAttribute';
@@ -94,7 +91,7 @@ class Get extends Action
             $attribute->setAttribute($key, $option);
         }
 
-        $model = $this->getCorrectModel($type, $format);
+        $model = $this->getModel($type, $format);
 
         $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
 

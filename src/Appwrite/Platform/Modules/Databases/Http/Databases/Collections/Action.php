@@ -3,33 +3,28 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Context;
 use Utopia\Platform\Action as UtopiaAction;
+use Utopia\Platform\Scope\HTTP;
 
 abstract class Action extends UtopiaAction
 {
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = Context::DATABASE_COLLECTIONS;
+    private ?string $context = COLLECTIONS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
 
-    /**
-     * Set the current API context.
-     *
-     * @param string $context Must be either `Context::DATABASE_TABLES` or `Context::DATABASE_COLLECTIONS`.
-     */
-    final protected function setContext(string $context): void
+    public function setHttpPath(string $path): UtopiaAction
     {
-        if (!\in_array($context, [Context::DATABASE_TABLES, Context::DATABASE_COLLECTIONS], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `Context::DATABASE_TABLES` or `Context::DATABASE_COLLECTIONS`.");
+        if (str_contains($path, '/:databaseId/tables')) {
+            $this->context = TABLES;
         }
 
-        $this->context = $context;
+        return parent::setHttpPath($path);
     }
 
     /**
@@ -53,7 +48,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function isCollectionsAPI(): bool
     {
-        return $this->getContext() === Context::DATABASE_COLLECTIONS;
+        return $this->getContext() === COLLECTIONS;
     }
 
     /**
@@ -62,6 +57,14 @@ abstract class Action extends UtopiaAction
     final protected function getSdkGroup(): string
     {
         return $this->isCollectionsAPI() ? 'collections' : 'tables';
+    }
+
+    /**
+     * Get the SDK namespace for the current action.
+     */
+    final protected function getSdkNamespace(): string
+    {
+        return $this->isCollectionsAPI() ? 'databases' : 'tables';
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Rows\Column;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute\Increment as IncrementDocumentAttribute;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,14 +10,11 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Numeric;
 
 class Increment extends IncrementDocumentAttribute
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'incrementRowColumn';
@@ -31,8 +27,6 @@ class Increment extends IncrementDocumentAttribute
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_ROWS);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId/:column/increment')

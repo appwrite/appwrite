@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL\Collections;
+namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -109,7 +109,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['collectionsCreateStringAttribute']);
+        $this->assertIsArray($attribute['body']['data']['databasesCreateStringAttribute']);
 
         return $data;
     }
@@ -141,7 +141,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['collectionsCreateIntegerAttribute']);
+        $this->assertIsArray($attribute['body']['data']['databasesCreateIntegerAttribute']);
 
         return $data;
     }
@@ -182,7 +182,7 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
 
-        $document = $document['body']['data']['collectionsCreateDocument'];
+        $document = $document['body']['data']['databasesCreateDocument'];
         $this->assertIsArray($document);
 
         return [
@@ -215,7 +215,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $documents['body']);
         $this->assertIsArray($documents['body']['data']);
-        $this->assertIsArray($documents['body']['data']['collectionsListDocuments']);
+        $this->assertIsArray($documents['body']['data']['databasesListDocuments']);
     }
 
     /**
@@ -242,7 +242,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
-        $this->assertIsArray($document['body']['data']['collectionsGetDocument']);
+        $this->assertIsArray($document['body']['data']['databasesGetDocument']);
     }
 
     /**
@@ -272,7 +272,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
-        $document = $document['body']['data']['collectionsUpdateDocument'];
+        $document = $document['body']['data']['databasesUpdateDocument'];
         $this->assertIsArray($document);
 
         $this->assertStringContainsString('New Document Name', $document['data']);
@@ -377,7 +377,7 @@ class DatabaseClientTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['collectionsCreateDocuments']['documents']);
+        $this->assertCount(10, $res['body']['data']['databasesCreateDocuments']['documents']);
 
         return [
             'databaseId' => $databaseId,
@@ -418,7 +418,7 @@ class DatabaseClientTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['collectionsUpdateDocuments']['documents']);
+        $this->assertCount(10, $res['body']['data']['databasesUpdateDocuments']['documents']);
 
         return $data;
     }
@@ -449,7 +449,7 @@ class DatabaseClientTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(2, $res['body']['data']['collectionsUpsertDocuments']['documents']);
+        $this->assertCount(2, $res['body']['data']['databasesUpsertDocuments']['documents']);
 
         return $data;
     }
@@ -475,7 +475,7 @@ class DatabaseClientTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(11, $res['body']['data']['collectionsDeleteDocuments']['documents']);
+        $this->assertCount(11, $res['body']['data']['databasesDeleteDocuments']['documents']);
 
         return $data;
     }

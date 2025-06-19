@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\XList as CollectionXList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,17 +10,14 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Tables;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Text;
 
 class XList extends CollectionXList
 {
-    use HTTP;
-
     public static function getName(): string
     {
-        return 'listTables';
+        return 'list';
     }
 
     protected function getResponseModel(): string
@@ -31,8 +27,6 @@ class XList extends CollectionXList
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_TABLES);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables')
@@ -41,8 +35,8 @@ class XList extends CollectionXList
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'databases',
-                group: $this->getSdkGroup(),
+                namespace: $this->getSdkNamespace(),
+                group: null,
                 name: self::getName(),
                 description: '/docs/references/databases/list-tables.md',
                 auth: [AuthType::KEY],
@@ -55,7 +49,7 @@ class XList extends CollectionXList
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('queries', [], new Tables(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Tables::ALLOWED_ATTRIBUTES), true)
+            ->param('queries', [], new Tables(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Tables::ALLOWED_COLUMNS), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForProject')

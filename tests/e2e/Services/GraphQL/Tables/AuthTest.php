@@ -128,7 +128,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -154,7 +154,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -178,7 +178,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
                 'rowId' => $row['body']['data']['tablesCreateRow']['_id'],
             ]
         ];
@@ -213,7 +213,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -237,7 +237,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
                 'rowId' => $row['body']['data']['tablesCreateRow']['_id'],
             ]
         ];

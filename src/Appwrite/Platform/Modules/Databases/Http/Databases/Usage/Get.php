@@ -15,14 +15,11 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'getUsage';

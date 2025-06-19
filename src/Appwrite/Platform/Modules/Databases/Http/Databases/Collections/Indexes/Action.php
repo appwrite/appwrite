@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Context;
 use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
@@ -11,25 +10,20 @@ abstract class Action extends UtopiaAction
     /**
      * The current API context (either 'columnIndex' or 'index').
      */
-    private ?string $context = Context::DATABASE_INDEX;
+    private ?string $context = INDEX;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
 
-    /**
-     * Set the current API context.
-     *
-     * @param string $context Must be either `DATABASE_INDEX` or `DATABASE_COLUMN_INDEX`.
-     */
-    final protected function setContext(string $context): void
+    public function setHttpPath(string $path): UtopiaAction
     {
-        if (!\in_array($context, [Context::DATABASE_INDEX, Context::DATABASE_COLUMN_INDEX], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `Context::DATABASE_COLUMN_INDEX` or `Context::DATABASE_INDEX`.");
+        if (str_contains($path, '/:databaseId/tables')) {
+            $this->context = COLUMN_INDEX;
         }
 
-        $this->context = $context;
+        return parent::setHttpPath($path);
     }
 
     /**
@@ -37,9 +31,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function getParentContext(): string
     {
-        return $this->getContext() === Context::DATABASE_INDEX
-            ? Context::DATABASE_ATTRIBUTES
-            : Context::DATABASE_COLUMNS;
+        return $this->getContext() === INDEX ? ATTRIBUTES : COLUMNS;
     }
 
     /**
@@ -55,7 +47,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function isCollectionsAPI(): bool
     {
-        return $this->getParentContext() === Context::DATABASE_ATTRIBUTES;
+        return $this->getParentContext() === ATTRIBUTES;
     }
 
     /**
@@ -71,7 +63,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'collections' : 'tables';
+        return $this->isCollectionsAPI() ? 'databases' : 'tables';
     }
 
     /**

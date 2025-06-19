@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Tables\Indexes;
 
-use Appwrite\Platform\Modules\Databases\Context;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Create as IndexCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,7 +11,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
@@ -21,8 +19,6 @@ use Utopia\Validator\WhiteList;
 
 class Create extends IndexCreate
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createColumnIndex';
@@ -35,8 +31,6 @@ class Create extends IndexCreate
 
     public function __construct()
     {
-        $this->setContext(Context::DATABASE_COLUMN_INDEX);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes')

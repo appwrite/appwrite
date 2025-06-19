@@ -11,13 +11,10 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class Get extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'getCollection';

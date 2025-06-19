@@ -4,10 +4,10 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 
 class Tables extends Base
 {
-    public const ALLOWED_ATTRIBUTES = [
+    public const array ALLOWED_COLUMNS = [
         'name',
         'enabled',
-        'documentSecurity'
+        'rowSecurity'
     ];
 
     /**
@@ -16,6 +16,6 @@ class Tables extends Base
      */
     public function __construct()
     {
-        parent::__construct('collections', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('collections', self::ALLOWED_COLUMNS);
     }
 }
