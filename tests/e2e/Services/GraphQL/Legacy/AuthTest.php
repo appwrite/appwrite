@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL\Collections;
+namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -179,7 +179,7 @@ class AuthTest extends Scope
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
-                'documentId' => $document['body']['data']['collectionsCreateDocument']['_id'],
+                'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
             ]
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -188,7 +188,7 @@ class AuthTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
-        $this->assertIsArray($document['body']['data']['collectionsGetDocument']);
+        $this->assertIsArray($document['body']['data']['databasesGetDocument']);
         $this->assertArrayNotHasKey('errors', $document['body']);
 
         // Try to read as account 2
@@ -238,7 +238,7 @@ class AuthTest extends Scope
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
-                'documentId' => $document['body']['data']['collectionsCreateDocument']['_id'],
+                'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
             ]
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [

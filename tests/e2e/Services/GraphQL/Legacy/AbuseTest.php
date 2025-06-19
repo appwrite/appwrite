@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL\Collections;
+namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
