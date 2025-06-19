@@ -26,7 +26,6 @@ class Delete extends Action
 
     protected function getResponseModel(): string|array
     {
-        // we should correctly & carefully set the context later.
         return UtopiaResponse::MODEL_NONE;
     }
 
