@@ -580,8 +580,8 @@ trait Base
                     }
                 }';
             case self::$GET_TABLE:
-                return 'query getTable($databaseId: String!, $tableId: String!) {
-                    databasesGetTable(databaseId: $databaseId, tableId: $tableId) {
+                return 'query tablesGet($databaseId: String!, $tableId: String!) {
+                    tablesGet(databaseId: $databaseId, tableId: $tableId) {
                         _id
                         _permissions
                         rowSecurity
@@ -589,8 +589,8 @@ trait Base
                     }
                 }';
             case self::$GET_TABLES:
-                return 'query listTables($databaseId: String!) {
-                    databasesListTables(databaseId: $databaseId) {
+                return 'query tablesList($databaseId: String!) {
+                    tablesList(databaseId: $databaseId) {
                         total
                         tables {
                             _id
@@ -601,8 +601,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TABLE:
-                return 'mutation createTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!]!) {
-                    databasesCreateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions) {
+                return 'mutation tablesCreate($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!]!) {
+                    tablesCreate(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions) {
                         _id
                         _permissions
                         rowSecurity
@@ -610,8 +610,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TABLE:
-                return 'mutation updateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!], $enabled: Boolean) {
-                    databasesUpdateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions, enabled: $enabled) {
+                return 'mutation tablesUpdate($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!], $enabled: Boolean) {
+                    tablesUpdate(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions, enabled: $enabled) {
                         _id
                         _permissions
                         rowSecurity
@@ -619,8 +619,8 @@ trait Base
                     }
                 }';
             case self::$DELETE_TABLE:
-                return 'mutation deleteTable($databaseId: String!, $tableId: String!) {
-                    databasesDeleteTable(databaseId: $databaseId, tableId: $tableId) {
+                return 'mutation tablesDelete($databaseId: String!, $tableId: String!) {
+                    tablesDelete(databaseId: $databaseId, tableId: $tableId) {
                         status
                     }
                 }';

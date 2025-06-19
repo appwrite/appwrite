@@ -18,7 +18,7 @@ class Update extends CollectionUpdate
 {
     public static function getName(): string
     {
-        return 'updateTable';
+        return 'update';
     }
 
     protected function getResponseModel(): string
@@ -39,8 +39,8 @@ class Update extends CollectionUpdate
             ->label('audits.event', 'table.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: 'databases',
-                group: $this->getSdkGroup(),
+                namespace: $this->getSdkNamespace(),
+                group: null,
                 name: self::getName(),
                 description: '/docs/references/databases/update-collection.md',
                 auth: [AuthType::KEY],

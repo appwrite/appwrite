@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 
 class Columns extends Base
 {
-    public const ALLOWED_ATTRIBUTES = [
+    public const array ALLOWED_COLUMNS = [
         'key',
         'type',
         'size',
@@ -20,6 +20,6 @@ class Columns extends Base
      */
     public function __construct()
     {
-        parent::__construct('attributes', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('attributes', self::ALLOWED_COLUMNS);
     }
 }

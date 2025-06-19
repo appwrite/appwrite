@@ -34,7 +34,7 @@ class Get extends CollectionUsageGet
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'databases',
+                namespace: $this->getSdkNamespace(),
                 group: null,
                 name: self::getName(),
                 description: '/docs/references/databases/get-collection-usage.md',

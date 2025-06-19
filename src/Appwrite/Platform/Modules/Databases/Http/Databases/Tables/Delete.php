@@ -15,7 +15,7 @@ class Delete extends CollectionDelete
 {
     public static function getName(): string
     {
-        return 'deleteTable';
+        return 'delete';
     }
 
     protected function getResponseModel(): string
@@ -36,8 +36,8 @@ class Delete extends CollectionDelete
             ->label('audits.event', 'table.delete')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: 'databases',
-                group: $this->getSdkGroup(),
+                namespace: $this->getSdkNamespace(),
+                group: null,
                 name: self::getName(),
                 description: '/docs/references/databases/delete-collection.md',
                 auth: [AuthType::KEY],

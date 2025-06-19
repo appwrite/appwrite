@@ -15,7 +15,7 @@ class Get extends CollectionGet
 {
     public static function getName(): string
     {
-        return 'getTable';
+        return 'get';
     }
 
     protected function getResponseModel(): string
@@ -33,8 +33,8 @@ class Get extends CollectionGet
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'databases',
-                group: $this->getSdkGroup(),
+                namespace: $this->getSdkNamespace(),
+                group: null,
                 name: self::getName(),
                 description: '/docs/references/databases/get-collection.md',
                 auth: [AuthType::KEY],

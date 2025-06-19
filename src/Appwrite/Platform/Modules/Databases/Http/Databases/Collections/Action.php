@@ -60,6 +60,14 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the SDK namespace for the current action.
+     */
+    final protected function getSdkNamespace(): string
+    {
+        return $this->isCollectionsAPI() ? 'databases' : 'tables';
+    }
+
+    /**
      * Get the exception to throw when the resource already exists.
      */
     final protected function getDuplicateException(): string

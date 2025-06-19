@@ -75,7 +75,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table['body']['data']);
         $this->assertArrayNotHasKey('errors', $table['body']);
-        $table = $table['body']['data']['databasesCreateTable'];
+        $table = $table['body']['data']['tablesCreate'];
         $this->assertEquals('Actors', $table['name']);
 
         $gqlPayload = [
@@ -101,7 +101,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table2['body']['data']);
         $this->assertArrayNotHasKey('errors', $table2['body']);
-        $table2 = $table2['body']['data']['databasesCreateTable'];
+        $table2 = $table2['body']['data']['tablesCreate'];
         $this->assertEquals('Movies', $table2['name']);
 
         return [
@@ -992,7 +992,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $tables['body']);
         $this->assertIsArray($tables['body']['data']);
-        $this->assertIsArray($tables['body']['data']['databasesListTables']);
+        $this->assertIsArray($tables['body']['data']['tablesList']);
     }
 
     /**
@@ -1018,7 +1018,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['databasesGetTable']);
+        $this->assertIsArray($table['body']['data']['tablesGet']);
     }
 
     /**
@@ -1279,7 +1279,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['databasesUpdateTable']);
+        $this->assertIsArray($table['body']['data']['tablesUpdate']);
     }
 
     /**
@@ -1510,7 +1510,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $tableId = $res['body']['data']['databasesCreateTable']['_id'];
+        $tableId = $res['body']['data']['tablesCreate']['_id'];
 
         // Step 3: Create column
         $query = $this->getQuery(self::$CREATE_STRING_COLUMN);

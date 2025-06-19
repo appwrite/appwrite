@@ -19,7 +19,7 @@ class Create extends CollectionCreate
 {
     public static function getName(): string
     {
-        return 'createTable';
+        return 'create';
     }
 
     protected function getResponseModel(): string
@@ -40,8 +40,8 @@ class Create extends CollectionCreate
             ->label('audits.event', 'table.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'databases',
-                group: $this->getSdkGroup(),
+                namespace: $this->getSdkNamespace(),
+                group: null,
                 name: self::getName(),
                 description: '/docs/references/databases/create-collection.md',
                 auth: [AuthType::KEY],
