@@ -193,7 +193,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         [
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
             'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -397,7 +397,7 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
@@ -407,7 +407,7 @@ App::post('/v1/account')
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => MESSAGE_TYPE_EMAIL,
                     'identifier' => $email,
                 ])));
@@ -734,9 +734,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 continue;
             }
 
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
-                return $dbForProject->deleteDocument('sessions', $session->getId());
-            });
+            $dbForProject->deleteDocument('sessions', $session->getId());
 
             unset($sessions[$key]);
 
@@ -931,7 +929,7 @@ App::post('/v1/account/sessions/email')
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
@@ -1086,7 +1084,7 @@ App::post('/v1/account/sessions/anonymous')
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
-        $user->removeAttribute('$internalId');
+        $user->removeAttribute('$sequence');
         Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
@@ -1247,8 +1245,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
 
-        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-
+        $oAuthProviders = Config::getParam('oAuthProviders');
+        $className = $oAuthProviders[$provider]['class'];
         if (!\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
@@ -1480,7 +1478,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userInternalId', $user->getInternalId()),
+                Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
@@ -1594,7 +1592,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
-                    $user->removeAttribute('$internalId');
+                    $user->removeAttribute('$sequence');
                     $userDoc = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
@@ -1603,7 +1601,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                             Permission::delete(Role::user($user->getId())),
                         ],
                         'userId' => $userDoc->getId(),
-                        'userInternalId' => $userDoc->getInternalId(),
+                        'userInternalId' => $userDoc->getSequence(),
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
@@ -1622,7 +1620,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $identity = $dbForProject->findOne('identities', [
-            Query::equal('userInternalId', [$user->getInternalId()]),
+            Query::equal('userInternalId', [$user->getSequence()]),
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$oauth2ID]),
         ]);
@@ -1632,7 +1630,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userInternalId', $user->getInternalId()),
+                Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
                 $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
@@ -1645,7 +1643,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Permission::update(Role::user($userId)),
                     Permission::delete(Role::user($userId)),
                 ],
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'userId' => $userId,
                 'provider' => $provider,
                 'providerUid' => $oauth2ID,
@@ -1723,7 +1721,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => $provider,
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
@@ -1781,7 +1779,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 $target
                     ->setAttribute('sessionId', $session->getId())
-                    ->setAttribute('sessionInternalId', $session->getInternalId());
+                    ->setAttribute('sessionInternalId', $session->getSequence());
 
                 $dbForProject->updateDocument('targets', $target->getId(), $target);
             }
@@ -1978,7 +1976,7 @@ App::post('/v1/account/tokens/magic-url')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -2046,6 +2044,7 @@ App::post('/v1/account/tokens/magic-url')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -2145,7 +2144,7 @@ App::post('/v1/account/tokens/email')
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
@@ -2216,7 +2215,7 @@ App::post('/v1/account/tokens/email')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -2517,7 +2516,7 @@ App::post('/v1/account/tokens/phone')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
@@ -2527,7 +2526,7 @@ App::post('/v1/account/tokens/phone')
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => MESSAGE_TYPE_SMS,
                     'identifier' => $phone,
                 ])));
@@ -2756,7 +2755,7 @@ App::get('/v1/account/logs')
 
         $audit = new EventAudit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
+        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
 
         $output = [];
 
@@ -2785,7 +2784,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
+            'total' => $audit->countLogsByUser($user->getSequence(), $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2821,7 +2820,7 @@ App::patch('/v1/account/name')
 
         $user->setAttribute('name', $name);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2900,7 +2899,7 @@ App::patch('/v1/account/password')
             ->setAttribute('hash', $proofForPassword->getHash()->getName())
             ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2960,7 +2959,7 @@ App::patch('/v1/account/email')
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
-            Query::notEqual('userInternalId', $user->getInternalId()),
+            Query::notEqual('userInternalId', $user->getSequence()),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
@@ -2988,7 +2987,7 @@ App::patch('/v1/account/email')
         }
 
         try {
-            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
              * @var Document $oldTarget
              */
@@ -3077,7 +3076,7 @@ App::patch('/v1/account/phone')
         }
 
         try {
-            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
              * @var Document $oldTarget
              */
@@ -3127,7 +3126,7 @@ App::patch('/v1/account/prefs')
 
         $user->setAttribute('prefs', $prefs);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3166,7 +3165,7 @@ App::patch('/v1/account/status')
 
         $user->setAttribute('status', false);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3939,7 +3938,7 @@ App::patch('/v1/account/mfa')
 
         $user->setAttribute('mfa', $mfa);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if ($mfa) {
             $factors = $session->getAttribute('factors', []);
@@ -3953,7 +3952,7 @@ App::patch('/v1/account/mfa')
             if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
                 $factors[] = Type::PHONE;
             }
-            $factors = \array_unique($factors);
+            $factors = \array_values(\array_unique($factors));
 
             $session->setAttribute('factors', $factors);
             $dbForProject->updateDocument('sessions', $session->getId(), $session);
@@ -4052,7 +4051,7 @@ App::post('/v1/account/mfa/authenticators/:type')
         $authenticator = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Type::TOTP,
             'verified' => false,
             'data' => [
@@ -4138,7 +4137,7 @@ App::put('/v1/account/mfa/authenticators/:type')
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
-        $factors = \array_unique($factors);
+        $factors = \array_values(\array_unique($factors));
 
         $session->setAttribute('factors', $factors);
         $dbForProject->updateDocument('sessions', $session->getId(), $session);
@@ -4368,7 +4367,7 @@ App::post('/v1/account/mfa/challenge')
         $code = $proofForCode->generate();
         $challenge = new Document([
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => $factor,
             'token' => $proofForToken->generate(),
             'code' => $code,
@@ -4625,7 +4624,7 @@ App::put('/v1/account/mfa/challenge')
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
-        $factors = \array_unique($factors);
+        $factors = \array_values(\array_unique($factors));
 
         $session
             ->setAttribute('factors', $factors)
@@ -4699,12 +4698,12 @@ App::post('/v1/account/targets/push')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getInternalId() : null,
+                'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
                 'providerType' =>  MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'sessionId' => $session->getId(),
-                'sessionInternalId' => $session->getInternalId(),
+                'sessionInternalId' => $session->getSequence(),
                 'identifier' => $identifier,
                 'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
             ]));
@@ -4823,7 +4822,7 @@ App::delete('/v1/account/targets/:targetId/push')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        if ($user->getInternalId() !== $target->getAttribute('userInternalId')) {
+        if ($user->getSequence() !== $target->getAttribute('userInternalId')) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
@@ -4872,7 +4871,7 @@ App::get('/v1/account/identities')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
+        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 
         /**
             * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries

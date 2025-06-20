@@ -18,7 +18,7 @@ class LetsEncrypt implements Adapter
     }
 
 
-    public function issueCertificate(string $certName, string $domain): ?string
+    public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
     {
         $stdout = '';
         $stderr = '';
@@ -84,7 +84,7 @@ class LetsEncrypt implements Adapter
         return DateTime::addSeconds($dt, -60 * 60 * 24 * 30);
     }
 
-    public function isRenewRequired(string $domain, Log $log): bool
+    public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {

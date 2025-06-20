@@ -96,17 +96,16 @@ class Create extends Action
         $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
         $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
-        $deployment->removeAttribute('$internalId');
+        $deployment->removeAttribute('$sequence');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$internalId' => '',
+            '$sequence' => '',
             '$id' => $deploymentId,
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'entrypoint' => $function->getAttribute('entrypoint'),
             'buildCommands' => $function->getAttribute('commands', ''),
-            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
-            'buildStartAt' => null,
-            'buildEndAt' => null,
+            'buildStartedAt' => null,
+            'buildEndedAt' => null,
             'buildDuration' => null,
             'buildSize' => null,
             'status' => 'waiting',
@@ -116,7 +115,7 @@ class Create extends Action
 
         $function = $function
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);

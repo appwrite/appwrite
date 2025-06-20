@@ -44,7 +44,7 @@ class V16 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
 
             switch ($id) {
                 case 'sessions':
@@ -52,7 +52,7 @@ class V16 extends Migration
                         /**
                          * Create 'expire' attribute
                          */
-                        $this->projectDB->deleteAttribute($id, 'expire');
+                        $this->dbForProject->deleteAttribute($id, 'expire');
                     } catch (\Throwable $th) {
                         Console::warning("'expire' from {$id}: {$th->getMessage()}");
                     }
@@ -64,7 +64,7 @@ class V16 extends Migration
                         /**
                          * Create 'region' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'region');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'region');
                     } catch (\Throwable $th) {
                         Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }
@@ -73,7 +73,7 @@ class V16 extends Migration
                         /**
                          * Create '_key_team' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_team');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_team' from {$id}: {$th->getMessage()}");
                     }
@@ -84,7 +84,7 @@ class V16 extends Migration
                         /**
                          * Create 'region' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'region');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'region');
                     } catch (\Throwable $th) {
                         Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }

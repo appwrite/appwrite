@@ -64,7 +64,7 @@ class SDKs extends Action
             $message ??= Console::confirm('Please enter your commit message:');
         }
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', '1.7.x', 'latest'])) {
+        if (!\in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', '1.7.x', '1.8.x', 'latest'])) {
             throw new \Exception('Unknown version given');
         }
 
@@ -251,7 +251,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
                         'X-Appwrite-Response-Format' => '1.7.0',
-                    ]);
+                    ])
+                    ->setExclude($language['exclude'] ?? []);
 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
@@ -312,7 +313,5 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
             }
         }
-
-        Console::exit();
     }
 }

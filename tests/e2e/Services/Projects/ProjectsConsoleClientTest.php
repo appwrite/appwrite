@@ -4453,13 +4453,12 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'search' => 'Dev'
-        ]);
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals('Dev Key Test', $response['body']['devKeys'][0]['name']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertEquals('Key Test', $response['body']['devKeys'][0]['name']);
+        $this->assertEquals('Dev Key Test', $response['body']['devKeys'][1]['name']);
 
         /** List dev keys with querying `expire` */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys', array_merge([

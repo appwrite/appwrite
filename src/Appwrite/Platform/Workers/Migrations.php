@@ -39,6 +39,13 @@ class Migrations extends Action
     protected Document $project;
 
     /**
+     * Cached for performance.
+     *
+     * @var array<string, int>
+     */
+    protected array $sourceReport = [];
+
+    /**
      * @var callable
      */
     protected $logError;
@@ -109,7 +116,7 @@ class Migrations extends Action
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
 
-        return match ($source) {
+        $migrationSource = match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
             ),
@@ -144,6 +151,10 @@ class Migrations extends Action
             ),
             default => throw new \Exception('Invalid source type'),
         };
+
+        $this->sourceReport = $migrationSource->report();
+
+        return $migrationSource;
     }
 
     /**
@@ -174,13 +185,33 @@ class Migrations extends Action
      */
     protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
+        $errorMessages = [];
+        $clonedMigrationDocument = clone $migration;
+
+        // we cannot use #sensitive because
+        // `errors` is nested which requires an override.
+        $errors = $clonedMigrationDocument->getAttribute('errors', []);
+
+        foreach ($errors as $error) {
+            $decoded = json_decode($error, true);
+
+            if (is_array($decoded) && isset($decoded['trace'])) {
+                unset($decoded['trace']);
+                $errorMessages[] = json_encode($decoded);
+            }
+        }
+
+        // set the errors back without trace
+        $clonedMigrationDocument->setAttribute('errors', $errorMessages);
+
+
         /** Trigger Realtime Events */
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
             ->setEvent('migrations.[migrationId].update')
             ->setParam('migrationId', $migration->getId())
-            ->setPayload($migration->getArrayCopy())
+            ->setPayload($clonedMigrationDocument->getArrayCopy(), ['options', 'credentials'])
             ->trigger();
 
         return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
@@ -262,28 +293,27 @@ class Migrations extends Action
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration, $tempAPIKey);
 
-            $source->report();
-
             $transfer = new Transfer(
                 $source,
                 $destination
             );
 
             /** Start Transfer */
-            $migration->setAttribute('stage', 'migrating');
-            $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
+            if (empty($source->getErrors())) {
+                $migration->setAttribute('stage', 'migrating');
+                $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
-            $transfer->run(
-                $migration->getAttribute('resources'),
-                function () use ($migration, $transfer, $projectDocument, $queueForRealtime) {
-                    $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
-                    $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                    $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
-                },
-                $migration->getAttribute('resourceId'),
-                $migration->getAttribute('resourceType')
-            );
-
+                $transfer->run(
+                    $migration->getAttribute('resources'),
+                    function () use ($migration, $transfer, $projectDocument, $queueForRealtime) {
+                        $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
+                        $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+                        $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
+                    },
+                    $migration->getAttribute('resourceId'),
+                    $migration->getAttribute('resourceType')
+                );
+            }
             $destination->shutDown();
             $source->shutDown();
 
@@ -296,26 +326,13 @@ class Migrations extends Action
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
-                    $message = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
-                    if ($error->getPrevious()) {
-                        $message .= " Message: ".$error->getPrevious()->getMessage() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
-                    }
-
-                    $errorMessages[] = $message;
+                    $errorMessages[] = json_encode($error);
                 }
                 foreach ($destinationErrors as $error) {
-                    $message = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
-
-                    if ($error->getPrevious()) {
-                        $message .= " Message: ".$error->getPrevious()->getMessage() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
-                    }
-
-                    /** @var MigrationException $error */
-                    $errorMessages[] = $message;
+                    $errorMessages[] = json_encode($error);
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
-                $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
                 return;
             }
@@ -345,12 +362,10 @@ class Migrations extends Action
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
-                    /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message '{$error->getMessage()}'";
+                    $errorMessages[] = json_encode($error);
                 }
                 foreach ($destinationErrors as $error) {
-                    /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message '{$error->getMessage()}'";
+                    $errorMessages[] = json_encode($error);
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
@@ -359,7 +374,7 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
             if ($migration->getAttribute('status', '') === 'failed') {
-                Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');
+                Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
                 if ($destination) {
                     $destination->error();

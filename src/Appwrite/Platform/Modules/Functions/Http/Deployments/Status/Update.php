@@ -87,17 +87,17 @@ class Update extends Action
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
 
-        $startTime = new \DateTime($deployment->getAttribute('buildStartAt', 'now'));
+        $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
-            'buildEndAt' => DateTime::now(),
+            'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
             'status' => 'canceled'
         ]));
 
-        if ($deployment->getInternalId() === $function->getAttribute('latestDeploymentInternalId', '')) {
+        if ($deployment->getSequence() === $function->getAttribute('latestDeploymentInternalId', '')) {
             $function = $function->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
             $dbForProject->updateDocument('functions', $function->getId(), $function);
         }

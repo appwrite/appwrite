@@ -1,4 +1,5 @@
 > [Get started with Appwrite](https://apwr.dev/appcloud)
+> [Join the Init kick off event 19th of May: The future of Appwrite with Founder & CEO Eldad Fux](https://www.youtube.com/watch?v=1g8tuogsp7A)
 
 <br />
 <p align="center">
@@ -77,7 +78,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.6.2
+    appwrite/appwrite:1.7.4
 ```
 
 ### Windows
@@ -89,7 +90,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.6.2
+    appwrite/appwrite:1.7.4
 ```
 
 #### PowerShell
@@ -99,7 +100,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.6.2
+    appwrite/appwrite:1.7.4
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.

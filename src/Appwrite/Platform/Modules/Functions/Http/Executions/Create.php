@@ -77,7 +77,6 @@ class Create extends Base
                     )
                 ],
                 contentType: ContentType::MULTIPART,
-                requestType: 'application/json',
             ))
             ->param('functionId', '', new UID(), 'Function ID.')
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
@@ -260,10 +259,10 @@ class Create extends Base
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
-            'resourceInternalId' => $function->getInternalId(),
+            'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'trigger' => (!is_null($scheduledAt)) ? 'schedule' : 'http',
             'status' => $status, // waiting / processing / completed / failed / scheduled
@@ -312,7 +311,7 @@ class Create extends Base
                     'region' => $project->getAttribute('region'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
-                    'resourceInternalId' => $execution->getInternalId(),
+                    'resourceInternalId' => $execution->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
@@ -322,7 +321,7 @@ class Create extends Base
 
                 $execution = $execution
                     ->setAttribute('scheduleId', $schedule->getId())
-                    ->setAttribute('scheduleInternalId', $schedule->getInternalId())
+                    ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
@@ -393,7 +392,9 @@ class Create extends Base
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
+            $source = $deployment->getAttribute('buildPath', '');
+            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
+            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
@@ -401,7 +402,7 @@ class Create extends Base
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $deployment->getAttribute('buildPath', ''),
+                source: $source,
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 version: $version,
                 path: $path,
@@ -446,13 +447,13 @@ class Create extends Base
             $queueForStatsUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
                 ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
                 ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));

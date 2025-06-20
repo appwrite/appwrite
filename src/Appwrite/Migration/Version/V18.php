@@ -26,7 +26,7 @@ class V18 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+        $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
         $this->addDocumentSecurityToProject();
 
         Console::info('Migrating Databases');
@@ -48,12 +48,12 @@ class V18 extends Migration
     private function migrateDatabases(): void
     {
         foreach ($this->documentsIterator('databases') as $database) {
-            $databaseTable = "database_{$database->getInternalId()}";
+            $databaseTable = "database_{$database->getSequence()}";
 
             Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
-                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
+                $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
 
                 foreach ($collection['attributes'] ?? [] as $attribute) {
                     if ($attribute['type'] !== Database::VAR_FLOAT) {
@@ -66,7 +66,7 @@ class V18 extends Migration
                     $documentSecurity = $collection->getAttribute('documentSecurity', false);
                     $permissions = $collection->getPermissions();
 
-                    $this->projectDB->updateCollection($collectionTable, $permissions, $documentSecurity);
+                    $this->dbForProject->updateCollection($collectionTable, $permissions, $documentSecurity);
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }
@@ -94,7 +94,7 @@ class V18 extends Migration
             }
 
             try {
-                $this->projectDB->updateCollection($id, [Permission::create(Role::any())], true);
+                $this->dbForProject->updateCollection($id, [Permission::create(Role::any())], true);
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
             }
@@ -105,8 +105,8 @@ class V18 extends Migration
                         /**
                          * Create 'passwordHistory' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'passwordHistory');
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'passwordHistory');
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'passwordHistory' from {$id}: {$th->getMessage()}");
                     }
@@ -116,8 +116,8 @@ class V18 extends Migration
                         /**
                          * Create 'prefs' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'prefs');
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'prefs');
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'prefs' from {$id}: {$th->getMessage()}");
                     }
@@ -127,8 +127,8 @@ class V18 extends Migration
                         /**
                          * Create 'options' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'options');
-                        $this->projectDB->purgeCachedCollection($id);
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'options');
+                        $this->dbForProject->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'options' from {$id}: {$th->getMessage()}");
                     }
@@ -138,7 +138,7 @@ class V18 extends Migration
                         /**
                          * Delete 'userInternalId' attribute
                          */
-                        $this->projectDB->deleteAttribute($id, 'userInternalId');
+                        $this->dbForProject->deleteAttribute($id, 'userInternalId');
                     } catch (\Throwable $th) {
                         Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -197,10 +197,10 @@ class V18 extends Migration
                  * Set the bucket permission in the metadata table
                  */
                 try {
-                    $internalBucketId = "bucket_{$this->project->getInternalId()}";
+                    $internalBucketId = "bucket_{$this->project->getSequence()}";
                     $permissions = $document->getPermissions();
                     $fileSecurity = $document->getAttribute('fileSecurity', false);
-                    $this->projectDB->updateCollection($internalBucketId, $permissions, $fileSecurity);
+                    $this->dbForProject->updateCollection($internalBucketId, $permissions, $fileSecurity);
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }
@@ -214,8 +214,8 @@ class V18 extends Migration
                     $data = $document->getAttribute('data', []);
                     $mode = $data['mode'] ?? 'default';
                     $user = match ($mode) {
-                        'admin' => $this->consoleDB->getDocument('users', $userId),
-                        default => $this->projectDB->getDocument('users', $userId),
+                        'admin' => $this->dbForPlatform->getDocument('users', $userId),
+                        default => $this->dbForProject->getDocument('users', $userId),
                     };
 
                     if ($user->isEmpty()) {
@@ -224,8 +224,8 @@ class V18 extends Migration
                         // Nonetheless, there's nothing else we can do here.
                         break;
                     }
-                    $internalId = $user->getInternalId();
-                    $document->setAttribute('userId', $internalId);
+                    $sequence = $user->getSequence();
+                    $document->setAttribute('userId', $sequence);
                     $data = $document->getAttribute('data', []);
                     $data['userId'] = $user->getId();
                     $document->setAttribute('data', $data);
@@ -244,7 +244,7 @@ class V18 extends Migration
             /**
              * Create 'documentSecurity' column
              */
-            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}__metadata` ADD COLUMN IF NOT EXISTS documentSecurity TINYINT(1);")->execute();
+            $this->pdo->prepare("ALTER TABLE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}__metadata` ADD COLUMN IF NOT EXISTS documentSecurity TINYINT(1);")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }
@@ -253,7 +253,7 @@ class V18 extends Migration
             /**
              * Set 'documentSecurity' column to 1 if NULL
              */
-            $this->pdo->prepare("UPDATE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}__metadata` SET documentSecurity = 1 WHERE documentSecurity IS NULL")->execute();
+            $this->pdo->prepare("UPDATE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}__metadata` SET documentSecurity = 1 WHERE documentSecurity IS NULL")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }

@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -82,8 +81,8 @@ class Create extends Base
             ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
-                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
-                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Framework specification for the site and builds.', true, ['plan'])
             ->inject('response')
             ->inject('dbForProject')
@@ -155,7 +154,7 @@ class Create extends Base
             'search' => implode(' ', [$siteId, $name, $framework]),
             'fallbackFile' => $fallbackFile,
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => '',
             'repositoryInternalId' => '',
@@ -181,18 +180,18 @@ class Create extends Base
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $site->getId(),
-                'resourceInternalId' => $site->getInternalId(),
+                'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
             ]));
 
             $site->setAttribute('repositoryId', $repository->getId());
-            $site->setAttribute('repositoryInternalId', $repository->getInternalId());
+            $site->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
         $site = $dbForProject->updateDocument('sites', $site->getId(), $site);

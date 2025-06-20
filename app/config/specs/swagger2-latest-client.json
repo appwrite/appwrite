@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.7.0",
+        "version": "1.7.4",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -60,6 +60,12 @@
             "type": "apiKey",
             "name": "X-Appwrite-Session",
             "description": "The user session to authenticate with",
+            "in": "header"
+        },
+        "DevKey": {
+            "type": "apiKey",
+            "name": "X-Appwrite-Dev-Key",
+            "description": "Your secret dev API key",
             "in": "header"
         }
     },
@@ -2765,7 +2771,10 @@
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-email.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
-                    "rate-key": "url:{url},email:{param-email}",
+                    "rate-key": [
+                        "url:{url},email:{param-email}",
+                        "url:{url},ip:{ip}"
+                    ],
                     "scope": "sessions.write",
                     "platforms": [
                         "server",
@@ -3442,7 +3451,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3521,12 +3529,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -3567,7 +3575,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3652,12 +3659,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -3698,7 +3705,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3761,7 +3767,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4202,12 +4207,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     }
                 ]
@@ -4248,7 +4253,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4331,7 +4335,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4422,7 +4425,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4513,7 +4515,6 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4571,7 +4572,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4594,11 +4595,42 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createDocument",
+                            "auth": {
+                                "Admin": [],
+                                "Session": [],
+                                "Key": [],
+                                "JWT": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/document"
+                                }
+                            ],
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4636,13 +4668,13 @@
                                 "documentId": {
                                     "type": "string",
                                     "description": "Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<DOCUMENT_ID>"
                                 },
                                 "data": {
                                     "type": "object",
                                     "description": "Document data as JSON object.",
-                                    "default": {},
+                                    "default": [],
                                     "x-example": "{}"
                                 },
                                 "permissions": {
@@ -4653,12 +4685,17 @@
                                     "items": {
                                         "type": "string"
                                     }
+                                },
+                                "documents": {
+                                    "type": "array",
+                                    "description": "Array of documents data as JSON objects.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
                                 }
-                            },
-                            "required": [
-                                "documentId",
-                                "data"
-                            ]
+                            }
                         }
                     }
                 ]
@@ -4699,7 +4736,6 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4753,6 +4789,110 @@
                     }
                 ]
             },
+            "put": {
+                "summary": "Upsert document",
+                "operationId": "databasesUpsertDocument",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "schema": {
+                            "$ref": "#\/definitions\/document"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "upsertDocument",
+                    "group": "documents",
+                    "weight": 114,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/upsert-document.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "Document data as JSON object. Include all required attributes of the document to be created or updated.",
+                                    "default": {},
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "data"
+                            ]
+                        }
+                    }
+                ]
+            },
             "patch": {
                 "summary": "Update document",
                 "operationId": "databasesUpdateDocument",
@@ -4789,7 +4929,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4874,7 +5013,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 114,
+                    "weight": 119,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4886,7 +5025,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4929,6 +5067,224 @@
                 ]
             }
         },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
+            "patch": {
+                "summary": "Decrement document attribute",
+                "operationId": "databasesDecrementDocumentAttribute",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Decrement a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "schema": {
+                            "$ref": "#\/definitions\/document"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "decrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 116,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/decrement-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to decrement the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "min": {
+                                    "type": "number",
+                                    "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
+            "patch": {
+                "summary": "Increment document attribute",
+                "operationId": "databasesIncrementDocumentAttribute",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Increment a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "schema": {
+                            "$ref": "#\/definitions\/document"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "incrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 115,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/increment-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "max": {
+                                    "type": "number",
+                                    "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
         "\/functions\/{functionId}\/executions": {
             "get": {
                 "summary": "List executions",
@@ -4952,7 +5308,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 388,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4964,7 +5320,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5026,7 +5381,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 386,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5038,7 +5393,6 @@
                     "scope": "execution.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5143,7 +5497,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 387,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5155,7 +5509,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5215,7 +5568,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 302,
+                    "weight": 308,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5227,8 +5580,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5289,7 +5641,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 301,
+                    "weight": 307,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5301,8 +5653,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5361,7 +5712,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 118,
+                    "weight": 124,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5373,7 +5724,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5413,7 +5763,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 119,
+                    "weight": 125,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5425,7 +5775,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5465,7 +5814,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 123,
+                    "weight": 129,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5477,7 +5826,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5517,7 +5865,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 120,
+                    "weight": 126,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5529,7 +5877,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5569,7 +5916,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 121,
+                    "weight": 127,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5581,7 +5928,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5621,7 +5967,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 122,
+                    "weight": 128,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5633,7 +5979,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5673,7 +6018,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 124,
+                    "weight": 130,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5685,7 +6030,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5725,7 +6069,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 125,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5737,7 +6081,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5779,7 +6122,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 348,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5792,8 +6135,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5864,7 +6206,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 352,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5877,8 +6219,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5935,7 +6276,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 208,
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5947,7 +6288,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6018,7 +6358,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 207,
+                    "weight": 213,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -6030,7 +6370,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6108,7 +6447,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 209,
+                    "weight": 215,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6120,7 +6459,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6178,7 +6516,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 214,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6190,7 +6528,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6267,7 +6604,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 215,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6279,7 +6616,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6337,7 +6673,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 211,
+                    "weight": 217,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6349,7 +6685,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6380,6 +6715,15 @@
                         "type": "string",
                         "x-example": "<FILE_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "token",
+                        "description": "File token for accessing this file.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<TOKEN>",
+                        "default": "",
+                        "in": "query"
                     }
                 ]
             }
@@ -6407,7 +6751,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 210,
+                    "weight": 216,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6419,7 +6763,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6495,12 +6838,12 @@
                     },
                     {
                         "name": "quality",
-                        "description": "Preview image quality. Pass an integer between 0 to 100. Defaults to 100.",
+                        "description": "Preview image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
-                        "default": 100,
+                        "x-example": -1,
+                        "default": -1,
                         "in": "query"
                     },
                     {
@@ -6568,14 +6911,23 @@
                         "enum": [
                             "jpg",
                             "jpeg",
-                            "gif",
                             "png",
                             "webp",
                             "heic",
-                            "avif"
+                            "avif",
+                            "gif"
                         ],
                         "x-enum-name": "ImageFormat",
                         "x-enum-keys": [],
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "token",
+                        "description": "File token for accessing this file.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<TOKEN>",
                         "default": "",
                         "in": "query"
                     }
@@ -6605,7 +6957,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 212,
+                    "weight": 218,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6617,7 +6969,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6648,6 +6999,15 @@
                         "type": "string",
                         "x-example": "<FILE_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "token",
+                        "description": "File token for accessing this file.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<TOKEN>",
+                        "default": "",
+                        "in": "query"
                     }
                 ]
             }
@@ -6675,7 +7035,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 219,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6687,7 +7047,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6750,7 +7109,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 218,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6762,7 +7121,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6840,7 +7198,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 220,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6852,7 +7210,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6902,7 +7259,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 222,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6914,7 +7271,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6977,7 +7333,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 224,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6989,7 +7345,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7039,7 +7394,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 226,
+                    "weight": 232,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7051,7 +7406,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7122,7 +7476,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 225,
+                    "weight": 231,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7134,7 +7488,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7235,7 +7588,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 227,
+                    "weight": 233,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7247,7 +7600,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7305,7 +7657,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 228,
+                    "weight": 234,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7317,7 +7669,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7391,7 +7742,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 230,
+                    "weight": 236,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7403,7 +7754,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7463,7 +7813,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 229,
+                    "weight": 235,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7557,7 +7907,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 221,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7618,7 +7968,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 223,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7673,540 +8023,76 @@
                     }
                 ]
             }
-        },
-        "\/tokens\/buckets\/{bucketId}\/files\/{fileId}": {
-            "get": {
-                "summary": "List tokens",
-                "operationId": "tokensList",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "List all the tokens created for a specific file or bucket. You can use the query params to filter your results.",
-                "responses": {
-                    "200": {
-                        "description": "Resource Tokens List",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceTokenList"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "list",
-                    "group": "files",
-                    "weight": 436,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/list.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterList all the tokens created for a specific file or bucket. You can use the query params to filter your results.",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tokens.read",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "bucketId",
-                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<BUCKET_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "fileId",
-                        "description": "File unique ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<FILE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: expire",
-                        "required": false,
-                        "type": "array",
-                        "collectionFormat": "multi",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": [],
-                        "in": "query"
-                    }
-                ]
-            },
-            "post": {
-                "summary": "Create file token",
-                "operationId": "tokensCreateFileToken",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Create a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.",
-                "responses": {
-                    "201": {
-                        "description": "ResourceToken",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceToken"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "createFileToken",
-                    "group": "files",
-                    "weight": 433,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/create-file-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "tokens.write",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "bucketId",
-                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<BUCKET_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "fileId",
-                        "description": "File unique ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<FILE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "expire": {
-                                    "type": "string",
-                                    "description": "Token expiry date",
-                                    "default": null,
-                                    "x-example": null,
-                                    "x-nullable": true
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": [],
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            }
-        },
-        "\/tokens\/{tokenId}": {
-            "get": {
-                "summary": "Get token",
-                "operationId": "tokensGet",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Get a token by its unique ID.",
-                "responses": {
-                    "200": {
-                        "description": "ResourceToken",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceToken"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "get",
-                    "group": "tokens",
-                    "weight": 434,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/get.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a token by its unique ID.",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tokens.read",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "Token ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    }
-                ]
-            },
-            "patch": {
-                "summary": "Update token",
-                "operationId": "tokensUpdate",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Update a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.",
-                "responses": {
-                    "200": {
-                        "description": "ResourceToken",
-                        "schema": {
-                            "$ref": "#\/definitions\/resourceToken"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "update",
-                    "group": "tokens",
-                    "weight": 437,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/update.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterUpdate a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "tokens.write",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "Token unique ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "expire": {
-                                    "type": "string",
-                                    "description": "File token expiry date",
-                                    "default": null,
-                                    "x-example": null,
-                                    "x-nullable": true
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            },
-            "delete": {
-                "summary": "Delete token",
-                "operationId": "tokensDelete",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Delete a token by its unique ID.",
-                "responses": {
-                    "204": {
-                        "description": "No content"
-                    }
-                },
-                "x-appwrite": {
-                    "method": "delete",
-                    "group": "tokens",
-                    "weight": 438,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/delete.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterDelete a token by its unique ID.",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "tokens.write",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "Token ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    }
-                ]
-            }
-        },
-        "\/tokens\/{tokenId}\/jwt": {
-            "get": {
-                "summary": "Get token as JWT",
-                "operationId": "tokensGetJWT",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "tokens"
-                ],
-                "description": "Get a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.",
-                "responses": {
-                    "200": {
-                        "description": "JWT",
-                        "schema": {
-                            "$ref": "#\/definitions\/jwt"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getJWT",
-                    "group": "tokens",
-                    "weight": 435,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "tokens\/get-j-w-t.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tokens.read",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "tokenId",
-                        "description": "File token ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TOKEN_ID>",
-                        "in": "path"
-                    }
-                ]
-            }
         }
     },
     "tags": [
         {
             "name": "account",
-            "description": "The Account service allows you to authenticate and manage a user account.",
-            "x-globalAttributes": []
+            "description": "The Account service allows you to authenticate and manage a user account."
         },
         {
             "name": "avatars",
-            "description": "The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.",
-            "x-globalAttributes": []
+            "description": "The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars."
         },
         {
             "name": "databases",
-            "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents",
-            "x-globalAttributes": [
-                "databaseId"
-            ]
+            "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
         },
         {
             "name": "locale",
-            "description": "The Locale service allows you to customize your app based on your users' location.",
-            "x-globalAttributes": []
+            "description": "The Locale service allows you to customize your app based on your users' location."
         },
         {
             "name": "health",
-            "description": "The Health service allows you to both validate and monitor your Appwrite server's health.",
-            "x-globalAttributes": []
+            "description": "The Health service allows you to both validate and monitor your Appwrite server's health."
         },
         {
             "name": "projects",
-            "description": "The Project service allows you to manage all the projects in your Appwrite server.",
-            "x-globalAttributes": []
+            "description": "The Project service allows you to manage all the projects in your Appwrite server."
         },
         {
             "name": "project",
-            "description": "The Project service allows you to manage all the projects in your Appwrite server.",
-            "x-globalAttributes": []
+            "description": "The Project service allows you to manage all the projects in your Appwrite server."
         },
         {
             "name": "storage",
-            "description": "The Storage service allows you to manage your project files.",
-            "x-globalAttributes": []
+            "description": "The Storage service allows you to manage your project files."
         },
         {
             "name": "teams",
-            "description": "The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources",
-            "x-globalAttributes": []
+            "description": "The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources"
         },
         {
             "name": "users",
-            "description": "The Users service allows you to manage your project users.",
-            "x-globalAttributes": []
+            "description": "The Users service allows you to manage your project users."
         },
         {
             "name": "sites",
-            "description": "The Sites Service allows you view, create and manage your web applications.",
-            "x-globalAttributes": []
+            "description": "The Sites Service allows you view, create and manage your web applications."
         },
         {
             "name": "functions",
-            "description": "The Functions Service allows you view, create and manage your Cloud Functions.",
-            "x-globalAttributes": []
+            "description": "The Functions Service allows you view, create and manage your Cloud Functions."
         },
         {
             "name": "proxy",
-            "description": "The Proxy Service allows you to configure actions for your domains beyond DNS configuration.",
-            "x-globalAttributes": []
+            "description": "The Proxy Service allows you to configure actions for your domains beyond DNS configuration."
         },
         {
             "name": "graphql",
-            "description": "The GraphQL API allows you to query and mutate your Appwrite server using GraphQL.",
-            "x-globalAttributes": []
+            "description": "The GraphQL API allows you to query and mutate your Appwrite server using GraphQL."
         },
         {
             "name": "console",
-            "description": "The Console service allows you to interact with console relevant informations.",
-            "x-globalAttributes": []
+            "description": "The Console service allows you to interact with console relevant informations."
         },
         {
             "name": "migrations",
-            "description": "The Migrations service allows you to migrate third-party data to your Appwrite project.",
-            "x-globalAttributes": []
+            "description": "The Migrations service allows you to migrate third-party data to your Appwrite project."
         },
         {
             "name": "messaging",
-            "description": "The Messaging service allows you to send messages to any provider type (SMTP, push notification, SMS, etc.).",
-            "x-globalAttributes": []
+            "description": "The Messaging service allows you to send messages to any provider type (SMTP, push notification, SMS, etc.)."
         }
     ],
     "definitions": {
@@ -8338,31 +8224,6 @@
             "required": [
                 "total",
                 "files"
-            ]
-        },
-        "resourceTokenList": {
-            "description": "Resource Tokens List",
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer",
-                    "description": "Total number of tokens documents that matched your query.",
-                    "x-example": 5,
-                    "format": "int32"
-                },
-                "tokens": {
-                    "type": "array",
-                    "description": "List of tokens.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/resourceToken"
-                    },
-                    "x-example": ""
-                }
-            },
-            "required": [
-                "total",
-                "tokens"
             ]
         },
         "teamList": {
@@ -8599,6 +8460,12 @@
                     "description": "Document ID.",
                     "x-example": "5e5ea5c16897e"
                 },
+                "$sequence": {
+                    "type": "integer",
+                    "description": "Document automatically incrementing ID.",
+                    "x-example": 1,
+                    "format": "int32"
+                },
                 "$collectionId": {
                     "type": "string",
                     "description": "Collection ID.",
@@ -8633,6 +8500,7 @@
             "additionalProperties": true,
             "required": [
                 "$id",
+                "$sequence",
                 "$collectionId",
                 "$databaseId",
                 "$createdAt",
@@ -9570,50 +9438,6 @@
                 "sizeOriginal",
                 "chunksTotal",
                 "chunksUploaded"
-            ]
-        },
-        "resourceToken": {
-            "description": "ResourceToken",
-            "type": "object",
-            "properties": {
-                "$id": {
-                    "type": "string",
-                    "description": "Token ID.",
-                    "x-example": "bb8ea5c16897e"
-                },
-                "$createdAt": {
-                    "type": "string",
-                    "description": "Token creation date in ISO 8601 format.",
-                    "x-example": "2020-10-15T06:38:00.000+00:00"
-                },
-                "resourceId": {
-                    "type": "string",
-                    "description": "Resource ID.",
-                    "x-example": "5e5ea5c168bb8:5e5ea5c168bb8"
-                },
-                "resourceInternalId": {
-                    "type": "string",
-                    "description": "File ID.",
-                    "x-example": "1:1"
-                },
-                "resourceType": {
-                    "type": "string",
-                    "description": "Resource type.",
-                    "x-example": "file"
-                },
-                "expire": {
-                    "type": "string",
-                    "description": "Token expiration date in ISO 8601 format.",
-                    "x-example": "2020-10-15T06:38:00.000+00:00"
-                }
-            },
-            "required": [
-                "$id",
-                "$createdAt",
-                "resourceId",
-                "resourceInternalId",
-                "resourceType",
-                "expire"
             ]
         },
         "team": {

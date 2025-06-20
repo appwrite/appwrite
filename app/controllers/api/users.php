@@ -8,6 +8,8 @@ use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -159,7 +161,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => 'email',
                     'identifier' => $email,
                 ]));
@@ -183,7 +185,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => 'sms',
                     'identifier' => $phone,
                 ]));
@@ -603,10 +605,10 @@ App::post('/v1/users/:userId/targets')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'providerId' => empty($provider->getId()) ? null : $provider->getId(),
-                'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
+                'providerInternalId' => $provider->isEmpty() ? null : $provider->getSequence(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'identifier' => $identifier,
                 'name' => ($name !== '') ? $name : null,
             ]));
@@ -885,7 +887,7 @@ App::get('/v1/users/:userId/memberships')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
+        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 
         $memberships = array_map(function ($membership) use ($dbForProject, $user) {
             $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
@@ -949,7 +951,7 @@ App::get('/v1/users/:userId/logs')
 
         $audit = new Audit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
+        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
 
         $output = [];
 
@@ -996,7 +998,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
+            'total' => $audit->countLogsByUser($user->getSequence(), $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1019,7 +1021,7 @@ App::get('/v1/users/:userId/targets')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, array $queries, Response $response, Database $dbForProject) {
@@ -1446,7 +1448,7 @@ App::patch('/v1/users/:userId/email')
             // Makes sure this email is not already used in another identity
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userInternalId', $user->getInternalId()),
+                Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
@@ -1490,7 +1492,7 @@ App::patch('/v1/users/:userId/email')
                             Permission::delete(Role::user($user->getId())),
                         ],
                         'userId' => $user->getId(),
-                        'userInternalId' => $user->getInternalId(),
+                        'userInternalId' => $user->getSequence(),
                         'providerType' => 'email',
                         'identifier' => $email,
                     ]));
@@ -1579,7 +1581,7 @@ App::patch('/v1/users/:userId/phone')
                             Permission::delete(Role::user($user->getId())),
                         ],
                         'userId' => $user->getId(),
-                        'userInternalId' => $user->getInternalId(),
+                        'userInternalId' => $user->getSequence(),
                         'providerType' => 'sms',
                         'identifier' => $number,
                     ]));
@@ -1761,7 +1763,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
 
             $target
                 ->setAttribute('providerId', $provider->getId())
-                ->setAttribute('providerInternalId', $provider->getInternalId());
+                ->setAttribute('providerInternalId', $provider->getSequence());
         }
 
         if ($name) {
@@ -2353,6 +2355,8 @@ App::delete('/v1/users/:userId')
         $clone = clone $user;
 
         $dbForProject->deleteDocument('users', $userId);
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)

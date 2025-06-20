@@ -145,7 +145,7 @@ class StatsUsage extends Action
 
         $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
-        $projectId = $project->getInternalId();
+        $projectId = $project->getSequence();
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
                 continue;
@@ -211,8 +211,8 @@ class StatsUsage extends Action
                     }
                     break;
                 case $document->getCollection() === 'databases': // databases
-                    $collections = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS)));
-                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS)));
+                    $collections = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), METRIC_DATABASE_ID_COLLECTIONS)));
+                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), METRIC_DATABASE_ID_DOCUMENTS)));
                     if (!empty($collections['value'])) {
                         $metrics[] = [
                             'key' => METRIC_COLLECTIONS,
@@ -232,7 +232,7 @@ class StatsUsage extends Action
                     $databaseInternalId = $parts[1] ?? 0;
                     $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(
                         ['{databaseInternalId}', '{collectionInternalId}'],
-                        [$databaseInternalId, $document->getInternalId()],
+                        [$databaseInternalId, $document->getSequence()],
                         METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
                     )));
 
@@ -249,8 +249,8 @@ class StatsUsage extends Action
                     break;
 
                 case $document->getCollection() === 'buckets':
-                    $files = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES)));
-                    $storage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE)));
+                    $files = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getSequence(), METRIC_BUCKET_ID_FILES)));
+                    $storage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE)));
 
                     if (!empty($files['value'])) {
                         $metrics[] = [
@@ -268,13 +268,13 @@ class StatsUsage extends Action
                     break;
 
                 case $document->getCollection() === 'functions' || $document->getCollection() === 'sites':
-                    $deployments = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS)));
-                    $deploymentsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE)));
-                    $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS)));
-                    $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE)));
-                    $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE)));
-                    $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS)));
-                    $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE)));
+                    $deployments = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS)));
+                    $deploymentsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE)));
+                    $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS)));
+                    $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE)));
+                    $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE)));
+                    $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS)));
+                    $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getCollection(), $document->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE)));
 
                     if (!empty($deployments['value'])) {
                         $metrics[] = [
@@ -357,7 +357,7 @@ class StatsUsage extends Action
                     break;
             }
         } catch (Throwable $e) {
-            console::error("[reducer] " . " {DateTime::now()} " . " {$project->getInternalId()} " . " {$e->getMessage()}");
+            Console::error("[reducer] " . " {DateTime::now()} " . " {$project->getSequence()} " . " {$e->getMessage()}");
         }
     }
 
@@ -376,7 +376,7 @@ class StatsUsage extends Action
                 continue;
             }
 
-            console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
+            Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getSequence(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
             try {
                 foreach ($stats['keys'] ?? [] as $key => $value) {
@@ -402,23 +402,23 @@ class StatsUsage extends Action
                         ]);
 
 
-                        $this->projects[$project->getInternalId()]['project']  = new Document([
+                        $this->projects[$project->getSequence()]['project']  = new Document([
                             '$id' => $project->getId(),
-                            '$internalId' => $project->getInternalId(),
+                            '$sequence' => $project->getSequence(),
                             'database' => $project->getAttribute('database'),
                         ]);
-                        $this->projects[$project->getInternalId()]['stats'][] = $document;
+                        $this->projects[$project->getSequence()]['stats'][] = $document;
 
                         $this->prepareForLogsDB($project, $document);
                     }
                 }
             } catch (Exception $e) {
-                console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+                Console::error('[' . DateTime::now() . '] project [' . $project->getSequence() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
         }
 
-        foreach ($this->projects as $internalId => $projectStats) {
-            if (empty($internalId)) {
+        foreach ($this->projects as $sequence => $projectStats) {
+            if (empty($sequence)) {
                 continue;
             }
             try {
@@ -427,7 +427,7 @@ class StatsUsage extends Action
                 $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
                 Console::success('Batch successfully written to DB');
 
-                unset($this->projects[$internalId]);
+                unset($this->projects[$sequence]);
             } catch (Throwable $e) {
                 Console::error('Error processing stats: ' . $e->getMessage());
             }
@@ -437,7 +437,7 @@ class StatsUsage extends Action
 
     }
 
-    protected function prepareForLogsDB(Document $project, Document $stat)
+    protected function prepareForLogsDB(Document $project, Document $stat): void
     {
         if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
             return;
@@ -451,7 +451,7 @@ class StatsUsage extends Action
             }
         }
         $documentClone = clone $stat;
-        $documentClone->setAttribute('$tenant', (int) $project->getInternalId());
+        $documentClone->setAttribute('$tenant', (int) $project->getSequence());
         $this->statDocuments[] = $documentClone;
     }
 
@@ -462,8 +462,7 @@ class StatsUsage extends Action
             return;
         }
 
-        $dbForLogs = call_user_func($this->getLogsDB);
-        $dbForLogs
+        $dbForLogs = ($this->getLogsDB)()
             ->setTenant(null)
             ->setTenantPerDocument(true);
 
@@ -478,6 +477,5 @@ class StatsUsage extends Action
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }
-        $this->register->get('pools')->get('logs')->reclaim();
     }
 }

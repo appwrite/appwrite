@@ -92,8 +92,20 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
 
 $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
     $value = 1;
-    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-        $value = -1;
+
+    switch ($event) {
+        case Database::EVENT_DOCUMENT_DELETE:
+            $value = -1;
+            break;
+        case Database::EVENT_DOCUMENTS_DELETE:
+            $value = -1 * $document->getAttribute('modified', 0);
+            break;
+        case Database::EVENT_DOCUMENTS_CREATE:
+            $value = $document->getAttribute('modified', 0);
+            break;
+        case Database::EVENT_DOCUMENTS_UPSERT:
+            $value = $document->getAttribute('created', 0);
+            break;
     }
 
     switch (true) {
@@ -395,6 +407,8 @@ App::init()
          */
         $method = $route->getLabel('sdk', false);
 
+        // Take the first method if there's more than one,
+        // namespace can not differ between methods on the same route
         if (\is_array($method)) {
             $method = $method[0];
         }
@@ -584,6 +598,9 @@ App::init()
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
                 $project,
                 $document,
@@ -600,7 +617,7 @@ App::init()
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
 
-            $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $key = $request->cacheIdentifier();
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
@@ -616,7 +633,7 @@ App::init()
                     $bucketId = $parts[1] ?? null;
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getInternalId();
+                    $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
                     $isAPIKey = Auth::isAppUser(Authorization::getRoles());
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -635,12 +652,12 @@ App::init()
                     $fileId = $parts[1] ?? null;
 
                     if ($fileSecurity && !$valid && !$isToken) {
-                        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                        $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                     } else {
-                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                     }
 
-                    if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+                    if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
@@ -866,7 +883,7 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+                $key = $request->cacheIdentifier();
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
