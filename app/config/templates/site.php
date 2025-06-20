@@ -1390,7 +1390,7 @@ return [
         'providerVersion' => '0.4.*',
         'variables' => [
             [
-                'name' => 'APPWRITE_SITE_API_ENDPOINT',  // TODO: Update this
+                'name' => 'VITE_APPWRITE_ENDPOINT',
                 'description' => 'Endpoint of Appwrite server',
                 'value' => '{apiEndpoint}',
                 'placeholder' => '{apiEndpoint}',
@@ -1398,7 +1398,7 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'APPWRITE_SITE_PROJECT_ID', // TODO: Update this
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
                 'description' => 'Your Appwrite project ID',
                 'value' => '{projectId}',
                 'placeholder' => '{projectId}',
@@ -1406,7 +1406,7 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'VITE_APPWRITE_PROJECT_NAME', // TODO: Update this
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
                 'description' => 'Your Appwrite project name',
                 'value' => '{projectName}',
                 'placeholder' => '{projectName}',
