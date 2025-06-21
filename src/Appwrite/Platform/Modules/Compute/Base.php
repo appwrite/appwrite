@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -225,6 +226,73 @@ class Base extends Action
                 'region' => $project->getAttribute('region')
             ]))
         );
+
+        if (!empty($commitDetails['commitHash'])) {
+            $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
+            $ruleId = md5($domain);
+            try {
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+            } catch (Duplicate $err) {
+                // Ignore, rule already exists; will be updated by builds worker
+            }
+        }
+
+        // VCS branch preview
+        if (!empty($providerBranch)) {
+            $branchPrefix = substr($providerBranch, 0, 16);
+            if (strlen($providerBranch) > 16) {
+                $remainingChars = substr($providerBranch, 16);
+                $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+            }
+            $resourceProjectHash = substr(hash('sha256', $site->getId() . $project->getId()), 0, 7);
+            $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+            $ruleId = md5($domain);
+            try {
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+            } catch (Duplicate $err) {
+                // Ignore, rule already exists; will be updated by builds worker
+            }
+        }
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
