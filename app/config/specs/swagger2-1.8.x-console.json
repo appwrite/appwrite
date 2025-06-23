@@ -14460,7 +14460,11 @@
                             "90d"
                         ],
                         "x-enum-name": "DatabaseUsageRange",
-                        "x-enum-keys": [],
+                        "x-enum-keys": [
+                            "Twenty Four Hours",
+                            "Thirty Days",
+                            "Ninety Days"
+                        ],
                         "default": "30d",
                         "in": "query"
                     },

@@ -483,6 +483,13 @@ abstract class Format
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
+            case 'tables':
+                switch ($method) {
+                    case 'getUsage':
+                        // Range Enum Keys
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
             case 'proxy':
                 switch ($method) {
                     case 'createRedirectRule':
