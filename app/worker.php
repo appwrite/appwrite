@@ -431,7 +431,7 @@ try {
      */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
-        'connection' => $pools->get('consumer')->pop()->getResource(),
+        'connection' => new BrokerPool($pools->get('consumer')),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
     ]);
