@@ -431,7 +431,7 @@ try {
      */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
-        'connection' => new BrokerPool($pools->get('consumer')),
+        'connection' => fn () => $pools->get('consumer')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
     ]);
@@ -489,7 +489,6 @@ $worker->workerStart()
 
         Process::signal(SIGTERM, function () use ($worker, $workerName) {
             Console::info("Stopping worker $workerName.");
-
             $worker->stop();
             Timer::clearAll();
         });
