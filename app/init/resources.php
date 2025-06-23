@@ -953,9 +953,9 @@ App::setResource('httpReferrer', function (Request $request): string {
 App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $clients, Database $dbForPlatform, Document $project, App $utopia): string {
     $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
 
-    // Safe if route is public
+    // Safe if route is publicly accessible
     $route = $utopia->getRoute();
-    if (!$route->getLabel('origin', false)) {
+    if ($route->getLabel('origin', false)) {
         goto originToUrl;
     }
 
