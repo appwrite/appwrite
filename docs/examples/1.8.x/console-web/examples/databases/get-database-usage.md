@@ -6,7 +6,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.getUsage(
+const result = await databases.getDatabaseUsage(
+    '<DATABASE_ID>', // databaseId
     DatabaseUsageRange.TwentyFourHours // range (optional)
 );
 

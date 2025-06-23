@@ -36,7 +36,7 @@ class Get extends CollectionUsageGet
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: null,
-                name: self::getName(),
+                name: 'getUsage', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/get-table-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [

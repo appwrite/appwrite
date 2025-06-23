@@ -11174,7 +11174,7 @@
                                         "manyToMany",
                                         "oneToMany"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "RelationshipType",
                                     "x-enum-keys": []
                                 },
                                 "twoWay": {
@@ -11205,7 +11205,7 @@
                                         "restrict",
                                         "setNull"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "RelationMutate",
                                     "x-enum-keys": []
                                 }
                             },
@@ -11935,7 +11935,7 @@
                                         "restrict",
                                         "setNull"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "RelationMutate",
                                     "x-enum-keys": []
                                 },
                                 "newKey": {
@@ -12117,7 +12117,7 @@
                                         "fulltext",
                                         "unique"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "IndexType",
                                     "x-enum-keys": []
                                 },
                                 "columns": {

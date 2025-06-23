@@ -4843,7 +4843,7 @@
         "\/databases\/usage": {
             "get": {
                 "summary": "Get databases usage stats",
-                "operationId": "databasesListUsages",
+                "operationId": "databasesListUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
@@ -4851,7 +4851,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Get usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections\/tables, documents\/rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageDatabases",
@@ -4861,14 +4861,14 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "listUsages",
+                    "method": "listUsage",
                     "group": null,
                     "weight": 324,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "databases\/list-usages.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-usage.md",
+                    "demo": "databases\/list-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -4898,8 +4898,12 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": null,
-                        "x-enum-keys": [],
+                        "x-enum-name": "DatabaseUsageRange",
+                        "x-enum-keys": [
+                            "Twenty Four Hours",
+                            "Thirty Days",
+                            "Ninety Days"
+                        ],
                         "default": "30d",
                         "in": "query"
                     }
@@ -11979,7 +11983,7 @@
                                         "manyToMany",
                                         "oneToMany"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "RelationshipType",
                                     "x-enum-keys": []
                                 },
                                 "twoWay": {
@@ -12010,7 +12014,7 @@
                                         "restrict",
                                         "setNull"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "RelationMutate",
                                     "x-enum-keys": []
                                 }
                             },
@@ -12733,7 +12737,7 @@
                                         "restrict",
                                         "setNull"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "RelationMutate",
                                     "x-enum-keys": []
                                 },
                                 "newKey": {
@@ -12913,7 +12917,7 @@
                                         "fulltext",
                                         "unique"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "IndexType",
                                     "x-enum-keys": []
                                 },
                                 "columns": {
@@ -14392,7 +14396,7 @@
         "\/databases\/{databaseId}\/tables\/{tableId}\/usage": {
             "get": {
                 "summary": "Get table usage stats",
-                "operationId": "tablesGetTableUsage",
+                "operationId": "tablesGetUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
@@ -14410,13 +14414,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getTableUsage",
+                    "method": "getUsage",
                     "group": null,
                     "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "tables\/get-table-usage.md",
+                    "demo": "tables\/get-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -14455,7 +14459,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": null,
+                        "x-enum-name": "DatabaseUsageRange",
                         "x-enum-keys": [],
                         "default": "30d",
                         "in": "query"
@@ -14474,7 +14478,7 @@
         "\/databases\/{databaseId}\/usage": {
             "get": {
                 "summary": "Get database usage stats",
-                "operationId": "databasesGetUsage",
+                "operationId": "databasesGetDatabaseUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
@@ -14492,13 +14496,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getUsage",
+                    "method": "getDatabaseUsage",
                     "group": null,
                     "weight": 323,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "databases\/get-usage.md",
+                    "demo": "databases\/get-database-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-database-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,

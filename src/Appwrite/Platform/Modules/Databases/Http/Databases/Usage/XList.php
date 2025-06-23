@@ -20,7 +20,7 @@ class XList extends Action
 {
     public static function getName(): string
     {
-        return 'listUsages';
+        return 'listUsage';
     }
 
     public function __construct()
@@ -35,8 +35,8 @@ class XList extends Action
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: null,
-                name: 'listUsages',
-                description: '/docs/references/databases/get-usage.md',
+                name: self::getName(),
+                description: '/docs/references/databases/list-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

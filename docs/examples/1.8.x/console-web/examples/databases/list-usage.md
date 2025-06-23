@@ -6,7 +6,7 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.getUsage(
+const result = await databases.listUsage(
     DatabaseUsageRange.TwentyFourHours // range (optional)
 );
 
