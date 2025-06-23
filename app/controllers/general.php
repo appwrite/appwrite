@@ -1275,7 +1275,7 @@ App::error()
             $log->addTag('code', $error->getCode());
 
             $tags = $log->getTags();
-            if (isset($tags['projectId'])) {
+            if (!isset($tags['projectId'])) {
                 $log->addTag('projectId', $project->getId());
             }
 
