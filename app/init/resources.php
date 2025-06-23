@@ -944,3 +944,54 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
     }
     return new Document([]);
 }, ['project', 'dbForProject', 'request']);
+
+App::setResource('httpReferrer', function (Request $request): string {
+    $referrer = $request->getReferer();
+    return $referrer;
+}, ['request']);
+
+App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $clients, Database $dbForPlatform, Document $project, App $utopia): string {
+    $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
+
+    // Safe if route is public
+    $route = $utopia->getRoute();
+    if (!$route->getLabel('origin', false)) {
+        goto originToUrl;
+    }
+
+    // Safe if added as web platform
+    $validator = new Hostname($clients);
+    if ($validator->isValid($origin)) {
+        goto originToUrl;
+    }
+
+    // Safe if rule with same project ID exists
+    if (!empty($origin)) {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
+        } else {
+            $rule = Authorization::skip(
+                fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', [$origin]),
+                    Query::limit(1)
+                ])
+            )[0] ?? new Document();
+        }
+
+        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
+            goto originToUrl;
+        }
+    }
+
+    // Unsafe; Localhost is always safe for ease of local development
+    $origin = 'localhost';
+
+    originToUrl:
+
+    $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
+
+    $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
+
+    return $referrer;
+}, ['request', 'httpReferrer', 'clients', 'dbForPlatform', 'project', 'utopia']);

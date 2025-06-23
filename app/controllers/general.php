@@ -793,7 +793,6 @@ App::init()
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
-    ->inject('clients')
     ->inject('geodb')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
@@ -804,7 +803,9 @@ App::init()
     ->inject('previewHostname')
     ->inject('devKey')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey) {
+    ->inject('httpReferrer')
+    ->inject('httpReferrerSafe')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe) {
         /*
         * Appwrite Router
         */
@@ -936,42 +937,9 @@ App::init()
             $locale->setDefault($localeParam);
         }
 
-        $referrer = $request->getReferer();
-        $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
-        $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
-        $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
-
-        $refDomainOrigin = 'localhost';
-        $validator = new Hostname($clients);
-        if ($validator->isValid($origin)) {
-            $refDomainOrigin = $origin;
-        } elseif (!empty($origin)) {
-            // Auto-allow domains with linked rule
-            if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-                $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
-            } else {
-                $rule = Authorization::skip(
-                    fn () => $dbForPlatform->find('rules', [
-                        Query::equal('domain', [$origin]),
-                        Query::limit(1)
-                    ])
-                )[0] ?? new Document();
-            }
-
-            if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
-                $refDomainOrigin = $origin;
-            }
-        }
-
-        $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $refDomainOrigin . (!empty($port) ? ':' . $port : '');
-
-        $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
-            ? $refDomain
-            : (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
-
+        $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
         $selfDomain = new Domain($request->getHostname());
         $endDomain = new Domain((string)$origin);
-
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
@@ -1043,7 +1011,7 @@ App::init()
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
-            ->addHeader('Access-Control-Allow-Origin', $refDomain)
+            ->addHeader('Access-Control-Allow-Origin', $httpReferrerSafe)
             ->addHeader('Access-Control-Allow-Credentials', 'true');
 
         if (!$devKey->isEmpty()) {
@@ -1064,6 +1032,7 @@ App::init()
             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
+            && \parse_url($httpReferrerSafe, PHP_URL_HOST) === 'localhost'
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
         }
@@ -1086,7 +1055,8 @@ App::options()
     ->inject('project')
     ->inject('devKey')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey) {
+    ->inject('httpReferrerSafe')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, string $httpReferrerSafe) {
         /*
         * Appwrite Router
         */
@@ -1099,14 +1069,12 @@ App::options()
             }
         }
 
-        $origin = $request->getOrigin();
-
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
-            ->addHeader('Access-Control-Allow-Origin', $origin)
+            ->addHeader('Access-Control-Allow-Origin', $httpReferrerSafe)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
             ->noContent();
 
