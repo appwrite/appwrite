@@ -838,11 +838,9 @@ class Builds extends Action
             $detectionLogs = '';
             $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
             if ($separator !== false) {
-                $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
-                $separatorEnd = \strpos($detectionLogs, '{APPWRITE_DETECTION_SEPARATOR_END}');
-                $logs .= \substr($detectionLogs, $separatorEnd + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
-                $detectionLogs = \substr($detectionLogs, 0, $separatorEnd);
-                $logs = \substr($logs, 0, $separator);
+                [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+                [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
+                $logs = $logsBefore . $logsAfter;
             }
 
             $deployment->setAttribute('buildLogs', $logs);
@@ -876,7 +874,6 @@ class Builds extends Action
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
-
 
             $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
 
