@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Functions\Workers;
+namespace Appwrite\Platform\Modules\Functions\Workers\Builds\Actions;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
@@ -43,7 +43,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 use function Swoole\Coroutine\batch;
 
-class Builds extends Action
+class Handler extends Action
 {
     public static function getName(): string
     {
@@ -55,6 +55,7 @@ class Builds extends Action
      */
     public function __construct()
     {
+        $this->setType(self::TYPE_DEFAULT);
         $this
             ->desc('Builds worker')
             ->groups(['builds'])
@@ -117,6 +118,8 @@ class Builds extends Action
         Executor $executor,
         array $plan
     ): void {
+        $startTime = \microtime(true);
+
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
