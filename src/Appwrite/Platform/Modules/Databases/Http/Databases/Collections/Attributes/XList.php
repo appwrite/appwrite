@@ -50,7 +50,10 @@ class XList extends Action
                         code: SwooleResponse::STATUS_CODE_OK,
                         model: $this->getResponseModel()
                     )
-                ]
+                ],
+                deprecated: [
+                    'replaceWith' => 'listColumns',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

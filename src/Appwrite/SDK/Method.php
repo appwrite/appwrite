@@ -23,7 +23,7 @@ class Method
      * @param array<SDKResponse> $responses
      * @param ContentType $contentType
      * @param MethodType|null $type
-     * @param bool $deprecated
+     * @param ?array $deprecated
      * @param array|bool $hide
      * @param bool $packaging
      * @param ContentType $requestType
@@ -39,7 +39,7 @@ class Method
         protected array $responses,
         protected ContentType $contentType = ContentType::JSON,
         protected ?MethodType $type = null,
-        protected bool $deprecated = false,
+        protected ?array $deprecated = null,
         protected array|bool $hide = false,
         protected bool $packaging = false,
         protected ContentType $requestType = ContentType::JSON,
@@ -177,7 +177,34 @@ class Method
 
     public function isDeprecated(): bool
     {
-        return $this->deprecated;
+        return $this->deprecated !== null;
+    }
+
+    /**
+     * Get the deprecation info array
+     * @return array
+     */
+    public function getDeprecationInfo(): array
+    {
+        return $this->deprecated ?? [];
+    }
+
+    /**
+     * Get the deprecation message if set
+     * @return string|null
+     */
+    public function getDeprecationMessage(): ?string
+    {
+        return $this->deprecated['message'] ?? '';
+    }
+
+    /**
+     * Get the replacement method if set
+     * @return string|null
+     */
+    public function getDeprecationReplacement(): ?string
+    {
+        return $this->deprecated['replaceWith'] ?? '';
     }
 
     public function isHidden(): bool|array
@@ -258,7 +285,12 @@ class Method
         return $this;
     }
 
-    public function setDeprecated(bool $deprecated): self
+    /**
+     * Set the deprecation info array
+     * @param array $deprecated
+     * @return self
+     */
+    public function setDeprecated(array $deprecated): self
     {
         $this->deprecated = $deprecated;
         return $this;

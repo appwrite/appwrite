@@ -54,7 +54,10 @@ class Update extends Action
                         model: $this->getResponseModel(),
                     )
                 ],
-                contentType: ContentType::JSON
+                contentType: ContentType::JSON,
+                deprecated: [
+                    'replaceWith' => 'updateEnumColumn',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

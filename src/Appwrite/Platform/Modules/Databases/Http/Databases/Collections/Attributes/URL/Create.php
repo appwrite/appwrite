@@ -52,7 +52,10 @@ class Create extends Action
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
                         model: $this->getResponseModel(),
                     )
-                ]
+                ],
+                deprecated: [
+                    'replaceWith' => 'createUrlColumn',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

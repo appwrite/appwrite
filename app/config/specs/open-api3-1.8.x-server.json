@@ -4847,7 +4847,7 @@
                     "weight": 346,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/list-attributes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-attributes.md",
                     "rate-limit": 0,
@@ -4858,6 +4858,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "listColumns",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4932,7 +4933,7 @@
                     "weight": 347,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-boolean-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-boolean-attribute.md",
                     "rate-limit": 0,
@@ -4943,6 +4944,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createBooleanColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5039,7 +5041,7 @@
                     "weight": 348,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-boolean-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-boolean-attribute.md",
                     "rate-limit": 0,
@@ -5050,6 +5052,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateBooleanColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5151,7 +5154,7 @@
                     "weight": 349,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-datetime-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-datetime-attribute.md",
                     "rate-limit": 0,
@@ -5162,6 +5165,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createDatetimeColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5258,7 +5262,7 @@
                     "weight": 350,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-datetime-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-datetime-attribute.md",
                     "rate-limit": 0,
@@ -5269,6 +5273,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateDatetimeColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5370,7 +5375,7 @@
                     "weight": 351,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-email-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-email-attribute.md",
                     "rate-limit": 0,
@@ -5381,6 +5386,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createEmailColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5477,7 +5483,7 @@
                     "weight": 352,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-email-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-email-attribute.md",
                     "rate-limit": 0,
@@ -5488,6 +5494,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateEmailColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5589,7 +5596,7 @@
                     "weight": 353,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-enum-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-enum-attribute.md",
                     "rate-limit": 0,
@@ -5600,6 +5607,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createEnumColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5705,7 +5713,7 @@
                     "weight": 354,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-enum-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-enum-attribute.md",
                     "rate-limit": 0,
@@ -5716,6 +5724,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateEnumColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5826,7 +5835,7 @@
                     "weight": 355,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-float-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-float-attribute.md",
                     "rate-limit": 0,
@@ -5837,6 +5846,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createFloatColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5943,7 +5953,7 @@
                     "weight": 356,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-float-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-float-attribute.md",
                     "rate-limit": 0,
@@ -5954,6 +5964,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateFloatColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6065,7 +6076,7 @@
                     "weight": 357,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-integer-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-integer-attribute.md",
                     "rate-limit": 0,
@@ -6076,6 +6087,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createIntegerColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6182,7 +6194,7 @@
                     "weight": 358,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-integer-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-integer-attribute.md",
                     "rate-limit": 0,
@@ -6193,6 +6205,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateIntegerColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6304,7 +6317,7 @@
                     "weight": 359,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-ip-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-ip-attribute.md",
                     "rate-limit": 0,
@@ -6315,6 +6328,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createIpColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6411,7 +6425,7 @@
                     "weight": 360,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-ip-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-ip-attribute.md",
                     "rate-limit": 0,
@@ -6422,6 +6436,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateIpColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6523,7 +6538,7 @@
                     "weight": 361,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-relationship-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-relationship-attribute.md",
                     "rate-limit": 0,
@@ -6534,6 +6549,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createRelationshipColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6655,7 +6671,7 @@
                     "weight": 363,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-string-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-string-attribute.md",
                     "rate-limit": 0,
@@ -6666,6 +6682,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createStringColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6773,7 +6790,7 @@
                     "weight": 364,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-string-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-string-attribute.md",
                     "rate-limit": 0,
@@ -6784,6 +6801,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateStringColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6890,7 +6908,7 @@
                     "weight": 365,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-url-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-url-attribute.md",
                     "rate-limit": 0,
@@ -6901,6 +6919,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "createUrlColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6997,7 +7016,7 @@
                     "weight": 366,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-url-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-url-attribute.md",
                     "rate-limit": 0,
@@ -7008,6 +7027,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateUrlColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7140,7 +7160,7 @@
                     "weight": 344,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/get-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-attribute.md",
                     "rate-limit": 0,
@@ -7151,6 +7171,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "getColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7212,7 +7233,7 @@
                     "weight": 345,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/delete-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-attribute.md",
                     "rate-limit": 0,
@@ -7223,6 +7244,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "deleteColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7293,7 +7315,7 @@
                     "weight": 362,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-relationship-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-relationship-attribute.md",
                     "rate-limit": 0,
@@ -7304,6 +7326,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "updateRelationshipColumn",
                     "auth": {
                         "Project": [],
                         "Key": []

@@ -172,6 +172,14 @@ class Swagger2 extends Format
                 ],
             ];
 
+            if (!empty($sdk->getDeprecationReplacement())) {
+                $temp['x-appwrite']['replaceWith'] = $sdk->getDeprecationReplacement();
+            }
+
+            if (!empty($sdk->getDeprecationMessage())) {
+                $temp['x-appwrite']['deprecatedMessage'] = $sdk->getDeprecationMessage();
+            }
+
             if ($produces) {
                 $temp['produces'][] = $produces;
             }
