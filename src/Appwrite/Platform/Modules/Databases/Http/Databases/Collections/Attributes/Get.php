@@ -58,7 +58,7 @@ class Get extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'getColumn',
+                    'replaceWith' => 'tables.getColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

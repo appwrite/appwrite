@@ -4858,7 +4858,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "listColumns",
+                    "replaceWith": "tables.listColumns",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4944,7 +4944,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createBooleanColumn",
+                    "replaceWith": "tables.createBooleanColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5052,7 +5052,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateBooleanColumn",
+                    "replaceWith": "tables.updateBooleanColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5165,7 +5165,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createDatetimeColumn",
+                    "replaceWith": "tables.createDatetimeColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5273,7 +5273,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateDatetimeColumn",
+                    "replaceWith": "tables.updateDatetimeColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5386,7 +5386,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createEmailColumn",
+                    "replaceWith": "tables.createEmailColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5494,7 +5494,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateEmailColumn",
+                    "replaceWith": "tables.updateEmailColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5607,7 +5607,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createEnumColumn",
+                    "replaceWith": "tables.createEnumColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5724,7 +5724,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateEnumColumn",
+                    "replaceWith": "tables.updateEnumColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5846,7 +5846,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createFloatColumn",
+                    "replaceWith": "tables.createFloatColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5964,7 +5964,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateFloatColumn",
+                    "replaceWith": "tables.updateFloatColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6087,7 +6087,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createIntegerColumn",
+                    "replaceWith": "tables.createIntegerColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6205,7 +6205,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateIntegerColumn",
+                    "replaceWith": "tables.updateIntegerColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6328,7 +6328,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createIpColumn",
+                    "replaceWith": "tables.createIpColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6436,7 +6436,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateIpColumn",
+                    "replaceWith": "tables.updateIpColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6549,7 +6549,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createRelationshipColumn",
+                    "replaceWith": "tables.createRelationshipColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6682,7 +6682,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createStringColumn",
+                    "replaceWith": "tables.createStringColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6801,7 +6801,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateStringColumn",
+                    "replaceWith": "tables.updateStringColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6919,7 +6919,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "createUrlColumn",
+                    "replaceWith": "tables.createUrlColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7027,7 +7027,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateUrlColumn",
+                    "replaceWith": "tables.updateUrlColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7171,7 +7171,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "getColumn",
+                    "replaceWith": "tables.getColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7244,7 +7244,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "deleteColumn",
+                    "replaceWith": "tables.deleteColumn",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7326,7 +7326,7 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "updateRelationshipColumn",
+                    "replaceWith": "tables.updateRelationshipColumn",
                     "auth": {
                         "Project": [],
                         "Key": []

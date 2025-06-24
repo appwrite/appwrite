@@ -56,7 +56,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'createEnumColumn',
+                    'replaceWith' => 'tables.createEnumColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

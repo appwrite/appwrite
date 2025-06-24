@@ -54,7 +54,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'createUrlColumn',
+                    'replaceWith' => 'tables.createUrlColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

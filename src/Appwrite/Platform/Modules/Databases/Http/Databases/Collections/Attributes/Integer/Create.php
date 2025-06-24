@@ -56,7 +56,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'createIntegerColumn',
+                    'replaceWith' => 'tables.createIntegerColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

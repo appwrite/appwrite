@@ -56,7 +56,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'createFloatColumn',
+                    'replaceWith' => 'tables.createFloatColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

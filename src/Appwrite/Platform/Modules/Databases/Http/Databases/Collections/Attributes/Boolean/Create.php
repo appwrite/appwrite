@@ -53,7 +53,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'createBooleanColumn',
+                    'replaceWith' => 'tables.createBooleanColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

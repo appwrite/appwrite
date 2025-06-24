@@ -54,7 +54,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'createEmailColumn',
+                    'replaceWith' => 'tables.createEmailColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

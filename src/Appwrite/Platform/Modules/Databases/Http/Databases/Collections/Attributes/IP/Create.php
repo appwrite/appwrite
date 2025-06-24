@@ -54,7 +54,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'createIpColumn',
+                    'replaceWith' => 'tables.createIpColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

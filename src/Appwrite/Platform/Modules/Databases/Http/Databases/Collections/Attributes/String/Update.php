@@ -57,7 +57,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'replaceWith' => 'updateStringColumn',
+                    'replaceWith' => 'tables.updateStringColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
