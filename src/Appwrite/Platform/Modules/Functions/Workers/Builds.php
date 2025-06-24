@@ -882,10 +882,7 @@ class Builds extends Action
                 ->trigger();
 
             $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
-
-            \var_dump("After edge finish:");
-            \var_dump($deployment);
-            \var_dump('---');
+            $logs = $deployment->getAttribute('buildLogs', '');
 
             if ($resource->getCollection() === 'sites') {
                 $date = \date('H:i:s');
