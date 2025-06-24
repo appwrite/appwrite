@@ -61,6 +61,9 @@ class Upsert extends Action
                         )
                     ],
                     contentType: ContentType::JSON,
+                    deprecated: [
+                        'replaceWith' => 'tables.upsertRows',
+                    ],
                 )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')

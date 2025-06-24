@@ -8074,7 +8074,7 @@
                     "weight": 340,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/list-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
@@ -8087,6 +8087,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.listRows",
                     "auth": {
                         "Project": []
                     }
@@ -8156,7 +8157,7 @@
                     "weight": 332,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
@@ -8169,6 +8170,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.createRow",
                     "methods": [
                         {
                             "name": "createDocument",
@@ -8319,7 +8321,7 @@
                     "weight": 337,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/upsert-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-documents.md",
                     "rate-limit": 120,
@@ -8331,6 +8333,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.upsertRows",
                     "methods": [
                         {
                             "name": "upsertDocuments",
@@ -8426,7 +8429,7 @@
                     "weight": 335,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-documents.md",
                     "rate-limit": 120,
@@ -8438,6 +8441,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.updateRows",
                     "auth": {
                         "Project": []
                     }
@@ -8518,7 +8522,7 @@
                     "weight": 339,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/delete-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-documents.md",
                     "rate-limit": 60,
@@ -8530,6 +8534,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.deleteRows",
                     "auth": {
                         "Project": []
                     }
@@ -8604,7 +8609,7 @@
                     "weight": 333,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/get-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
@@ -8617,6 +8622,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.getRow",
                     "auth": {
                         "Project": []
                     }
@@ -8694,7 +8700,7 @@
                     "weight": 336,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/upsert-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
@@ -8707,6 +8713,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.upsertRow",
                     "methods": [
                         {
                             "name": "upsertDocument",
@@ -8818,7 +8825,7 @@
                     "weight": 334,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
@@ -8831,6 +8838,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.updateRow",
                     "auth": {
                         "Project": []
                     }
@@ -8915,7 +8923,7 @@
                     "weight": 338,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/delete-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,
@@ -8928,6 +8936,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.deleteRow",
                     "auth": {
                         "Project": []
                     }
@@ -9081,7 +9090,7 @@
                     "weight": 343,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/decrement-document-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
                     "rate-limit": 120,
@@ -9093,6 +9102,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.decrementColumn",
                     "auth": {
                         "Project": []
                     }
@@ -9187,7 +9197,7 @@
                     "weight": 342,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/increment-document-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
                     "rate-limit": 120,
@@ -9199,6 +9209,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.incrementColumn",
                     "auth": {
                         "Project": []
                     }
