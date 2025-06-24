@@ -1192,6 +1192,21 @@ class Deletes extends Action
     private function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates): void
     {
         $domain = $document->getAttribute('domain');
+
+        // Race condition prevention
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = $dbForPlatform->getDocument('rules', md5($domain));
+        } else {
+            $rule = $dbForPlatform->findOne('rules', [
+                Query::equal('domain', [$domain]),
+                Query::limit(1)
+            ]);
+        }
+        if ($rule->isEmpty()) {
+            Console::warning("Race condition in certificate deletion prevented for domain {$domain}");
+            return;
+        }
+
         $certificates->deleteCertificate($domain);
 
         // Delete certificate document, so Appwrite is aware of change
