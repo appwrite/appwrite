@@ -845,11 +845,6 @@ class Builds extends Action
                 $logs = \substr($logs, 0, $separator);
             }
 
-            if ($resource->getCollection() === 'sites') {
-                $date = \date('H:i:s');
-                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
-            }
-
             $deployment->setAttribute('buildLogs', $logs);
 
             if ($resource->getCollection() === 'sites' && !empty($detectionLogs)) {
@@ -877,15 +872,23 @@ class Builds extends Action
                 }
             }
 
-            $deployment->setAttribute('buildLogs', $logs);
-
-            $this->afterBuildSuccess($dbForProject, $deployment);
-
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
+
+
+            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
+
+            if ($resource->getCollection() === 'sites') {
+                $date = \date('H:i:s');
+                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+                $deployment->setAttribute('buildLogs', $logs);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+            }
 
             /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
@@ -1319,12 +1322,14 @@ class Builds extends Action
     /**
      * Hook to run after build success
      *
+     * @param Realtime $queueForRealtime
      * @param Database $dbForProject
      * @param Document $deployment
      * @return void
      */
-    protected function afterBuildSuccess(Database $dbForProject, Document &$deployment): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment): void
     {
+        assert($queueForRealtime instanceof Realtime);
         assert($dbForProject instanceof Database);
         assert($deployment instanceof Document);
     }
