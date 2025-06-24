@@ -4416,7 +4416,7 @@
                     "weight": 329,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/list-collections.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-collections.md",
                     "rate-limit": 0,
@@ -4427,6 +4427,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.listTables",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4500,7 +4501,7 @@
                     "weight": 325,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-collection.md",
                     "rate-limit": 0,
@@ -4511,6 +4512,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.createTable",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4605,7 +4607,7 @@
                     "weight": 326,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/get-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-collection.md",
                     "rate-limit": 0,
@@ -4616,6 +4618,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.getTable",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4675,7 +4678,7 @@
                     "weight": 327,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-collection.md",
                     "rate-limit": 0,
@@ -4686,6 +4689,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.updateTable",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4775,7 +4779,7 @@
                     "weight": 328,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/delete-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-collection.md",
                     "rate-limit": 0,
@@ -4786,6 +4790,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.deleteTable",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8626,7 +8631,7 @@
                     "weight": 370,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/list-indexes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-indexes.md",
                     "rate-limit": 0,
@@ -8637,6 +8642,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.listColumnIndexes",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8709,7 +8715,7 @@
                     "weight": 367,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
                     "rate-limit": 0,
@@ -8720,6 +8726,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.createColumnIndex",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8838,7 +8845,7 @@
                     "weight": 368,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/get-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-index.md",
                     "rate-limit": 0,
@@ -8849,6 +8856,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.getColumnIndex",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8910,7 +8918,7 @@
                     "weight": 369,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/delete-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-index.md",
                     "rate-limit": 0,
@@ -8921,6 +8929,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.deleteColumnIndex",
                     "auth": {
                         "Project": [],
                         "Key": []
