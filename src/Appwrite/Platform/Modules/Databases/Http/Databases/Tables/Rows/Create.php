@@ -41,7 +41,7 @@ class Create extends DocumentCreate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows')
             ->desc('Create row')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'row.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')

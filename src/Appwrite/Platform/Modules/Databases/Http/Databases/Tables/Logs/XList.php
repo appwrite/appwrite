@@ -27,7 +27,7 @@ class XList extends CollectionLogXList
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/logs')
             ->desc('List table logs')
             ->groups(['api', 'database'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'tables.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',

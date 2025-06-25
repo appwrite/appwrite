@@ -35,7 +35,7 @@ class Create extends CollectionCreate
             ->desc('Create table')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].tables.[tableId].create')
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'table.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{response.$id}')

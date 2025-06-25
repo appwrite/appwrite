@@ -27,7 +27,7 @@ class XList extends DocumentLogXList
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId/logs')
             ->desc('List row logs')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'rows.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),

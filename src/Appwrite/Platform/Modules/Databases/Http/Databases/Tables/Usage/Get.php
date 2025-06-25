@@ -31,7 +31,7 @@ class Get extends CollectionUsageGet
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/usage')
             ->desc('Get table usage stats')
             ->groups(['api', 'database', 'usage'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'tables.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
