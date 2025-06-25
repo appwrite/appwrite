@@ -80,7 +80,7 @@ class StatsResources extends Action
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
         $endTime = microtime(true);
         $executionTime = $endTime - $startTime;
-        Console::info('Project: ' . $project->getId() . '(' . $project->getInternalId() . ') aggregated in ' . $executionTime .' seconds');
+        Console::info('Project: ' . $project->getId() . '(' . $project->getSequence() . ') aggregated in ' . $executionTime .' seconds');
     }
 
     protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
@@ -105,17 +105,17 @@ class StatsResources extends Action
             $region = $project->getAttribute('region');
 
             $platforms = $dbForPlatform->count('platforms', [
-                Query::equal('projectInternalId', [$project->getInternalId()])
+                Query::equal('projectInternalId', [$project->getSequence()])
             ]);
             $webhooks = $dbForPlatform->count('webhooks', [
-                Query::equal('projectInternalId', [$project->getInternalId()])
+                Query::equal('projectInternalId', [$project->getSequence()])
             ]);
             $keys = $dbForPlatform->count('keys', [
-                Query::equal('projectInternalId', [$project->getInternalId()])
+                Query::equal('projectInternalId', [$project->getSequence()])
             ]);
 
             $domains = $dbForPlatform->count('rules', [
-                Query::equal('projectInternalId', [$project->getInternalId()]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
                 Query::equal('owner', ['']),
             ]);
 
@@ -198,7 +198,7 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForFunctions($dbForProject, $dbForLogs, $region);
+                $this->countForSitesAndFunctions($dbForProject, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
@@ -216,13 +216,13 @@ class StatsResources extends Action
         $totalFiles = 0;
         $totalStorage = 0;
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
-            $files = $dbForProject->count('bucket_' . $bucket->getInternalId());
+            $files = $dbForProject->count('bucket_' . $bucket->getSequence());
 
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES);
+            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
             $this->createStatsDocuments($region, $metric, $files);
 
-            $storage = $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeActual');
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
+            $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
+            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $this->createStatsDocuments($region, $metric, $storage);
 
             $totalStorage += $storage;
@@ -241,10 +241,10 @@ class StatsResources extends Action
         $totalImageTransformations = 0;
         $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $last30Days, $region, &$totalImageTransformations) {
-            $imageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
+            $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
                 Query::greaterThanEqual('transformedAt', $last30Days),
             ]);
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
+            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
             $this->createStatsDocuments($region, $metric, $imageTransformations);
             $totalImageTransformations += $imageTransformations;
         });
@@ -260,9 +260,9 @@ class StatsResources extends Action
         $totalDatabaseStorage = 0;
 
         $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage) {
-            $collections = $dbForProject->count('database_' . $database->getInternalId());
+            $collections = $dbForProject->count('database_' . $database->getSequence());
 
-            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS);
+            $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_COLLECTIONS);
             $this->createStatsDocuments($region, $metric, $collections);
 
             [$documents, $storage] = $this->countForCollections($dbForProject, $database, $region);
@@ -280,71 +280,136 @@ class StatsResources extends Action
     {
         $databaseDocuments = 0;
         $databaseStorage = 0;
-        $this->foreachDocument($dbForProject, 'database_' . $database->getInternalId(), [], function ($collection) use ($dbForProject, $database, $region, &$databaseStorage, &$databaseDocuments) {
-            $documents = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
+        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $database, $region, &$databaseStorage, &$databaseDocuments) {
+            $documents = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
             $this->createStatsDocuments($region, $metric, $documents);
             $databaseDocuments += $documents;
 
-            $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
+            $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
             $this->createStatsDocuments($region, $metric, $collectionStorage);
             $databaseStorage += $collectionStorage;
 
         });
 
-        $metric = str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_DOCUMENTS);
+        $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], METRIC_DATABASE_ID_DOCUMENTS);
         $this->createStatsDocuments($region, $metric, $databaseDocuments);
 
-        $metric = str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE);
+        $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], METRIC_DATABASE_ID_STORAGE);
         $this->createStatsDocuments($region, $metric, $databaseStorage);
 
         return [$databaseDocuments, $databaseStorage];
     }
 
-    protected function countForFunctions(Database $dbForProject, Database $dbForLogs, string $region)
+    protected function countForSitesAndFunctions(Database $dbForProject, string $region): void
     {
-        $deploymentsStorage = $dbForProject->sum('deployments', 'size');
-        $buildsStorage = $dbForProject->sum('builds', 'size');
+        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize');
+        $buildsStorage = $dbForProject->sum('deployments', 'buildSize');
         $this->createStatsDocuments($region, METRIC_DEPLOYMENTS_STORAGE, $deploymentsStorage);
         $this->createStatsDocuments($region, METRIC_BUILDS_STORAGE, $buildsStorage);
 
         $deployments = $dbForProject->count('deployments');
-        $builds = $dbForProject->count('builds');
         $this->createStatsDocuments($region, METRIC_DEPLOYMENTS, $deployments);
-        $this->createStatsDocuments($region, METRIC_BUILDS, $builds);
+        $this->createStatsDocuments($region, METRIC_BUILDS, $deployments);
 
+        $this->countForFunctions($dbForProject, $region);
+        $this->countForSites($dbForProject, $region);
+    }
 
-        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $dbForLogs, $region) {
-            $functionDeploymentsStorage = $dbForProject->sum('deployments', 'size', [
-                Query::equal('resourceInternalId', [$function->getInternalId()]),
+    protected function countForFunctions(Database $dbForProject, string $region)
+    {
+
+        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+            Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
+        ]);
+        $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [
+            Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
+        ]);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $deploymentsStorage);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $buildsStorage);
+
+        $deployments = $dbForProject->count('deployments', [
+            Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
+        ]);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
+
+        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region) {
+            $functionDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+                Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
             ]);
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $functionDeploymentsStorage);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $functionDeploymentsStorage);
 
             $functionDeployments = $dbForProject->count('deployments', [
-                Query::equal('resourceInternalId', [$function->getInternalId()]),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
             ]);
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $functionDeployments);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $functionDeployments);
 
             /**
              * As deployments and builds have 1-1 relationship,
              * the count for one should match the other
              */
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), $functionDeployments);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), $functionDeployments);
 
             $functionBuildsStorage = 0;
 
             $this->foreachDocument($dbForProject, 'deployments', [
-                Query::equal('resourceInternalId', [$function->getInternalId()]),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
-            ], function (Document $deployment) use ($dbForProject, &$functionBuildsStorage): void {
-                $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
-                $functionBuildsStorage += $build->getAttribute('size', 0);
+            ], function (Document $deployment) use (&$functionBuildsStorage): void {
+                $functionBuildsStorage += $deployment->getAttribute('buildSize', 0);
             });
 
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
+        });
+    }
+
+    protected function countForSites(Database $dbForProject, string $region)
+    {
+
+        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+            Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+        ]);
+        $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [
+            Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+        ]);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $deploymentsStorage);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $buildsStorage);
+
+        $deployments = $dbForProject->count('deployments', [
+            Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+        ]);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
+
+        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region) {
+            $siteDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+                Query::equal('resourceInternalId', [$site->getSequence()]),
+                Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
+            ]);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $siteDeploymentsStorage);
+
+            $siteDeployments = $dbForProject->count('deployments', [
+                Query::equal('resourceInternalId', [$site->getSequence()]),
+                Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
+            ]);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $siteDeployments);
+
+            /**
+             * As deployments and builds have 1-1 relationship,
+             * the count for one should match the other
+             */
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), $siteDeployments);
+
+            $siteBuildsStorage = $dbForProject->sum('deployments', 'buildSize', [
+                Query::equal('resourceInternalId', [$site->getSequence()]),
+                Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
+            ]);
+
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $siteBuildsStorage);
         });
     }
 
@@ -372,6 +437,6 @@ class StatsResources extends Action
             $this->documents
         );
         $this->documents = [];
-        Console::success('Stats  written to logs db for project: ' . $project->getId() . '(' . $project->getInternalId() . ')');
+        Console::success('Stats  written to logs db for project: ' . $project->getId() . '(' . $project->getSequence() . ')');
     }
 }

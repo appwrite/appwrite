@@ -9,6 +9,8 @@ use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -21,6 +23,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
+use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
@@ -33,6 +36,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -136,7 +140,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => 'email',
                     'identifier' => $email,
                 ]));
@@ -160,7 +164,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => 'sms',
                     'identifier' => $phone,
                 ]));
@@ -191,6 +195,7 @@ App::post('/v1/users')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'create',
         description: '/docs/references/users/create-user.md',
         auth: [AuthType::KEY],
@@ -225,6 +230,7 @@ App::post('/v1/users/bcrypt')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createBcryptUser',
         description: '/docs/references/users/create-bcrypt-user.md',
         auth: [AuthType::KEY],
@@ -259,6 +265,7 @@ App::post('/v1/users/md5')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createMD5User',
         description: '/docs/references/users/create-md5-user.md',
         auth: [AuthType::KEY],
@@ -293,6 +300,7 @@ App::post('/v1/users/argon2')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createArgon2User',
         description: '/docs/references/users/create-argon2-user.md',
         auth: [AuthType::KEY],
@@ -327,6 +335,7 @@ App::post('/v1/users/sha')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createSHAUser',
         description: '/docs/references/users/create-sha-user.md',
         auth: [AuthType::KEY],
@@ -368,6 +377,7 @@ App::post('/v1/users/phpass')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createPHPassUser',
         description: '/docs/references/users/create-phpass-user.md',
         auth: [AuthType::KEY],
@@ -402,6 +412,7 @@ App::post('/v1/users/scrypt')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createScryptUser',
         description: '/docs/references/users/create-scrypt-user.md',
         auth: [AuthType::KEY],
@@ -449,6 +460,7 @@ App::post('/v1/users/scrypt-modified')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createScryptModifiedUser',
         description: '/docs/references/users/create-scrypt-modified-user.md',
         auth: [AuthType::KEY],
@@ -487,6 +499,7 @@ App::post('/v1/users/:userId/targets')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'createTarget',
         description: '/docs/references/users/create-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -551,10 +564,10 @@ App::post('/v1/users/:userId/targets')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'providerId' => empty($provider->getId()) ? null : $provider->getId(),
-                'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
+                'providerInternalId' => $provider->isEmpty() ? null : $provider->getSequence(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'identifier' => $identifier,
                 'name' => ($name !== '') ? $name : null,
             ]));
@@ -578,6 +591,7 @@ App::get('/v1/users')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'list',
         description: '/docs/references/users/list-users.md',
         auth: [AuthType::KEY],
@@ -630,10 +644,15 @@ App::get('/v1/users')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $users = $dbForProject->find('users', $queries);
+            $total = $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'users' => $dbForProject->find('users', $queries),
-            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
+            'users' => $users,
+            'total' => $total,
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -643,6 +662,7 @@ App::get('/v1/users/:userId')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'get',
         description: '/docs/references/users/get-user.md',
         auth: [AuthType::KEY],
@@ -673,6 +693,7 @@ App::get('/v1/users/:userId/prefs')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'getPrefs',
         description: '/docs/references/users/get-user-prefs.md',
         auth: [AuthType::KEY],
@@ -705,6 +726,7 @@ App::get('/v1/users/:userId/targets/:targetId')
     ->label('scope', 'targets.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'getTarget',
         description: '/docs/references/users/get-user-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -742,6 +764,7 @@ App::get('/v1/users/:userId/sessions')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'sessions',
         name: 'listSessions',
         description: '/docs/references/users/list-user-sessions.md',
         auth: [AuthType::KEY],
@@ -788,6 +811,7 @@ App::get('/v1/users/:userId/memberships')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/users/list-user-memberships.md',
         auth: [AuthType::KEY],
@@ -799,15 +823,30 @@ App::get('/v1/users/:userId/memberships')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
+    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, array $queries, string $search, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        if (!empty($search)) {
+            $queries[] = Query::search('search', $search);
+        }
+
+        // Set internal queries
+        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 
         $memberships = array_map(function ($membership) use ($dbForProject, $user) {
             $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
@@ -818,7 +857,7 @@ App::get('/v1/users/:userId/memberships')
                 ->setAttribute('userEmail', $user->getAttribute('email'));
 
             return $membership;
-        }, $user->getAttribute('memberships', []));
+        }, $dbForProject->find('memberships', $queries));
 
         $response->dynamic(new Document([
             'memberships' => $memberships,
@@ -832,6 +871,7 @@ App::get('/v1/users/:userId/logs')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'logs',
         name: 'listLogs',
         description: '/docs/references/users/list-user-logs.md',
         auth: [AuthType::KEY],
@@ -870,7 +910,7 @@ App::get('/v1/users/:userId/logs')
 
         $audit = new Audit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
+        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
 
         $output = [];
 
@@ -917,7 +957,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
+            'total' => $audit->countLogsByUser($user->getSequence(), $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -928,6 +968,7 @@ App::get('/v1/users/:userId/targets')
     ->label('scope', 'targets.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'listTargets',
         description: '/docs/references/users/list-user-targets.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -939,7 +980,7 @@ App::get('/v1/users/:userId/targets')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, array $queries, Response $response, Database $dbForProject) {
@@ -980,10 +1021,15 @@ App::get('/v1/users/:userId/targets')
 
             $cursor->setValue($cursorDocument);
         }
-
+        try {
+            $targets = $dbForProject->find('targets', $queries);
+            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'targets' => $dbForProject->find('targets', $queries),
-            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
+            'targets' => $targets,
+            'total' => $total,
         ]), Response::MODEL_TARGET_LIST);
     });
 
@@ -993,6 +1039,7 @@ App::get('/v1/users/identities')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'identities',
         name: 'listIdentities',
         description: '/docs/references/users/list-identities.md',
         auth: [AuthType::KEY],
@@ -1045,10 +1092,15 @@ App::get('/v1/users/identities')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $identities = $dbForProject->find('identities', $queries);
+            $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'identities' => $dbForProject->find('identities', $queries),
-            'total' => $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT),
+            'identities' => $identities,
+            'total' => $total,
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
@@ -1062,6 +1114,7 @@ App::patch('/v1/users/:userId/status')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateStatus',
         description: '/docs/references/users/update-user-status.md',
         auth: [AuthType::KEY],
@@ -1102,6 +1155,7 @@ App::put('/v1/users/:userId/labels')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateLabels',
         description: '/docs/references/users/update-user-labels.md',
         auth: [AuthType::KEY],
@@ -1144,6 +1198,7 @@ App::patch('/v1/users/:userId/verification/phone')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePhoneVerification',
         description: '/docs/references/users/update-user-phone-verification.md',
         auth: [AuthType::KEY],
@@ -1185,6 +1240,7 @@ App::patch('/v1/users/:userId/name')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateName',
         description: '/docs/references/users/update-user-name.md',
         auth: [AuthType::KEY],
@@ -1227,6 +1283,7 @@ App::patch('/v1/users/:userId/password')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePassword',
         description: '/docs/references/users/update-user-password.md',
         auth: [AuthType::KEY],
@@ -1309,6 +1366,7 @@ App::patch('/v1/users/:userId/email')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateEmail',
         description: '/docs/references/users/update-user-email.md',
         auth: [AuthType::KEY],
@@ -1338,7 +1396,7 @@ App::patch('/v1/users/:userId/email')
             // Makes sure this email is not already used in another identity
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userInternalId', $user->getInternalId()),
+                Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
@@ -1382,7 +1440,7 @@ App::patch('/v1/users/:userId/email')
                             Permission::delete(Role::user($user->getId())),
                         ],
                         'userId' => $user->getId(),
-                        'userInternalId' => $user->getInternalId(),
+                        'userInternalId' => $user->getSequence(),
                         'providerType' => 'email',
                         'identifier' => $email,
                     ]));
@@ -1408,6 +1466,7 @@ App::patch('/v1/users/:userId/phone')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePhone',
         description: '/docs/references/users/update-user-phone.md',
         auth: [AuthType::KEY],
@@ -1470,7 +1529,7 @@ App::patch('/v1/users/:userId/phone')
                             Permission::delete(Role::user($user->getId())),
                         ],
                         'userId' => $user->getId(),
-                        'userInternalId' => $user->getInternalId(),
+                        'userInternalId' => $user->getSequence(),
                         'providerType' => 'sms',
                         'identifier' => $number,
                     ]));
@@ -1497,6 +1556,7 @@ App::patch('/v1/users/:userId/verification')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateEmailVerification',
         description: '/docs/references/users/update-user-email-verification.md',
         auth: [AuthType::KEY],
@@ -1534,6 +1594,7 @@ App::patch('/v1/users/:userId/prefs')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePrefs',
         description: '/docs/references/users/update-user-prefs.md',
         auth: [AuthType::KEY],
@@ -1574,6 +1635,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'updateTarget',
         description: '/docs/references/users/update-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -1649,7 +1711,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
 
             $target
                 ->setAttribute('providerId', $provider->getId())
-                ->setAttribute('providerInternalId', $provider->getInternalId());
+                ->setAttribute('providerInternalId', $provider->getSequence());
         }
 
         if ($name) {
@@ -1678,6 +1740,7 @@ App::patch('/v1/users/:userId/mfa')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateMfa',
         description: '/docs/references/users/update-user-mfa.md',
         auth: [AuthType::KEY],
@@ -1717,6 +1780,7 @@ App::get('/v1/users/:userId/mfa/factors')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'listMfaFactors',
         description: '/docs/references/users/list-mfa-factors.md',
         auth: [AuthType::KEY],
@@ -1755,6 +1819,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'getMfaRecoveryCodes',
         description: '/docs/references/users/get-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
@@ -1799,6 +1864,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'createMfaRecoveryCodes',
         description: '/docs/references/users/create-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
@@ -1840,7 +1906,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::put('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Regenerate MFA recovery codes')
+    ->desc('Update MFA recovery codes (regenerate)')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.mfa.recovery-codes')
     ->label('scope', 'users.write')
@@ -1850,6 +1916,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'updateMfaRecoveryCodes',
         description: '/docs/references/users/update-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
@@ -1900,6 +1967,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'deleteMfaAuthenticator',
         description: '/docs/references/users/delete-mfa-authenticator.md',
         auth: [AuthType::KEY],
@@ -1947,6 +2015,7 @@ App::post('/v1/users/:userId/sessions')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'sessions',
         name: 'createSession',
         description: '/docs/references/users/create-session.md',
         auth: [AuthType::KEY],
@@ -1982,7 +2051,7 @@ App::post('/v1/users/:userId/sessions')
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => Auth::SESSION_PROVIDER_SERVER,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -2031,6 +2100,7 @@ App::post('/v1/users/:userId/tokens')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'sessions',
         name: 'createToken',
         description: '/docs/references/users/create-token.md',
         auth: [AuthType::KEY],
@@ -2061,7 +2131,7 @@ App::post('/v1/users/:userId/tokens')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Auth::TOKEN_TYPE_GENERIC,
             'secret' => Auth::hash($secret),
             'expire' => $expire,
@@ -2093,6 +2163,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'sessions',
         name: 'deleteSession',
         description: '/docs/references/users/delete-user-session.md',
         auth: [AuthType::KEY],
@@ -2143,6 +2214,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'sessions',
         name: 'deleteSessions',
         description: '/docs/references/users/delete-user-sessions.md',
         auth: [AuthType::KEY],
@@ -2192,6 +2264,7 @@ App::delete('/v1/users/:userId')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'delete',
         description: '/docs/references/users/delete.md',
         auth: [AuthType::KEY],
@@ -2220,6 +2293,8 @@ App::delete('/v1/users/:userId')
         $clone = clone $user;
 
         $dbForProject->deleteDocument('users', $userId);
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -2241,6 +2316,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'deleteTarget',
         description: '/docs/references/users/delete-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -2298,6 +2374,7 @@ App::delete('/v1/users/identities/:identityId')
     ->label('audits.resource', 'identity/{request.$identityId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'identities',
         name: 'deleteIdentity',
         description: '/docs/references/users/delete-identity.md',
         auth: [AuthType::KEY],
@@ -2337,6 +2414,7 @@ App::post('/v1/users/:userId/jwts')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'sessions',
         name: 'createJWT',
         description: '/docs/references/users/create-user-jwt.md',
         auth: [AuthType::KEY],
@@ -2392,6 +2470,7 @@ App::get('/v1/users/usage')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/users/get-usage.md',
         auth: [AuthType::ADMIN],

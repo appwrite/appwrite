@@ -3,9 +3,10 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\SDK\AuthType;
-use Appwrite\Specification\Format\OpenAPI3;
-use Appwrite\Specification\Format\Swagger2;
-use Appwrite\Specification\Specification;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Specification\Format\OpenAPI3;
+use Appwrite\SDK\Specification\Format\Swagger2;
+use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
 use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
@@ -19,7 +20,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
-use Utopia\Registry\Registry;
 use Utopia\Request as UtopiaRequest;
 use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
@@ -49,11 +49,10 @@ class Specs extends Action
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->inject('register')
-            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
+            ->callback($this->action(...));
     }
 
-    public function action(string $version, string $mode, Registry $register): void
+    public function action(string $version, string $mode): void
     {
         $appRoutes = App::getRoutes();
         $response = $this->getResponse();
@@ -101,6 +100,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Session',
                     'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
                     'in' => 'header',
                 ]
             ],
@@ -194,7 +199,7 @@ class Specs extends Action
                     }
 
                     foreach ($sdks as $sdk) {
-                        /** @var \Appwrite\SDK\Method $sdks */
+                        /** @var Method $sdk */
 
                         $hide = $sdk->isHidden();
                         if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
@@ -262,7 +267,6 @@ class Specs extends Action
                 $services[] = [
                     'name' => $service['key'] ?? '',
                     'description' => $service['subtitle'] ?? '',
-                    'x-globalAttributes' => $service['globalAttributes'] ?? [],
                 ];
             }
 
@@ -274,7 +278,15 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [
+                new App('UTC'),
+                $services,
+                $routes,
+                $models,
+                $keys[$platform],
+                $authCounts[$platform] ?? 0
+            ];
+
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),
@@ -290,6 +302,7 @@ class Specs extends Action
                     ->setParam('name', APP_NAME)
                     ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
                     ->setParam('endpoint', 'https://cloud.appwrite.io/v1')
+                    ->setParam('endpoint.docs', 'https://<REGION>.cloud.appwrite.io/v1')
                     ->setParam('version', APP_VERSION_STABLE)
                     ->setParam('terms', $endpoint . '/policy/terms')
                     ->setParam('support.email', $email)

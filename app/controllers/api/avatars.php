@@ -171,6 +171,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('cache.resource', 'avatar/credit-card')
     ->label('sdk', new Method(
         namespace: 'avatars',
+        group: null,
         name: 'getCreditCard',
         description: '/docs/references/avatars/get-credit-card.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -186,7 +187,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: ' . \implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))) . '.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('quality', -1, new Range(-1, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
@@ -198,6 +199,7 @@ App::get('/v1/avatars/browsers/:code')
     ->label('cache.resource', 'avatar/browser')
     ->label('sdk', new Method(
         namespace: 'avatars',
+        group: null,
         name: 'getBrowser',
         description: '/docs/references/avatars/get-browser.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -213,7 +215,7 @@ App::get('/v1/avatars/browsers/:code')
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-browsers'))), 'Browser Code.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('quality', -1, new Range(-1, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
@@ -225,6 +227,7 @@ App::get('/v1/avatars/flags/:code')
     ->label('cache.resource', 'avatar/flag')
     ->label('sdk', new Method(
         namespace: 'avatars',
+        group: null,
         name: 'getFlag',
         description: '/docs/references/avatars/get-flag.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -240,7 +243,7 @@ App::get('/v1/avatars/flags/:code')
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-flags'))), 'Country Code. ISO Alpha-2 country code format.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('quality', -1, new Range(-1, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
@@ -252,6 +255,7 @@ App::get('/v1/avatars/image')
     ->label('cache.resource', 'avatar/image')
     ->label('sdk', new Method(
         namespace: 'avatars',
+        group: null,
         name: 'getImage',
         description: '/docs/references/avatars/get-image.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -322,6 +326,7 @@ App::get('/v1/avatars/favicon')
     ->label('cache.resource', 'avatar/favicon')
     ->label('sdk', new Method(
         namespace: 'avatars',
+        group: null,
         name: 'getFavicon',
         description: '/docs/references/avatars/get-favicon.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -472,6 +477,7 @@ App::get('/v1/avatars/qr')
     ->label('scope', 'avatars.read')
     ->label('sdk', new Method(
         namespace: 'avatars',
+        group: null,
         name: 'getQR',
         description: '/docs/references/avatars/get-qr.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -496,6 +502,7 @@ App::get('/v1/avatars/qr')
             'addQuietzone' => true,
             'quietzoneSize' => $margin,
             'outputType' => QRCode::OUTPUT_IMAGICK,
+            'scale' => 15,
         ]);
 
         $qrcode = new QRCode($options);
@@ -510,7 +517,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
-            ->send($image->output('png', 9));
+            ->send($image->output('png', 90));
     });
 
 App::get('/v1/avatars/initials')
@@ -520,6 +527,7 @@ App::get('/v1/avatars/initials')
     ->label('cache.resource', 'avatar/initials')
     ->label('sdk', new Method(
         namespace: 'avatars',
+        group: null,
         name: 'getInitials',
         description: '/docs/references/avatars/get-initials.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -661,7 +669,7 @@ App::get('/v1/cards/cloud')
                 }
             }
 
-            $isPlatinum = $user->getInternalId() % 100 === 0;
+            $isPlatinum = $user->getSequence() % 100 === 0;
         } else {
             $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
             $createdAt = new \DateTime('now');
@@ -851,7 +859,7 @@ App::get('/v1/cards/cloud-back')
             $isEmployee = \array_key_exists($email, $employees);
 
             $isGolden = $isEmployee || $isHero || $isContributor;
-            $isPlatinum = $user->getInternalId() % 100 === 0;
+            $isPlatinum = $user->getSequence() % 100 === 0;
         } else {
             $userId = '63e0bcf3c3eb803ba530';
 
@@ -918,9 +926,9 @@ App::get('/v1/cards/cloud-og')
         }
 
         if (!$mock) {
-            $internalId = $user->getInternalId();
-            $bgVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
-            $cardVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
+            $sequence = $user->getSequence();
+            $bgVariation = $sequence % 3 === 0 ? '1' : ($sequence % 3 === 1 ? '2' : '3');
+            $cardVariation = $sequence % 3 === 0 ? '1' : ($sequence % 3 === 1 ? '2' : '3');
 
             $name = $user->getAttribute('name', 'Anonymous');
             $email = $user->getAttribute('email', '');
@@ -950,7 +958,7 @@ App::get('/v1/cards/cloud-og')
                 }
             }
 
-            $isPlatinum = $user->getInternalId() % 100 === 0;
+            $isPlatinum = $user->getSequence() % 100 === 0;
         } else {
             $bgVariation = \str_ends_with($mock, '-bg2') ? '2' : (\str_ends_with($mock, '-bg3') ? '3' : '1');
             $cardVariation = \str_ends_with($mock, '-right') ? '2' : (\str_ends_with($mock, '-middle') ? '3' : '1');

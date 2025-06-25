@@ -19,25 +19,19 @@ class Executor
     public const METHOD_CONNECT = 'CONNECT';
     public const METHOD_TRACE = 'TRACE';
 
-    private bool $selfSigned = false;
+    protected bool $selfSigned = false;
 
-    /**
-     * @var callable(string, string): string  $endpoint
-     */
-    private $endpointSelector;
-
+    protected string $endpoint;
     protected array $headers;
 
-    /**
-     * @param callable(string, string): string $endpointSelector
-     */
-    public function __construct(callable $endpointSelector)
+    public function __construct()
     {
-        $this->endpointSelector = $endpointSelector;
+        $this->endpoint = System::getEnv('_APP_EXECUTOR_HOST', '');
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
-            'x-opr-addressing-method' => 'anycast-efficient'
+            'x-opr-addressing-method' => 'anycast-efficient',
+            'x-edge-bypass-gateway' => '1'
         ];
     }
 
@@ -64,19 +58,20 @@ class Executor
         string $version,
         float $cpus,
         int $memory,
+        int $timeout,
         bool $remove = false,
         string $entrypoint = '',
         string $destination = '',
         array $variables = [],
         string $command = null,
+        string $outputDirectory = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         // Remove after migration
-        if ($version == 'v3') {
-            $version = 'v4';
+        if ($version === 'v3' || $version === 'v4') {
+            $version = 'v5';
         }
 
         $params = [
@@ -92,10 +87,11 @@ class Executor
             'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
+            'outputDirectory' => $outputDirectory
         ];
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -116,18 +112,16 @@ class Executor
     public function getLogs(
         string $deploymentId,
         string $projectId,
+        string $timeout,
         callable $callback
     ) {
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [
             'timeout' => $timeout
         ];
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $this->call($endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
+        $this->call($this->endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
     }
 
     /**
@@ -138,15 +132,19 @@ class Executor
      * @param string $projectId
      * @param string $deploymentId
      */
-    public function deleteRuntime(string $projectId, string $deploymentId)
+    public function deleteRuntime(string $projectId, string $deploymentId, string $suffix = '')
     {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId" . $suffix;
         $route = "/runtimes/$runtimeId";
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_DELETE, $route, [
+        $response = $this->call($this->endpoint, self::METHOD_DELETE, $route, [
             'x-opr-addressing-method' => 'broadcast'
         ], [], true, 30);
+
+        // Temporary fix for race condition
+        if ($response['headers']['status-code'] === 500 && \str_contains($response['body']['message'], 'already in progress')) {
+            return true; // OK, removal already in progress
+        }
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -200,8 +198,8 @@ class Executor
         $route = '/runtimes/' . $runtimeId . '/executions';
 
         // Remove after migration
-        if ($version == 'v3') {
-            $version = 'v4';
+        if ($version === 'v3' || $version === 'v4') {
+            $version = 'v5';
         }
 
         $params = [
@@ -232,8 +230,7 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -249,6 +246,31 @@ class Executor
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
         $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
         $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
+
+        return $response['body'];
+    }
+
+    public function createCommand(
+        string $deploymentId,
+        string $projectId,
+        string $command,
+        int $timeout
+    ) {
+        $runtimeId = "$projectId-$deploymentId-build";
+        $route = "/runtimes/$runtimeId/commands";
+
+        $params = [
+            'command' => $command,
+            'timeout' => $timeout
+        ];
+
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+
+        $status = $response['headers']['status-code'];
+        if ($status >= 400) {
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
+        }
 
         return $response['body'];
     }
@@ -431,10 +453,5 @@ class Executor
         }
 
         return $output;
-    }
-
-    private function selectEndpoint(string $projectId, string $deploymentId): string
-    {
-        return call_user_func($this->endpointSelector, $projectId, $deploymentId);
     }
 }

@@ -2,13 +2,14 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\Messaging\Adapter;
+use Appwrite\Messaging\Adapter as MessagingAdapter;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
-class Realtime extends Adapter
+class Realtime extends MessagingAdapter
 {
     /**
      * Connection Tree
@@ -34,6 +35,14 @@ class Realtime extends Adapter
      *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
      */
     public array $subscriptions = [];
+
+    private PubSubPool $pubSubPool;
+
+    public function __construct()
+    {
+        global $register;
+        $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+    }
 
     /**
      * Adds a subscription.
@@ -123,13 +132,14 @@ class Realtime extends Adapter
      * Sends an event to the Realtime Server
      * @param string $projectId
      * @param array $payload
-     * @param string $event
+     * @param array $events
      * @param array $channels
      * @param array $roles
      * @param array $options
      * @return void
+     * @throws \Exception
      */
-    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
+    public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;
@@ -138,26 +148,18 @@ class Realtime extends Adapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        global $register;
-        $pubsub = $register->get('pools')->get('pubsub')->pop();
-        try {
-            /** @var \Appwrite\PubSub\Adapter $redis */
-            $redis = $pubsub->getResource();
-            $redis->publish('realtime', json_encode([
-                'project' => $projectId,
-                'roles' => $roles,
-                'permissionsChanged' => $permissionsChanged,
-                'userId' => $userId,
-                'data' => [
-                    'events' => $events,
-                    'channels' => $channels,
-                    'timestamp' => DateTime::formatTz(DateTime::now()),
-                    'payload' => $payload
-                ]
-            ]));
-        } finally {
-            $pubsub->reclaim();
-        }
+        $this->pubSubPool->publish('realtime', json_encode([
+            'project' => $projectId,
+            'roles' => $roles,
+            'permissionsChanged' => $permissionsChanged,
+            'userId' => $userId,
+            'data' => [
+                'events' => $events,
+                'channels' => $channels,
+                'timestamp' => DateTime::formatTz(DateTime::now()),
+                'payload' => $payload
+            ]
+        ]));
     }
 
     /**
@@ -172,8 +174,9 @@ class Realtime extends Adapter
      *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions
      *
      * @param array $event
+     * @return int[]|string[]
      */
-    public function getSubscribers(array $event)
+    public function getSubscribers(array $event): array
     {
 
         $receivers = [];
@@ -227,7 +230,7 @@ class Realtime extends Adapter
 
         foreach ($channels as $key => $value) {
             switch (true) {
-                case strpos($key, 'account.') === 0:
+                case \str_starts_with($key, 'account.'):
                     unset($channels[$key]);
                     break;
 
@@ -349,6 +352,14 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
+                break;
+            case 'sites':
+                if ($parts[2] === 'deployments') {
+                    $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
+                    $projectId = 'console';
+                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                }
                 break;
             case 'migrations':
                 $channels[] = 'console';

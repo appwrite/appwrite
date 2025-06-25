@@ -871,7 +871,6 @@ class DatabasesCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-
         // We should be allowed to link and create a new document from collection 3 to collection 2.
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $collection1['body']['$id'], array_merge([
             'content-type' => 'application/json',

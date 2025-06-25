@@ -13,10 +13,13 @@ use Swoole\Table;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -27,6 +30,8 @@ use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 use Utopia\Swoole\Files;
 use Utopia\System\System;
+
+Files::load(__DIR__.'/../public');
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
@@ -42,29 +47,6 @@ $http = new Server(
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
-
-$http
-    ->set([
-        'worker_num' => $totalWorkers,
-        'dispatch_func' => 'dispatch',
-        'open_http2_protocol' => true,
-        'http_compression' => false,
-        'package_max_length' => $payloadSize,
-        'buffer_output_size' => $payloadSize,
-        'task_worker_num' => 1, // required for the task to fetch domains background
-    ]);
-
-$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
-    Console::success('Worker ' . ++$workerId . ' started successfully');
-});
-
-$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
-    Console::success('Starting reload...');
-});
-
-$http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
-    Console::success('Reload completed...');
-});
 
 /**
  * Assigns HTTP requests to worker threads by analyzing its payload/content.
@@ -83,75 +65,104 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
  */
 function dispatch(Server $server, int $fd, int $type, $data = null): int
 {
-    global $totalWorkers, $domains;
+    $resolveWorkerId = function (Server $server, $data = null) {
+        global $totalWorkers, $domains;
 
-    // If data is not set we can send request to any worker
-    // first we try to pick idle worker, if not we randomly pick a worker
-    if ($data === null) {
+        // If data is not set we can send request to any worker
+        // first we try to pick idle worker, if not we randomly pick a worker
+        if ($data === null) {
+            for ($i = 0; $i < $totalWorkers; $i++) {
+                if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
+                    return $i;
+                }
+            }
+            return rand(0, $totalWorkers - 1);
+        }
+
+        $riskyWorkersPercent = intval(System::getEnv('_APP_RISKY_WORKERS_PERCENT', 80)) / 100; // Decimal form 0 to 1
+
+        // Each worker has numeric ID, starting from 0 and incrementing
+        // From 0 to riskyWorkers, we consider safe workers
+        // From riskyWorkers to totalWorkers, we consider risky workers
+        $riskyWorkers = (int)floor($totalWorkers * $riskyWorkersPercent); // Absolute amount of risky workers
+
+        $domain = '';
+        // max up to 3 as first line has request details and second line has host
+        $lines = explode("\n", $data, 3);
+        $request = $lines[0];
+        if (count($lines) > 1) {
+            $domain = trim(explode('Host: ', $lines[1])[1]);
+        }
+
+        // Sync executions are considered risky
+        $risky = false;
+        if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
+            $risky = true;
+        } elseif (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+            $risky = true;
+        } elseif ($domains->get(md5($domain), 'value') === 1) {
+            // executions request coming from custom domain
+            $risky = true;
+        }
+
+        if ($risky) {
+            // If risky request, only consider risky workers
+            for ($j = $riskyWorkers; $j < $totalWorkers; $j++) {
+                /** Reference https://openswoole.com/docs/modules/swoole-server-getWorkerStatus#description */
+                if ($server->getWorkerStatus($j) === SWOOLE_WORKER_IDLE) {
+                    // If idle worker found, give to him
+                    return $j;
+                }
+            }
+
+            // If no idle workers, give to random risky worker
+            $worker = rand($riskyWorkers, $totalWorkers - 1);
+            Console::warning("swoole_dispatch: Risky branch: did not find a idle worker, picking random worker {$worker}");
+            return $worker;
+        }
+
+        // If safe request, give to any idle worker
+        // Its fine to pick risky worker here, because it's idle. Idle is never actually risky
         for ($i = 0; $i < $totalWorkers; $i++) {
             if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
                 return $i;
             }
         }
-        return rand(0, $totalWorkers - 1);
-    }
 
-    $riskyWorkersPercent = intval(System::getEnv('_APP_RISKY_WORKERS_PERCENT', 80)) / 100; // Decimal form 0 to 1
-
-    // Each worker has numeric ID, starting from 0 and incrementing
-    // From 0 to riskyWorkers, we consider safe workers
-    // From riskyWorkers to totalWorkers, we consider risky workers
-    $riskyWorkers = (int) floor($totalWorkers * $riskyWorkersPercent); // Absolute amount of risky workers
-
-    $domain = '';
-    // max up to 3 as first line has request details and second line has host
-    $lines = explode("\n", $data, 3);
-    $request = $lines[0];
-    if (count($lines) > 1) {
-        $domain = trim(explode('Host: ', $lines[1])[1]);
-    }
-
-    // Sync executions are considered risky
-    $risky = false;
-    if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
-        $risky = true;
-    } elseif (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
-        $risky = true;
-    } elseif ($domains->get(md5($domain), 'value') === 1) {
-        // executions request coming from custom domain
-        $risky = true;
-    }
-
-    if ($risky) {
-        // If risky request, only consider risky workers
-        for ($j = $riskyWorkers; $j < $totalWorkers; $j++) {
-            /** Reference https://openswoole.com/docs/modules/swoole-server-getWorkerStatus#description */
-            if ($server->getWorkerStatus($j) === SWOOLE_WORKER_IDLE) {
-                // If idle worker found, give to him
-                return $j;
-            }
-        }
-
-        // If no idle workers, give to random risky worker
-        $worker = rand($riskyWorkers, $totalWorkers - 1);
-        Console::warning("swoole_dispatch: Risky branch: did not find a idle worker, picking random worker {$worker}");
+        // If no idle worker found, give to random safe worker
+        // We avoid risky workers here, as it could be in work - not idle. Thats exactly when they are risky.
+        $worker = rand(0, $riskyWorkers - 1);
+        Console::warning("swoole_dispatch: Non-risky branch: did not find a idle worker, picking random worker {$worker}");
         return $worker;
-    }
-
-    // If safe request, give to any idle worker
-    // Its fine to pick risky worker here, because it's idle. Idle is never actually risky
-    for ($i = 0; $i < $totalWorkers; $i++) {
-        if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
-            return $i;
-        }
-    }
-
-    // If no idle worker found, give to random safe worker
-    // We avoid risky workers here, as it could be in work - not idle. Thats exactly when they are risky.
-    $worker = rand(0, $riskyWorkers - 1);
-    Console::warning("swoole_dispatch: Non-risky branch: did not find a idle worker, picking random worker {$worker}");
-    return $worker;
+    };
+    $workerId = $resolveWorkerId($server, $data);
+    $server->bind($fd, $workerId);
+    return $workerId;
 }
+
+
+$http
+    ->set([
+        Constant::OPTION_WORKER_NUM => $totalWorkers,
+        Constant::OPTION_DISPATCH_FUNC => dispatch(...),
+        Constant::OPTION_DISPATCH_MODE => SWOOLE_DISPATCH_UIDMOD,
+        Constant::OPTION_HTTP_COMPRESSION => false,
+        Constant::OPTION_PACKAGE_MAX_LENGTH => $payloadSize,
+        Constant::OPTION_OUTPUT_BUFFER_SIZE => $payloadSize,
+        Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
+    ]);
+
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
+    Console::success('Worker ' . ++$workerId . ' started successfully');
+});
+
+$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
+    Console::success('Starting reload...');
+});
+
+$http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
+    Console::success('Reload completed...');
+});
 
 include __DIR__ . '/controllers/general.php';
 
@@ -161,7 +172,7 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
     $sleep = 1;
     $attempts = 0;
 
-    do {
+    while (true) {
         try {
             $attempts++;
             $resource = $app->getResource($resourceKey);
@@ -170,13 +181,12 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
             break; // exit loop on success
         } catch (\Exception $e) {
             Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
-            $pools->reclaim();
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
             sleep($sleep);
         }
-    } while ($attempts < $max);
+    }
 
     Console::success("[Setup] - $dbName database init started...");
 
@@ -249,8 +259,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $audit->setup();
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() &&
-                !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
+            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 Console::info("    └── Creating default bucket...");
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
@@ -300,7 +309,55 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+                $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
+            }
+
+            if (Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
+                Console::info("    └── Creating screenshots bucket...");
+                Authorization::skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
+                    '$id' => ID::custom('screenshots'),
+                    '$collection' => ID::custom('buckets'),
+                    'name' => 'Screenshots',
+                    'maximumFileSize' => 20000000, // ~20MB
+                    'allowedFileExtensions' => [ 'png' ],
+                    'enabled' => true,
+                    'compression' => Compression::GZIP,
+                    'encryption' => false,
+                    'antivirus' => false,
+                    'fileSecurity' => true,
+                    '$permissions' => [],
+                    'search' => 'buckets Screenshots',
+                ])));
+
+                $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+
+                Console::info("    └── Creating files collection for screenshots bucket...");
+                $files = $collections['buckets']['files'] ?? [];
+                if (empty($files)) {
+                    throw new Exception('Files collection is not configured.');
+                }
+
+                $attributes = array_map(fn ($attr) => new Document([
+                    '$id' => ID::custom($attr['$id']),
+                    'type' => $attr['type'],
+                    'size' => $attr['size'],
+                    'required' => $attr['required'],
+                    'signed' => $attr['signed'],
+                    'array' => $attr['array'],
+                    'filters' => $attr['filters'],
+                    'default' => $attr['default'] ?? null,
+                    'format' => $attr['format'] ?? ''
+                ]), $files['attributes']);
+
+                $indexes = array_map(fn ($index) => new Document([
+                    '$id' => ID::custom($index['$id']),
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]), $files['indexes']);
+
+                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
             }
         });
 
@@ -312,11 +369,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $cache = $app->getResource('cache');
 
         foreach ($sharedTablesV2 as $hostname) {
-            $adapter = $pools
-                ->get($hostname)
-                ->pop()
-                ->getResource();
-
+            $adapter = new DatabasePool($pools->get($hostname));
             $dbForProject = (new Database($adapter, $cache))
                 ->setDatabase('appwrite')
                 ->setSharedTables(true)
@@ -326,7 +379,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             try {
                 Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                 $dbForProject->create();
-            } catch (Duplicate) {
+            } catch (DuplicateException) {
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
@@ -352,7 +405,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             }
         }
 
-        $pools->reclaim();
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -467,6 +519,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         Console::error('[Error] Message: ' . $th->getMessage());
         Console::error('[Error] File: ' . $th->getFile());
         Console::error('[Error] Line: ' . $th->getLine());
+        Console::error('[Error] Trace: ' . $th->getTraceAsString());
 
         $swooleResponse->setStatusCode(500);
 
@@ -484,13 +537,11 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         ];
 
         $swooleResponse->end(\json_encode($output));
-    } finally {
-        $pools->reclaim();
     }
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on('Task', function () use ($register, $domains) {
+$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);
@@ -514,7 +565,6 @@ $http->on('Task', function () use ($register, $domains) {
                 if ($lastSyncUpdate != null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
-                $queries[] = Query::equal('resourceType', ['function']);
                 $results = [];
                 try {
                     $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
@@ -525,7 +575,7 @@ $http->on('Task', function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
                         continue;
                     }
                     $domains->set(md5($domain), ['value' => 1]);

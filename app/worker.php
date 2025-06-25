@@ -15,16 +15,17 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
-use Appwrite\Event\StatsUsageDump;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -34,28 +35,28 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
+use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 Authorization::disable();
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+Runtime::enableCoroutine();
 
 Server::setResource('register', fn () => $register);
 
 Server::setResource('dbForPlatform', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
-    $database = $pools
-        ->get('console')
-        ->pop()
-        ->getResource();
+    $adapter = new DatabasePool($pools->get('console'));
+    $dbForPlatform = new Database($adapter, $cache);
+    $dbForPlatform->setNamespace('_console');
 
-    $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_console');
-
-    return $adapter;
+    return $dbForPlatform;
 }, ['cache', 'register']);
 
 Server::setResource('project', function (Message $message, Database $dbForPlatform) {
@@ -83,32 +84,21 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $adapter = $pools
-        ->get($dsn->getHost())
-        ->pop()
-        ->getResource();
-
+    $adapter = new DatabasePool($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
-
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getInternalId())
+            ->setTenant((int)$project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
             ->setSharedTables(false)
             ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
+            ->setNamespace('_' . $project->getSequence());
     }
 
     $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
@@ -139,24 +129,20 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
+                    ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
 
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $adapter = new DatabasePool($pools->get($dsn->getHost()));
+        $database = new Database($adapter, $cache);
 
         $databases[$dsn->getHost()] = $database;
 
@@ -165,13 +151,13 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_' . $project->getSequence());
         }
 
         $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
@@ -184,19 +170,12 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
     return function (?Document $project = null) use ($pools, $cache, $database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant((int)$project->getSequence());
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get('logs')
-            ->pop()
-            ->getResource();
-
-        $database = new Database(
-            $dbAdapter,
-            $cache
-        );
+        $adapter = new DatabasePool($pools->get('logs'));
+        $database = new Database($adapter, $cache);
 
         $database
             ->setSharedTables(true)
@@ -206,7 +185,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant((int)$project->getSequence());
         }
 
         return $database;
@@ -234,11 +213,7 @@ Server::setResource('cache', function (Registry $register) {
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
+        $adapters[] = new CachePool($pools->get($value));
     }
 
     return new Cache(new Sharding($adapters));
@@ -267,20 +242,17 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
+
 Server::setResource('publisher', function (Group $pools) {
-    return $pools->get('publisher')->pop()->getResource();
+    return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 
 Server::setResource('consumer', function (Group $pools) {
-    return $pools->get('consumer')->pop()->getResource();
+    return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
-}, ['publisher']);
-
-Server::setResource('queueForStatsUsageDump', function (Publisher $publisher) {
-    return new StatsUsageDump($publisher);
 }, ['publisher']);
 
 Server::setResource('queueForDatabase', function (Publisher $publisher) {
@@ -339,26 +311,40 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-Server::setResource('deviceForFunctions', function (Document $project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('telemetry', fn () => new NoTelemetry());
 
-Server::setResource('deviceForFiles', function (Document $project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForSites', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForBuilds', function (Document $project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForCache', function (Document $project) {
-    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForFunctions', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+
+Server::setResource('deviceForFiles', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+
+Server::setResource('deviceForBuilds', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+
+Server::setResource('deviceForCache', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
 Server::setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
+
+Server::setResource('plan', function (array $plan = []) {
+    return [];
+});
 
 Server::setResource('certificates', function () {
     $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
@@ -370,7 +356,7 @@ Server::setResource('certificates', function () {
 });
 
 Server::setResource('logError', function (Registry $register, Document $project) {
-    return function (Throwable $error, string $namespace, string $action, ?array $extras) use ($register, $project) {
+    return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
         $logger = $register->get('logger');
 
         if ($logger) {
@@ -392,7 +378,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('trace', $error->getTraceAsString());
 
 
-            foreach ($extras as $key => $value) {
+            foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
             }
 
@@ -414,7 +400,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
     };
 }, ['register', 'project']);
 
-Server::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+Server::setResource('executor', fn () => new Executor());
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
@@ -454,21 +440,13 @@ try {
 $worker = $platform->getWorker();
 
 $worker
-    ->shutdown()
-    ->inject('pools')
-    ->action(function (Group $pools) {
-        $pools->reclaim();
-    });
-
-$worker
     ->error()
     ->inject('error')
     ->inject('logger')
     ->inject('log')
     ->inject('pools')
     ->inject('project')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
-        $pools->reclaim();
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($worker, $queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {

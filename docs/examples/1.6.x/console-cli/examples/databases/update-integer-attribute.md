@@ -3,7 +3,7 @@ appwrite databases updateIntegerAttribute \
         --collectionId <COLLECTION_ID> \
         --key '' \
         --required false \
-        --min null \
-        --max null \
         --default null \
+
+
 

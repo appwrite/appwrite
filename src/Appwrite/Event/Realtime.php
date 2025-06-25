@@ -2,15 +2,22 @@
 
 namespace Appwrite\Event;
 
+use Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
 
 class Realtime extends Event
 {
     protected array $subscribers = [];
 
+    private Adapter $realtime;
+
+    protected bool $critical = false;
+
     public function __construct()
     {
+        $this->realtime = new Adapter\Realtime();
     }
 
     /**
@@ -35,7 +42,7 @@ class Realtime extends Event
      * Set subscribers for this realtime event.
      *
      * @param array $subscribers
-     * @return array
+     * @return self
      */
     public function setSubscribers(array $subscribers): self
     {
@@ -57,7 +64,7 @@ class Realtime extends Event
      * Execute Event.
      *
      * @return string|bool
-     * @throws InvalidArgumentException
+     * @throws Exception
      */
     public function trigger(): string|bool
     {
@@ -87,7 +94,7 @@ class Realtime extends Event
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
         foreach ($projectIds as $projectId) {
-            RealtimeAdapter::send(
+            $this->realtime->send(
                 projectId: $projectId,
                 payload: $this->getRealtimePayload(),
                 events: $allEvents,

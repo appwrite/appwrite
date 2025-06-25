@@ -24,10 +24,12 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -68,6 +70,7 @@ App::post('/v1/projects')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'create',
         description: '/docs/references/projects/create.md',
         auth: [AuthType::ADMIN],
@@ -179,7 +182,7 @@ App::post('/v1/projects')
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'name' => $name,
-                'teamInternalId' => $team->getInternalId(),
+                'teamInternalId' => $team->getSequence(),
                 'teamId' => $team->getId(),
                 'region' => $region,
                 'description' => $description,
@@ -221,19 +224,19 @@ App::post('/v1/projects')
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         if (!$sharedTablesV2) {
-            $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+            $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
 
             if ($sharedTables) {
                 $dbForProject
                     ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? $project->getInternalId() : null)
+                    ->setTenant($sharedTablesV1 ? (int)$project->getSequence() : null)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $dbForProject
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
 
             $create = true;
@@ -305,6 +308,7 @@ App::get('/v1/projects')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'list',
         description: '/docs/references/projects/list.md',
         auth: [AuthType::ADMIN],
@@ -357,10 +361,15 @@ App::get('/v1/projects')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $projects = $dbForPlatform->find('projects', $queries);
+            $total = $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'projects' => $dbForPlatform->find('projects', $queries),
-            'total' => $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT),
+            'projects' => $projects,
+            'total' => $total,
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -370,6 +379,7 @@ App::get('/v1/projects/:projectId')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'get',
         description: '/docs/references/projects/get.md',
         auth: [AuthType::ADMIN],
@@ -402,6 +412,7 @@ App::patch('/v1/projects/:projectId')
     ->label('audits.resource', 'project/{request.projectId}')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'update',
         description: '/docs/references/projects/update.md',
         auth: [AuthType::ADMIN],
@@ -455,6 +466,7 @@ App::patch('/v1/projects/:projectId/team')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateTeam',
         description: '/docs/references/projects/update-team.md',
         auth: [AuthType::ADMIN],
@@ -492,12 +504,12 @@ App::patch('/v1/projects/:projectId/team')
 
         $project
             ->setAttribute('teamId', $teamId)
-            ->setAttribute('teamInternalId', $team->getInternalId())
+            ->setAttribute('teamInternalId', $team->getSequence())
             ->setAttribute('$permissions', $permissions);
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project);
 
         $installations = $dbForPlatform->find('installations', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($installations as $installation) {
             $installation->getAttribute('$permissions', $permissions);
@@ -505,7 +517,7 @@ App::patch('/v1/projects/:projectId/team')
         }
 
         $repositories = $dbForPlatform->find('repositories', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($repositories as $repository) {
             $repository->getAttribute('$permissions', $permissions);
@@ -513,7 +525,7 @@ App::patch('/v1/projects/:projectId/team')
         }
 
         $vcsComments = $dbForPlatform->find('vcsComments', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($vcsComments as $vcsComment) {
             $vcsComment->getAttribute('$permissions', $permissions);
@@ -529,6 +541,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateServiceStatus',
         description: '/docs/references/projects/update-service-status.md',
         auth: [AuthType::ADMIN],
@@ -566,6 +579,7 @@ App::patch('/v1/projects/:projectId/service/all')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateServiceStatusAll',
         description: '/docs/references/projects/update-service-status-all.md',
         auth: [AuthType::ADMIN],
@@ -606,6 +620,7 @@ App::patch('/v1/projects/:projectId/api')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateApiStatus',
         description: '/docs/references/projects/update-api-status.md',
         auth: [AuthType::ADMIN],
@@ -643,6 +658,7 @@ App::patch('/v1/projects/:projectId/api/all')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateApiStatusAll',
         description: '/docs/references/projects/update-api-status-all.md',
         auth: [AuthType::ADMIN],
@@ -683,6 +699,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateOAuth2',
         description: '/docs/references/projects/update-oauth2.md',
         auth: [AuthType::ADMIN],
@@ -733,6 +750,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateSessionAlerts',
         description: '/docs/references/projects/update-session-alerts.md',
         auth: [AuthType::ADMIN],
@@ -770,6 +788,7 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateMembershipsPrivacy',
         description: '/docs/references/projects/update-memberships-privacy.md',
         auth: [AuthType::ADMIN],
@@ -811,6 +830,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthLimit',
         description: '/docs/references/projects/update-auth-limit.md',
         auth: [AuthType::ADMIN],
@@ -848,6 +868,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthDuration',
         description: '/docs/references/projects/update-auth-duration.md',
         auth: [AuthType::ADMIN],
@@ -885,6 +906,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthStatus',
         description: '/docs/references/projects/update-auth-status.md',
         auth: [AuthType::ADMIN],
@@ -925,6 +947,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthPasswordHistory',
         description: '/docs/references/projects/update-auth-password-history.md',
         auth: [AuthType::ADMIN],
@@ -962,6 +985,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthPasswordDictionary',
         description: '/docs/references/projects/update-auth-password-dictionary.md',
         auth: [AuthType::ADMIN],
@@ -994,11 +1018,12 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     });
 
 App::patch('/v1/projects/:projectId/auth/personal-data')
-    ->desc('Enable or disable checking user passwords for similarity with their personal data.')
+    ->desc('Update personal data check')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updatePersonalDataCheck',
         description: '/docs/references/projects/update-personal-data-check.md',
         auth: [AuthType::ADMIN],
@@ -1036,6 +1061,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthSessionsLimit',
         description: '/docs/references/projects/update-auth-sessions-limit.md',
         auth: [AuthType::ADMIN],
@@ -1073,6 +1099,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateMockNumbers',
         description: '/docs/references/projects/update-mock-numbers.md',
         auth: [AuthType::ADMIN],
@@ -1120,6 +1147,7 @@ App::delete('/v1/projects/:projectId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'delete',
         description: '/docs/references/projects/delete.md',
         auth: [AuthType::ADMIN],
@@ -1163,6 +1191,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'createWebhook',
         description: '/docs/references/projects/create-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1200,7 +1229,7 @@ App::post('/v1/projects/:projectId/webhooks')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
             'events' => $events,
@@ -1227,6 +1256,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'listWebhooks',
         description: '/docs/references/projects/list-webhooks.md',
         auth: [AuthType::ADMIN],
@@ -1249,7 +1279,7 @@ App::get('/v1/projects/:projectId/webhooks')
         }
 
         $webhooks = $dbForPlatform->find('webhooks', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1265,6 +1295,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'getWebhook',
         description: '/docs/references/projects/get-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1289,7 +1320,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1305,6 +1336,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'updateWebhook',
         description: '/docs/references/projects/update-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1338,7 +1370,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1370,6 +1402,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'updateWebhookSignature',
         description: '/docs/references/projects/update-webhook-signature.md',
         auth: [AuthType::ADMIN],
@@ -1394,7 +1427,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1415,6 +1448,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'deleteWebhook',
         description: '/docs/references/projects/delete-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1440,7 +1474,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($webhook->isEmpty()) {
@@ -1462,6 +1496,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'createKey',
         description: '/docs/references/projects/create-key.md',
         auth: [AuthType::ADMIN],
@@ -1493,7 +1528,7 @@ App::post('/v1/projects/:projectId/keys')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
@@ -1518,6 +1553,7 @@ App::get('/v1/projects/:projectId/keys')
     ->label('scope', 'keys.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'listKeys',
         description: '/docs/references/projects/list-keys.md',
         auth: [AuthType::ADMIN],
@@ -1540,7 +1576,7 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForPlatform->find('keys', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1556,6 +1592,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'keys.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'getKey',
         description: '/docs/references/projects/get-key.md',
         auth: [AuthType::ADMIN],
@@ -1580,7 +1617,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1596,6 +1633,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'updateKey',
         description: '/docs/references/projects/update-key.md',
         auth: [AuthType::ADMIN],
@@ -1623,7 +1661,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1648,6 +1686,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'deleteKey',
         description: '/docs/references/projects/delete-key.md',
         auth: [AuthType::ADMIN],
@@ -1673,7 +1712,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1695,6 +1734,7 @@ App::post('/v1/projects/:projectId/jwts')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'createJWT',
         description: '/docs/references/projects/create-jwt.md',
         auth: [AuthType::ADMIN],
@@ -1738,6 +1778,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'createPlatform',
         description: '/docs/references/projects/create-platform.md',
         auth: [AuthType::ADMIN],
@@ -1770,7 +1811,7 @@ App::post('/v1/projects/:projectId/platforms')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'type' => $type,
             'name' => $name,
@@ -1794,6 +1835,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->label('scope', 'platforms.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'listPlatforms',
         description: '/docs/references/projects/list-platforms.md',
         auth: [AuthType::ADMIN],
@@ -1816,7 +1858,7 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForPlatform->find('platforms', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1832,6 +1874,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'platforms.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'getPlatform',
         description: '/docs/references/projects/get-platform.md',
         auth: [AuthType::ADMIN],
@@ -1856,7 +1899,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($platform->isEmpty()) {
@@ -1872,6 +1915,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'updatePlatform',
         description: '/docs/references/projects/update-platform.md',
         auth: [AuthType::ADMIN],
@@ -1899,7 +1943,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($platform->isEmpty()) {
@@ -1927,6 +1971,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'deletePlatform',
         description: '/docs/references/projects/delete-platform.md',
         auth: [AuthType::ADMIN],
@@ -1952,7 +1997,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForPlatform->findOne('platforms', [
             Query::equal('$id', [$platformId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
 
         if ($platform->isEmpty()) {
@@ -1974,6 +2019,7 @@ App::patch('/v1/projects/:projectId/smtp')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'updateSmtp',
         description: '/docs/references/projects/update-smtp.md',
         auth: [AuthType::ADMIN],
@@ -2070,6 +2116,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'createSmtpTest',
         description: '/docs/references/projects/create-smtp-test.md',
         auth: [AuthType::ADMIN],
@@ -2093,7 +2140,8 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->inject('response')
     ->inject('dbForPlatform')
     ->inject('queueForMails')
-    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Mail $queueForMails) {
+    ->inject('plan')
+    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Mail $queueForMails, array $plan) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -2106,7 +2154,14 @@ App::post('/v1/projects/:projectId/smtp/tests')
         $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
-            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})");
+            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})")
+            ->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL)
+            ->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR)
+            ->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER)
+            ->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD)
+            ->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE)
+            ->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL)
+            ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
 
         foreach ($emails as $email) {
             $queueForMails
@@ -2136,6 +2191,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'getSmsTemplate',
         description: '/docs/references/projects/get-sms-template.md',
         auth: [AuthType::ADMIN],
@@ -2183,6 +2239,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'getEmailTemplate',
         description: '/docs/references/projects/get-email-template.md',
         auth: [AuthType::ADMIN],
@@ -2217,6 +2274,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
                 ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
+                ->setParam('{{buttonText}}', $localeObj->getText("emails.{$type}.buttonText"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
             $message = $message->render();
@@ -2241,6 +2299,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'updateSmsTemplate',
         description: '/docs/references/projects/update-sms-template.md',
         auth: [AuthType::ADMIN],
@@ -2287,6 +2346,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'updateEmailTemplate',
         description: '/docs/references/projects/update-email-template.md',
         auth: [AuthType::ADMIN],
@@ -2343,6 +2403,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'deleteSmsTemplate',
         description: '/docs/references/projects/delete-sms-template.md',
         auth: [AuthType::ADMIN],
@@ -2388,11 +2449,12 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     });
 
 App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
-    ->desc('Reset custom email template')
+    ->desc('Delete custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'deleteEmailTemplate',
         description: '/docs/references/projects/delete-email-template.md',
         auth: [AuthType::ADMIN],

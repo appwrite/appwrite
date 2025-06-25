@@ -17,6 +17,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -26,6 +27,7 @@ App::get('/v1/project/usage')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/project/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -148,7 +150,7 @@ App::get('/v1/project/usage')
         $executionsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -164,7 +166,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -180,7 +182,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -196,7 +198,7 @@ App::get('/v1/project/usage')
         $bucketsBreakdown = array_map(function ($bucket) use ($dbForProject) {
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
+            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -212,7 +214,7 @@ App::get('/v1/project/usage')
         $databasesStorageBreakdown = array_map(function ($database) use ($dbForProject) {
             $id = $database->getId();
             $name = $database->getAttribute('name');
-            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
+            $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_STORAGE);
 
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
@@ -229,13 +231,13 @@ App::get('/v1/project/usage')
         $functionsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
+            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE);
             $deploymentValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$deploymentMetric]),
                 Query::equal('period', ['inf'])
             ]);
 
-            $buildMetric = str_replace(['{functionInternalId}'], [$function->getInternalId()], METRIC_FUNCTION_ID_BUILDS_STORAGE);
+            $buildMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE);
             $buildValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$buildMetric]),
                 Query::equal('period', ['inf'])
@@ -253,7 +255,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -269,7 +271,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -387,6 +389,7 @@ App::post('/v1/project/variables')
     ->label('audits.event', 'variable.create')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: null,
         name: 'createVariable',
         description: '/docs/references/project/create-variable.md',
         auth: [AuthType::ADMIN],
@@ -399,11 +402,12 @@ App::post('/v1/project/variables')
     ))
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
+    ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
+    ->action(function (string $key, string $value, bool $secret, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variableId = ID::unique();
 
         $variable = new Document([
@@ -418,6 +422,7 @@ App::post('/v1/project/variables')
             'resourceType' => 'project',
             'key' => $key,
             'value' => $value,
+            'secret' => $secret,
             'search' => implode(' ', [$variableId, $key, 'project']),
         ]);
 
@@ -446,6 +451,7 @@ App::get('/v1/project/variables')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: null,
         name: 'listVariables',
         description: '/docs/references/project/list-variables.md',
         auth: [AuthType::ADMIN],
@@ -476,6 +482,7 @@ App::get('/v1/project/variables/:variableId')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: null,
         name: 'getVariable',
         description: '/docs/references/project/get-variable.md',
         auth: [AuthType::ADMIN],
@@ -505,6 +512,7 @@ App::put('/v1/project/variables/:variableId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: null,
         name: 'updateVariable',
         description: '/docs/references/project/update-variable.md',
         auth: [AuthType::ADMIN],
@@ -518,19 +526,25 @@ App::put('/v1/project/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
+    ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
+    ->action(function (string $variableId, string $key, ?string $value, ?bool $secret, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variable = $dbForProject->getDocument('variables', $variableId);
         if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
+        if ($variable->getAttribute('secret') === true && $secret === false) {
+            throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
+        }
+
         $variable
             ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
+            ->setAttribute('secret', $secret ?? $variable->getAttribute('secret'))
             ->setAttribute('search', implode(' ', [$variableId, $key, 'project']));
 
         try {
@@ -556,6 +570,7 @@ App::delete('/v1/project/variables/:variableId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: null,
         name: 'deleteVariable',
         description: '/docs/references/project/delete-variable.md',
         auth: [AuthType::ADMIN],
