@@ -209,6 +209,9 @@ class Builds extends Action
         Executor $executor,
         array $plan
     ): void {
+        $startTime = DateTime::now();
+        $durationStart = \microtime(true);
+
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
@@ -259,9 +262,6 @@ class Builds extends Action
             ->setEvent($event)
             ->setParam($resourceKey, $resource->getId())
             ->setParam('deploymentId', $deployment->getId());
-
-        $startTime = DateTime::now();
-        $durationStart = \microtime(true);
 
         if ($deployment->getAttribute('status') === 'canceled') {
             Console::info('Build has been canceled');
@@ -817,9 +817,6 @@ class Builds extends Action
                 throw $err;
             }
 
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-
             $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if (isset($plan['buildSize'])) {
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
@@ -828,10 +825,6 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
-            /** Update the build document */
-            $deployment->setAttribute('buildStartedAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
-            $deployment->setAttribute('buildEndedAt', $endTime);
-            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
             $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
@@ -1198,6 +1191,15 @@ class Builds extends Action
                 }
             }
 
+            $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
+            $deployment->setAttribute('buildEndedAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
                 return;
@@ -1237,7 +1239,7 @@ class Builds extends Action
 
             // Combine with previous logs if deployment got past build process
             $previousLogs = '';
-            if (!empty($deployment->getAttribute('buildEndedAt', ''))) {
+            if (!is_null($deployment->getAttribute('buildSize', null))) {
                 $previousLogs = $deployment->getAttribute('buildLogs', '');
                 if (!empty($previousLogs)) {
                     $message = $previousLogs . "\n" . $message;
