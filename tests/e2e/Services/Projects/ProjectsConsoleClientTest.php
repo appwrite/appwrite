@@ -2991,7 +2991,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
-            'scopes' => ['users.read', 'users.write', 'collections.read'],
+            'scopes' => ['users.read', 'users.write', 'collections.read', 'tables.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 360),
         ]);
 
@@ -3002,6 +3002,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.read', $response['body']['scopes']);
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
+        $this->assertContains('tables.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
@@ -3020,6 +3021,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.read', $response['body']['scopes']);
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
+        $this->assertContains('tables.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
