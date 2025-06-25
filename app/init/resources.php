@@ -952,17 +952,20 @@ App::setResource('httpReferrer', function (Request $request): string {
 
 App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $clients, Database $dbForPlatform, Document $project, App $utopia): string {
     $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
+    $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
+    $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
 
     // Safe if route is publicly accessible
     $route = $utopia->getRoute();
     if ($route->getLabel('origin', false)) {
-        goto originToUrl;
+        return $referrer;
     }
 
     // Safe if added as web platform
     $validator = new Hostname($clients);
     if ($validator->isValid($origin)) {
-        goto originToUrl;
+        return $referrer;
     }
 
     // Safe if rule with same project ID exists
@@ -979,19 +982,14 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
         }
 
         if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
-            goto originToUrl;
+            return $referrer;
         }
     }
 
     // Unsafe; Localhost is always safe for ease of local development
     $origin = 'localhost';
-
-    originToUrl:
-
     $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
-
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
-
     return $referrer;
 }, ['request', 'httpReferrer', 'clients', 'dbForPlatform', 'project', 'utopia']);
