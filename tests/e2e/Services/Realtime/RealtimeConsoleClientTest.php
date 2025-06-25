@@ -607,10 +607,8 @@ class RealtimeConsoleClientTest extends Scope
             $this->assertContains("projects.{$projectId}", $response['data']['channels']);
             $this->assertArrayHasKey('buildLogs', $response['data']['payload']);
 
-            if (!empty($response['data']['payload']['buildEndedAt'])) {
-                $this->assertNotEmpty($response['data']['payload']['buildEndedAt']);
+            if (!empty($response['data']['payload']['buildSize'])) {
                 $this->assertNotEmpty($response['data']['payload']['buildStartedAt']);
-                $this->assertNotEmpty($response['data']['payload']['buildDuration']);
                 $this->assertNotEmpty($response['data']['payload']['buildPath']);
                 $this->assertNotEmpty($response['data']['payload']['buildSize']);
                 $this->assertNotEmpty($response['data']['payload']['totalSize']);
@@ -633,6 +631,13 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains('console', $response['data']['channels']);
         $this->assertContains("projects.{$projectId}", $response['data']['channels']);
         $this->assertEquals("ready", $response['data']['payload']['status']);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['payload']['buildDuration']);
+        $this->assertNotEmpty($response['data']['payload']['buildEndedAt']);
 
         $client->close();
     }
