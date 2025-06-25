@@ -59,7 +59,7 @@ class StatsResources extends Action
         Console::success('Stats resources: started');
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
-        Timer::tick($interval, function () use ($queue) {
+        Timer::tick($interval * 1000, function () use ($queue) {
             Authorization::disable();
             Authorization::setDefaultStatus(false);
 
