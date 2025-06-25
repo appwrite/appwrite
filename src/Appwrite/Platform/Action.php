@@ -3,7 +3,10 @@
 namespace Appwrite\Platform;
 
 use Swoole\Coroutine as Co;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action as UtopiaAction;
 
@@ -15,6 +18,12 @@ class Action extends UtopiaAction
      * @var callable
      */
     protected mixed $logError;
+
+    protected array $filters = [
+        'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryProjectVariables', 'subQueryBlocks', 'subQueryDevKeys', // Project
+        'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
+        'subQueryVariables', // Sites
+    ];
 
     /**
      * Foreach Document
@@ -90,11 +99,7 @@ class Action extends UtopiaAction
 
     public function disableSubqueries()
     {
-        $filters = [
-            'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryProjectVariables', 'subQueryBlocks', 'subQueryDevKeys', // Project
-            'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
-            'subQueryVariables', // Sites
-        ];
+        $filters = $this->filters;
 
         foreach ($filters as $filter) {
             Database::addFilter(
@@ -106,6 +111,29 @@ class Action extends UtopiaAction
                     return [];
                 }
             );
+        }
+    }
+
+    public function dump(string $method, string $log, string $type = 'info', ?Document $project = null, string $collectionId = '')
+    {
+        if (empty($project)) {
+            $project = new Document([]);
+        }
+        switch ($type) {
+            case 'success':
+                Console::success("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'error':
+                Console::error("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'log':
+                Console::log("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'warning':
+                Console::warning("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            default:
+                Console::info("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
         }
     }
 }
