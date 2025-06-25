@@ -87,4 +87,25 @@ class Action extends UtopiaAction
             $latestDocument = $results[array_key_last($results)];
         }
     }
+
+    public function disableSubqueries()
+    {
+        $filters = [
+            'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryProjectVariables', 'subQueryBlocks', 'subQueryDevKeys', // Project
+            'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
+            'subQueryVariables', // Sites
+        ];
+
+        foreach ($filters as $filter) {
+            Database::addFilter(
+                $filter,
+                function (mixed $value) {
+                    return;
+                },
+                function (mixed $value, Document $document, Database $database) {
+                    return [];
+                }
+            );
+        }
+    }
 }
