@@ -64,6 +64,14 @@ class Databases extends Action
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
 
+        Console::info("Processing database operation: \n" . \json_encode([
+            'type' => $type,
+            'projectId' => $project->getId(),
+            'databaseId' => $database->getId(),
+            'collectionId' => $collection->getId(),
+            'documentId' => $document->getId(),
+        ], JSON_PRETTY_PRINT));
+
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
@@ -82,6 +90,14 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
             default => throw new Exception('No database operation for type: ' . \strval($type)),
         };
+
+        Console::info("Finished processing database operation: \n" . \json_encode([
+            'type' => $type,
+            'projectId' => $project->getId(),
+            'databaseId' => $database->getId(),
+            'collectionId' => $collection->getId(),
+            'documentId' => $document->getId(),
+        ], JSON_PRETTY_PRINT));
     }
 
     /**
@@ -116,6 +132,7 @@ class Databases extends Action
 
         $projectId = $project->getId();
         $event = "databases.[databaseId].collections.[collectionId].attributes.[attributeId].update";
+
         /**
          * TODO @christyjacob4 verify if this is still the case
          * Fetch attribute from the database, since with Resque float values are loosing informations.
