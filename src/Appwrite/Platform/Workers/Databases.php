@@ -38,7 +38,7 @@ class Databases extends Action
             ->inject('dbForProject')
             ->inject('queueForRealtime')
             ->inject('log')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
