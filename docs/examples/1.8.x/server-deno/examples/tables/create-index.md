@@ -1,4 +1,4 @@
-import { Client, Tables,  } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Tables, IndexType } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,7 +11,7 @@ const response = await tables.createIndex(
     '<DATABASE_ID>', // databaseId
     '<TABLE_ID>', // tableId
     '', // key
-    .Key, // type
+    IndexType.Key, // type
     [], // columns
     [], // orders (optional)
     [] // lengths (optional)

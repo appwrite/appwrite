@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Tables;
-use Appwrite\Enums\;
+use Appwrite\Enums\RelationshipType;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -15,9 +15,9 @@ $result = $tables->createRelationshipColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     relatedTableId: '<RELATED_TABLE_ID>',
-    type: ::ONETOONE(),
+    type: RelationshipType::ONETOONE(),
     twoWay: false, // optional
     key: '', // optional
     twoWayKey: '', // optional
-    onDelete: ::CASCADE() // optional
+    onDelete: RelationMutate::CASCADE() // optional
 );

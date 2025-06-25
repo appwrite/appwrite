@@ -11,9 +11,9 @@ ColumnRelationship result = await tables.createRelationshipColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     relatedTableId: '<RELATED_TABLE_ID>',
-    type: .oneToOne,
+    type: RelationshipType.oneToOne,
     twoWay: false, // (optional)
     key: '', // (optional)
     twoWayKey: '', // (optional)
-    onDelete: .cascade, // (optional)
+    onDelete: RelationMutate.cascade, // (optional)
 );

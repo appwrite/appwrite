@@ -11,7 +11,7 @@ ColumnIndex result = await tables.createIndex(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: '',
-    type: .key,
+    type: IndexType.key,
     columns: [],
     orders: [], // (optional)
     lengths: [], // (optional)

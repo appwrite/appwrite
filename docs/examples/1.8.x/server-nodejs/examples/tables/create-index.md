@@ -11,7 +11,7 @@ const result = await tables.createIndex(
     '<DATABASE_ID>', // databaseId
     '<TABLE_ID>', // tableId
     '', // key
-    sdk..Key, // type
+    sdk.IndexType.Key, // type
     [], // columns
     [], // orders (optional)
     [] // lengths (optional)
