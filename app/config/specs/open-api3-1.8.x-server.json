@@ -8963,7 +8963,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.read",
+                    "scope": "tables.read",
                     "platforms": [
                         "server"
                     ],
@@ -9047,7 +9047,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -9152,7 +9152,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.read",
+                    "scope": "tables.read",
                     "platforms": [
                         "server"
                     ],
@@ -9222,7 +9222,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -9322,7 +9322,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -9394,7 +9394,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.read",
+                    "scope": "tables.read",
                     "platforms": [
                         "server"
                     ],
@@ -9479,7 +9479,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -9508,7 +9508,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -9586,7 +9586,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -9615,7 +9615,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -9698,7 +9698,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -9805,7 +9805,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -9917,7 +9917,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10024,7 +10024,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10136,7 +10136,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10252,7 +10252,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10373,7 +10373,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10490,7 +10490,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10612,7 +10612,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10729,7 +10729,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10851,7 +10851,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -10958,7 +10958,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11070,7 +11070,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11202,7 +11202,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11231,7 +11231,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -11320,7 +11320,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11349,7 +11349,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -11437,7 +11437,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11544,7 +11544,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11687,7 +11687,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.read",
+                    "scope": "tables.read",
                     "platforms": [
                         "server"
                     ],
@@ -11759,7 +11759,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11840,7 +11840,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -11949,7 +11949,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.read",
+                    "scope": "tables.read",
                     "platforms": [
                         "server"
                     ],
@@ -11978,7 +11978,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12032,7 +12032,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -12061,7 +12061,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12161,7 +12161,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.read",
+                    "scope": "tables.read",
                     "platforms": [
                         "server"
                     ],
@@ -12190,7 +12190,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12233,7 +12233,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
+                    "scope": "tables.write",
                     "platforms": [
                         "server"
                     ],
@@ -12262,7 +12262,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12314,7 +12314,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "documents.read",
+                    "scope": "rows.read",
                     "platforms": [
                         "client",
                         "server",
@@ -12347,7 +12347,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12401,7 +12401,7 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "client",
                         "server",
@@ -12488,7 +12488,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection). Make sure to define columns before creating rows.",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate). Make sure to define columns before creating rows.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12566,7 +12566,7 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "console",
                         "server"
@@ -12677,7 +12677,7 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "console",
                         "server"
@@ -12772,7 +12772,7 @@
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "console",
                         "server"
@@ -12802,7 +12802,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12864,7 +12864,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "documents.read",
+                    "scope": "rows.read",
                     "platforms": [
                         "client",
                         "server",
@@ -12897,7 +12897,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -12961,7 +12961,7 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "client",
                         "server",
@@ -13088,7 +13088,7 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "client",
                         "server",
@@ -13189,7 +13189,7 @@
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "client",
                         "server",
@@ -13222,7 +13222,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -13275,7 +13275,7 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "console",
                         "server"
@@ -13388,7 +13388,7 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "console",
                         "server"
