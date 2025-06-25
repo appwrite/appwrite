@@ -44,7 +44,7 @@ class XList extends DocumentLogXList
                 contentType: ContentType::JSON,
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Collection ID.')
+            ->param('tableId', '', new UID(), 'Table ID.')
             ->param('rowId', '', new UID(), 'Row ID.')
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')

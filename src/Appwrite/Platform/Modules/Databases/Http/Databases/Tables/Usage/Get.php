@@ -49,7 +49,7 @@ class Get extends CollectionUsageGet
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
-            ->param('tableId', '', new UID(), 'Collection ID.')
+            ->param('tableId', '', new UID(), 'Table ID.')
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

@@ -33,7 +33,7 @@ class XList extends CollectionLogXList
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: 'listLogs', // getName needs to be different from parent action to avoid conflict in path name
-                description: '/docs/references/databases/get-collection-logs.md',
+                description: '/docs/references/databases/get-table-logs.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
