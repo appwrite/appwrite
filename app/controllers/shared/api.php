@@ -800,9 +800,9 @@ App::shutdown()
         if (!empty($queueForDatabase->getType())) {
             Console::info("Triggering database event: \n" .  \json_encode([
                 'projectId' => $project->getId(),
-                'databaseId' => $queueForDatabase->getDatabase()->getId(),
-                'collectionId' => $queueForDatabase->getCollection()->getId(),
-                'documentId' => $queueForDatabase->getDocument()->getId(),
+                'databaseId' => $queueForDatabase->getDatabase()?->getId(),
+                'collectionId' => $queueForDatabase->getCollection()?->getId(),
+                'documentId' => $queueForDatabase->getDocument()?->getId(),
             ]));
             $queueForDatabase->trigger();
         }
