@@ -21,6 +21,8 @@ use Utopia\Queue\Message;
 
 class Databases extends Action
 {
+    private ?int $heartbeatId = null;
+
     public static function getName(): string
     {
         return 'databases';
@@ -41,9 +43,17 @@ class Databases extends Action
             ->inject('log')
             ->callback($this->action(...));
 
-        Timer::tick(10_000, function () {
+        $this->heartbeatId = Timer::tick(10_000, function () {
             Console::info('Databases worker heartbeat');
         });
+    }
+
+    public function __destruct()
+    {
+        if ($this->heartbeatId) {
+            Timer::clear($this->heartbeatId);
+            $this->heartbeatId = null;
+        }
     }
 
     /**
@@ -137,6 +147,7 @@ class Databases extends Action
 
         $projectId = $project->getId();
         $event = "databases.[databaseId].collections.[collectionId].attributes.[attributeId].update";
+
         /**
          * TODO @christyjacob4 verify if this is still the case
          * Fetch attribute from the database, since with Resque float values are loosing informations.
