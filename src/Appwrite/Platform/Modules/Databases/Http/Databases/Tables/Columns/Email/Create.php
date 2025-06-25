@@ -32,7 +32,7 @@ class Create extends EmailCreate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/email')
             ->desc('Create email column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')

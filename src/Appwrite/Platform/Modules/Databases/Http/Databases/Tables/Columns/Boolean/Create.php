@@ -32,7 +32,7 @@ class Create extends BooleanCreate
             ->desc('Create boolean column')
             ->groups(['api', 'database', 'schema'])
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')

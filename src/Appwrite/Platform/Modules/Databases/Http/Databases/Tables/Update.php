@@ -33,7 +33,7 @@ class Update extends CollectionUpdate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId')
             ->desc('Update table')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].update')
             ->label('audits.event', 'table.update')

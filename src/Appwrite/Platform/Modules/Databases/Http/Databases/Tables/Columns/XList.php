@@ -30,7 +30,7 @@ class XList extends AttributesXList
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns')
             ->desc('List columns')
             ->groups(['api', 'database'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'tables.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),

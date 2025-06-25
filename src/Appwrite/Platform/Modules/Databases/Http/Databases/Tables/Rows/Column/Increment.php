@@ -33,7 +33,7 @@ class Increment extends IncrementDocumentAttribute
             ->desc('Increment row column')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].increment')
-            ->label('scope', 'documents.write')
+            ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'rows.increment')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')

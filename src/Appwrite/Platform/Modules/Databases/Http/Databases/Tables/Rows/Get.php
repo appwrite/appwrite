@@ -32,7 +32,7 @@ class Get extends DocumentGet
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
             ->desc('Get row')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'rows.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),

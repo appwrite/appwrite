@@ -34,7 +34,7 @@ class Create extends StringCreate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/string')
             ->desc('Create string column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')

@@ -34,7 +34,7 @@ class Update extends URLUpdate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/url/:key')
             ->desc('Update URL column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')

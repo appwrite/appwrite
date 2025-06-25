@@ -36,7 +36,7 @@ class Update extends EnumUpdate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/enum/:key')
             ->desc('Update enum column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')

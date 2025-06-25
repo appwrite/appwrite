@@ -33,7 +33,7 @@ class Update extends DocumentsUpdate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows')
             ->desc('Update rows')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'rows.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
