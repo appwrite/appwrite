@@ -1236,7 +1236,7 @@ class Builds extends Action
 
             // Combine with previous logs if deployment got past build process
             $previousLogs = '';
-            if (!empty($deployment->getAttribute('buildEndedAt', ''))) {
+            if (!is_null($deployment->getAttribute('buildSize', null))) {
                 $previousLogs = $deployment->getAttribute('buildLogs', '');
                 if (!empty($previousLogs)) {
                     $message = $previousLogs . "\n" . $message;
