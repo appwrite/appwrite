@@ -1234,8 +1234,8 @@ class Builds extends Action
                 $message = "[31m" . $message;
             }
 
-            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message, 1);
-            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message, 1);
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
 
             // Combine with previous logs if deployment got past build process
             $previousLogs = '';
