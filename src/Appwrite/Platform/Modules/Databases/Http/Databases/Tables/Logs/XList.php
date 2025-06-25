@@ -30,9 +30,9 @@ class XList extends CollectionLogXList
             ->label('scope', 'tables.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'databases',
+                namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'listLogs', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/get-collection-logs.md',
                 auth: [AuthType::ADMIN],
                 responses: [
