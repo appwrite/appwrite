@@ -75,7 +75,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForBuilds')
             ->inject('gitHub')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
