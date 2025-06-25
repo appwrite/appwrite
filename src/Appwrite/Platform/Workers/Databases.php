@@ -21,8 +21,6 @@ use Utopia\Queue\Message;
 
 class Databases extends Action
 {
-    private ?int $heartbeatId = null;
-
     public static function getName(): string
     {
         return 'databases';
@@ -42,18 +40,6 @@ class Databases extends Action
             ->inject('queueForRealtime')
             ->inject('log')
             ->callback($this->action(...));
-
-        $this->heartbeatId = Timer::tick(10_000, function () {
-            Console::info('Databases worker heartbeat');
-        });
-    }
-
-    public function __destruct()
-    {
-        if ($this->heartbeatId) {
-            Timer::clear($this->heartbeatId);
-            $this->heartbeatId = null;
-        }
     }
 
     /**
