@@ -42,7 +42,7 @@ class Create extends DatetimeCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-datetime-attribute.md',
+                description: '/docs/references/databases/create-datetime-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

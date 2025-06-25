@@ -36,8 +36,8 @@ class Get extends CollectionUsageGet
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: null,
-                name: self::getName(),
-                description: '/docs/references/databases/get-collection-usage.md',
+                name: 'getUsage', // getName needs to be different from parent action to avoid conflict in path name
+                description: '/docs/references/databases/get-table-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -49,7 +49,7 @@ class Get extends CollectionUsageGet
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
-            ->param('tableId', '', new UID(), 'Collection ID.')
+            ->param('tableId', '', new UID(), 'Table ID.')
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
