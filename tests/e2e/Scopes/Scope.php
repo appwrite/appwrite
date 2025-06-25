@@ -189,8 +189,6 @@ abstract class Scope extends TestCase
             'name' => $name,
         ]);
 
-        fwrite(STDERR, json_encode($user, JSON_PRETTY_PRINT));
-
         $this->assertEquals(201, $user['headers']['status-code']);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
