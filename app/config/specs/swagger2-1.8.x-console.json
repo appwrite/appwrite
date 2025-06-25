@@ -13104,13 +13104,13 @@
         "\/databases\/{databaseId}\/tables\/{tableId}\/logs": {
             "get": {
                 "summary": "List table logs",
-                "operationId": "databasesListTableLogs",
+                "operationId": "tablesListLogs",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "databases"
+                    "tables"
                 ],
                 "description": "Get the table activity logs list by its unique ID.",
                 "responses": {
@@ -13122,13 +13122,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "listTableLogs",
+                    "method": "listLogs",
                     "group": "tables",
                     "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "databases\/list-table-logs.md",
+                    "demo": "tables\/list-logs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table-logs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -14152,7 +14152,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Collection ID.",
+                        "description": "Table ID.",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -14470,7 +14470,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Collection ID.",
+                        "description": "Table ID.",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
