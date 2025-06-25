@@ -16,7 +16,7 @@ class Origin extends Validator
     /**
      * Constructor
      *
-     * @param array<Document> $platforms
+     * @param array<\Utopia\Database\Document> $platforms
      */
     public function __construct(array $platforms)
     {

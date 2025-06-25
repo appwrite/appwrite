@@ -69,7 +69,9 @@ class Platform
             switch ($type) {
                 case self::TYPE_WEB:
                 case self::TYPE_FLUTTER_WEB:
-                    $hostnames[] = $hostname;
+                    if (!empty($hostname)) {
+                        $hostnames[] = $hostname;
+                    }
                     break;
                 case self::TYPE_FLUTTER_IOS:
                 case self::TYPE_FLUTTER_ANDROID:
@@ -83,6 +85,7 @@ class Platform
                 case self::TYPE_APPLE_TVOS:
                 case self::TYPE_REACT_NATIVE_IOS:
                 case self::TYPE_REACT_NATIVE_ANDROID:
+                case self::TYPE_UNITY:
                     if (!empty($key)) {
                         $hostnames[] = $key;
                     }
