@@ -85,7 +85,7 @@ class Create extends Base
                 Permission::delete(Role::team(ID::custom($teamId), 'owner')),
                 Permission::delete(Role::team(ID::custom($teamId), 'developer')),
             ],
-            'resourceInternalId' => $site->getInternalId(),
+            'resourceInternalId' => $site->getSequence(),
             'resourceId' => $site->getId(),
             'resourceType' => 'site',
             'key' => $key,

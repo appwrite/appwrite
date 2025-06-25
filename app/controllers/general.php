@@ -186,7 +186,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/console/project-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
+            $exception->addCTA('View deployments', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
             throw $exception;
         }
 
@@ -319,21 +319,22 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             $status = $deployment->getAttribute('status');
+            $region = $project->getAttribute('region', 'default');
 
             switch ($status) {
                 case 'failed':
                     $exception = new AppwriteException(AppwriteException::BUILD_FAILED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments';
+                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments';
                     $exception->addCTA('View deployments', $url . $ctaUrl);
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
-                    $ctaUrl = '/console/project-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
                     $exception->addCTA('Reload', '/');
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
@@ -345,7 +346,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
-                $exception->addCTA('View settings', $url . '/console/project-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
+                $exception->addCTA('View settings', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
                 throw $exception;
             }
         }
@@ -391,9 +392,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => [],
-            'resourceInternalId' => $resource->getInternalId(),
+            'resourceInternalId' => $resource->getSequence(),
             'resourceId' => $resource->getId(),
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'responseStatusCode' => 0,
             'responseHeaders' => [],
@@ -511,17 +512,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 'function' => $deployment->getAttribute('entrypoint', ''),
                 'site' => '',
             };
+            $source = $deployment->getAttribute('buildPath', '');
+            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
 
-            if ($type === 'function') {
-                $runtimeEntrypoint = match ($version) {
-                    'v2' => '',
-                    default => 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"'
-                };
-            } elseif ($type === 'site') {
+            $startCommand = $runtime['startCommand'];
+            if ($type === 'site') {
                 $frameworks = Config::getParam('frameworks', []);
                 $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-
-                $startCommand = $runtime['startCommand'];
 
                 if (!is_null($framework)) {
                     $adapter = ($framework['adapters'] ?? [])[$deployment->getAttribute('adapter', '')] ?? null;
@@ -529,9 +526,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                         $startCommand = $adapter['startCommand'];
                     }
                 }
-
-                $runtimeEntrypoint = 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $startCommand . '"';
             }
+
+            $runtimeEntrypoint = match ($version) {
+                'v2' => '',
+                default => "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$startCommand\"",
+            };
 
             $entrypoint = match ($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
@@ -545,7 +545,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 variables: $vars,
                 timeout: $resource->getAttribute('timeout', 30),
                 image: $runtime['image'],
-                source: $deployment->getAttribute('buildPath', ''),
+                source: $source,
                 entrypoint: $entrypoint,
                 version: $version,
                 path: $path,
@@ -692,11 +692,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         }
 
         $metricTypeExecutions = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS);
-        $metricTypeIdExecutions = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
+        $metricTypeIdExecutions = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
         $metricTypeExecutionsCompute = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE);
-        $metricTypeIdExecutionsCompute = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE);
+        $metricTypeIdExecutionsCompute = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE);
         $metricTypeExecutionsMbSeconds = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS);
-        $metricTypeIdExecutionsMBSeconds = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
+        $metricTypeIdExecutionsMBSeconds = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
         if ($deployment->getAttribute('resourceType') === 'sites') {
             $queueForStatsUsage
                 ->disableMetric(METRIC_NETWORK_REQUESTS)
@@ -719,9 +719,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 ->addMetric(METRIC_SITES_REQUESTS, 1)
                 ->addMetric(METRIC_SITES_INBOUND, $request->getSize() + $fileSize)
                 ->addMetric(METRIC_SITES_OUTBOUND, $response->getSize())
-                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_REQUESTS), 1)
-                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_INBOUND), $request->getSize() + $fileSize)
-                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_OUTBOUND), $response->getSize())
+                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_REQUESTS), 1)
+                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_INBOUND), $request->getSize() + $fileSize)
+                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_OUTBOUND), $response->getSize())
             ;
         }
 
@@ -908,7 +908,7 @@ App::init()
                             'type' => 'api',
                             'status' => 'verifying',
                             'projectId' => $console->getId(),
-                            'projectInternalId' => $console->getInternalId(),
+                            'projectInternalId' => $console->getSequence(),
                             'search' => implode(' ', [$ruleId, $domain->get()]),
                             'owner' => $owner,
                             'region' => $console->getAttribute('region')
@@ -958,7 +958,7 @@ App::init()
                 )[0] ?? new Document();
             }
 
-            if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getInternalId()) {
+            if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
                 $refDomainOrigin = $origin;
             }
         }

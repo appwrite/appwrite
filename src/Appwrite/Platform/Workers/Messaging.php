@@ -373,7 +373,7 @@ class Messaging extends Action
                     throw new \Exception('Storage bucket with the requested ID could not be found');
                 }
 
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                 if ($file->isEmpty()) {
                     throw new \Exception('Storage file with the requested ID could not be found');
                 }
@@ -558,7 +558,7 @@ class Messaging extends Action
                     throw new \Exception('Storage bucket with the requested ID could not be found');
                 }
 
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                 if ($file->isEmpty()) {
                     throw new \Exception('Storage file with the requested ID could not be found');
                 }

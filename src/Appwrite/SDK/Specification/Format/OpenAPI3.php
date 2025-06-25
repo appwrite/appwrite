@@ -444,11 +444,11 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['schema']['x-example'] = $validator->getMin();
                         break;
-                    case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\Integer':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'int32';
                         break;
+                    case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\FloatValidator':
                         $node['schema']['type'] = 'number';
                         $node['schema']['format'] = 'float';

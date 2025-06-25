@@ -222,7 +222,7 @@ class Create extends Base
             'search' => implode(' ', [$functionId, $name, $runtime]),
             'version' => 'v5',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => '',
             'repositoryInternalId' => '',
@@ -237,7 +237,7 @@ class Create extends Base
                 'region' => $project->getAttribute('region'),
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule'  => $function->getAttribute('schedule'),
@@ -246,7 +246,7 @@ class Create extends Base
         );
 
         $function->setAttribute('scheduleId', $schedule->getId());
-        $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
+        $function->setAttribute('scheduleInternalId', $schedule->getSequence());
 
         // Git connect logic
         if (!empty($providerRepositoryId)) {
@@ -262,18 +262,18 @@ class Create extends Base
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
 
             $function->setAttribute('repositoryId', $repository->getId());
-            $function->setAttribute('repositoryInternalId', $repository->getInternalId());
+            $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -316,7 +316,7 @@ class Create extends Base
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -331,7 +331,7 @@ class Create extends Base
                         Permission::delete(Role::any()),
                     ],
                     'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceType' => 'functions',
                     'entrypoint' => $function->getAttribute('entrypoint', ''),
                     'buildCommands' => $function->getAttribute('commands', ''),
@@ -341,7 +341,7 @@ class Create extends Base
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -364,16 +364,16 @@ class Create extends Base
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getInternalId(),
+                        'projectInternalId' => $project->getSequence(),
                         'domain' => $domain,
                         'status' => 'verified',
                         'type' => 'deployment',
                         'trigger' => 'manual',
                         'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getSequence(),
                         'deploymentResourceType' => 'function',
                         'deploymentResourceId' => $function->getId(),
-                        'deploymentResourceInternalId' => $function->getInternalId(),
+                        'deploymentResourceInternalId' => $function->getSequence(),
                         'deploymentVcsProviderBranch' => '',
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),

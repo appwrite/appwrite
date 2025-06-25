@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -68,13 +69,13 @@ class Base extends Action
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getInternalId(),
+            'resourceInternalId' => $function->getSequence(),
             'resourceType' => 'functions',
             'entrypoint' => $entrypoint,
             'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $function->getAttribute('repositoryId', ''),
             'repositoryInternalId' => $function->getAttribute('repositoryInternalId', ''),
@@ -94,7 +95,7 @@ class Base extends Action
 
         $function = $function
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -165,7 +166,7 @@ class Base extends Action
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $site->getId(),
-            'resourceInternalId' => $site->getInternalId(),
+            'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
             'buildCommands' => implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
@@ -173,7 +174,7 @@ class Base extends Action
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $site->getAttribute('repositoryId', ''),
             'repositoryInternalId' => $site->getAttribute('repositoryInternalId', ''),
@@ -193,7 +194,7 @@ class Base extends Action
 
         $site = $site
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -208,15 +209,15 @@ class Base extends Action
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'domain' => $domain,
                 'trigger' => 'deployment',
                 'type' => 'deployment',
                 'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentInternalId' => $deployment->getSequence(),
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getInternalId(),
+                'deploymentResourceInternalId' => $site->getSequence(),
                 'deploymentVcsProviderBranch' => $providerBranch,
                 'status' => 'verified',
                 'certificateId' => '',
@@ -225,6 +226,73 @@ class Base extends Action
                 'region' => $project->getAttribute('region')
             ]))
         );
+
+        if (!empty($commitDetails['commitHash'])) {
+            $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
+            $ruleId = md5($domain);
+            try {
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+            } catch (Duplicate $err) {
+                // Ignore, rule already exists; will be updated by builds worker
+            }
+        }
+
+        // VCS branch preview
+        if (!empty($providerBranch)) {
+            $branchPrefix = substr($providerBranch, 0, 16);
+            if (strlen($providerBranch) > 16) {
+                $remainingChars = substr($providerBranch, 16);
+                $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+            }
+            $resourceProjectHash = substr(hash('sha256', $site->getId() . $project->getId()), 0, 7);
+            $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+            $ruleId = md5($domain);
+            try {
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+            } catch (Duplicate $err) {
+                // Ignore, rule already exists; will be updated by builds worker
+            }
+        }
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

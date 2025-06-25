@@ -153,7 +153,7 @@ class Create extends Base
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $site->getId(),
-            'resourceInternalId' => $site->getInternalId(),
+            'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
             'buildCommands' => \implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
@@ -165,7 +165,7 @@ class Create extends Base
 
         $site = $site
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -180,15 +180,15 @@ class Create extends Base
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'domain' => $domain,
                 'type' => 'deployment',
                 'trigger' => 'deployment',
                 'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getInternalId(),
+                'deploymentResourceInternalId' => $site->getSequence(),
                 'status' => 'verified',
                 'certificateId' => '',
                 'owner' => 'Appwrite',

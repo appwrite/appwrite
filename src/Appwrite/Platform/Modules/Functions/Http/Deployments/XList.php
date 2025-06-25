@@ -84,7 +84,7 @@ class XList extends Action
         }
 
         // Set resource queries
-        $queries[] = Query::equal('resourceInternalId', [$function->getInternalId()]);
+        $queries[] = Query::equal('resourceInternalId', [$function->getSequence()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
         /**
