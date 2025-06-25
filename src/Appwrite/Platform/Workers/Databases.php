@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Realtime;
 use Exception;
+use Swoole\Timer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -39,6 +40,10 @@ class Databases extends Action
             ->inject('queueForRealtime')
             ->inject('log')
             ->callback($this->action(...));
+
+        Timer::tick(10_000, function () {
+            Console::info('Databases worker heartbeat');
+        });
     }
 
     /**
@@ -64,6 +69,14 @@ class Databases extends Action
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
 
+        Console::info("Processing database operation: \n" . \json_encode([
+            'type' => $type,
+            'projectId' => $project->getId(),
+            'databaseId' => $database->getId(),
+            'collectionId' => $collection->getId(),
+            'documentId' => $document->getId(),
+        ], JSON_PRETTY_PRINT));
+
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
@@ -82,6 +95,14 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
             default => throw new Exception('No database operation for type: ' . \strval($type)),
         };
+
+        Console::info("Finished processing database operation: \n" . \json_encode([
+            'type' => $type,
+            'projectId' => $project->getId(),
+            'databaseId' => $database->getId(),
+            'collectionId' => $collection->getId(),
+            'documentId' => $document->getId(),
+        ], JSON_PRETTY_PRINT));
     }
 
     /**
