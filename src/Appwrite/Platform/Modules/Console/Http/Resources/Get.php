@@ -57,7 +57,7 @@ class Get extends Action
             ->param('type', '', new WhiteList(['rules']), 'Resource type.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
