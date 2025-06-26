@@ -1067,6 +1067,8 @@ App::init()
         $origin = $request->getOrigin($request->getReferer(''));
         $originValidator = new Origin($platforms);
 
+        Console::info('Platforms: ' . json_encode($platforms, JSON_PRETTY_PRINT));
+
         if (
             !empty($origin)
             && !$originValidator->isValid($origin)
