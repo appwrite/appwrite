@@ -5,7 +5,7 @@
     <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite banner, with logo and text saying "Build Like a Team of Hundreds"></a>
     <br />
     <br />
-    <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
+    <b>Appwrite is an all-in-one development platform for Web, Mobile, and Flutter applications. Use built-in backend infrastructure and web hosting, all from a single place. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
     <br />
     <br />
 </p>
