@@ -55,9 +55,9 @@ class Origin extends Validator
 
         Console::info('we got here (1)');
 
-        if (!in_array($this->scheme, ['http', 'https'])) {
-            return false;
-        }
+        // if (!in_array($this->scheme, ['http', 'https'])) {
+        //     return false;
+        // }
 
         Console::info('we got here (2)');
 
