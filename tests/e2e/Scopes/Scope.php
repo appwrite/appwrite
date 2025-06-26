@@ -83,7 +83,7 @@ abstract class Scope extends TestCase
     {
         $hostname = match ($type) {
             'webhook' => 'request-catcher-webhook',
-            'api' => 'request-catcher-api',
+            'sms' => 'request-catcher-sms',
             default => throw new \Exception('Invalid request catcher type.'),
         };
 
