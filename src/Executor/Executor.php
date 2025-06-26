@@ -190,7 +190,7 @@ class Executor
         int $memory,
         bool $logging,
         string $runtimeEntrypoint = '',
-        ?int $requestTimeout
+        ?int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
             $headers['host'] = System::getEnv('_APP_DOMAIN', '');
