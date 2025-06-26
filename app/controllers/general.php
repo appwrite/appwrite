@@ -1070,9 +1070,9 @@ App::init()
         Console::info('Platforms: ' . json_encode($platforms, JSON_PRETTY_PRINT));
 
         if (
-            !empty($origin)
+            $devKey->isEmpty()
+            && !empty($origin)
             && !$originValidator->isValid($origin)
-            && $devKey->isEmpty()
             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
