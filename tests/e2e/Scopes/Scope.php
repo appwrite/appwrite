@@ -13,6 +13,9 @@ abstract class Scope extends TestCase
     use Retryable;
     use Async;
 
+    public const REQUEST_TYPE_WEBHOOK = 'webhook';
+    public const REQUEST_TYPE_SMS = 'sms';
+
     protected ?Client $client = null;
     protected string $endpoint = 'http://localhost/v1';
 
@@ -76,10 +79,16 @@ abstract class Scope extends TestCase
         return [];
     }
 
-    protected function assertLastRequest(callable $probe, $timeoutMs = 20_000, $waitMs = 500): array
+    protected function assertLastRequest(callable $probe, string $type, $timeoutMs = 20_000, $waitMs = 500): array
     {
-        $this->assertEventually(function () use (&$request, $probe) {
-            $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        $hostname = match ($type) {
+            'webhook' => 'request-catcher-webhook',
+            'api' => 'request-catcher-api',
+            default => throw new \Exception('Invalid request catcher type.'),
+        };
+
+        $this->assertEventually(function () use (&$request, $probe, $hostname) {
+            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
             $request['data'] = json_decode($request['data'], true);
 
             call_user_func($probe, $request);
@@ -88,11 +97,16 @@ abstract class Scope extends TestCase
         return $request;
     }
 
+    /**
+     * @deprecated Use assertLastRequest instead. Used only historically in webhook tests
+     */
     protected function getLastRequest(): array
     {
+        $hostname = 'request-catcher-webhook';
+
         sleep(2);
 
-        $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
         $request['data'] = json_decode($request['data'], true);
 
         return $request;
