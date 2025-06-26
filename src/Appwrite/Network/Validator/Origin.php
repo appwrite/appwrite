@@ -3,7 +3,6 @@
 namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Platform;
-use Utopia\CLI\Console;
 use Utopia\Validator;
 use Utopia\Validator\Hostname;
 
@@ -43,26 +42,11 @@ class Origin extends Validator
         $this->scheme = $this->parseScheme($origin);
         $this->host = parse_url($origin, PHP_URL_HOST);
 
-        Console::info('Origin: ' . $origin);
-        Console::info('Hostnames: ' . json_encode($this->hostnames, JSON_PRETTY_PRINT));
-        Console::info('Host: ' . $this->host);
-        Console::info('Schemes: ' . json_encode($this->schemes, JSON_PRETTY_PRINT));
-        Console::info('Scheme: ' . $this->scheme);
-
-        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) {
-            return true;
+        if (!empty($this->scheme) && !in_array($this->scheme, $this->schemes, true)) {
+            return false;
         }
 
-        Console::info('we got here (1)');
-
-        // if (!in_array($this->scheme, ['http', 'https'])) {
-        //     return false;
-        // }
-
-        Console::info('we got here (2)');
-
         $validator = new Hostname($this->hostnames);
-        Console::info('Valid Hostname? ' . ($validator->isValid($this->host) ? 'Yes' : 'No'));
         return $validator->isValid($this->host);
     }
 
