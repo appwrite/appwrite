@@ -1282,7 +1282,6 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
-
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
