@@ -116,10 +116,10 @@ class Action extends UtopiaAction
 
     /**
      * Dump Log Message
-     * 
+     *
      * Logs messages to console with timestamp, method context, and project details.
      * Supports multiple log types: success, error, log, warning, and info (default).
-     * 
+     *
      * @param string $method The calling method name
      * @param string $log The log message
      * @param string $type The log type (success, error, log, warning, info)
