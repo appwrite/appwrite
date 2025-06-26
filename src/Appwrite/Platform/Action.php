@@ -114,7 +114,20 @@ class Action extends UtopiaAction
         }
     }
 
-    public function dump(string $method, string $log, string $type = 'info', ?Document $project = null, string $collectionId = '')
+    /**
+     * Dump Log Message
+     * 
+     * Logs messages to console with timestamp, method context, and project details.
+     * Supports multiple log types: success, error, log, warning, and info (default).
+     * 
+     * @param string $method The calling method name
+     * @param string $log The log message
+     * @param string $type The log type (success, error, log, warning, info)
+     * @param Document|null $project The project document for context
+     * @param string $collectionId The collection identifier
+     * @return void
+     */
+    public function dump(string $method, string $log, string $type = 'info', ?Document $project = null, string $collectionId = ''): void
     {
         if (empty($project)) {
             $project = new Document([]);
