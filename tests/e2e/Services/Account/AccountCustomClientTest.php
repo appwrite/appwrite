@@ -2415,12 +2415,20 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
-        $smsRequest = $this->assertLastRequest(function ($request) {
+        $tokenCreatedAt = $response['body']['$createdAt'];
+
+        $smsRequest = $this->assertLastRequest(function ($request) use ($tokenCreatedAt) {
             $this->assertArrayHasKey('data', $request);
+            $this->assertArrayHasKey('time', $request);
             $this->assertArrayHasKey('message', $request['data'], "Last request missing message: " . \json_encode($request));
+
+            // Ensure we are not using token from last sms login
+            $tokenRecievedAt = $request['time'];
+            $this->assertGreaterThan($tokenCreatedAt, $tokenRecievedAt);
         }, Scope::REQUEST_TYPE_SMS);
 
         /**

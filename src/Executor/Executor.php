@@ -188,9 +188,9 @@ class Executor
         array $headers,
         float $cpus,
         int $memory,
-        string $runtimeEntrypoint = '',
         bool $logging,
-        int $requestTimeout = null
+        string $runtimeEntrypoint = '',
+        ?int $requestTimeout
     ) {
         if (empty($headers['host'])) {
             $headers['host'] = System::getEnv('_APP_DOMAIN', '');
