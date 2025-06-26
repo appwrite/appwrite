@@ -188,7 +188,7 @@ class Executor
         array $headers,
         float $cpus,
         int $memory,
-        string $runtimeEntrypoint = null,
+        string $runtimeEntrypoint = '',
         bool $logging,
         int $requestTimeout = null
     ) {
