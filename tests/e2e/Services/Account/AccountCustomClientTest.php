@@ -2421,7 +2421,7 @@ class AccountCustomClientTest extends Scope
 
         $smsRequest = $this->assertLastRequest(function ($request) {
             $this->assertArrayHasKey('data', $request);
-            $this->assertArrayHasKey('message', $request['data']);
+            $this->assertArrayHasKey('message', $request['data'], "Last request missing message: " . \json_encode($request));
         });
 
         /**
