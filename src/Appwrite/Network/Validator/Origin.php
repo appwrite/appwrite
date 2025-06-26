@@ -46,6 +46,8 @@ class Origin extends Validator
         Console::info('Origin: ' . $origin);
         Console::info('Hostnames: ' . json_encode($this->hostnames, JSON_PRETTY_PRINT));
         Console::info('Host: ' . $this->host);
+        $validator = new Hostname($this->hostnames);
+        Console::info('Valid Hostname? ' . $validator->isValid($this->host) ? 'Yes' : 'No');
         Console::info('Schemes: ' . json_encode($this->schemes, JSON_PRETTY_PRINT));
         Console::info('Scheme: ' . $this->scheme);
 
@@ -57,7 +59,6 @@ class Origin extends Validator
             return false;
         }
 
-        $validator = new Hostname($this->hostnames);
         return $validator->isValid($this->host);
     }
 
