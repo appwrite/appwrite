@@ -40,7 +40,7 @@ class Origin extends Validator
         }
 
         $this->scheme = $this->parseScheme($origin);
-        $this->host = parse_url($origin, PHP_URL_HOST);
+        $this->host = strtolower(parse_url($origin, PHP_URL_HOST));
 
         if (!empty($this->scheme) && !in_array($this->scheme, $this->schemes, true)) {
             return false;
