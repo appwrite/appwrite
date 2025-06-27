@@ -283,8 +283,6 @@ jobs:
     name: E2E Service Test (Dev Keys)
     runs-on: ubuntu-latest
     needs: setup
-    strategy:
-      fail-fast: false
     steps:
       - name: checkout
         uses: actions/checkout@v4
