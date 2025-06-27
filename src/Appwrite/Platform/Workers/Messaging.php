@@ -72,7 +72,7 @@ class Messaging extends Action
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -426,7 +426,7 @@ class Messaging extends Action
         $credentials = $provider->getAttribute('credentials');
 
         return match ($provider->getAttribute('provider')) {
-            'mock' => new Mock('username', 'password'),
+            'mock' => (new Mock('username', 'password'))->setEndpoint('http://request-catcher-sms:5000/'),
             'twilio' => new Twilio(
                 $credentials['accountSid'] ?? '',
                 $credentials['authToken'] ?? '',

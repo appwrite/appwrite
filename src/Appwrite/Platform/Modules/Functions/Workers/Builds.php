@@ -75,7 +75,7 @@ class Builds extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -747,6 +747,13 @@ class Builds extends Action
                                         if ($separator !== false) {
                                             $logs = \substr($logs, 0, $separator);
                                             $insideSeparation = true;
+
+                                            $leftover = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
+                                            $separator = \strpos($leftover, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                                            if ($separator !== false) {
+                                                $logs .= \substr($leftover, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                                                $insideSeparation = false;
+                                            }
                                         }
                                     } else {
                                         $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
@@ -829,18 +836,10 @@ class Builds extends Action
 
             // Separate logs for SSR detection
             $detectionLogs = '';
-            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
-            if ($separator !== false) {
-                $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
-                $separatorEnd = \strpos($detectionLogs, '{APPWRITE_DETECTION_SEPARATOR_END}');
-                $logs .= \substr($detectionLogs, $separatorEnd + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
-                $detectionLogs = \substr($detectionLogs, 0, $separatorEnd);
-                $logs = \substr($logs, 0, $separator);
-            }
-
-            if ($resource->getCollection() === 'sites') {
-                $date = \date('H:i:s');
-                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+            if (\str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
+                [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+                [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
+                $logs = ($logsBefore ?? '') . ($logsAfter ?? '');
             }
 
             $deployment->setAttribute('buildLogs', $logs);
@@ -870,15 +869,23 @@ class Builds extends Action
                 }
             }
 
-            $deployment->setAttribute('buildLogs', $logs);
-
-            $this->afterBuildSuccess($dbForProject, $deployment);
-
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
+
+            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
+            $logs = $deployment->getAttribute('buildLogs', '');
+
+            if ($resource->getCollection() === 'sites') {
+                $date = \date('H:i:s');
+                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+                $deployment->setAttribute('buildLogs', $logs);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+            }
 
             /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
@@ -1227,12 +1234,8 @@ class Builds extends Action
                 $message = "[31m" . $message;
             }
 
-            $separator = \strpos($message, '{APPWRITE_DETECTION_SEPARATOR_START}');
-            if ($separator !== false) {
-                $error = \substr($message, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
-                $message = \substr($message, 0, $separator);
-                $message .= "\n[31m" . $error;
-            }
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
 
             // Combine with previous logs if deployment got past build process
             $previousLogs = '';
@@ -1321,12 +1324,14 @@ class Builds extends Action
     /**
      * Hook to run after build success
      *
+     * @param Realtime $queueForRealtime
      * @param Database $dbForProject
      * @param Document $deployment
      * @return void
      */
-    protected function afterBuildSuccess(Database $dbForProject, Document &$deployment): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment): void
     {
+        assert($queueForRealtime instanceof Realtime);
         assert($dbForProject instanceof Database);
         assert($deployment instanceof Document);
     }
