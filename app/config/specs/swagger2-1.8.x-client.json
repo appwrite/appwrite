@@ -4513,7 +4513,7 @@
                     "weight": 340,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/list-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
@@ -4526,6 +4526,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.listRows",
                     "auth": {
                         "Project": []
                     }
@@ -4595,7 +4596,7 @@
                     "weight": 332,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/create-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
@@ -4608,6 +4609,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.createRow",
                     "methods": [
                         {
                             "name": "createDocument",
@@ -4758,7 +4760,7 @@
                     "weight": 333,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/get-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
@@ -4771,6 +4773,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.getRow",
                     "auth": {
                         "Project": []
                     }
@@ -4848,7 +4851,7 @@
                     "weight": 336,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/upsert-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
@@ -4861,6 +4864,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.upsertRow",
                     "methods": [
                         {
                             "name": "upsertDocument",
@@ -4972,7 +4976,7 @@
                     "weight": 334,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/update-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
@@ -4985,6 +4989,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.updateRow",
                     "auth": {
                         "Project": []
                     }
@@ -5069,7 +5074,7 @@
                     "weight": 338,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
                     "demo": "databases\/delete-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,
@@ -5082,6 +5087,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "replaceWith": "tables.deleteRow",
                     "auth": {
                         "Project": []
                     }
