@@ -3649,8 +3649,20 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $cursor->setValue($cursorDocument);
         }
+
+        $selectQueries = [];
+
         try {
-            $documents = $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
+            $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+
+            if (! empty($selectQueries)) {
+                // has selects, allow relationship on documents!
+                $documents = $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
+            } else {
+                // has no selects, disable relationship looping on documents!
+                $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
+            }
+
             $total = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
@@ -3723,29 +3735,41 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), \max(1, $operations));
 
-        $select = \array_reduce($queries, function ($result, $query) {
-            return $result || ($query->getMethod() === Query::TYPE_SELECT);
-        }, false);
-
         // Check if the SELECT query includes $databaseId and $collectionId
+        $hasWildcard = false;
         $hasDatabaseId = false;
         $hasCollectionId = false;
-        if ($select) {
-            $hasDatabaseId = \array_reduce($queries, function ($result, $query) {
-                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$databaseId', $query->getValues()));
-            }, false);
-            $hasCollectionId = \array_reduce($queries, function ($result, $query) {
-                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$collectionId', $query->getValues()));
-            }, false);
-        }
+        $hasSelectQueries = !empty($selectQueries);
 
-        if ($select) {
-            foreach ($documents as $document) {
-                if (!$hasDatabaseId) {
-                    $document->removeAttribute('$databaseId');
+        if ($hasSelectQueries) {
+            foreach ($selectQueries as $query) {
+                if ($query->getMethod() !== Query::TYPE_SELECT) {
+                    continue;
                 }
-                if (!$hasCollectionId) {
-                    $document->removeAttribute('$collectionId');
+
+                $values = $query->getValues();
+                if (\in_array('*', $values, true)) {
+                    $hasWildcard = true;
+                    break;
+                }
+
+                if (\in_array('$databaseId', $values, true)) {
+                    $hasDatabaseId = true;
+                }
+
+                if (\in_array('$collectionId', $values, true)) {
+                    $hasCollectionId = true;
+                }
+            }
+
+            if (!$hasWildcard) {
+                foreach ($documents as $document) {
+                    if (!$hasDatabaseId) {
+                        $document->removeAttribute('$databaseId');
+                    }
+                    if (!$hasCollectionId) {
+                        $document->removeAttribute('$collectionId');
+                    }
                 }
             }
         }
@@ -3803,10 +3827,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        try {
+        $selects = Query::groupByType($queries)['selections'] ?? [];
+
+        if (! empty($selects)) {
+            // has selects, allow relationship on documents!
             $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } else {
+            // has no selects, disable relationship looping on documents!
+            $document = $dbForProject->skipRelationships(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries));
         }
 
         if ($document->isEmpty()) {
