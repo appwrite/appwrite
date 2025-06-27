@@ -323,7 +323,8 @@ services:
     depends_on:
       - redis
       - mariadb
-      - request-catcher
+      - request-catcher-sms
+      - request-catcher-webhook
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1075,12 +1076,21 @@ services:
     networks:
       - appwrite
 
-  request-catcher: # used mainly for dev tests
+  request-catcher-webhook: # used mainly for dev tests (mock HTTP webhook)
     image: appwrite/requestcatcher:1.0.0
-    container_name: appwrite-requestcatcher
+    container_name: appwrite-requestcatcher-webhook
     <<: *x-logging
     ports:
       - "9504:5000"
+    networks:
+      - appwrite
+
+  request-catcher-sms: # used mainly for dev tests (mock SMS auth secret)
+    image: appwrite/requestcatcher:1.0.0
+    container_name: appwrite-requestcatcher-sms
+    <<: *x-logging
+    ports:
+      - "9507:5000"
     networks:
       - appwrite
 
