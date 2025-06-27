@@ -3891,28 +3891,47 @@ trait DatabasesBase
         $this->assertCount(1, $documentsUser2['body']['documents']);
     }
 
-    /**
-     * @depends testDefaultPermissions
-     */
-    public function testUniqueIndexDuplicate(array $data): array
+    public function testUniqueIndexDuplicate(): void
     {
-        $databaseId = $data['databaseId'];
-        $uniqueIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+        // Setup: create database, collection, attribute, and initial document
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'key' => 'unique_title',
-            'type' => 'unique',
-            'attributes' => ['title'],
+            'databaseId' => ID::unique(),
+            'name' => 'Unique Index DB',
         ]);
-
-        $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
-
+        $databaseId = $database['body']['$id'];
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Movies',
+            'permissions' => [
+                Permission::create(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $moviesId = $movies['body']['$id'];
+        $title = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $title['headers']['status-code']);
         sleep(2);
-
-        // test for failure
-        $duplicate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+        // Insert initial document
+        $doc1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -3931,11 +3950,45 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
+        $this->assertEquals(201, $doc1['headers']['status-code']);
 
+        // Create unique index
+        $uniqueIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'unique_title',
+            'type' => 'unique',
+            'attributes' => ['title'],
+        ]);
+        $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
+        sleep(2);
+
+        // test for failure (duplicate title)
+        $duplicate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Captain America',
+                'releaseYear' => 1944,
+                'actors' => [
+                    'Chris Evans',
+                    'Samuel Jackson',
+                ]
+            ],
+            'permissions' => [
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+            ]
+        ]);
         $this->assertEquals(409, $duplicate['headers']['status-code']);
 
         // Test for exception when updating document to conflict
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -3954,11 +4007,9 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
-
         $this->assertEquals(201, $document['headers']['status-code']);
 
-        // Test for exception when updating document to conflict
-        $duplicate = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $document['body']['$id'], array_merge([
+        $duplicate = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $document['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -3977,17 +4028,48 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
-
         $this->assertEquals(409, $duplicate['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUniqueIndexDuplicate
-     */
-    public function testPersistantCreatedAt(array $data): array
+    public function testPersistentCreatedAt(): void
     {
+        // Setup: create database, collection, attribute
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'CreatedAtDB',
+        ]);
+        $databaseId = $database['body']['$id'];
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Movies',
+            'permissions' => [
+                Permission::create(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $moviesId = $movies['body']['$id'];
+        $title = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $title['headers']['status-code']);
+        sleep(2);
         $headers = $this->getSide() === 'client' ? array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3997,52 +4079,43 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ];
 
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', $headers, [
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', $headers, [
             'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Creation Date Test',
                 'releaseYear' => 2000
             ]
         ]);
-
         $this->assertEquals($document['body']['title'], 'Creation Date Test');
-
         $documentId = $document['body']['$id'];
         $createdAt = $document['body']['$createdAt'];
         $updatedAt = $document['body']['$updatedAt'];
 
         \sleep(1);
-
-        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Updated Date Test',
             ]
         ]);
-
         $updatedAtSecond = $document['body']['$updatedAt'];
-
         $this->assertEquals($document['body']['title'], 'Updated Date Test');
         $this->assertEquals($document['body']['$createdAt'], $createdAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
 
         \sleep(1);
-
-        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Again Updated Date Test',
                 '$createdAt' => '2022-08-01 13:09:23.040', // $createdAt is not updatable
                 '$updatedAt' => '2022-08-01 13:09:23.050' // system will update it not api
             ]
         ]);
-
         $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
         $this->assertEquals($document['body']['$createdAt'], $createdAt);
         $this->assertNotEquals($document['body']['$createdAt'], '2022-08-01 13:09:23.040');
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAtSecond);
         $this->assertNotEquals($document['body']['$updatedAt'], '2022-08-01 13:09:23.050');
-
-        return $data;
     }
 
     public function testUpdatePermissionsWithEmptyPayload(): array
@@ -5506,5 +5579,449 @@ trait DatabasesBase
         $this->assertEquals(400, $typeErr['headers']['status-code']);
     }
 
+    public function testCreateTransaction(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'TransactionTestDatabase'
+        ]);
 
+        $databaseId = $database['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/transactions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'ttl' => 900
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertArrayHasKey('transactionId', $response['body']);
+        $this->assertEquals('pending', $response['body']['status']);
+        $this->assertArrayHasKey('expiresAt', $response['body']);
+        $this->assertGreaterThanOrEqual(DateTime::addSeconds(new \DateTime(), 800), strtotime($response['body']['expiresAt']));
+        $this->assertLessThanOrEqual(DateTime::addSeconds(new \DateTime(), 1000), strtotime($response['body']['expiresAt']));
+
+        // Failure: invalid TTL
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/transactions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'ttl' => -1
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/transactions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'ttl' => 1000000
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testAddOperationsToTransaction(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'TransactionTestDatabase'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'TransactionTest',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/transactions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'ttl' => 300
+        ]);
+
+        $transactionId = $transaction['body']['transactionId'];
+
+        // Add operations
+        $transaction = $this->client->call(Client::METHOD_POST, "/databases/$databaseId/transactions/$transactionId/operations", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'action' => 'create',
+                    'data' => [
+                        'name' => 'Tester 1'
+                    ],
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'action' => 'create',
+                    'data' => [
+                        'name' => 'Tester 2'
+                    ],
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $this->assertNotEmpty($transaction['body']);
+
+        // Failure cases
+
+        // Invalid databaseId
+        $response = $this->client->call(Client::METHOD_POST, "/databases/invalidDatabaseId/transactions/$transactionId/operations", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'operations' => [
+                [
+                    'databaseId' => 'invalidDatabaseId',
+                    'collectionId' => $collectionId,
+                    'action' => 'create',
+                    'data' => ['name' => 'Invalid Tester']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        // Invalid collectionId
+        $response = $this->client->call(Client::METHOD_POST, "/databases/$databaseId/transactions/$transactionId/operations", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => 'invalidCollectionId',
+                    'action' => 'create',
+                    'data' => ['name' => 'Invalid Tester']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        // Invalid action
+        $response = $this->client->call(Client::METHOD_POST, "/databases/$databaseId/transactions/$transactionId/operations", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'action' => 'invalidAction',
+                    'data' => ['name' => 'Invalid Tester']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Missing required fields
+        $response = $this->client->call(Client::METHOD_POST, "/databases/$databaseId/transactions/$transactionId/operations", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId
+                    // Missing action
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCommitTransaction(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'TransactionTestDatabase'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'TransactionTestCommit',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        \sleep(2);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/transactions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $transactionId = $transaction['body']['transactionId'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/$databaseId/transactions/$transactionId/operations", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'action' => 'create',
+                    'data' => ['name' => 'Tester'],
+                ]
+            ]
+        ]);
+
+        $transaction = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/transactions/$transactionId", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $transaction['headers']['status-code']);
+        $this->assertEquals('committed', $transaction['body']['status']);
+
+        $documents = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/collections/$collectionId/documents", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(1, count($documents['body']['documents']));
+        $this->assertEquals('Tester', $documents['body']['documents'][0]['name']);
+    }
+
+    public function testRollbackTransaction(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'TransactionTestDatabase'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'TransactionTestRollback',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        \sleep(2);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/transactions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $transactionId = $transaction['body']['transactionId'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/$databaseId/transactions/$transactionId/operations", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'action' => 'create',
+                    'data' => [
+                        'name' => 'value'
+                    ],
+                ]
+            ]
+        ]);
+
+        $rollback = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/transactions/$transactionId", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rollback' => true
+        ]);
+
+        $this->assertEquals(200, $rollback['headers']['status-code']);
+        $this->assertEquals('rolledBack', $rollback['body']['status']);
+
+        $documents = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/collections/$collectionId/documents", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $this->assertEquals(0, count($documents['body']['documents']));
+    }
+    public function testTransactionConflict(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'TransactionTestConflictDatabase'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'TransactionTestConflict',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        // Add string attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/transactions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $transactionId = $transaction['body']['transactionId'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/$databaseId/transactions/$transactionId/operations", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'action' => 'create',
+                    'data' => ['attribute' => 'value'],
+                ]
+            ]
+        ]);
+
+        // Commit the transaction
+        $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/transactions/$transactionId", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        // Attempt to commit again, should fail with a conflict
+        $conflictResponse = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/transactions/$transactionId", \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(409, $conflictResponse['headers']['status-code']);
+    }
 }

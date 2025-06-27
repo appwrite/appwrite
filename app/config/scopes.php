@@ -40,6 +40,12 @@ return [ // List of publicly visible scopes
     'indexes.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collection\'s indexes',
     ],
+    'transactions.read' => [
+        'description' => 'Access to read your project\'s database transactions',
+    ],
+    'transactions.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database transactions',
+    ],
     'documents.read'  => [
         'description' => 'Access to read your project\'s database documents',
     ],

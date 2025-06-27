@@ -810,6 +810,43 @@ return [
         'code' => 409,
     ],
 
+    /** Transactions */
+    Exception::TRANSACTION_NOT_FOUND => [
+        'name' => Exception::TRANSACTION_NOT_FOUND,
+        'description' => 'Transaction with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TRANSACTION_ALREADY_EXISTS => [
+        'name' => Exception::TRANSACTION_ALREADY_EXISTS,
+        'description' => 'Transaction with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::TRANSACTION_INVALID => [
+        'name' => Exception::TRANSACTION_INVALID,
+        'description' => 'The transaction is invalid. Please check the transaction data and try again.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_EXPIRED => [
+        'name' => Exception::TRANSACTION_EXPIRED,
+        'description' => 'The transaction has expired. Please create a new transaction and try again.',
+        'code' => 410,
+    ],
+    Exception::TRANSACTION_CONFLICT => [
+        'name' => Exception::TRANSACTION_CONFLICT,
+        'description' => 'The transaction has a conflict. Please resolve the conflict and try again.',
+        'code' => 409,
+    ],
+    Exception::TRANSACTION_LIMIT_EXCEEDED => [
+        'name' => Exception::TRANSACTION_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of transactions has been reached.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_NOT_READY => [
+        'name' => Exception::TRANSACTION_NOT_READY,
+        'description' => 'The transaction is not ready yet. Please try again later.',
+        'code' => 400,
+    ],
+
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [
         'name' => Exception::PROJECT_NOT_FOUND,
