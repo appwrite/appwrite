@@ -13,7 +13,7 @@ tables.updateRelationshipColumn(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "", // key
-    .CASCADE, // onDelete (optional)
+    RelationMutate.CASCADE, // onDelete (optional)
     "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

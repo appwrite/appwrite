@@ -1,4 +1,4 @@
-import { Client, Tables,  } from "@appwrite.io/console";
+import { Client, Tables, IndexType } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -10,7 +10,7 @@ const result = await tables.createIndex(
     '<DATABASE_ID>', // databaseId
     '<TABLE_ID>', // tableId
     '', // key
-    .Key, // type
+    IndexType.Key, // type
     [], // columns
     [], // orders (optional)
     [] // lengths (optional)

@@ -14,6 +14,6 @@ $result = $tables->updateRelationshipColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: '',
-    onDelete: ::CASCADE(), // optional
+    onDelete: RelationMutate::CASCADE(), // optional
     newKey: '' // optional
 );

@@ -11,6 +11,6 @@ const result = await tables.updateRelationshipColumn(
     '<DATABASE_ID>', // databaseId
     '<TABLE_ID>', // tableId
     '', // key
-    sdk..Cascade, // onDelete (optional)
+    sdk.RelationMutate.Cascade, // onDelete (optional)
     '' // newKey (optional)
 );

@@ -14,6 +14,6 @@ ColumnRelationship result = await tables.UpdateRelationshipColumn(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     key: "",
-    onDelete: .Cascade, // optional
+    onDelete: RelationMutate.Cascade, // optional
     newKey: "" // optional
 );

@@ -27,12 +27,12 @@ class XList extends CollectionLogXList
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/logs')
             ->desc('List table logs')
             ->groups(['api', 'database'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'tables.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'databases',
+                namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'listLogs', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/get-table-logs.md',
                 auth: [AuthType::ADMIN],
                 responses: [

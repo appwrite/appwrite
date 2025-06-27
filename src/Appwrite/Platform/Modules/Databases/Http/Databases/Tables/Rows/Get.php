@@ -32,7 +32,7 @@ class Get extends DocumentGet
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
             ->desc('Get row')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'rows.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
@@ -49,7 +49,7 @@ class Get extends DocumentGet
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/tables#tablesCreate).')
             ->param('rowId', '', new UID(), 'Row ID.')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->inject('response')

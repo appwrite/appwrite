@@ -14,9 +14,9 @@ ColumnRelationship result = await tables.CreateRelationshipColumn(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     relatedTableId: "<RELATED_TABLE_ID>",
-    type: .OneToOne,
+    type: RelationshipType.OneToOne,
     twoWay: false, // optional
     key: "", // optional
     twoWayKey: "", // optional
-    onDelete: .Cascade // optional
+    onDelete: RelationMutate.Cascade // optional
 );

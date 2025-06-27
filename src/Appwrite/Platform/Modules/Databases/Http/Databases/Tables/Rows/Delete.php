@@ -36,7 +36,7 @@ class Delete extends DocumentDelete
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
             ->desc('Delete row')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].delete')
             ->label('audits.event', 'row.delete')
@@ -59,7 +59,7 @@ class Delete extends DocumentDelete
                 contentType: ContentType::NONE
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/tables#tablesCreate).')
             ->param('rowId', '', new UID(), 'Row ID.')
             ->inject('requestTimestamp')
             ->inject('response')

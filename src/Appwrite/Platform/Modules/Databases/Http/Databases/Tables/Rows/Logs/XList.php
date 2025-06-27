@@ -27,7 +27,7 @@ class XList extends DocumentLogXList
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId/logs')
             ->desc('List row logs')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'rows.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
@@ -44,7 +44,7 @@ class XList extends DocumentLogXList
                 contentType: ContentType::JSON,
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Collection ID.')
+            ->param('tableId', '', new UID(), 'Table ID.')
             ->param('rowId', '', new UID(), 'Row ID.')
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')

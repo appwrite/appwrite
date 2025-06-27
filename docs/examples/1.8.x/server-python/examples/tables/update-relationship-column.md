@@ -12,6 +12,6 @@ result = tables.update_relationship_column(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
     key = '',
-    on_delete = .CASCADE, # optional
+    on_delete = RelationMutate.CASCADE, # optional
     new_key = '' # optional
 )

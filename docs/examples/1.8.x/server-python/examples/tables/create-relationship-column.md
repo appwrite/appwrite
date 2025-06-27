@@ -1,6 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.tables import Tables
-from appwrite.enums import 
+from appwrite.enums import RelationshipType
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -13,9 +13,9 @@ result = tables.create_relationship_column(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
     related_table_id = '<RELATED_TABLE_ID>',
-    type = .ONETOONE,
+    type = RelationshipType.ONETOONE,
     two_way = False, # optional
     key = '', # optional
     two_way_key = '', # optional
-    on_delete = .CASCADE # optional
+    on_delete = RelationMutate.CASCADE # optional
 )

@@ -1,4 +1,4 @@
-import { Client, Tables,  } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Tables, RelationMutate } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,6 +11,6 @@ const response = await tables.updateRelationshipColumn(
     '<DATABASE_ID>', // databaseId
     '<TABLE_ID>', // tableId
     '', // key
-    .Cascade, // onDelete (optional)
+    RelationMutate.Cascade, // onDelete (optional)
     '' // newKey (optional)
 );

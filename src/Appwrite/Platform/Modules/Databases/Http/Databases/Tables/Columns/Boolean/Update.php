@@ -33,7 +33,7 @@ class Update extends BooleanUpdate
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/boolean/:key')
             ->desc('Update boolean column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')
@@ -53,7 +53,7 @@ class Update extends BooleanUpdate
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/tables#tablesCreate).')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Boolean()), 'Default value for column when not provided. Cannot be set when column is required.')

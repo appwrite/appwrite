@@ -31,12 +31,12 @@ class Get extends CollectionUsageGet
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/usage')
             ->desc('Get table usage stats')
             ->groups(['api', 'database', 'usage'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'tables.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: null,
-                name: self::getName(),
+                name: 'getUsage', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/get-table-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [
@@ -49,7 +49,7 @@ class Get extends CollectionUsageGet
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
-            ->param('tableId', '', new UID(), 'Collection ID.')
+            ->param('tableId', '', new UID(), 'Table ID.')
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

@@ -14,7 +14,7 @@ ColumnIndex result = await tables.CreateIndex(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     key: "",
-    type: .Key,
+    type: IndexType.Key,
     columns: new List<string>(),
     orders: new List<string>(), // optional
     lengths: new List<long>() // optional
