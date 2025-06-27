@@ -49,7 +49,7 @@ class Get extends Action
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

@@ -22,6 +22,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -797,6 +798,12 @@ App::shutdown()
         }
 
         if (!empty($queueForDatabase->getType())) {
+            Console::info("Triggering database event: \n" .  \json_encode([
+                'projectId' => $project->getId(),
+                'databaseId' => $queueForDatabase->getDatabase()?->getId(),
+                'collectionId' => $queueForDatabase->getCollection()?->getId(),
+                'documentId' => $queueForDatabase->getDocument()?->getId(),
+            ]));
             $queueForDatabase->trigger();
         }
 
