@@ -1080,6 +1080,7 @@ App::options()
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
+    ->inject('log')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
@@ -1092,7 +1093,7 @@ App::options()
     ->inject('project')
     ->inject('devKey')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey) {
         /*
         * Appwrite Router
         */
@@ -1396,6 +1397,7 @@ App::get('/robots.txt')
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
+    ->inject('log')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
@@ -1406,7 +1408,7 @@ App::get('/robots.txt')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1428,6 +1430,7 @@ App::get('/humans.txt')
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
+    ->inject('log')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
@@ -1438,7 +1441,7 @@ App::get('/humans.txt')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 

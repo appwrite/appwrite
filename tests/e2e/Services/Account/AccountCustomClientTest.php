@@ -2065,14 +2065,13 @@ class AccountCustomClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $smsRequest = $this->assertLastRequest(function (array $request) use ($number) {
-            $this->assertEquals('http://request-catcher:5000/mock-sms', $request['url']);
             $this->assertEquals('Appwrite Mock Message Sender', $request['headers']['User-Agent']);
             $this->assertEquals('username', $request['headers']['X-Username']);
             $this->assertEquals('password', $request['headers']['X-Key']);
             $this->assertEquals('POST', $request['method']);
             $this->assertEquals('+123456789', $request['data']['from']);
             $this->assertEquals($number, $request['data']['to']);
-        });
+        }, Scope::REQUEST_TYPE_SMS);
 
         $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
@@ -2416,13 +2415,21 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
-        $smsRequest = $this->assertLastRequest(function ($request) {
+        $tokenCreatedAt = $response['body']['$createdAt'];
+
+        $smsRequest = $this->assertLastRequest(function ($request) use ($tokenCreatedAt) {
             $this->assertArrayHasKey('data', $request);
+            $this->assertArrayHasKey('time', $request);
             $this->assertArrayHasKey('message', $request['data'], "Last request missing message: " . \json_encode($request));
-        });
+
+            // Ensure we are not using token from last sms login
+            $tokenRecievedAt = $request['time'];
+            $this->assertGreaterThan($tokenCreatedAt, $tokenRecievedAt);
+        }, Scope::REQUEST_TYPE_SMS);
 
         /**
          * Test for FAILURE

@@ -53,11 +53,14 @@ class StatsResources extends Action
         $this->logError = $logError;
         $this->dbForPlatform = $dbForPlatform;
 
+        $this->disableSubqueries();
+
         Console::title("Stats resources V1");
 
         Console::success('Stats resources: started');
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
+
         Console::loop(function () use ($queue) {
             Authorization::disable();
             Authorization::setDefaultStatus(false);
