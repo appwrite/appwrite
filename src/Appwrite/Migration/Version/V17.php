@@ -2,7 +2,6 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -270,7 +269,7 @@ class V17 extends Migration
                 * Set hashOptions type
                 */
                 $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
-                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
+                    'type' => $document->getAttribute('hash', 'argon2')
                 ]));
                 break;
         }
