@@ -20,6 +20,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Platform;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -943,7 +944,7 @@ App::setResource('httpReferrer', function (Request $request): string {
     return $referrer;
 }, ['request']);
 
-App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $clients, Database $dbForPlatform, Document $project, App $utopia): string {
+App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $platforms, Database $dbForPlatform, Document $project, App $utopia): string {
     $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
     $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
@@ -956,8 +957,8 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     }
 
     // Safe if added as web platform
-    $validator = new Hostname($clients);
-    if ($validator->isValid($origin)) {
+    $originValidator = new Origin($platforms);
+    if ($originValidator->isValid($origin)) {
         return $referrer;
     }
 
@@ -985,4 +986,4 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
     return $referrer;
-}, ['request', 'httpReferrer', 'clients', 'dbForPlatform', 'project', 'utopia']);
+}, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
