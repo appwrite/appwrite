@@ -75,7 +75,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForBuilds')
             ->inject('gitHub')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -142,7 +142,7 @@ class Create extends Base
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getInternalId(),
+            'resourceInternalId' => $function->getSequence(),
             'resourceType' => 'functions',
             'entrypoint' => $function->getAttribute('entrypoint', ''),
             'buildCommands' => $function->getAttribute('commands', ''),
@@ -152,7 +152,7 @@ class Create extends Base
 
         $function = $function
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);

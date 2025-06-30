@@ -62,7 +62,7 @@ class Update extends Base
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -90,7 +90,7 @@ class Update extends Base
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
@@ -105,17 +105,18 @@ class Update extends Base
 
         $queries = [
             Query::equal('trigger', ['manual']),
-            Query::equal("type", ["deployment"]),
-            Query::equal("deploymentResourceType", ["function"]),
-            Query::equal("deploymentResourceInternalId", [$function->getInternalId()]),
-            Query::equal("deploymentVcsProviderBranch", [""]),
-            Query::equal("projectInternalId", [$project->getInternalId()])
+            Query::equal('type', ['deployment']),
+            Query::equal('deploymentResourceType', ['function']),
+            Query::equal('deploymentResourceInternalId', [$function->getSequence()]),
+            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
         Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
-                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                ->setAttribute('deploymentInternalId', $deployment->getSequence());
+
             Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
         }, $queries));
 

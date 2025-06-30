@@ -57,7 +57,7 @@ class Create extends Action
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $projectId, string $name, ?string $expire, Document $user, Response $response, Database $dbForPlatform)
@@ -76,7 +76,7 @@ class Create extends Action
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
             'expire' => $expire,

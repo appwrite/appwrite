@@ -66,7 +66,7 @@ class Create extends Action
             ->inject('queueForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
@@ -153,7 +153,7 @@ class Create extends Action
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'api',

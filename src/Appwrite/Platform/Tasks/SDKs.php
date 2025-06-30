@@ -46,7 +46,7 @@ class SDKs extends Action
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
             ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void
@@ -64,7 +64,7 @@ class SDKs extends Action
             $message ??= Console::confirm('Please enter your commit message:');
         }
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', '1.7.x', 'latest'])) {
+        if (!\in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', '1.7.x', '1.8.x', 'latest'])) {
             throw new \Exception('Unknown version given');
         }
 

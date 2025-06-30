@@ -74,7 +74,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
@@ -170,7 +170,7 @@ class Create extends Action
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'redirect',
@@ -179,7 +179,7 @@ class Create extends Action
             'redirectStatusCode' => $statusCode,
             'deploymentResourceType' => $resourceType,
             'deploymentResourceId' => $resource->getId(),
-            'deploymentResourceInternalId' => $resource->getInternalId(),
+            'deploymentResourceInternalId' => $resource->getSequence(),
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get()]),
             'owner' => $owner,

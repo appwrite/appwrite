@@ -55,7 +55,7 @@ class XList extends Action
             ->param('queries', [], new FileTokens(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', FileTokens::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $bucketId, string $fileId, array $queries, Response $response, Database $dbForProject)
@@ -64,7 +64,7 @@ class XList extends Action
 
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_FILES]);
-        $queries[] = Query::equal('resourceInternalId', [$bucket->getInternalId() . ':' . $file->getInternalId()]);
+        $queries[] = Query::equal('resourceInternalId', [$bucket->getSequence() . ':' . $file->getSequence()]);
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);

@@ -54,7 +54,7 @@ class Delete extends Base
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $variableId, Response $response, Database $dbForProject)
@@ -66,7 +66,7 @@ class Delete extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getInternalId() || $variable->getAttribute('resourceType') !== 'site') {
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getSequence() || $variable->getAttribute('resourceType') !== 'site') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

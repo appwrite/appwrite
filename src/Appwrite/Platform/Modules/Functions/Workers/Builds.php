@@ -75,7 +75,7 @@ class Builds extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -209,6 +209,9 @@ class Builds extends Action
         Executor $executor,
         array $plan
     ): void {
+        $startTime = DateTime::now();
+        $durationStart = \microtime(true);
+
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
@@ -259,9 +262,6 @@ class Builds extends Action
             ->setEvent($event)
             ->setParam($resourceKey, $resource->getId())
             ->setParam('deploymentId', $deployment->getId());
-
-        $startTime = DateTime::now();
-        $durationStart = \microtime(true);
 
         if ($deployment->getAttribute('status') === 'canceled') {
             Console::info('Build has been canceled');
@@ -749,6 +749,13 @@ class Builds extends Action
                                         if ($separator !== false) {
                                             $logs = \substr($logs, 0, $separator);
                                             $insideSeparation = true;
+
+                                            $leftover = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
+                                            $separator = \strpos($leftover, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                                            if ($separator !== false) {
+                                                $logs .= \substr($leftover, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                                                $insideSeparation = false;
+                                            }
                                         }
                                     } else {
                                         $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
@@ -812,9 +819,6 @@ class Builds extends Action
                 throw $err;
             }
 
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-
             $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if (isset($plan['buildSize'])) {
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
@@ -823,10 +827,6 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
-            /** Update the build document */
-            $deployment->setAttribute('buildStartedAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
-            $deployment->setAttribute('buildEndedAt', $endTime);
-            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
             $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
@@ -838,18 +838,10 @@ class Builds extends Action
 
             // Separate logs for SSR detection
             $detectionLogs = '';
-            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
-            if ($separator !== false) {
-                $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
-                $separatorEnd = \strpos($detectionLogs, '{APPWRITE_DETECTION_SEPARATOR_END}');
-                $logs .= \substr($detectionLogs, $separatorEnd + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
-                $detectionLogs = \substr($detectionLogs, 0, $separatorEnd);
-                $logs = \substr($logs, 0, $separator);
-            }
-
-            if ($resource->getCollection() === 'sites') {
-                $date = \date('H:i:s');
-                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+            if (\str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
+                [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+                [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
+                $logs = ($logsBefore ?? '') . ($logsAfter ?? '');
             }
 
             $deployment->setAttribute('buildLogs', $logs);
@@ -879,23 +871,31 @@ class Builds extends Action
                 }
             }
 
-            $deployment->setAttribute('buildLogs', $logs);
-
-            $this->afterBuildSuccess($dbForProject, $deployment);
-
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
+
+            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
+            $logs = $deployment->getAttribute('buildLogs', '');
+
+            if ($resource->getCollection() === 'sites') {
+                $date = \date('H:i:s');
+                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+                $deployment->setAttribute('buildLogs', $logs);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+            }
 
             /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-                        Query::equal("projectInternalId", [$project->getInternalId()]),
+                        Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
-                        Query::equal('deploymentInternalId', [$deployment->getInternalId()]),
+                        Query::equal('deploymentInternalId', [$deployment->getSequence()]),
                     ]));
 
                     if ($rule->isEmpty()) {
@@ -934,9 +934,9 @@ class Builds extends Action
                             str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
                             str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
                             str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
                         ],
                         'bannerDisabled' => true,
                         'projectCheckDisabled' => true,
@@ -1006,7 +1006,7 @@ class Builds extends Action
                                 Permission::read(Role::team(ID::custom($teamId))),
                             ],
                             'bucketId' => $bucket->getId(),
-                            'bucketInternalId' => $bucket->getInternalId(),
+                            'bucketInternalId' => $bucket->getSequence(),
                             'name' => $fileName,
                             'path' => $path,
                             'signature' => $deviceForFiles->getFileHash($path),
@@ -1025,7 +1025,7 @@ class Builds extends Action
                             'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
                         ]);
 
-                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
 
                         $deployment->setAttribute($key, $fileId);
                     }
@@ -1034,6 +1034,7 @@ class Builds extends Action
                     $date = \date('H:i:s');
                     $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n";
 
+                    $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     $queueForRealtime
@@ -1048,6 +1049,7 @@ class Builds extends Action
                     $date = \date('H:i:s');
                     $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n";
 
+                    $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
             }
@@ -1105,18 +1107,17 @@ class Builds extends Action
                 switch ($resource->getCollection()) {
                     case 'functions':
                         $resource->setAttribute('deploymentId', $deployment->getId());
-                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getInternalId()]),
-                            Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),
-                            Query::equal("projectInternalId", [$project->getInternalId()])
                         ];
 
                         $rulesUpdated = false;
@@ -1124,31 +1125,30 @@ class Builds extends Action
                             $rulesUpdated = true;
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
-                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                                ->setAttribute('deploymentInternalId', $deployment->getSequence());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                         }, $queries);
                         break;
                     case 'sites':
                         $resource->setAttribute('deploymentId', $deployment->getId());
-                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
                         $resource->setAttribute('deploymentScreenshotLight', $deployment->getAttribute('screenshotLight', ''));
                         $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         $queries = [
-                            Query::equal("projectInternalId", [$project->getInternalId()]),
-                            Query::equal("type", ["deployment"]),
-                            Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
                             Query::equal('deploymentVcsProviderBranch', ['']),
-                            Query::equal("projectInternalId", [$project->getInternalId()])
                         ];
 
                         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
-                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                                ->setAttribute('deploymentInternalId', $deployment->getSequence());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                         }, $queries);
 
@@ -1174,15 +1174,15 @@ class Builds extends Action
                         $dbForPlatform->createDocument('rules', new Document([
                             '$id' => $ruleId,
                             'projectId' => $project->getId(),
-                            'projectInternalId' => $project->getInternalId(),
+                            'projectInternalId' => $project->getSequence(),
                             'domain' => $domain,
                             'type' => 'deployment',
                             'trigger' => 'deployment',
                             'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getInternalId(),
+                            'deploymentInternalId' => $deployment->getSequence(),
                             'deploymentResourceType' => 'site',
                             'deploymentResourceId' => $deployment->getId(),
-                            'deploymentResourceInternalId' => $deployment->getInternalId(),
+                            'deploymentResourceInternalId' => $deployment->getSequence(),
                             'deploymentVcsProviderBranch' => $branchName,
                             'status' => 'verified',
                             'certificateId' => '',
@@ -1194,28 +1194,36 @@ class Builds extends Action
                         $rule = $dbForPlatform->getDocument('rules', $ruleId);
                         $rule = $rule
                             ->setAttribute('deploymentId', $deployment->getId())
-                            ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                            ->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                     }
 
                     $queries = [
-                        Query::equal("projectInternalId", [$project->getInternalId()]),
-                        Query::equal("type", ["deployment"]),
-                        Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                        Query::equal('projectInternalId', [$project->getSequence()]),
+                        Query::equal('type', ['deployment']),
+                        Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                         Query::equal('deploymentResourceType', ['site']),
-                        Query::equal("deploymentVcsProviderBranch", [$branchName]),
-                        Query::equal("trigger", ['manual']),
-                        Query::equal("projectInternalId", [$project->getInternalId()])
+                        Query::equal('deploymentVcsProviderBranch', [$branchName]),
+                        Query::equal('trigger', ['manual']),
                     ];
 
                     $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
                         $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
-                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                                ->setAttribute('deploymentInternalId', $deployment->getSequence());
                         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                     }, $queries);
                 }
             }
+
+            $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
+            $deployment->setAttribute('buildEndedAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -1251,16 +1259,12 @@ class Builds extends Action
                 $message = "[31m" . $message;
             }
 
-            $separator = \strpos($message, '{APPWRITE_DETECTION_SEPARATOR_START}');
-            if ($separator !== false) {
-                $error = \substr($message, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
-                $message = \substr($message, 0, $separator);
-                $message .= "\n[31m" . $error;
-            }
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
 
             // Combine with previous logs if deployment got past build process
             $previousLogs = '';
-            if (!empty($deployment->getAttribute('buildEndedAt', ''))) {
+            if (!is_null($deployment->getAttribute('buildSize', null))) {
                 $previousLogs = $deployment->getAttribute('buildLogs', '');
                 if (!empty($previousLogs)) {
                     $message = $previousLogs . "\n" . $message;
@@ -1312,8 +1316,8 @@ class Builds extends Action
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per function
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
             case 'failed':
                 $queue
@@ -1321,8 +1325,8 @@ class Builds extends Action
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per function
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
         }
 
@@ -1335,10 +1339,10 @@ class Builds extends Action
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }
@@ -1346,12 +1350,14 @@ class Builds extends Action
     /**
      * Hook to run after build success
      *
+     * @param Realtime $queueForRealtime
      * @param Database $dbForProject
      * @param Document $deployment
      * @return void
      */
-    protected function afterBuildSuccess(Database $dbForProject, Document &$deployment): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment): void
     {
+        assert($queueForRealtime instanceof Realtime);
         assert($dbForProject instanceof Database);
         assert($deployment instanceof Document);
     }
@@ -1470,10 +1476,11 @@ class Builds extends Action
             $hostname = System::getEnv('_APP_DOMAIN');
 
             $projectId = $project->getId();
+            $region = $project->getAttribute('region', 'default');
             $resourceId = $resource->getId();
             $providerTargetUrl = match ($resource->getCollection()) {
-                'functions' => "{$protocol}://{$hostname}/console/project-{$projectId}/functions/function-{$resourceId}",
-                'sites' => "{$protocol}://{$hostname}/console/project-{$projectId}/sites/site-{$resourceId}",
+                'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
+                'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
                 default => throw new \Exception('Invalid resource type')
             };
 
@@ -1509,9 +1516,9 @@ class Builds extends Action
                 };
 
                 $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-                    Query::equal("projectInternalId", [$project->getInternalId()]),
+                    Query::equal("projectInternalId", [$project->getSequence()]),
                     Query::equal("type", ["deployment"]),
-                    Query::equal("deploymentInternalId", [$deployment->getInternalId()]),
+                    Query::equal("deploymentInternalId", [$deployment->getSequence()]),
                 ]));
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
