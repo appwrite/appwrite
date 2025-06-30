@@ -958,7 +958,7 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
 
     // Safe if added as web platform
     $originValidator = new Origin($platforms);
-    if ($originValidator->isValid($origin)) {
+    if ($originValidator->isValid($request->getOrigin($httpReferrer))) {
         return $referrer;
     }
 
