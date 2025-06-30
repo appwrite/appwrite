@@ -18,6 +18,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -953,12 +954,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     // NOTE: this is only for the sdk generator and is not used in the action below and is utilised in `resources.php` for `resourceToken`.
     ->param('token', '', new Text(512), 'File token for accessing this file.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('resourceToken')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, ?string $token, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal) {
+    ->inject('project')
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, ?string $token, Request $request, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal, Document $project) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -1035,7 +1038,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
 
+        $startTime = \microtime(true);
+
         $source = $deviceForFiles->read($path);
+
+        $downloadTime = \microtime(true) - $startTime;
 
         if (!empty($cipher)) { // Decrypt
             $source = OpenSSL::decrypt(
@@ -1048,6 +1055,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             );
         }
 
+        $decryptionTime = \microtime(true) - $startTime - $downloadTime;
+
         switch ($algorithm) {
             case Compression::ZSTD:
                 $compressor = new Zstd();
@@ -1058,6 +1067,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $source = $compressor->decompress($source);
                 break;
         }
+
+        $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
         try {
             $image = new Image($source);
@@ -1088,6 +1099,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         $data = $image->output($output, $quality);
+
+        $renderingTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime - $decompressionTime;
+
+        $totalTime = \microtime(true) - $startTime;
+
+        Console::info("File preview rendered,project=" . $project->getId() . ",bucket=" . $bucketId . ",file=" . $file->getId() . ",uri=" . $request->getURI() . ",total=" . $totalTime . ",rendering=" . $renderingTime . ",decryption=" . $decryptionTime . ",decompression=" . $decompressionTime . ",download=" . $downloadTime);
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 

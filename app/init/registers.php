@@ -36,7 +36,8 @@ App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 if (!App::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
-    PublicDomain::allow(['request-catcher']);
+    PublicDomain::allow(['request-catcher-sms']);
+    PublicDomain::allow(['request-catcher-webhook']);
 }
 $register->set('logger', function () {
     // Register error logger

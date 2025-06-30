@@ -134,7 +134,7 @@ return [
             [
                 'key' => 'react-native',
                 'name' => 'React Native',
-                'version' => '0.9.1',
+                'version' => '0.10.0',
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '8.0.1',
+                'version' => '8.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
