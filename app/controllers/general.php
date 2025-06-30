@@ -1034,9 +1034,9 @@ App::init()
         $originValidator = new Origin($platforms);
 
         if (
-            $devKey->isEmpty()
+            !$originValidator->isValid($origin)
+            && $devKey->isEmpty()
             && !empty($origin)
-            && !$originValidator->isValid($origin)
             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
