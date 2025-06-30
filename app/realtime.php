@@ -559,7 +559,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $origin = $request->getOrigin();
         $originValidator = new Origin($platforms);
 
-        if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
+        if (!$originValidator->isValid($origin) && $project->getId() !== 'console') {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
