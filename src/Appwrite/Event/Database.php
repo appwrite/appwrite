@@ -62,6 +62,16 @@ class Database extends Event
     }
 
     /**
+     * Returns set database for this event.
+     *
+     * @return null|Document
+     */
+    public function getDatabase(): ?Document
+    {
+        return $this->database;
+    }
+
+    /**
      * Set the table for this database event.
      *
      * @param Document $table

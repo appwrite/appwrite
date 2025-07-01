@@ -13,6 +13,9 @@ abstract class Scope extends TestCase
     use Retryable;
     use Async;
 
+    public const REQUEST_TYPE_WEBHOOK = 'webhook';
+    public const REQUEST_TYPE_SMS = 'sms';
+
     protected ?Client $client = null;
     protected string $endpoint = 'http://localhost/v1';
 
@@ -37,18 +40,55 @@ abstract class Scope extends TestCase
             if ($limit === 1) {
                 return end($emails);
             } else {
-                $lastEmails = array_slice($emails, -1 * $limit);
-                return $lastEmails;
+                return array_slice($emails, -1 * $limit);
             }
         }
 
         return [];
     }
 
-    protected function assertLastRequest(callable $probe, $timeoutMs = 20_000, $waitMs = 500): array
+    protected function extractQueryParamsFromEmailLink(string $html): array
     {
-        $this->assertEventually(function () use (&$request, $probe) {
-            $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
+            $linkStart = strpos($html, $prefix);
+            if ($linkStart !== false) {
+                $hrefStart = strrpos(substr($html, 0, $linkStart), 'href="');
+                if ($hrefStart === false) {
+                    continue;
+                }
+
+                $hrefStart += 6;
+                $hrefEnd = strpos($html, '"', $hrefStart);
+                if ($hrefEnd === false || $hrefStart >= $hrefEnd) {
+                    continue;
+                }
+
+                $link = substr($html, $hrefStart, $hrefEnd - $hrefStart);
+                $link = strtok($link, '#'); // Remove `#title`
+                $queryStart = strpos($link, '?');
+                if ($queryStart === false) {
+                    continue;
+                }
+
+                $queryString = substr($link, $queryStart + 1);
+                parse_str(html_entity_decode($queryString), $queryParams);
+                return $queryParams;
+            }
+        }
+
+        return [];
+    }
+
+    protected function assertLastRequest(callable $probe, string $type, $timeoutMs = 20_000, $waitMs = 500): array
+    {
+        $hostname = match ($type) {
+            'webhook' => 'request-catcher-webhook',
+            'sms' => 'request-catcher-sms',
+            default => throw new \Exception('Invalid request catcher type.'),
+        };
+
+        $this->assertEventually(function () use (&$request, $probe, $hostname) {
+            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
             $request['data'] = json_decode($request['data'], true);
 
             call_user_func($probe, $request);
@@ -57,11 +97,16 @@ abstract class Scope extends TestCase
         return $request;
     }
 
+    /**
+     * @deprecated Use assertLastRequest instead. Used only historically in webhook tests
+     */
     protected function getLastRequest(): array
     {
+        $hostname = 'request-catcher-webhook';
+
         sleep(2);
 
-        $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
         $request['data'] = json_decode($request['data'], true);
 
         return $request;
