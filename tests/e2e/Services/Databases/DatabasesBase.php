@@ -1414,9 +1414,20 @@ trait DatabasesBase
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
         $this->assertEquals($releaseWithDate2['body']['key'], $movies['body']['indexes'][3]['key']);
-        foreach ($movies['body']['indexes'] as $index) {
-            $this->assertEquals('available', $index['status']);
-        }
+
+        $this->assertEventually(function () use ($databaseId, $data) {
+            $movies = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+
+            foreach ($movies['body']['indexes'] as $index) {
+                $this->assertEquals('available', $index['status']);
+            }
+
+            return true;
+        }, 60000, 500);
 
         return $data;
     }
