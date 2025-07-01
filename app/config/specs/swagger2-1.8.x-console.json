@@ -5133,6 +5133,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.list",
                     "demo": "databases\/list-collections.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-collections.md",
                     "rate-limit": 0,
@@ -5143,7 +5145,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.listTables",
                     "auth": {
                         "Project": []
                     }
@@ -5214,6 +5215,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.create",
                     "demo": "databases\/create-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-collection.md",
                     "rate-limit": 0,
@@ -5224,7 +5227,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createTable",
                     "auth": {
                         "Project": []
                     }
@@ -5320,6 +5322,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.get",
                     "demo": "databases\/get-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-collection.md",
                     "rate-limit": 0,
@@ -5330,7 +5334,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.getTable",
                     "auth": {
                         "Project": []
                     }
@@ -5388,6 +5391,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.update",
                     "demo": "databases\/update-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-collection.md",
                     "rate-limit": 0,
@@ -5398,7 +5403,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateTable",
                     "auth": {
                         "Project": []
                     }
@@ -5490,6 +5494,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.delete",
                     "demo": "databases\/delete-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-collection.md",
                     "rate-limit": 0,
@@ -5500,7 +5506,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.deleteTable",
                     "auth": {
                         "Project": []
                     }
@@ -5558,6 +5563,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.listColumns",
                     "demo": "databases\/list-attributes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-attributes.md",
                     "rate-limit": 0,
@@ -5568,7 +5575,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.listColumns",
                     "auth": {
                         "Project": []
                     }
@@ -5640,6 +5646,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createBooleanColumn",
                     "demo": "databases\/create-boolean-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-boolean-attribute.md",
                     "rate-limit": 0,
@@ -5650,7 +5658,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createBooleanColumn",
                     "auth": {
                         "Project": []
                     }
@@ -5747,6 +5754,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateBooleanColumn",
                     "demo": "databases\/update-boolean-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-boolean-attribute.md",
                     "rate-limit": 0,
@@ -5757,7 +5766,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateBooleanColumn",
                     "auth": {
                         "Project": []
                     }
@@ -5856,6 +5864,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createDatetimeColumn",
                     "demo": "databases\/create-datetime-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-datetime-attribute.md",
                     "rate-limit": 0,
@@ -5866,7 +5876,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createDatetimeColumn",
                     "auth": {
                         "Project": []
                     }
@@ -5963,6 +5972,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateDatetimeColumn",
                     "demo": "databases\/update-datetime-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-datetime-attribute.md",
                     "rate-limit": 0,
@@ -5973,7 +5984,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateDatetimeColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6072,6 +6082,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createEmailColumn",
                     "demo": "databases\/create-email-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-email-attribute.md",
                     "rate-limit": 0,
@@ -6082,7 +6094,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createEmailColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6179,6 +6190,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateEmailColumn",
                     "demo": "databases\/update-email-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-email-attribute.md",
                     "rate-limit": 0,
@@ -6189,7 +6202,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateEmailColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6288,6 +6300,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createEnumColumn",
                     "demo": "databases\/create-enum-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-enum-attribute.md",
                     "rate-limit": 0,
@@ -6298,7 +6312,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createEnumColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6405,6 +6418,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateEnumColumn",
                     "demo": "databases\/update-enum-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-enum-attribute.md",
                     "rate-limit": 0,
@@ -6415,7 +6430,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateEnumColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6524,6 +6538,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createFloatColumn",
                     "demo": "databases\/create-float-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-float-attribute.md",
                     "rate-limit": 0,
@@ -6534,7 +6550,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createFloatColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6643,6 +6658,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateFloatColumn",
                     "demo": "databases\/update-float-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-float-attribute.md",
                     "rate-limit": 0,
@@ -6653,7 +6670,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateFloatColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6764,6 +6780,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createIntegerColumn",
                     "demo": "databases\/create-integer-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-integer-attribute.md",
                     "rate-limit": 0,
@@ -6774,7 +6792,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createIntegerColumn",
                     "auth": {
                         "Project": []
                     }
@@ -6883,6 +6900,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateIntegerColumn",
                     "demo": "databases\/update-integer-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-integer-attribute.md",
                     "rate-limit": 0,
@@ -6893,7 +6912,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateIntegerColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7004,6 +7022,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createIpColumn",
                     "demo": "databases\/create-ip-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-ip-attribute.md",
                     "rate-limit": 0,
@@ -7014,7 +7034,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createIpColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7111,6 +7130,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateIpColumn",
                     "demo": "databases\/update-ip-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-ip-attribute.md",
                     "rate-limit": 0,
@@ -7121,7 +7142,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateIpColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7220,6 +7240,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createRelationshipColumn",
                     "demo": "databases\/create-relationship-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-relationship-attribute.md",
                     "rate-limit": 0,
@@ -7230,7 +7252,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createRelationshipColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7354,6 +7375,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createStringColumn",
                     "demo": "databases\/create-string-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-string-attribute.md",
                     "rate-limit": 0,
@@ -7364,7 +7387,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createStringColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7474,6 +7496,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateStringColumn",
                     "demo": "databases\/update-string-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-string-attribute.md",
                     "rate-limit": 0,
@@ -7484,7 +7508,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateStringColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7589,6 +7612,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createUrlColumn",
                     "demo": "databases\/create-url-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-url-attribute.md",
                     "rate-limit": 0,
@@ -7599,7 +7624,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createUrlColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7696,6 +7720,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateUrlColumn",
                     "demo": "databases\/update-url-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-url-attribute.md",
                     "rate-limit": 0,
@@ -7706,7 +7732,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateUrlColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7834,6 +7859,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.getColumn",
                     "demo": "databases\/get-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-attribute.md",
                     "rate-limit": 0,
@@ -7844,7 +7871,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.getColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7904,6 +7930,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.deleteColumn",
                     "demo": "databases\/delete-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-attribute.md",
                     "rate-limit": 0,
@@ -7914,7 +7942,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.deleteColumn",
                     "auth": {
                         "Project": []
                     }
@@ -7981,6 +8008,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateRelationshipColumn",
                     "demo": "databases\/update-relationship-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-relationship-attribute.md",
                     "rate-limit": 0,
@@ -7991,7 +8020,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateRelationshipColumn",
                     "auth": {
                         "Project": []
                     }
@@ -8084,6 +8112,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.listRows",
                     "demo": "databases\/list-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
@@ -8096,7 +8126,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.listRows",
                     "auth": {
                         "Project": []
                     }
@@ -8167,6 +8196,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createRow",
                     "demo": "databases\/create-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
@@ -8179,7 +8210,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createRow",
                     "methods": [
                         {
                             "name": "createDocument",
@@ -8331,6 +8361,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.upsertRows",
                     "demo": "databases\/upsert-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-documents.md",
                     "rate-limit": 120,
@@ -8342,7 +8374,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.upsertRows",
                     "methods": [
                         {
                             "name": "upsertDocuments",
@@ -8439,6 +8470,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateRows",
                     "demo": "databases\/update-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-documents.md",
                     "rate-limit": 120,
@@ -8450,7 +8483,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateRows",
                     "auth": {
                         "Project": []
                     }
@@ -8532,6 +8564,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.deleteRows",
                     "demo": "databases\/delete-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-documents.md",
                     "rate-limit": 60,
@@ -8543,7 +8577,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.deleteRows",
                     "auth": {
                         "Project": []
                     }
@@ -8619,6 +8652,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.getRow",
                     "demo": "databases\/get-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
@@ -8631,7 +8666,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.getRow",
                     "auth": {
                         "Project": []
                     }
@@ -8710,6 +8744,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.upsertRow",
                     "demo": "databases\/upsert-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
@@ -8722,7 +8758,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.upsertRow",
                     "methods": [
                         {
                             "name": "upsertDocument",
@@ -8835,6 +8870,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.updateRow",
                     "demo": "databases\/update-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
@@ -8847,7 +8884,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.updateRow",
                     "auth": {
                         "Project": []
                     }
@@ -8933,6 +8969,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.deleteRow",
                     "demo": "databases\/delete-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,
@@ -8945,7 +8983,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.deleteRow",
                     "auth": {
                         "Project": []
                     }
@@ -9011,7 +9048,9 @@
                     "weight": 341,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
+                    "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.listLogs",
                     "demo": "databases\/list-document-logs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document-logs.md",
                     "rate-limit": 0,
@@ -9100,6 +9139,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.decrementColumn",
                     "demo": "databases\/decrement-document-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
                     "rate-limit": 120,
@@ -9111,7 +9152,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.decrementColumn",
                     "auth": {
                         "Project": []
                     }
@@ -9207,6 +9247,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.incrementColumn",
                     "demo": "databases\/increment-document-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
                     "rate-limit": 120,
@@ -9218,7 +9260,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.incrementColumn",
                     "auth": {
                         "Project": []
                     }
@@ -9312,6 +9353,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.listColumnIndexes",
                     "demo": "databases\/list-indexes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-indexes.md",
                     "rate-limit": 0,
@@ -9322,7 +9365,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.listColumnIndexes",
                     "auth": {
                         "Project": []
                     }
@@ -9392,6 +9434,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.createColumnIndex",
                     "demo": "databases\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
                     "rate-limit": 0,
@@ -9402,7 +9446,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.createColumnIndex",
                     "auth": {
                         "Project": []
                     }
@@ -9520,6 +9563,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.getColumnIndex",
                     "demo": "databases\/get-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-index.md",
                     "rate-limit": 0,
@@ -9530,7 +9575,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.getColumnIndex",
                     "auth": {
                         "Project": []
                     }
@@ -9590,6 +9634,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.deleteColumnIndex",
                     "demo": "databases\/delete-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-index.md",
                     "rate-limit": 0,
@@ -9600,7 +9646,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.deleteColumnIndex",
                     "auth": {
                         "Project": []
                     }
@@ -9665,6 +9710,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.listTableLogs",
                     "demo": "databases\/list-collection-logs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-collection-logs.md",
                     "rate-limit": 0,
@@ -9675,7 +9722,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.listTableLogs",
                     "auth": {
                         "Project": []
                     }
@@ -9744,6 +9790,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
+                    "deprecatedVersion": "1.8.0",
+                    "replaceWith": "tables.getTableUsage",
                     "demo": "databases\/get-collection-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-collection-usage.md",
                     "rate-limit": 0,
@@ -9754,7 +9802,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "replaceWith": "tables.getTableUsage",
                     "auth": {
                         "Project": []
                     }

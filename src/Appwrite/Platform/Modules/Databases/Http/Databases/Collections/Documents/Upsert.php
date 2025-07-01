@@ -70,6 +70,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: [
                         'replaceWith' => 'tables.upsertRow',
+                        'version' => '1.8.0',
                     ],
                 ),
             ])

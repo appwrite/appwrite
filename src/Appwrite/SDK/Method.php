@@ -180,31 +180,24 @@ class Method
         return $this->deprecated !== null;
     }
 
-    /**
-     * Get the deprecation info array
-     * @return array
-     */
     public function getDeprecationInfo(): array
     {
         return $this->deprecated ?? [];
     }
 
-    /**
-     * Get the deprecation message if set
-     * @return string|null
-     */
     public function getDeprecationMessage(): ?string
     {
         return $this->deprecated['message'] ?? '';
     }
 
-    /**
-     * Get the replacement method if set
-     * @return string|null
-     */
     public function getDeprecationReplacement(): ?string
     {
         return $this->deprecated['replaceWith'] ?? '';
+    }
+
+    public function getDeprecationVersion(): ?string
+    {
+        return $this->deprecated['version'] ?? '';
     }
 
     public function isHidden(): bool|array
@@ -285,11 +278,6 @@ class Method
         return $this;
     }
 
-    /**
-     * Set the deprecation info array
-     * @param array $deprecated
-     * @return self
-     */
     public function setDeprecated(array $deprecated): self
     {
         $this->deprecated = $deprecated;

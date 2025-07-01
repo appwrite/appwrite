@@ -59,6 +59,7 @@ class Delete extends Action
                 contentType: ContentType::NONE,
                 deprecated: [
                     'replaceWith' => 'tables.deleteColumnIndex',
+                    'version' => '1.8.0',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

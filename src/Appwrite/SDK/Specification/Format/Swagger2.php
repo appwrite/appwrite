@@ -161,6 +161,9 @@ class Swagger2 extends Format
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'deprecated' => $sdk->isDeprecated(),
+                    ...(!empty($sdk->getDeprecationMessage()) ? ['deprecatedMessage' => $sdk->getDeprecationMessage()] : []),
+                    ...(!empty($sdk->getDeprecationVersion()) ? ['deprecatedVersion' => $sdk->getDeprecationVersion()] : []),
+                    ...(!empty($sdk->getDeprecationReplacement()) ? ['replaceWith' => $sdk->getDeprecationReplacement()] : []),
                     'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
@@ -171,14 +174,6 @@ class Swagger2 extends Format
                     'packaging' => $sdk->isPackaging()
                 ],
             ];
-
-            if (!empty($sdk->getDeprecationReplacement())) {
-                $temp['x-appwrite']['replaceWith'] = $sdk->getDeprecationReplacement();
-            }
-
-            if (!empty($sdk->getDeprecationMessage())) {
-                $temp['x-appwrite']['deprecatedMessage'] = $sdk->getDeprecationMessage();
-            }
 
             if ($produces) {
                 $temp['produces'][] = $produces;

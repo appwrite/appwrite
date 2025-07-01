@@ -83,6 +83,7 @@ class Create extends Action
                     ],
                     deprecated: [
                         'replaceWith' => 'tables.createRow',
+                        'version' => '1.8.0',
                     ],
                 ),
                 new Method(
