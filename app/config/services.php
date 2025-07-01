@@ -58,7 +58,7 @@ return [
         'name' => 'Databases',
         'subtitle' => 'The Databases service allows you to create structured collections of documents, query and filter lists of documents',
         'description' => '/docs/services/databases.md',
-        'controller' => 'api/databases.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/databases',
