@@ -114,7 +114,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
