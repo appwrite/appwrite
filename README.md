@@ -1,3 +1,6 @@
+
+> We just announced a new Databases featue: CSV imports. [Learn more in the announcement](https://appwrite.io/blog/post/announcing-csv-imports)
+
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
 <br />
