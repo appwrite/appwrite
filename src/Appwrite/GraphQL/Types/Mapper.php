@@ -226,7 +226,7 @@ class Mapper
             ];
 
             if (!$rule['required']) {
-                $fields[$escapedKey]['defaultValue'] = $rule['default'] ?? null;
+                $fields[$escapedKey]['defaultValue'] = $rule['default'];
             }
         }
 

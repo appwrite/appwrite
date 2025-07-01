@@ -649,8 +649,6 @@ App::get('/v1/users')
             $total = $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
         $response->dynamic(new Document([
             'users' => $users,
