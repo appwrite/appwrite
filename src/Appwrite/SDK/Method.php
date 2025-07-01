@@ -177,12 +177,7 @@ class Method
 
     public function isDeprecated(): bool
     {
-        return $this->deprecated !== null;
-    }
-
-    public function getDeprecationInfo(): array
-    {
-        return $this->deprecated ?? [];
+        return $this->deprecated !== null && \is_array($this->deprecated);
     }
 
     public function getDeprecationMessage(): ?string
@@ -190,14 +185,14 @@ class Method
         return $this->deprecated['message'] ?? '';
     }
 
-    public function getDeprecationReplacement(): ?string
-    {
-        return $this->deprecated['replaceWith'] ?? '';
-    }
-
     public function getDeprecationVersion(): ?string
     {
         return $this->deprecated['version'] ?? '';
+    }
+
+    public function getDeprecationReplacement(): ?string
+    {
+        return $this->deprecated['replaceWith'] ?? '';
     }
 
     public function isHidden(): bool|array

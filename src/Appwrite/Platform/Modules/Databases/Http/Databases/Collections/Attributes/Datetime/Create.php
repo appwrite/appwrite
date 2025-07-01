@@ -54,8 +54,8 @@ class Create extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'tables.createDatetimeColumn',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.createDatetimeColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

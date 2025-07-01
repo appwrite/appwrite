@@ -60,8 +60,8 @@ class XList extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'replaceWith' => 'tables.listTableLogs',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.listTableLogs',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

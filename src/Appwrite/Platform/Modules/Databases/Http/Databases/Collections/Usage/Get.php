@@ -53,8 +53,8 @@ class Get extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'replaceWith' => 'tables.getTableUsage',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.getTableUsage',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

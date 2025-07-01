@@ -63,8 +63,8 @@ class Decrement extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'replaceWith' => 'tables.decrementColumn',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.decrementColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

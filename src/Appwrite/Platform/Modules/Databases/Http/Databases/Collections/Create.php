@@ -63,8 +63,8 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'replaceWith' => 'tables.create',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.createTable',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

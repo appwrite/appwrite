@@ -56,8 +56,8 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'replaceWith' => 'tables.updateEnumColumn',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.updateEnumColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

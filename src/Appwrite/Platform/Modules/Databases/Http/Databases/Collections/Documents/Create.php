@@ -82,8 +82,8 @@ class Create extends Action
                         new Parameter('permissions', optional: true),
                     ],
                     deprecated: [
-                        'replaceWith' => 'tables.createRow',
                         'version' => '1.8.0',
+                        'replaceWith' => 'tables.createRow',
                     ],
                 ),
                 new Method(

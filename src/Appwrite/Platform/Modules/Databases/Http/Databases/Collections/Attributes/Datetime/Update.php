@@ -55,8 +55,8 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'replaceWith' => 'tables.updateDatetimeColumn',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.updateDatetimeColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

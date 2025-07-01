@@ -52,8 +52,8 @@ class XList extends Action
                     )
                 ],
                 deprecated: [
-                    'replaceWith' => 'tables.listColumns',
                     'version' => '1.8.0',
+                    'replaceWith' => 'tables.listColumns',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
