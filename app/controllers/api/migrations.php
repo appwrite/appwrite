@@ -410,8 +410,8 @@ App::post('/v1/migrations/csv')
             'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
-            'statusCounters' => [],
-            'resourceData' => [],
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
             'errors' => [],
             'options' => [
                 'path' => $newPath,
