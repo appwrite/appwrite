@@ -332,7 +332,13 @@ class Migrations extends Action
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
                 );
+            } else {
+                Console::log(json_encode([
+                    'stage' => 'source#errors',
+                    'errors' => $source->getErrors(),
+                ], JSON_PRETTY_PRINT));
             }
+
             $destination->shutDown();
             $source->shutDown();
 
