@@ -144,7 +144,7 @@ trait ProjectCustom
                 'teams.*',
                 'users.*'
             ],
-            'url' => 'http://request-catcher:5000/webhook',
+            'url' => 'http://request-catcher-webhook:5000/',
             'security' => false,
         ]);
 
