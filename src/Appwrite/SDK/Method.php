@@ -175,6 +175,11 @@ class Method
         return $this->type;
     }
 
+    public function isDeprecated(): bool
+    {
+        return $this->deprecated !== false;
+    }
+
     public function getDeprecated(): bool|array
     {
         return $this->deprecated;

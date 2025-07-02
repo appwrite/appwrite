@@ -90,13 +90,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "get",
                     "group": "account",
                     "weight": 10,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get.md",
                     "rate-limit": 0,
@@ -141,13 +141,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "create",
                     "group": "account",
                     "weight": 9,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create.md",
                     "rate-limit": 10,
@@ -232,13 +232,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "account",
                     "weight": 35,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-email.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email.md",
                     "rate-limit": 0,
@@ -310,13 +310,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listIdentities",
                     "group": "identities",
                     "weight": 58,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-identities.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-identities.md",
                     "rate-limit": 0,
@@ -372,13 +372,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteIdentity",
                     "group": "identities",
                     "weight": 59,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-identity.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-identity.md",
                     "rate-limit": 0,
@@ -435,13 +435,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createJWT",
                     "group": "tokens",
                     "weight": 30,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-j-w-t.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "rate-limit": 100,
@@ -484,13 +484,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
                     "weight": 32,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-logs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-logs.md",
                     "rate-limit": 0,
@@ -551,13 +551,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMFA",
                     "group": "mfa",
                     "weight": 45,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-m-f-a.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "rate-limit": 0,
@@ -624,13 +624,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
                     "weight": 47,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-mfa-authenticator.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-authenticator.md",
                     "rate-limit": 0,
@@ -690,13 +690,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
                     "weight": 48,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-mfa-authenticator.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-authenticator.md",
                     "rate-limit": 0,
@@ -769,13 +769,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
                     "weight": 52,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-mfa-authenticator.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-mfa-authenticator.md",
                     "rate-limit": 0,
@@ -837,13 +837,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
                     "weight": 53,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-mfa-challenge.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-challenge.md",
                     "rate-limit": 10,
@@ -914,13 +914,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
                     "weight": 54,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-mfa-challenge.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-challenge.md",
                     "rate-limit": 10,
@@ -992,13 +992,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
                     "weight": 46,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-mfa-factors.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-mfa-factors.md",
                     "rate-limit": 0,
@@ -1043,13 +1043,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
                     "weight": 51,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get-mfa-recovery-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-mfa-recovery-codes.md",
                     "rate-limit": 0,
@@ -1094,13 +1094,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
                     "weight": 49,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-mfa-recovery-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-recovery-codes.md",
                     "rate-limit": 0,
@@ -1145,13 +1145,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
                     "weight": 50,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-mfa-recovery-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-recovery-codes.md",
                     "rate-limit": 0,
@@ -1198,13 +1198,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "account",
                     "weight": 33,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-name.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-name.md",
                     "rate-limit": 0,
@@ -1271,13 +1271,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePassword",
                     "group": "account",
                     "weight": 34,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-password.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-password.md",
                     "rate-limit": 10,
@@ -1350,13 +1350,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePhone",
                     "group": "account",
                     "weight": 36,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-phone.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone.md",
                     "rate-limit": 0,
@@ -1428,13 +1428,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "account",
                     "weight": 31,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-prefs.md",
                     "rate-limit": 0,
@@ -1479,13 +1479,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "account",
                     "weight": 37,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-prefs.md",
                     "rate-limit": 0,
@@ -1552,13 +1552,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createRecovery",
                     "group": "recovery",
                     "weight": 39,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-recovery.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-recovery.md",
                     "rate-limit": 10,
@@ -1633,13 +1633,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateRecovery",
                     "group": "recovery",
                     "weight": 40,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-recovery.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-recovery.md",
                     "rate-limit": 10,
@@ -1718,13 +1718,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listSessions",
                     "group": "sessions",
                     "weight": 12,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-sessions.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-sessions.md",
                     "rate-limit": 0,
@@ -1764,13 +1764,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteSessions",
                     "group": "sessions",
                     "weight": 13,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-sessions.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-sessions.md",
                     "rate-limit": 100,
@@ -1817,13 +1817,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createAnonymousSession",
                     "group": "sessions",
                     "weight": 18,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-anonymous-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-anonymous.md",
                     "rate-limit": 50,
@@ -1868,13 +1868,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createEmailPasswordSession",
                     "group": "sessions",
                     "weight": 17,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-email-password-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-email-password.md",
                     "rate-limit": 10,
@@ -1946,13 +1946,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMagicURLSession",
                     "group": "sessions",
                     "weight": 27,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
                     "demo": "account\/update-magic-u-r-l-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
@@ -1964,6 +1964,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": true,
                     "auth": {
                         "Project": []
                     }
@@ -2019,13 +2020,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createOAuth2Session",
                     "group": "sessions",
                     "weight": 20,
                     "cookies": false,
                     "type": "webAuth",
-                    "deprecated": false,
                     "demo": "account\/create-o-auth2session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-oauth2.md",
                     "rate-limit": 50,
@@ -2156,13 +2157,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updatePhoneSession",
                     "group": "sessions",
                     "weight": 28,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
                     "demo": "account\/update-phone-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
@@ -2174,6 +2175,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": true,
                     "auth": {
                         "Project": []
                     }
@@ -2234,13 +2236,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createSession",
                     "group": "sessions",
                     "weight": 19,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
@@ -2310,13 +2312,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getSession",
                     "group": "sessions",
                     "weight": 14,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-session.md",
                     "rate-limit": 0,
@@ -2371,13 +2373,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateSession",
                     "group": "sessions",
                     "weight": 16,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-session.md",
                     "rate-limit": 10,
@@ -2427,13 +2429,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteSession",
                     "group": "sessions",
                     "weight": 15,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-session.md",
                     "rate-limit": 100,
@@ -2490,13 +2492,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateStatus",
                     "group": "account",
                     "weight": 38,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-status.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-status.md",
                     "rate-limit": 0,
@@ -2543,13 +2545,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createPushTarget",
                     "group": "pushTargets",
                     "weight": 55,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-push-target.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
@@ -2627,13 +2629,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePushTarget",
                     "group": "pushTargets",
                     "weight": 56,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-push-target.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
@@ -2699,13 +2701,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deletePushTarget",
                     "group": "pushTargets",
                     "weight": 57,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-push-target.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
@@ -2760,13 +2762,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createEmailToken",
                     "group": "tokens",
                     "weight": 26,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-email-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-email.md",
                     "rate-limit": 10,
@@ -2847,13 +2849,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMagicURLToken",
                     "group": "tokens",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-magic-u-r-l-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "rate-limit": 60,
@@ -2935,13 +2937,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createOAuth2Token",
                     "group": "tokens",
                     "weight": 24,
                     "cookies": false,
                     "type": "webAuth",
-                    "deprecated": false,
                     "demo": "account\/create-o-auth2token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "rate-limit": 50,
@@ -3072,13 +3074,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createPhoneToken",
                     "group": "tokens",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-phone-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-phone.md",
                     "rate-limit": 10,
@@ -3153,13 +3155,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createVerification",
                     "group": "verification",
                     "weight": 41,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-email-verification.md",
                     "rate-limit": 10,
@@ -3224,13 +3226,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateVerification",
                     "group": "verification",
                     "weight": 42,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email-verification.md",
                     "rate-limit": 10,
@@ -3304,13 +3306,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createPhoneVerification",
                     "group": "verification",
                     "weight": 43,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-phone-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-phone-verification.md",
                     "rate-limit": 10,
@@ -3358,13 +3360,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
                     "group": "verification",
                     "weight": 44,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-phone-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone-verification.md",
                     "rate-limit": 10,
@@ -3436,13 +3438,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getBrowser",
                     "group": null,
                     "weight": 61,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-browser.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-browser.md",
                     "rate-limit": 0,
@@ -3561,13 +3563,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getCreditCard",
                     "group": null,
                     "weight": 60,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-credit-card.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-credit-card.md",
                     "rate-limit": 0,
@@ -3692,13 +3694,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFavicon",
                     "group": null,
                     "weight": 64,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-favicon.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-favicon.md",
                     "rate-limit": 0,
@@ -3755,13 +3757,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFlag",
                     "group": null,
                     "weight": 62,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-flag.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-flag.md",
                     "rate-limit": 0,
@@ -4242,13 +4244,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getImage",
                     "group": null,
                     "weight": 63,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-image.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-image.md",
                     "rate-limit": 0,
@@ -4325,13 +4327,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getInitials",
                     "group": null,
                     "weight": 66,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-initials.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-initials.md",
                     "rate-limit": 0,
@@ -4416,13 +4418,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getQR",
                     "group": null,
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-q-r.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "rate-limit": 0,
@@ -4507,16 +4509,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
                     "weight": 340,
                     "cookies": false,
                     "type": "",
-                    "deprecated": {
-                        "since": "1.8.0",
-                        "replaceWith": "tables.listRows"
-                    },
                     "demo": "databases\/list-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
@@ -4529,6 +4528,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.listRows"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -4592,16 +4595,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
                     "weight": 332,
                     "cookies": false,
                     "type": "",
-                    "deprecated": {
-                        "since": "1.8.0",
-                        "replaceWith": "tables.createRow"
-                    },
                     "demo": "databases\/create-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
@@ -4614,6 +4614,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createRow"
+                    },
                     "methods": [
                         {
                             "name": "createDocument",
@@ -4758,16 +4762,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
                     "weight": 333,
                     "cookies": false,
                     "type": "",
-                    "deprecated": {
-                        "since": "1.8.0",
-                        "replaceWith": "tables.getRow"
-                    },
                     "demo": "databases\/get-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
@@ -4780,6 +4781,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.getRow"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -4851,16 +4856,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
                     "weight": 336,
                     "cookies": false,
                     "type": "",
-                    "deprecated": {
-                        "since": "1.8.0",
-                        "replaceWith": "tables.upsertRow"
-                    },
                     "demo": "databases\/upsert-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
@@ -4873,6 +4875,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.upsertRow"
+                    },
                     "methods": [
                         {
                             "name": "upsertDocument",
@@ -4978,16 +4984,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
                     "weight": 334,
                     "cookies": false,
                     "type": "",
-                    "deprecated": {
-                        "since": "1.8.0",
-                        "replaceWith": "tables.updateRow"
-                    },
                     "demo": "databases\/update-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
@@ -5000,6 +5003,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateRow"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -5078,16 +5085,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
                     "weight": 338,
                     "cookies": false,
                     "type": "",
-                    "deprecated": {
-                        "since": "1.8.0",
-                        "replaceWith": "tables.deleteRow"
-                    },
                     "demo": "databases\/delete-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,
@@ -5100,6 +5104,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.deleteRow"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -5159,13 +5167,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
                     "weight": 413,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "tables\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-rows.md",
                     "rate-limit": 0,
@@ -5241,13 +5249,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
                     "weight": 405,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "tables\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-row.md",
                     "rate-limit": 120,
@@ -5404,13 +5412,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
                     "weight": 406,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "tables\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row.md",
                     "rate-limit": 0,
@@ -5494,13 +5502,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
                     "weight": 409,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "tables\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-row.md",
                     "rate-limit": 120,
@@ -5615,13 +5623,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
                     "weight": 407,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "tables\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-row.md",
                     "rate-limit": 120,
@@ -5712,13 +5720,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
                     "weight": 411,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "tables\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-row.md",
                     "rate-limit": 60,
@@ -5790,13 +5798,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
                     "weight": 441,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "functions\/list-executions.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a list of all the current user function execution logs. You can use the query params to filter your results.",
                     "rate-limit": 0,
@@ -5864,13 +5872,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
                     "weight": 439,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "functions\/create-execution.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterTrigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.",
                     "rate-limit": 0,
@@ -5981,13 +5989,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
                     "weight": 440,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "functions\/get-execution.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a function execution log by its unique ID.",
                     "rate-limit": 0,
@@ -6053,13 +6061,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
                     "weight": 255,
                     "cookies": false,
                     "type": "graphql",
-                    "deprecated": false,
                     "demo": "graphql\/query.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "rate-limit": 60,
@@ -6127,13 +6135,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
                     "weight": 254,
                     "cookies": false,
                     "type": "graphql",
-                    "deprecated": false,
                     "demo": "graphql\/mutation.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "rate-limit": 60,
@@ -6199,13 +6207,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
                     "weight": 70,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/get-locale.md",
                     "rate-limit": 0,
@@ -6251,13 +6259,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
                     "weight": 71,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-locale-codes.md",
                     "rate-limit": 0,
@@ -6303,13 +6311,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
                     "weight": 75,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-continents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-continents.md",
                     "rate-limit": 0,
@@ -6355,13 +6363,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
                     "weight": 72,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-countries.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries.md",
                     "rate-limit": 0,
@@ -6407,13 +6415,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
                     "weight": 73,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-countries-e-u.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "rate-limit": 0,
@@ -6459,13 +6467,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
                     "weight": 74,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-countries-phones.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-phones.md",
                     "rate-limit": 0,
@@ -6511,13 +6519,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
                     "weight": 76,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-currencies.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-currencies.md",
                     "rate-limit": 0,
@@ -6563,13 +6571,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
                     "weight": 77,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-languages.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-languages.md",
                     "rate-limit": 0,
@@ -6617,13 +6625,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
                     "weight": 301,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "messaging\/create-subscriber.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/create-subscriber.md",
                     "rate-limit": 0,
@@ -6702,13 +6710,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
                     "weight": 305,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "messaging\/delete-subscriber.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/delete-subscriber.md",
                     "rate-limit": 0,
@@ -6773,13 +6781,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
                     "weight": 161,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/list-files.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/list-files.md",
                     "rate-limit": 0,
@@ -6856,13 +6864,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
                     "weight": 160,
                     "cookies": false,
                     "type": "upload",
-                    "deprecated": false,
                     "demo": "storage\/create-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/create-file.md",
                     "rate-limit": 60,
@@ -6946,13 +6954,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
                     "weight": 162,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/get-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file.md",
                     "rate-limit": 0,
@@ -7016,13 +7024,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
                     "weight": 167,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/update-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/update-file.md",
                     "rate-limit": 60,
@@ -7105,13 +7113,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
                     "weight": 168,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/delete-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/delete-file.md",
                     "rate-limit": 60,
@@ -7175,13 +7183,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
                     "weight": 164,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "storage\/get-file-download.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-download.md",
                     "rate-limit": 0,
@@ -7254,13 +7262,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
                     "weight": 163,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "storage\/get-file-preview.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-preview.md",
                     "rate-limit": 0,
@@ -7461,13 +7469,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
                     "weight": 165,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "storage\/get-file-view.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-view.md",
                     "rate-limit": 0,
@@ -7540,13 +7548,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
                     "weight": 172,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/list.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-teams.md",
                     "rate-limit": 0,
@@ -7615,13 +7623,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
                     "weight": 171,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team.md",
                     "rate-limit": 0,
@@ -7705,13 +7713,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
                     "weight": 173,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team.md",
                     "rate-limit": 0,
@@ -7767,13 +7775,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
                     "weight": 175,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-name.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-name.md",
                     "rate-limit": 0,
@@ -7842,13 +7850,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
                     "weight": 177,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/delete.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team.md",
                     "rate-limit": 0,
@@ -7904,13 +7912,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
                     "weight": 179,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/list-memberships.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-team-members.md",
                     "rate-limit": 0,
@@ -7987,13 +7995,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
                     "weight": 178,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/create-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team-membership.md",
                     "rate-limit": 10,
@@ -8100,13 +8108,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
                     "weight": 180,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/get-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-member.md",
                     "rate-limit": 0,
@@ -8170,13 +8178,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
                     "weight": 181,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership.md",
                     "rate-limit": 0,
@@ -8256,13 +8264,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
                     "weight": 183,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/delete-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team-membership.md",
                     "rate-limit": 0,
@@ -8328,13 +8336,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
                     "weight": 182,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-membership-status.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership-status.md",
                     "rate-limit": 0,
@@ -8422,13 +8430,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
                     "weight": 174,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/get-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-prefs.md",
                     "rate-limit": 0,
@@ -8483,13 +8491,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
                     "weight": 176,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-prefs.md",
                     "rate-limit": 0,
