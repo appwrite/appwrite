@@ -154,8 +154,6 @@ class Migrations extends Action
 
         $this->sourceReport = $migrationSource->report();
 
-        Console::log(json_encode(['stage' => 'processSource', 'source' => $source], JSON_PRETTY_PRINT));
-
         return $migrationSource;
     }
 
@@ -165,8 +163,6 @@ class Migrations extends Action
     protected function processDestination(Document $migration, string $apiKey): Destination
     {
         $destination = $migration->getAttribute('destination');
-
-        Console::log(json_encode(['stage' => 'processDestination', 'destination' => $destination], JSON_PRETTY_PRINT));
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
@@ -217,12 +213,6 @@ class Migrations extends Action
             ->setParam('migrationId', $migration->getId())
             ->setPayload($clonedMigrationDocument->getArrayCopy(), ['options', 'credentials'])
             ->trigger();
-
-        Console::log(json_encode([
-            'stage' => 'updateMigrationDocument',
-            'migration' => $migration,
-            'clonedMigration' => $clonedMigrationDocument
-        ], JSON_PRETTY_PRINT));
 
         return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
     }
@@ -316,15 +306,6 @@ class Migrations extends Action
                 $transfer->run(
                     $migration->getAttribute('resources'),
                     function () use ($migration, $transfer, $projectDocument, $queueForRealtime) {
-                        Console::log(json_encode([
-                            'stage' => 'transfer#run',
-                            'migration' => $migration,
-                            'details' => [
-                                'resourceData' => $transfer->getCache(),
-                                'statusCounters' => $transfer->getStatusCounters()
-                            ]
-                        ], JSON_PRETTY_PRINT));
-
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
                         $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
@@ -332,11 +313,6 @@ class Migrations extends Action
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
                 );
-            } else {
-                Console::log(json_encode([
-                    'stage' => 'source#errors',
-                    'errors' => $source->getErrors(),
-                ], JSON_PRETTY_PRINT));
             }
 
             $destination->shutDown();

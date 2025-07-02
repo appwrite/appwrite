@@ -361,7 +361,7 @@ App::post('/v1/migrations/csv')
         $hasCompression = $compression !== Compression::NONE;
 
         $migrationId = ID::unique();
-        $newPath = $deviceForImports->getPath('/' . $migrationId . '_' . $fileId . '.csv');
+        $newPath = $deviceForImports->getPath($migrationId . '_' . $fileId . '.csv');
 
         if ($hasEncryption || $hasCompression) {
             $source = $deviceForFiles->read($path);
