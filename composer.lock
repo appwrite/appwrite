@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0adf677d7a79dd195419f512265b9905",
+    "content-hash": "55bc52686a08d64930e6af7411ac0654",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3993,16 +3993,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-fix-path",
+            "version": "0.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "1f2271ec2be7daba00ce025dbbb25a988caf4796"
+                "reference": "ea1c585df7ec5f346f061a11581fc9a91679966f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/1f2271ec2be7daba00ce025dbbb25a988caf4796",
-                "reference": "1f2271ec2be7daba00ce025dbbb25a988caf4796",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ea1c585df7ec5f346f061a11581fc9a91679966f",
+                "reference": "ea1c585df7ec5f346f061a11581fc9a91679966f",
                 "shasum": ""
             },
             "require": {
@@ -4043,9 +4043,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/fix-path"
+                "source": "https://github.com/utopia-php/migration/tree/0.10.1"
             },
-            "time": "2025-07-02T14:18:24+00:00"
+            "time": "2025-05-26T15:29:19+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -8236,9 +8236,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

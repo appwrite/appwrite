@@ -401,6 +401,13 @@ App::post('/v1/migrations/csv')
         $fileSize = $deviceForImports->getFileSize($newPath);
         $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
 
+        // full path
+        $newPath = str_ireplace(
+            $deviceForImports->getRoot(),
+            $deviceForImports->getRoot() . DIRECTORY_SEPARATOR,
+            $newPath
+        );
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
             'status' => 'pending',
