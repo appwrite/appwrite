@@ -58,7 +58,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE,
                 deprecated: [
-                    'version' => '1.8.0',
+                    'since' => '1.8.0',
                     'replaceWith' => 'tables.deleteColumnIndex',
                 ],
             ))

@@ -4513,9 +4513,10 @@
                     "weight": 340,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.listRows",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.listRows"
+                    },
                     "demo": "databases\/list-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
@@ -4597,9 +4598,10 @@
                     "weight": 332,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createRow"
+                    },
                     "demo": "databases\/create-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
@@ -4762,9 +4764,10 @@
                     "weight": 333,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.getRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.getRow"
+                    },
                     "demo": "databases\/get-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
@@ -4854,9 +4857,10 @@
                     "weight": 336,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.upsertRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.upsertRow"
+                    },
                     "demo": "databases\/upsert-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
@@ -4980,9 +4984,10 @@
                     "weight": 334,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateRow"
+                    },
                     "demo": "databases\/update-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
@@ -5079,9 +5084,10 @@
                     "weight": 338,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.deleteRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.deleteRow"
+                    },
                     "demo": "databases\/delete-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,

@@ -4416,9 +4416,10 @@
                     "weight": 329,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.list",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.list"
+                    },
                     "demo": "databases\/list-collections.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-collections.md",
                     "rate-limit": 0,
@@ -4502,9 +4503,10 @@
                     "weight": 325,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.create",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createTable"
+                    },
                     "demo": "databases\/create-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-collection.md",
                     "rate-limit": 0,
@@ -4609,9 +4611,10 @@
                     "weight": 326,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.get",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.getTable"
+                    },
                     "demo": "databases\/get-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-collection.md",
                     "rate-limit": 0,
@@ -4681,9 +4684,10 @@
                     "weight": 327,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.update",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateTable"
+                    },
                     "demo": "databases\/update-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-collection.md",
                     "rate-limit": 0,
@@ -4783,9 +4787,10 @@
                     "weight": 328,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.delete",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.deleteTable"
+                    },
                     "demo": "databases\/delete-collection.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-collection.md",
                     "rate-limit": 0,
@@ -4857,9 +4862,10 @@
                     "weight": 346,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.listColumns",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.listColumns"
+                    },
                     "demo": "databases\/list-attributes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-attributes.md",
                     "rate-limit": 0,
@@ -4944,9 +4950,10 @@
                     "weight": 347,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createBooleanColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createBooleanColumn"
+                    },
                     "demo": "databases\/create-boolean-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-boolean-attribute.md",
                     "rate-limit": 0,
@@ -5053,9 +5060,10 @@
                     "weight": 348,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateBooleanColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateBooleanColumn"
+                    },
                     "demo": "databases\/update-boolean-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-boolean-attribute.md",
                     "rate-limit": 0,
@@ -5167,9 +5175,10 @@
                     "weight": 349,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createDatetimeColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createDatetimeColumn"
+                    },
                     "demo": "databases\/create-datetime-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-datetime-attribute.md",
                     "rate-limit": 0,
@@ -5276,9 +5285,10 @@
                     "weight": 350,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateDatetimeColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateDatetimeColumn"
+                    },
                     "demo": "databases\/update-datetime-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-datetime-attribute.md",
                     "rate-limit": 0,
@@ -5390,9 +5400,10 @@
                     "weight": 351,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createEmailColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createEmailColumn"
+                    },
                     "demo": "databases\/create-email-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-email-attribute.md",
                     "rate-limit": 0,
@@ -5499,9 +5510,10 @@
                     "weight": 352,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateEmailColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateEmailColumn"
+                    },
                     "demo": "databases\/update-email-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-email-attribute.md",
                     "rate-limit": 0,
@@ -5613,9 +5625,10 @@
                     "weight": 353,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createEnumColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createEnumColumn"
+                    },
                     "demo": "databases\/create-enum-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-enum-attribute.md",
                     "rate-limit": 0,
@@ -5731,9 +5744,10 @@
                     "weight": 354,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateEnumColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateEnumColumn"
+                    },
                     "demo": "databases\/update-enum-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-enum-attribute.md",
                     "rate-limit": 0,
@@ -5854,9 +5868,10 @@
                     "weight": 355,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createFloatColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createFloatColumn"
+                    },
                     "demo": "databases\/create-float-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-float-attribute.md",
                     "rate-limit": 0,
@@ -5973,9 +5988,10 @@
                     "weight": 356,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateFloatColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateFloatColumn"
+                    },
                     "demo": "databases\/update-float-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-float-attribute.md",
                     "rate-limit": 0,
@@ -6097,9 +6113,10 @@
                     "weight": 357,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createIntegerColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createIntegerColumn"
+                    },
                     "demo": "databases\/create-integer-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-integer-attribute.md",
                     "rate-limit": 0,
@@ -6216,9 +6233,10 @@
                     "weight": 358,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateIntegerColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateIntegerColumn"
+                    },
                     "demo": "databases\/update-integer-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-integer-attribute.md",
                     "rate-limit": 0,
@@ -6340,9 +6358,10 @@
                     "weight": 359,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createIpColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createIpColumn"
+                    },
                     "demo": "databases\/create-ip-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-ip-attribute.md",
                     "rate-limit": 0,
@@ -6449,9 +6468,10 @@
                     "weight": 360,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateIpColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateIpColumn"
+                    },
                     "demo": "databases\/update-ip-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-ip-attribute.md",
                     "rate-limit": 0,
@@ -6563,9 +6583,10 @@
                     "weight": 361,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createRelationshipColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createRelationshipColumn"
+                    },
                     "demo": "databases\/create-relationship-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-relationship-attribute.md",
                     "rate-limit": 0,
@@ -6697,9 +6718,10 @@
                     "weight": 363,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createStringColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createStringColumn"
+                    },
                     "demo": "databases\/create-string-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-string-attribute.md",
                     "rate-limit": 0,
@@ -6817,9 +6839,10 @@
                     "weight": 364,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateStringColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateStringColumn"
+                    },
                     "demo": "databases\/update-string-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-string-attribute.md",
                     "rate-limit": 0,
@@ -6936,9 +6959,10 @@
                     "weight": 365,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createUrlColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createUrlColumn"
+                    },
                     "demo": "databases\/create-url-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-url-attribute.md",
                     "rate-limit": 0,
@@ -7045,9 +7069,10 @@
                     "weight": 366,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateUrlColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateUrlColumn"
+                    },
                     "demo": "databases\/update-url-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-url-attribute.md",
                     "rate-limit": 0,
@@ -7190,9 +7215,10 @@
                     "weight": 344,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.getColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.getColumn"
+                    },
                     "demo": "databases\/get-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-attribute.md",
                     "rate-limit": 0,
@@ -7264,9 +7290,10 @@
                     "weight": 345,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.deleteColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.deleteColumn"
+                    },
                     "demo": "databases\/delete-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-attribute.md",
                     "rate-limit": 0,
@@ -7347,9 +7374,10 @@
                     "weight": 362,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateRelationshipColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateRelationshipColumn"
+                    },
                     "demo": "databases\/update-relationship-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-relationship-attribute.md",
                     "rate-limit": 0,
@@ -7458,9 +7486,10 @@
                     "weight": 340,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.listRows",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.listRows"
+                    },
                     "demo": "databases\/list-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
@@ -7547,9 +7576,10 @@
                     "weight": 332,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createRow"
+                    },
                     "demo": "databases\/create-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
@@ -7714,9 +7744,10 @@
                     "weight": 337,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.upsertRows",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.upsertRows"
+                    },
                     "demo": "databases\/upsert-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-documents.md",
                     "rate-limit": 120,
@@ -7827,9 +7858,10 @@
                     "weight": 335,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateRows",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateRows"
+                    },
                     "demo": "databases\/update-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-documents.md",
                     "rate-limit": 120,
@@ -7924,9 +7956,10 @@
                     "weight": 339,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.deleteRows",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.deleteRows"
+                    },
                     "demo": "databases\/delete-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-documents.md",
                     "rate-limit": 60,
@@ -8018,9 +8051,10 @@
                     "weight": 333,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.getRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.getRow"
+                    },
                     "demo": "databases\/get-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
@@ -8117,9 +8151,10 @@
                     "weight": 336,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.upsertRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.upsertRow"
+                    },
                     "demo": "databases\/upsert-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
@@ -8249,9 +8284,10 @@
                     "weight": 334,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.updateRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.updateRow"
+                    },
                     "demo": "databases\/update-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
@@ -8352,9 +8388,10 @@
                     "weight": 338,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.deleteRow",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.deleteRow"
+                    },
                     "demo": "databases\/delete-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,
@@ -8440,9 +8477,10 @@
                     "weight": 343,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.decrementColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.decrementColumn"
+                    },
                     "demo": "databases\/decrement-document-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
                     "rate-limit": 120,
@@ -8555,9 +8593,10 @@
                     "weight": 342,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.incrementColumn",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.incrementColumn"
+                    },
                     "demo": "databases\/increment-document-attribute.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
                     "rate-limit": 120,
@@ -8670,9 +8709,10 @@
                     "weight": 370,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.listColumnIndexes",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.listColumnIndexes"
+                    },
                     "demo": "databases\/list-indexes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-indexes.md",
                     "rate-limit": 0,
@@ -8755,9 +8795,10 @@
                     "weight": 367,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.createColumnIndex",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.createColumnIndex"
+                    },
                     "demo": "databases\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
                     "rate-limit": 0,
@@ -8886,9 +8927,10 @@
                     "weight": 368,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.getColumnIndex",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.getColumnIndex"
+                    },
                     "demo": "databases\/get-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-index.md",
                     "rate-limit": 0,
@@ -8960,9 +9002,10 @@
                     "weight": 369,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
-                    "deprecatedVersion": "1.8.0",
-                    "replaceWith": "tables.deleteColumnIndex",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tables.deleteColumnIndex"
+                    },
                     "demo": "databases\/delete-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-index.md",
                     "rate-limit": 0,

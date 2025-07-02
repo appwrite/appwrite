@@ -57,7 +57,7 @@ class XList extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: [
-                    'version' => '1.8.0',
+                    'since' => '1.8.0',
                     'replaceWith' => 'tables.listRows',
                 ],
             ))
