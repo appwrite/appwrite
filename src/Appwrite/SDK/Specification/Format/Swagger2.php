@@ -161,7 +161,6 @@ class Swagger2 extends Format
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'deprecated' => $sdk->isDeprecated(),
-                    ...(!empty($sdk->getDeprecationMessage()) ? ['deprecatedMessage' => $sdk->getDeprecationMessage()] : []),
                     ...(!empty($sdk->getDeprecationVersion()) ? ['deprecatedVersion' => $sdk->getDeprecationVersion()] : []),
                     ...(!empty($sdk->getDeprecationReplacement()) ? ['replaceWith' => $sdk->getDeprecationReplacement()] : []),
                     'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',

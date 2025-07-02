@@ -180,11 +180,6 @@ class Method
         return $this->deprecated !== null && \is_array($this->deprecated);
     }
 
-    public function getDeprecationMessage(): ?string
-    {
-        return $this->deprecated['message'] ?? '';
-    }
-
     public function getDeprecationVersion(): ?string
     {
         return $this->deprecated['version'] ?? '';
