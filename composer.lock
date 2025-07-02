@@ -3993,16 +3993,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.10.3",
+            "version": "0.10.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "c8509727d0c5ecef31c1063b5901ed1a7541c71e"
+                "reference": "0c85917482db172b3ccdc0704e42af3c1cc89361"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c8509727d0c5ecef31c1063b5901ed1a7541c71e",
-                "reference": "c8509727d0c5ecef31c1063b5901ed1a7541c71e",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0c85917482db172b3ccdc0704e42af3c1cc89361",
+                "reference": "0c85917482db172b3ccdc0704e42af3c1cc89361",
                 "shasum": ""
             },
             "require": {
@@ -4043,9 +4043,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.10.3"
+                "source": "https://github.com/utopia-php/migration/tree/0.10.4"
             },
-            "time": "2025-07-02T16:57:46+00:00"
+            "time": "2025-07-02T18:31:09+00:00"
         },
         {
             "name": "utopia-php/orchestration",
