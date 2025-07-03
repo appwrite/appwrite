@@ -1,5 +1,13 @@
 # Change Log
 
+## 8.1.1
+
+* Type generation fixes:
+  * Add ability to generate types to specific file
+  * Fix optional attributes using `?` instead of `| null`
+  * Fix `Models` import error
+  * Improve formatting and add auto-generated comments
+
 ## 8.1.0
 
 * Add multi-region support to `init` command
