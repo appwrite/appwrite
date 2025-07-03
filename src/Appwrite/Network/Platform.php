@@ -50,10 +50,10 @@ class Platform
     /**
      * Get user-friendly platform name from a scheme.
      *
-     * @param string $scheme
+     * @param string|null $scheme
      * @return string Empty string if scheme is not found.
      */
-    public static function getNameByScheme(string $scheme): string
+    public static function getNameByScheme(?string $scheme): string
     {
         return self::$names[$scheme] ?? '';
     }
@@ -62,7 +62,7 @@ class Platform
     {
         $hostnames = [];
         foreach ($platforms as $platform) {
-            $type = $platform['type'] ?? self::TYPE_UNKNOWN;
+            $type = strtolower($platform['type'] ?? self::TYPE_UNKNOWN);
             $hostname = strtolower($platform['hostname'] ?? '');
             $key = strtolower($platform['key'] ?? '');
 

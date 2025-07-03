@@ -12,7 +12,7 @@ class Redirect extends Origin
      */
     public function getDescription(): string
     {
-        $platform = $this->scheme ? Platform::getNameByScheme($this->scheme) : null;
+        $platform = Platform::getNameByScheme($this->scheme);
         $host = $this->host ? '(' . $this->host . ')' : '';
 
         if (empty($this->host) && empty($this->scheme)) {
