@@ -2,8 +2,6 @@
 
 namespace Appwrite\Network;
 
-use Utopia\CLI\Console;
-
 class Platform
 {
     public const TYPE_UNKNOWN = 'unknown';
@@ -102,7 +100,6 @@ class Platform
     public static function getSchemes(array $platforms): array
     {
         $schemes = [];
-        Console::log("Platforms: " . json_encode($platforms, JSON_PRETTY_PRINT));
         foreach ($platforms as $platform) {
             $type = strtolower($platform['type'] ?? self::TYPE_UNKNOWN);
             $scheme = strtolower($platform['key'] ?? '');
