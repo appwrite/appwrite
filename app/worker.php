@@ -248,7 +248,7 @@ Server::setResource('publisher', function (Group $pools) {
 }, ['pools']);
 
 Server::setResource('publisherRedis', function () {
-    return;
+    // Stub
 });
 
 Server::setResource('consumer', function (Group $pools) {
@@ -256,7 +256,7 @@ Server::setResource('consumer', function (Group $pools) {
 }, ['pools']);
 
 Server::setResource('consumerRedis', function () {
-    return;
+    // Stub
 });
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
