@@ -264,7 +264,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtUserId = $payload['userId'] ?? '';
         if (!empty($jwtUserId)) {
-            $user = $dbForProject->getDocument('users', $jwtUserId);
+            if (APP_MODE_ADMIN !== $mode) {
+                $user = $dbForProject->getDocument('users', $jwtUserId);
+            } else {
+                $user = $dbForPlatform->getDocument('users', $jwtUserId);
+            }
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
