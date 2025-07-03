@@ -113,6 +113,7 @@ class Platform
                 case self::TYPE_WEB:
                 case self::TYPE_FLUTTER_WEB:
                     $schemes[] = self::SCHEME_HTTP;
+                    $schemes[] = self::SCHEME_HTTPS;
                     break;
                 case self::TYPE_FLUTTER_IOS:
                 case self::TYPE_APPLE_IOS:
