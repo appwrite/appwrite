@@ -51,7 +51,9 @@ class Origin extends Validator
         $validator = new Hostname($this->hostnames);
         if (in_array($this->scheme, ['http', 'https']) && $validator->isValid($this->host)) { // Valid HTTP/HTTPS origin
             return true;
-        } if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) { // Valid scheme-based origin
+        }
+
+        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) { // Valid scheme-based origin
             return true;
         }
 

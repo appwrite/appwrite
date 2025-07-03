@@ -110,6 +110,37 @@ class Platform
                         $schemes[] = $scheme;
                     }
                     break;
+                case self::TYPE_WEB:
+                case self::TYPE_FLUTTER_WEB:
+                    $schemes[] = self::SCHEME_HTTP;
+                    break;
+                case self::TYPE_FLUTTER_IOS:
+                case self::TYPE_APPLE_IOS:
+                case self::TYPE_REACT_NATIVE_IOS:
+                    $schemes[] = self::SCHEME_IOS;
+                    break;
+                case self::TYPE_FLUTTER_ANDROID:
+                case self::TYPE_ANDROID:
+                case self::TYPE_REACT_NATIVE_ANDROID:
+                    $schemes[] = self::SCHEME_ANDROID;
+                    break;
+                case self::TYPE_FLUTTER_MACOS:
+                case self::TYPE_APPLE_MACOS:
+                    $schemes[] = self::SCHEME_MACOS;
+                    break;
+                case self::TYPE_FLUTTER_WINDOWS:
+                case self::TYPE_UNITY:
+                    $schemes[] = self::SCHEME_WINDOWS;
+                    break;
+                case self::TYPE_FLUTTER_LINUX:
+                    $schemes[] = self::SCHEME_LINUX;
+                    break;
+                case self::TYPE_APPLE_WATCHOS:
+                    $schemes[] = self::SCHEME_WATCHOS;
+                    break;
+                case self::TYPE_APPLE_TVOS:
+                    $schemes[] = self::SCHEME_TVOS;
+                    break;
                 default:
                     break;
             }
