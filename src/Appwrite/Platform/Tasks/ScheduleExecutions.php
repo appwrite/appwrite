@@ -34,7 +34,8 @@ class ScheduleExecutions extends ScheduleBase
 
         $isRedisFallback = \str_contains(System::getEnv('_APP_WORKER_REDIS_FALLBACK', ''), 'functions');
 
-        $queueForFunctions = new Func($isRedisFallback
+        $queueForFunctions = new Func(
+            $isRedisFallback
             ? $this->publisherRedis
             : $this->publisher
         );
