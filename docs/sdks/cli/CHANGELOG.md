@@ -3,8 +3,8 @@
 ## 8.1.1
 
 * Type generation fixes:
-  * Add ability to generate types to specific file
-  * Fix optional attributes using `?` instead of `| null`
+  * Add ability to generate types directly to a specific file by passing a file path to `appwrite types output_path`, instead of just a directory
+  * Fix non-required attributes to not be null if default value is provided
   * Fix `Models` import error
   * Improve formatting and add auto-generated comments
 

@@ -279,8 +279,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git init && \
                         git remote add origin ' . $gitUrl . ' && \
                         git fetch origin && \
-                        git checkout main || git checkout -b main && \
-                        git pull origin main && \
+                        git checkout master || git checkout -b master && \
+                        git pull origin master && \
                         git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
                         git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
