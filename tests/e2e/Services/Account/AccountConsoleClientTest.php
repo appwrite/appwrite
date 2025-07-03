@@ -45,7 +45,6 @@ class AccountConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
-
         // create team
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
@@ -56,6 +55,7 @@ class AccountConsoleClientTest extends Scope
             'teamId' => 'unique()',
             'name' => 'myteam'
         ]);
+
         $this->assertEquals($team['headers']['status-code'], 201);
 
         $teamId = $team['body']['$id'];
