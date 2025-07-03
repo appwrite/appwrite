@@ -101,12 +101,14 @@ class Platform
     {
         $schemes = [];
         foreach ($platforms as $platform) {
-            $type = $platform['type'] ?? self::TYPE_UNKNOWN;
-            $scheme = $platform['key'] ?? '';
+            $type = strtolower($platform['type'] ?? self::TYPE_UNKNOWN);
+            $scheme = strtolower($platform['key'] ?? '');
 
             switch ($type) {
                 case self::TYPE_SCHEME:
-                    $schemes[] = $scheme;
+                    if (!empty($scheme) && preg_match('/^[a-z][a-z0-9+.-]*$/', $scheme)) {
+                        $schemes[] = $scheme;
+                    }
                     break;
                 default:
                     break;
