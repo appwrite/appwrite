@@ -222,7 +222,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if (APP_MODE_ADMIN !== $mode) {
+    if ($mode === APP_MODE_ADMIN) {
+        $user = $dbForPlatform->getDocument('users', Auth::$unique);
+    } else {
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
@@ -232,8 +234,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
                 $user = $dbForProject->getDocument('users', Auth::$unique);
             }
         }
-    } else {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
     }
 
     if (
@@ -264,7 +264,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtUserId = $payload['userId'] ?? '';
         if (!empty($jwtUserId)) {
-            $user = $dbForProject->getDocument('users', $jwtUserId);
+            if ($mode === APP_MODE_ADMIN) {
+                $user = $dbForPlatform->getDocument('users', $jwtUserId);
+            } else {
+                $user = $dbForProject->getDocument('users', $jwtUserId);
+            }
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
