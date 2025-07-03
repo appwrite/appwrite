@@ -52,7 +52,11 @@ class Create extends Action
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
                         model: $this->getResponseModel()
                     )
-                ]
+                ],
+                deprecated: [
+                    'since' => '1.8.0',
+                    'replaceWith' => 'tables.createDatetimeColumn',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#createCollection).')

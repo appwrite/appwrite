@@ -666,6 +666,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                    ->setParam('{{buttonText}}', $locale->getText("emails.invitation.buttonText"))
                     ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
                 $body = $message->render();
 

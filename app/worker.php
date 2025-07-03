@@ -18,9 +18,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
 use Executor\Executor;
-use Swoole\Process;
 use Swoole\Runtime;
-use Swoole\Timer;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -484,15 +482,8 @@ $worker
     });
 
 $worker->workerStart()
-    ->action(function () use ($worker, $workerName) {
-        Console::info("Worker $workerName started");
-
-        Process::signal(SIGTERM, function () use ($worker, $workerName) {
-            Console::info("Stopping worker $workerName.");
-
-            $worker->stop();
-            Timer::clearAll();
-        });
+    ->action(function () use ($workerName) {
+        Console::info("Worker $workerName  started");
     });
 
 $worker->start();

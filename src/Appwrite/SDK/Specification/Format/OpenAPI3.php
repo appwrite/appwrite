@@ -152,13 +152,13 @@ class OpenAPI3 extends Format
                 'tags' => [$namespace],
                 'description' => $descContents,
                 'responses' => [],
+                'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
                     'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
-                    'deprecated' => $sdk->isDeprecated(),
                     'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
@@ -170,6 +170,9 @@ class OpenAPI3 extends Format
                 ],
             ];
 
+            if ($sdk->isDeprecated()) {
+                $temp['x-appwrite']['deprecated'] = $sdk->getDeprecated();
+            }
 
             if (!empty($additionalMethods)) {
                 $temp['x-appwrite']['methods'] = [];

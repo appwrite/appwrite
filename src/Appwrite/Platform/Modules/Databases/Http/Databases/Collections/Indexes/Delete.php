@@ -56,7 +56,11 @@ class Delete extends Action
                         model: UtopiaResponse::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::NONE
+                contentType: ContentType::NONE,
+                deprecated: [
+                    'since' => '1.8.0',
+                    'replaceWith' => 'tables.deleteIndex',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')

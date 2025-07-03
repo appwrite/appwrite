@@ -56,7 +56,11 @@ class Get extends Action
                         code: SwooleResponse::STATUS_CODE_OK,
                         model: $this->getResponseModel()
                     )
-                ]
+                ],
+                deprecated: [
+                    'since' => '1.8.0',
+                    'replaceWith' => 'tables.getColumn',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

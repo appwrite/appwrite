@@ -67,7 +67,11 @@ class Upsert extends Action
                             model: $this->getResponseModel(),
                         )
                     ],
-                    contentType: ContentType::JSON
+                    contentType: ContentType::JSON,
+                    deprecated: [
+                        'since' => '1.8.0',
+                        'replaceWith' => 'tables.upsertRow',
+                    ],
                 ),
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')

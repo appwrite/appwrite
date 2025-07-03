@@ -51,7 +51,11 @@ class Delete extends Action
                         model: UtopiaResponse::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::NONE
+                contentType: ContentType::NONE,
+                deprecated: [
+                    'since' => '1.8.0',
+                    'replaceWith' => 'tables.delete',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

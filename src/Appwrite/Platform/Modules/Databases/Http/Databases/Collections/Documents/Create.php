@@ -80,7 +80,11 @@ class Create extends Action
                         new Parameter('documentId', optional: false),
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
-                    ]
+                    ],
+                    deprecated: [
+                        'since' => '1.8.0',
+                        'replaceWith' => 'tables.createRow',
+                    ],
                 ),
                 new Method(
                     namespace: $this->getSdkNamespace(),
@@ -99,7 +103,10 @@ class Create extends Action
                         new Parameter('databaseId', optional: false),
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
-                    ]
+                    ],
+                    deprecated: [
+                        'replaceWith' => 'tables.createRows',
+                    ],
                 )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')

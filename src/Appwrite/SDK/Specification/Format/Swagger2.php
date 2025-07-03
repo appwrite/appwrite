@@ -141,6 +141,7 @@ class Swagger2 extends Format
                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
+            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace() ?? 'default';
 
             $desc ??= '';
@@ -154,13 +155,13 @@ class Swagger2 extends Format
                 'tags' => [$namespace],
                 'description' => $descContents,
                 'responses' => [],
+                'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
                     'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
-                    'deprecated' => $sdk->isDeprecated(),
                     'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
@@ -168,9 +169,13 @@ class Swagger2 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $sdk->isPackaging()
+                    'packaging' => $sdk->isPackaging(),
                 ],
             ];
+
+            if ($sdk->isDeprecated()) {
+                $temp['x-appwrite']['deprecated'] = $sdk->getDeprecated();
+            }
 
             if ($produces) {
                 $temp['produces'][] = $produces;

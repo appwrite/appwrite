@@ -52,6 +52,10 @@ class Get extends Action
                     )
                 ],
                 contentType: ContentType::JSON,
+                deprecated: [
+                    'since' => '1.8.0',
+                    'replaceWith' => 'tables.getUsage',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)

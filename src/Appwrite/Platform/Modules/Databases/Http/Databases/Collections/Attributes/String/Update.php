@@ -55,7 +55,11 @@ class Update extends Action
                         model: $this->getResponseModel(),
                     )
                 ],
-                contentType: ContentType::JSON
+                contentType: ContentType::JSON,
+                deprecated: [
+                    'since' => '1.8.0',
+                    'replaceWith' => 'tables.updateStringColumn',
+                ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
