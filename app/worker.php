@@ -247,9 +247,17 @@ Server::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 
+Server::setResource('publisherRedis', function () {
+    return null;
+});
+
 Server::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
+
+Server::setResource('consumerRedis', function () {
+    return null;
+});
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
