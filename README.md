@@ -1,5 +1,5 @@
 
-> We just announced CSV imports for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-csv-imports)
+> We just announced Bulk API for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-bulk-api)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
