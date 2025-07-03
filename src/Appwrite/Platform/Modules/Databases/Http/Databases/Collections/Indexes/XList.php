@@ -55,7 +55,7 @@ class XList extends Action
                 contentType: ContentType::JSON,
                 deprecated: [
                     'since' => '1.8.0',
-                    'replaceWith' => 'tables.listColumnIndexes',
+                    'replaceWith' => 'tables.listIndexes',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

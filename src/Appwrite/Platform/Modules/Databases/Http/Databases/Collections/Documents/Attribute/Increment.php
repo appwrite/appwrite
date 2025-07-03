@@ -64,7 +64,7 @@ class Increment extends Action
                 contentType: ContentType::JSON,
                 deprecated: [
                     'since' => '1.8.0',
-                    'replaceWith' => 'tables.incrementColumn',
+                    'replaceWith' => 'tables.incrementRowColumn',
                 ],
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
