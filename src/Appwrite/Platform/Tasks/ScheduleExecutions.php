@@ -30,8 +30,6 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
-        $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
-
         $isRedisFallback = \str_contains(System::getEnv('_APP_WORKER_REDIS_FALLBACK', ''), 'functions');
 
         $queueForFunctions = new Func(
@@ -52,9 +50,6 @@ class ScheduleExecutions extends ScheduleBase
             }
 
             $scheduledAt = new \DateTime($schedule['schedule']);
-            if ($scheduledAt <= $intervalEnd) {
-                continue;
-            }
 
             $data = $dbForPlatform->getDocument(
                 'schedules',
@@ -65,10 +60,10 @@ class ScheduleExecutions extends ScheduleBase
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data) {
+            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data, $dbForPlatform) {
                 Co::sleep($delay);
 
-                $queueForFunctions->setType('schedule')
+                $result = $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
                     // TODO: Refactor to use function instead of functionId
                     ->setFunctionId($schedule['resource']['resourceId'])
@@ -82,12 +77,15 @@ class ScheduleExecutions extends ScheduleBase
                     ->trigger();
 
                 $this->recordEnqueueDelay($scheduledAt);
-            });
 
-            $dbForPlatform->deleteDocument(
-                'schedules',
-                $schedule['$id'],
-            );
+                //Only delete schedule if it was successfully enqueued
+                if ($result) {
+                    $dbForPlatform->deleteDocument(
+                        'schedules',
+                        $schedule['$id'],
+                    );
+                }
+            });
 
             unset($this->schedules[$schedule['$sequence']]);
         }
