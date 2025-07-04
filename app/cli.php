@@ -188,16 +188,18 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         return $database;
     };
 }, ['pools', 'cache']);
-
+CLI::setResource('publisher', function (Group $pools) {
+    return new BrokerPool(publisher: $pools->get('publisher'));
+}, ['pools']);
+CLI::setResource('publisherRedis', function () {
+    // Stub
+});
 CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
-CLI::setResource('publisher', function (Group $pools) {
-    return new BrokerPool(publisher: $pools->get('publisher'));
-}, ['pools']);
 CLI::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
