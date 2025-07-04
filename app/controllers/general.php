@@ -49,7 +49,6 @@ use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\System\System;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -799,6 +798,7 @@ App::init()
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
+    ->inject('platforms')
     ->inject('geodb')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
@@ -811,7 +811,7 @@ App::init()
     ->inject('apiKey')
     ->inject('httpReferrer')
     ->inject('httpReferrerSafe')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $platforms, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe) {
         /*
         * Appwrite Router
         */
@@ -1030,11 +1030,12 @@ App::init()
         *  Skip this check for non-web platforms which are not required to send an origin header
         */
         $origin = $request->getOrigin($request->getReferer(''));
-        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+        $originValidator = new Origin($platforms);
 
         if (
-            !$originValidator->isValid($origin)
-            && $devKey->isEmpty()
+            $devKey->isEmpty()
+            && !empty($origin)
+            && !$originValidator->isValid($origin)
             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
