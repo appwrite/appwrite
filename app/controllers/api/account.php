@@ -1121,6 +1121,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = $request->getProtocol();
+        $baseurl = $protocol . '://' . $request->getHostname();  
+        $origin = $request->getHeader('origin') ?? null;
 
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
@@ -1155,8 +1157,10 @@ App::get('/v1/account/sessions/oauth2/:provider')
         if (empty($failure)) {
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
+
         $token = false;
-        $state = Auth::stateGenerator($success, $failure, $token, $key);
+        $aud = $project->getId();
+        $state = Auth::stateGenerator($success, $failure, $token, $key, $aud, $scopes, $baseurl, $origin);
         $oauth2 = new $className($appId, $appSecret, $callback, [$state], $scopes);
 
         $response
@@ -1252,12 +1256,14 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('queueForEvents')
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
+        $origin = $request->getHeader('origin') ?? null;
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
+        $aud = $project->getId();
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
@@ -1272,11 +1278,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
 
-        $verificationState = Auth::stateVerify($state, $key);
-
-        if($verificationState === false) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Wrong state code from OAuth2 provider');
-        }
+        $verificationState = Auth::stateVerify($state, $key, $aud, $origin);
 
         if (!empty($state)) {
             try {
@@ -1285,6 +1287,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to parse login state params as passed from OAuth2 provider');
             }
         } else {
+            if($verificationState === false) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Wrong state code from OAuth2 provider');
+            }
+
             $state = $defaultState;
         }
 
