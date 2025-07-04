@@ -36,12 +36,6 @@ class Document extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$sequence', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Document automatically incrementing ID.',
-                'default' => 0,
-                'example' => 1,
-            ])
             ->addRule('$collectionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
@@ -79,6 +73,7 @@ class Document extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
+        $document->removeAttribute('$sequence');
 
         foreach ($document->getAttributes() as $attribute) {
             if (\is_array($attribute)) {
