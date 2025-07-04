@@ -42,12 +42,12 @@ class Origin extends Validator
         $this->scheme = $this->parseScheme($origin);
         $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');
 
-        $validator = new Hostname($this->hostnames);
-        if (in_array($this->scheme, [Platform::SCHEME_HTTP, Platform::SCHEME_HTTPS]) && $validator->isValid($this->host)) { // Valid HTTP/HTTPS origin
-            return true;
+        if (in_array($this->scheme, [Platform::SCHEME_HTTP, Platform::SCHEME_HTTPS], true)) {
+            $validator = new Hostname($this->hostnames);
+            return $validator->isValid($this->host);
         }
 
-        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) { // Valid scheme-based origin
+        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) {
             return true;
         }
 
