@@ -47,6 +47,7 @@ $http = new Server(
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+$nextWorker = new \Swoole\Atomic\Long(0); // lock‑free counter for round‑robin idle‑worker selection
 
 /**
  * Assigns HTTP requests to worker threads by analyzing its payload/content.
@@ -66,12 +67,14 @@ $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intva
 function dispatch(Server $server, int $fd, int $type, $data = null): int
 {
     $resolveWorkerId = function (Server $server, $data = null) {
-        global $totalWorkers, $domains;
+        global $totalWorkers, $domains, $nextWorker;
+        $start = $nextWorker->add(1) % $totalWorkers;   // ring‑buffer start index
 
         // If data is not set we can send request to any worker
         // first we try to pick idle worker, if not we randomly pick a worker
         if ($data === null) {
-            for ($i = 0; $i < $totalWorkers; $i++) {
+            for ($offset = 0; $offset < $totalWorkers; $offset++) {
+                $i = ($start + $offset) % $totalWorkers;
                 if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
                     return $i;
                 }
@@ -107,7 +110,8 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
 
         if ($risky) {
             // If risky request, only consider risky workers
-            for ($j = $riskyWorkers; $j < $totalWorkers; $j++) {
+            for ($offset = 0; $offset < ($totalWorkers - $riskyWorkers); $offset++) {
+                $j = ($start + $riskyWorkers + $offset) % $totalWorkers;
                 /** Reference https://openswoole.com/docs/modules/swoole-server-getWorkerStatus#description */
                 if ($server->getWorkerStatus($j) === SWOOLE_WORKER_IDLE) {
                     // If idle worker found, give to him
@@ -123,7 +127,8 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
 
         // If safe request, give to any idle worker
         // Its fine to pick risky worker here, because it's idle. Idle is never actually risky
-        for ($i = 0; $i < $totalWorkers; $i++) {
+        for ($offset = 0; $offset < $totalWorkers; $offset++) {
+            $i = ($start + $offset) % $totalWorkers;
             if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
                 return $i;
             }
