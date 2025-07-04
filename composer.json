@@ -67,7 +67,7 @@
         "utopia-php/platform": "0.7.*",
         "utopia-php/pools": "0.8.*",
         "utopia-php/preloader": "0.2.*",
-        "utopia-php/queue": "0.11.0",
+        "utopia-php/queue": "0.12.0",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.8.*",
