@@ -314,6 +314,7 @@ class Migrations extends Action
                     $migration->getAttribute('resourceType')
                 );
             }
+
             $destination->shutDown();
             $source->shutDown();
 
