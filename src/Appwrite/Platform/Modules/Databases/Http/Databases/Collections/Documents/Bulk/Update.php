@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
+use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -17,6 +18,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -45,6 +47,7 @@ class Update extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('event','databases.[databaseId].collections.[collectionId].documents.update')
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -71,11 +74,12 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
+            ->inject('queueForEvents')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -85,12 +89,12 @@ class Update extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $database = $dbForProject->getDocument('databases', $databaseId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
@@ -146,6 +150,12 @@ class Update extends Action
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
+
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database);
 
         $response->dynamic(new Document([
             'total' => $modified,
