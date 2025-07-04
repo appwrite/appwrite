@@ -181,55 +181,111 @@ class Auth
     }
 
     /**
-     * Generates a state code for dynamic state.
+     * Generates a state code for dynamic state (stateless CSRF protection).
      *
-     * @param string $success success url
-     * @param string $failure failure url
-     * @param string $secret The secret key
+     * @param string $success Success URL
+     * @param string $failure Failure URL
+     * @param bool   $token   Whether to expect a token on callback
+     * @param string $secret  Secret key for signing
+     * @param string $aud     Audience or project/client ID
+     * @param array  $scope   Array of requested scopes
+     * @param string $baseurl Optional: base URL of the calling client
+     * @param string|null $origin Optional: origin header (if available)
+     * @param int    $lifetime Expiration in seconds (default 5 min)
      *
-     * @return string The base64-encoded state code containing the payload and its signature.
+     * @return string Base64URL-encoded state
      */
-    public static function stateGenerator(string $success, string $failure, bool $token, string $secret)
-    {
+    public static function stateGenerator(
+        string $success,
+        string $failure,
+        bool $token,
+        string $secret,
+        string $aud,
+        array $scope = [],
+        string $baseurl = '',
+        ?string $origin = null,
+        int $lifetime = 300
+    ): string {
+        $issuedAt = time();
+        $expiresAt = $issuedAt + $lifetime;
+
         $payload = [
             'success' => $success,
             'failure' => $failure,
             'token' => $token,
-            'time' => time(), // The current time
+            'aud' => $aud,
+            'scope' => $scope,
+            'iat' => $issuedAt,
+            'exp' => $expiresAt,
+            'baseurl' => $baseurl,
         ];
 
-        $payloadString = json_encode($payload);
+        if (!is_null($origin)) {
+            $payload['origin'] = $origin;
+        }
+
+        $payloadString = json_encode($payload, JSON_UNESCAPED_SLASHES);
         $signature = hash_hmac('sha256', $payloadString, $secret);
         $code = $payloadString . '--' . $signature;
 
-        // Encode the code
-        $code = base64_encode($code);
+        // Encode using Base64URL
+        $code = rtrim(strtr(base64_encode($code), '+/', '-_'), '=');
 
         return $code;
     }
 
     /**
-     * Verifies string The base64-encoded state for dynamic state
+     * Verifies a base64url-encoded state for dynamic OAuth2 flow.
      *
-     * @param string $code base64-encoded state
-     * @param string $secret secret key
+     * @param string      $code     Base64URL-encoded state
+     * @param string      $secret   Secret key used to sign
+     * @param string|null $expectedAud Expected audience (project/client ID)
+     * @param string|null $expectedOrigin Optional expected origin
      *
-     * @return array|false The decoded payload if code is valid, or false if verification fails.
+     * @return array|false Decoded payload if valid, false otherwise
      */
-    public static function stateVerify(string $code, string $secret)
-    {
-        // Decode the code
-        $code = base64_decode($code);
+    public static function stateVerify(
+        string $code,
+        string $secret,
+        ?string $expectedAud = null,
+        ?string $expectedOrigin = null
+    ): array|false {
+        // Decode from Base64URL
+        $code = strtr($code, '-_', '+/');
+        $code = base64_decode($code . str_repeat('=', (4 - strlen($code) % 4) % 4));
 
-        list($payloadString, $signature) = explode('--', $code, 2);
+        if (!$code || !str_contains($code, '--')) {
+            return false;
+        }
+
+        [$payloadString, $signature] = explode('--', $code, 2);
         $expectedSignature = hash_hmac('sha256', $payloadString, $secret);
 
         if (!hash_equals($expectedSignature, $signature)) {
             return false;
         }
 
-        // The code is valid, return the payload
         $payload = json_decode($payloadString, true);
+
+        if (!is_array($payload)) {
+            return false;
+        }
+
+        // Expiration check
+        $now = time();
+        if (!isset($payload['exp']) || !is_int($payload['exp']) || $payload['exp'] < $now) {
+            return false;
+        }
+
+        // Audience check
+        if (!is_null($expectedAud) && ($payload['aud'] ?? null) !== $expectedAud) {
+            return false;
+        }
+
+        // Origin check
+        if (!is_null($expectedOrigin) && ($payload['origin'] ?? null) !== $expectedOrigin) {
+            return false;
+        }
 
         return $payload;
     }
