@@ -49,10 +49,10 @@ class Platform
         self::SCHEME_ANDROID => 'Android',
         self::SCHEME_WINDOWS => 'Windows',
         self::SCHEME_LINUX => 'Linux',
-        self::SCHEME_CHROME_EXTENSION => 'Chrome Extension',
-        self::SCHEME_FIREFOX_EXTENSION => 'Firefox Extension',
-        self::SCHEME_SAFARI_EXTENSION => 'Safari Extension',
-        self::SCHEME_EDGE_EXTENSION => 'Edge Extension',
+        self::SCHEME_CHROME_EXTENSION => 'Web (Chrome Extension)',
+        self::SCHEME_FIREFOX_EXTENSION => 'Web (Firefox Extension)',
+        self::SCHEME_SAFARI_EXTENSION => 'Web (Safari Extension)',
+        self::SCHEME_EDGE_EXTENSION => 'Web (Edge Extension)',
     ];
 
     /**
