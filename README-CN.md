@@ -1,8 +1,8 @@
-> 好消息！Appwrite 云现已进入公开测试版！立即访问 cloud.appwrite.io 注册，体验无忧的托管服务。今天就加入我们的云端吧！☁️🎉
+> 好消息！Appwrite 云现已进入公开测试版！立即访问 cloud.appwrite.io 注册，体验无忧的托管服务。今天就加入我们的云端吧！:cloud: :tada:
 
 <br />
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite banner with logo and slogan build like a team of hundreds""></a>
     <br />
     <br />
     <b>适用于[Flutter/Vue/Angular/React/iOS/Android/* 等等平台 *]的完整后端服务</b>
@@ -26,7 +26,7 @@
 
 [**Appwrite 云公开测试版！立即注册！**](https://cloud.appwrite.io)
 
-Appwrite 是一个基于 Docker 的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面简化了从零开始编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
+Appwrite 是一个基于 Docker 的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，原生应用，以及后端。它既包含后端服务器，也提供了用于部署静态和服务器端渲染前端的完全集成托管解决方案。Appwrite 通过视觉化界面简化了从零开始构建现代应用的复杂性和重复性，让您能够更快地构建安全的全栈应用。
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
 
@@ -36,6 +36,8 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
 
 内容：
 
+
+- [开始](#开始)
 - [安装](#安装)
   - [Unix](#unix)
   - [Windows](#windows)
@@ -54,6 +56,9 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
 - [订阅我们](#订阅我们)
 - [版权说明](#版权说明)
 
+## 开始
+要轻松开始使用Appwrite，您可以[**免费注册Appwrite Cloud**](https://cloud.appwrite.io/)。在Appwrite Cloud公开测试版期间，您可以完全免费使用Appwrite，而且我们不会收集您的信用卡信息。
+
 ## 安装
 
 Appwrite 的容器化服务器只需要一行指令就可以运行。您可以使用 docker-compose 在本地主机上运行 Appwrite，也可以在任何其他容器化工具（如 [Kubernetes](https://kubernetes.io/docs/home/)、[Docker Swarm](https://docs.docker.com/engine/swarm/) 或 [Rancher](https://rancher.com/docs/)）上运行 Appwrite。
@@ -67,7 +72,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.6.0
+    appwrite/appwrite:1.7.3
 ```
 
 ### Windows
@@ -79,7 +84,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.6.0
+    appwrite/appwrite:1.7.3
 ```
 
 #### PowerShell
@@ -89,7 +94,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.6.0
+    appwrite/appwrite:1.7.3
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -98,7 +103,42 @@ docker run -it --rm `
 
 ### 从旧版本升级
 
-如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [安装文档](https://appwrite.io/docs/installation)。
+如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [安装文档](https://appwrite.io/docs/self-hosting)。
+
+## 一键配置
+
+除了在本地运行 Appwrite，您还可以使用预配置的设置启动 Appwrite。这样可以让您快速启动并运行 Appwrite，而无需在本地计算机上安装 Docker。
+
+请从以下提供商中选择一个：
+
+<table border="0">
+  <tr>
+    <td align="center" width="100" height="100">
+      <a href="https://marketplace.digitalocean.com/apps/appwrite">
+        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+          <br /><sub><b>DigitalOcean</b></sub></a>
+        </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+          <br /><sub><b>Gitpod</b></sub></a>    
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
+        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+          <br /><sub><b>Akamai Compute</b></sub></a>    
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
+        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+          <br /><sub><b>AWS Marketplace</b></sub></a>    
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## 入门
 
@@ -139,6 +179,8 @@ docker run -it --rm `
 - [**消息传递**](https://appwrite.io/docs/references/cloud/client-web/messaging) - 使用 Appwrite 消息传递功能通过推送通知、电子邮件和短信与用户进行通信。
 - [**语言适配**](https://appwrite.io/docs/references/cloud/client-web/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
 - [**头像**](https://appwrite.io/docs/references/cloud/client-web/avatars) -管理用户头像、国家旗帜、浏览器图标、信用卡符号，和生成二维码。
+- [**MCP**](https://appwrite.io/docs/tooling/mcp) - 使用 Appwrite 的模型上下文协议（Model Context Protocol）服务器，允许大语言模型（LLM）和 AI 工具（如 Claude Desktop、Cursor 和 Windsurf Editor）通过自然语言直接与您的 Appwrite 项目交互。
+- [**站点**](https://appwrite.io/docs/products/sites) - 直接从 Appwrite 开发、部署和扩展您的 Web 应用程序，与您的后端一起。
   如需完整的 API 界面文档，请访问 [https://appwrite.io/docs](https://appwrite.io/docs)。如需更多教程、新闻和公告，请订阅我们的 [博客](https://medium.com/appwrite-io) 和 加入我们的[Discord 社区](https://discord.gg/GSeTUeA)。
 
 ### 开发套件
@@ -146,29 +188,25 @@ docker run -it --rm `
 以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md)。
 
 #### 客户端
-
-- ✅ &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (由 Appwrite 团队维护)
-- ✅ &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native) - **公测** (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (由 Appwrite 团队维护)
 
 #### 服务器
-
-- ✅ &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
-- ✅ &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) (由 Appwrite 团队维护)
-- ✅ &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift) (由 Appwrite 团队维护)
-- ✅ &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **公测** (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **公测** (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **公测** (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
+* :white_check_mark:  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **公测** (由 Appwrite 团队维护)
 
 #### 开发者社区
-
-- ✅ &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (维护者 [Michael Gangolf](https://github.com/m1ga/))
-- ✅ &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (维护者 [fenix-hub @GodotNuts](https://github.com/fenix-hub))
+* :white_check_mark:  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (维护者 [Michael Gangolf](https://github.com/m1ga/))  
+* :white_check_mark:  &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (维护者 [fenix-hub @GodotNuts](https://github.com/fenix-hub))  
 
 找不到需要的的 SDK？ - 欢迎通过发起 PR 来帮助我们完善 Appwrite 的软件生态环境 [SDK 生成器](https://github.com/appwrite/sdk-generator)!
 

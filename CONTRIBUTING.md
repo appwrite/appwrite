@@ -1,6 +1,6 @@
 # Contributing
 
-We would ❤️ you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
+We would :heart: you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
 
 ## Here for Hacktoberfest?
 If you're here to contribute during Hacktoberfest, we're so happy to see you here. Appwrite has been a long-time participant of Hacktoberfest and we welcome you, whatever your experience level. This year, we're **only taking contributions for issues tagged** `hacktoberfest`, so we can focus our resources to support your contributions.
@@ -9,13 +9,13 @@ You can [find issues using this query](https://github.com/search?q=org%3Aappwrit
 
 ## How to Start?
 
-If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite](https://twitter.com/appwrite) on Twitter or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
+If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite on Twitter](https://twitter.com/appwrite) or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
 
 ## Code of Conduct
 
 Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](https://github.com/appwrite/.github/blob/main/CODE_OF_CONDUCT.md).
 
-## Submit a Pull Request 🚀
+## Submit a Pull Request :rocket:
 
 Branch naming convention is as following
 
@@ -65,13 +65,13 @@ Now, go a step further by running the linter using the following command to manu
 composer lint <your file path>
 ```
 
-This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [on PHP_Codesniffer usage Wiki](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
 composer lint --report=diff <your file path>
 ```
 
-5. Push changes to GitHub.
+5. Push changes to GitHub
 
 ```
 $ git push origin [name_of_your_new_branch]
@@ -162,6 +162,28 @@ Other containes should be named the same as their service, for example `redis` s
 - [OAuth](https://en.wikipedia.org/wiki/OAuth)
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)
+
+## Modules
+
+As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesnt contain all product's features such as workers or tasks. While there might still be some occurances of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
+
+### HTTP Endpoints
+
+Every endpoint file follows below structure, making it consistent with HTTP REST endpoint path:
+
+```
+src/Appwrite/Platform/Modules/[service]/Http/[resource]/[action].php
+```
+
+Tips and tricks:
+
+1. If endpoint doesn't have resource, use service name as resource name too
+> Example: `Modules/Sites/Http/Sites/Get.php`
+
+2. If there are multiple resources, use then all in folder structure
+> Example: `Modules/Sites/Http/Deployments/Builds/Create.php`
+
+3. Action can only be `Get`, `Create`, `Update`, `Delete` or `XList`
 
 ## Architecture
 
@@ -301,7 +323,7 @@ Adding a new dependency should have vital value for the product with minimum pos
 
 ## Introducing New Features
 
-We would 💖 you to contribute to Appwrite, but we also want to ensure Appwrite is loyal to its vision and mission statement 🙏.
+We would :sparkling_heart: you to contribute to Appwrite, but we also want to ensure Appwrite is loyal to its vision and mission statement :pray:.
 
 For us to find the right balance, please open an issue explaining your ideas before introducing a new pull request.
 
@@ -319,10 +341,13 @@ These are the current metrics we collect usage stats for:
 | users | Total number of users per project|
 | executions | Total number of executions per project           | 
 | databases | Total number of databases per project             | 
+| databases.storage | Total amount of storage used by all databases per project (in bytes) |
 | collections | Total number of collections per project | 
 | {databaseInternalId}.collections | Total number of collections per database| 
+| {databaseInternalId}.storage | Sum of database storage (in bytes) |
 | documents | Total number of documents per project             | 
 | {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
+| {databaseInternalId}.{collectionInternalId}.storage | Sum of database storage used by the collection (in bytes) |
 | buckets | Total number of buckets per project               | 
 | files | Total number of files per project                 |
 | {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |
@@ -364,7 +389,7 @@ In file `app/controllers/shared/api.php` On the database listener, add to an exi
 
 ```php
       case $document->getCollection() === 'teams':
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_TEAMS, $value); // per project
             break;
 ```
@@ -376,10 +401,10 @@ In that case you need also to handle children removal using addReduce() method c
 ```php
 
  case $document->getCollection() === 'buckets': //buckets
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_BUCKETS, $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForUsage
+                $queueForStatsUsage
                     ->addReduce($document);
             }
             break;
@@ -425,16 +450,16 @@ public function __construct()
       ->inject('dbForProject')
       ->inject('queueForFunctions')
       ->inject('queueForEvents')
-      ->inject('queueForUsage')
+      ->inject('queueForStatsUsage')
       ->inject('log')
-      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $log));
 }
 ```
 
 and then trigger the queue with the new metric like so: 
 
 ```php
-$queueForUsage
+$queueForStatsUsage
   ->addMetric(METRIC_BUILDS, 1)
   ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
   ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
@@ -610,6 +635,18 @@ If you need to clear the cache, you can do so by running the following command:
 docker compose exec redis redis-cli FLUSHALL
 ```
 
+## Using preview domains locally
+
+Appwrite Functions are automatically given a domain you can visit to execute the function. This domain has format `[SOMETHING].functions.localhost` unless you changed `_APP_DOMAIN_FUNCTIONS` environment variable. This default value works great when running Appwrite locally, but it can be impossible to use preview domains with Cloud woekspaces such as Gitpod or GitHub Codespaces.
+
+To use preview domains on Cloud workspaces, you can visit hostname provided by them, and supply function's preview domain as URL parameter:
+
+```
+https://8080-appwrite-appwrite-mjeb3ebilwv.ws-eu116.gitpod.io/ping?preview=672b3c7eab1ac523ccf5.functions.localhost
+```
+
+The path was set to `/ping` intentionally. Visiting `/` for preview domains might trigger Console background worker, and trigger redirect to Console without our preview URL param. Visiting different path ensures this doesnt happen.
+
 ## Tutorials
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
@@ -625,7 +662,7 @@ Pull requests are great, but there are many other ways you can help Appwrite.
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite on Twitter](https://twitter.com/appwrite) and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 

@@ -5,7 +5,8 @@ mutation {
         key: "",
         elements: [],
         required: false,
-        default: "<DEFAULT>"
+        default: "<DEFAULT>",
+        newKey: ""
     ) {
         key
         type
@@ -13,6 +14,8 @@ mutation {
         error
         required
         array
+        _createdAt
+        _updatedAt
         elements
         format
         default
