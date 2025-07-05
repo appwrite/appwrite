@@ -193,6 +193,156 @@ class Auth
     }
 
     /**
+     * Generates a state code for dynamic state (stateless CSRF protection).
+     *
+     * @param string $success Success URL
+     * @param string $failure Failure URL
+     * @param bool   $token   Whether to expect a token on callback
+     * @param string $secret  Secret key for signing
+     * @param string $aud     Audience or project/client ID
+     * @param array  $scope   Array of requested scopes
+     * @param string $baseurl Optional: base URL of the calling client
+     * @param string|null $origin Optional: origin header (if available)
+     * @param int    $lifetime Expiration in seconds (default 5 min)
+     *
+     * @return string Base64URL-encoded state
+     */
+    public static function stateGenerator(
+        string $success,
+        string $failure,
+        bool $token,
+        string $secret,
+        string $aud,
+        array $scope = [],
+        string $baseurl = '',
+        ?string $origin = null,
+        int $lifetime = 300
+    ): string {
+        if (empty($secret)) {
+            throw new \InvalidArgumentException('Secret key cannot be empty');
+        }
+        if (empty($aud)) {
+            throw new \InvalidArgumentException('Audience cannot be empty');
+        }
+        if ($lifetime <= 0) {
+            throw new \InvalidArgumentException('Lifetime must be positive');
+        }
+        if (empty($success) || empty($failure)) {
+            throw new \InvalidArgumentException('Success and failure URLs cannot be empty');
+        }
+
+        $issuedAt = time();
+        $expiresAt = $issuedAt + $lifetime;
+
+        $payload = [
+            'success' => $success,
+            'failure' => $failure,
+            'token' => $token,
+            'aud' => $aud,
+            'scope' => $scope,
+            'iat' => $issuedAt,
+            'exp' => $expiresAt,
+            'baseurl' => $baseurl,
+        ];
+
+        if (!is_null($origin)) {
+            $payload['origin'] = $origin;
+        }
+
+        $payloadString = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        if ($payloadString === false) {
+            throw new \RuntimeException('Failed to encode state payload');
+        }
+
+        $signature = hash_hmac('sha256', $payloadString, $secret);
+       $code = strlen($payloadString) . ':' . $payloadString . ':' . $signature;
+
+        // Encode using Base64URL
+        $code = rtrim(strtr(base64_encode($code), '+/', '-_'), '=');
+
+        return $code;
+    }
+
+    /**
+     * Verifies a base64url-encoded state for dynamic OAuth2 flow.
+     *
+     * @param string      $code     Base64URL-encoded state
+     * @param string      $secret   Secret key used to sign
+     * @param string|null $expectedAud Expected audience (project/client ID)
+     * @param string|null $expectedOrigin Optional expected origin
+     *
+     * @return array|false Decoded payload if valid, false otherwise
+     */
+    public static function stateVerify(
+        string $code,
+        string $secret,
+        ?string $expectedAud = null,
+        ?string $expectedOrigin = null
+    ): array|false {
+        // Decode from Base64URL
+        $code = strtr($code, '-_', '+/');
+        $paddingLength = (4 - strlen($code) % 4) % 4;
+        $code = base64_decode($code . str_repeat('=', $paddingLength), true);
+
+        if ($code === false) {
+            return false;
+        }
+
+        $firstColon = strpos($code, ':');
+        if ($firstColon === false) {
+            return false;
+        }
+
+        $length = (int)substr($code, 0, $firstColon);
+        $remaining = substr($code, $firstColon + 1);
+
+        if (strlen($remaining) < $length + 1) {
+            return false;
+        }
+
+        $payloadString = substr($remaining, 0, $length);
+        $signature = substr($remaining, $length + 1);
+
+        $expectedSignature = hash_hmac('sha256', $payloadString, $secret);
+
+        if (!hash_equals($expectedSignature, $signature)) {
+            return false;
+        }
+
+        $payload = json_decode($payloadString, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
+            return false;
+        }
+
+        // Expiration check
+        $now = time();
+        if (!isset($payload['exp']) || !is_numeric($payload['exp']) || (int)$payload['exp'] <= $now) {
+            return false;
+        }
+
+        // Validate required fields
+        $requiredFields = ['success', 'failure', 'token', 'aud', 'iat'];
+        foreach ($requiredFields as $field) {
+            if (!isset($payload[$field])) {
+                return false;
+            }
+        }
+
+        // Audience check
+        if (!is_null($expectedAud) && ($payload['aud'] ?? null) !== $expectedAud) {
+            return false;
+        }
+
+        // Origin check
+        if (!is_null($expectedOrigin) && ($payload['origin'] ?? null) !== $expectedOrigin) {
+            return false;
+        }
+
+        return $payload;
+    }
+
+    /**
      * Encode.
      *
      * One-way encryption
