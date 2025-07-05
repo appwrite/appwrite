@@ -55,7 +55,10 @@ class Origin extends Validator
             return $validator->isValid($this->host);
         }
 
-        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) {
+        if (!empty($this->scheme) &&
+            in_array($this->scheme, $this->schemes, true) &&
+            in_array($this->host, $this->hostnames, true)
+        ) {
             return true;
         }
 
