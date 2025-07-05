@@ -206,6 +206,19 @@ class Auth
         ?string $origin = null,
         int $lifetime = 300
     ): string {
+        if (empty($secret)) {
+            throw new \InvalidArgumentException('Secret key cannot be empty');
+        }
+        if (empty($aud)) {
+            throw new \InvalidArgumentException('Audience cannot be empty');
+        }
+        if ($lifetime <= 0) {
+            throw new \InvalidArgumentException('Lifetime must be positive');
+        }
+        if (empty($success) || empty($failure)) {
+            throw new \InvalidArgumentException('Success and failure URLs cannot be empty');
+        }
+
         $issuedAt = time();
         $expiresAt = $issuedAt + $lifetime;
 
@@ -225,8 +238,12 @@ class Auth
         }
 
         $payloadString = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        if ($payloadString === false) {
+            throw new \RuntimeException('Failed to encode state payload');
+        }
+
         $signature = hash_hmac('sha256', $payloadString, $secret);
-        $code = $payloadString . '--' . $signature;
+       $code = strlen($payloadString) . ':' . $payloadString . ':' . $signature;
 
         // Encode using Base64URL
         $code = rtrim(strtr(base64_encode($code), '+/', '-_'), '=');
@@ -252,13 +269,28 @@ class Auth
     ): array|false {
         // Decode from Base64URL
         $code = strtr($code, '-_', '+/');
-        $code = base64_decode($code . str_repeat('=', (4 - strlen($code) % 4) % 4));
+        $paddingLength = (4 - strlen($code) % 4) % 4;
+        $code = base64_decode($code . str_repeat('=', $paddingLength), true);
 
-        if (!$code || !str_contains($code, '--')) {
+        if ($code === false) {
             return false;
         }
 
-        [$payloadString, $signature] = explode('--', $code, 2);
+        $firstColon = strpos($code, ':');
+        if ($firstColon === false) {
+            return false;
+        }
+
+        $length = (int)substr($code, 0, $firstColon);
+        $remaining = substr($code, $firstColon + 1);
+
+        if (strlen($remaining) < $length + 1) {
+            return false;
+        }
+
+        $payloadString = substr($remaining, 0, $length);
+        $signature = substr($remaining, $length + 1);
+
         $expectedSignature = hash_hmac('sha256', $payloadString, $secret);
 
         if (!hash_equals($expectedSignature, $signature)) {
@@ -267,14 +299,22 @@ class Auth
 
         $payload = json_decode($payloadString, true);
 
-        if (!is_array($payload)) {
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
             return false;
         }
 
         // Expiration check
         $now = time();
-        if (!isset($payload['exp']) || !is_int($payload['exp']) || $payload['exp'] < $now) {
+        if (!isset($payload['exp']) || !is_numeric($payload['exp']) || (int)$payload['exp'] <= $now) {
             return false;
+        }
+
+        // Validate required fields
+        $requiredFields = ['success', 'failure', 'token', 'aud', 'iat'];
+        foreach ($requiredFields as $field) {
+            if (!isset($payload[$field])) {
+                return false;
+            }
         }
 
         // Audience check

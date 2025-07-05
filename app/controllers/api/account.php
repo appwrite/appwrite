@@ -1271,14 +1271,14 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $key = "";
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
         $providers = Config::getParam('oAuthProviders');
         $providerName = $providers[$provider]['name'] ?? '';
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
 
-        $verificationState = Auth::stateVerify($state, $key, $aud, $origin);
+        $verificationState = Auth::stateVerify($state, $signingKey, $aud, $origin);
 
         if (!empty($state)) {
             try {
