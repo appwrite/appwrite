@@ -243,7 +243,7 @@ class Auth
         }
 
         $signature = hash_hmac('sha256', $payloadString, $secret);
-       $code = strlen($payloadString) . ':' . $payloadString . ':' . $signature;
+        $code = strlen($payloadString) . ':' . $payloadString . ':' . $signature;
 
         // Encode using Base64URL
         $code = rtrim(strtr(base64_encode($code), '+/', '-_'), '=');
