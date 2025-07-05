@@ -42,7 +42,15 @@ class Origin extends Validator
         $this->scheme = $this->parseScheme($origin);
         $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');
 
-        if (in_array($this->scheme, [Platform::SCHEME_HTTP, Platform::SCHEME_HTTPS], true)) {
+        $webPlatforms = [
+            Platform::SCHEME_HTTP,
+            Platform::SCHEME_HTTPS,
+            Platform::SCHEME_CHROME_EXTENSION,
+            Platform::SCHEME_FIREFOX_EXTENSION,
+            Platform::SCHEME_SAFARI_EXTENSION,
+            Platform::SCHEME_EDGE_EXTENSION,
+        ];
+        if (in_array($this->scheme, $webPlatforms, true)) {
             $validator = new Hostname($this->hostnames);
             return $validator->isValid($this->host);
         }

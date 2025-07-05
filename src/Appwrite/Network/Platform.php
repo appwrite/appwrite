@@ -24,6 +24,10 @@ class Platform
 
     public const SCHEME_HTTP = 'http';
     public const SCHEME_HTTPS = 'https';
+    public const SCHEME_CHROME_EXTENSION = 'chrome-extension';
+    public const SCHEME_FIREFOX_EXTENSION = 'moz-extension';
+    public const SCHEME_SAFARI_EXTENSION = 'extension';
+    public const SCHEME_EDGE_EXTENSION = 'ms-browser-extension';
     public const SCHEME_IOS = 'appwrite-ios';
     public const SCHEME_MACOS = 'appwrite-macos';
     public const SCHEME_WATCHOS = 'appwrite-watchos';
@@ -45,6 +49,10 @@ class Platform
         self::SCHEME_ANDROID => 'Android',
         self::SCHEME_WINDOWS => 'Windows',
         self::SCHEME_LINUX => 'Linux',
+        self::SCHEME_CHROME_EXTENSION => 'Chrome Extension',
+        self::SCHEME_FIREFOX_EXTENSION => 'Firefox Extension',
+        self::SCHEME_SAFARI_EXTENSION => 'Safari Extension',
+        self::SCHEME_EDGE_EXTENSION => 'Edge Extension',
     ];
 
     /**
