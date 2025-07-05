@@ -26,7 +26,7 @@ class Platform
     public const SCHEME_HTTPS = 'https';
     public const SCHEME_CHROME_EXTENSION = 'chrome-extension';
     public const SCHEME_FIREFOX_EXTENSION = 'moz-extension';
-    public const SCHEME_SAFARI_EXTENSION = 'extension';
+    public const SCHEME_SAFARI_EXTENSION = 'safari-web-extension';
     public const SCHEME_EDGE_EXTENSION = 'ms-browser-extension';
     public const SCHEME_IOS = 'appwrite-ios';
     public const SCHEME_MACOS = 'appwrite-macos';
