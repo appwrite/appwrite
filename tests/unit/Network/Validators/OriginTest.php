@@ -94,5 +94,17 @@ class OriginTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid('appwrite-windows://com.company.appname'));
         $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard', $validator->getDescription());
+
+        $this->assertEquals(false, $validator->isValid('chrome-extension://com.company.appname'));
+        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Chrome Extension) platform on your project console dashboard', $validator->getDescription());
+
+        $this->assertEquals(false, $validator->isValid('moz-extension://com.company.appname'));
+        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Firefox Extension) platform on your project console dashboard', $validator->getDescription());
+
+        $this->assertEquals(false, $validator->isValid('safari-web-extension://com.company.appname'));
+        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Safari Extension) platform on your project console dashboard', $validator->getDescription());
+
+        $this->assertEquals(false, $validator->isValid('ms-browser-extension://com.company.appname'));
+        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Edge Extension) platform on your project console dashboard', $validator->getDescription());
     }
 }
