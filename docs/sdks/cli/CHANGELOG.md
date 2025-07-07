@@ -1,5 +1,14 @@
 # Change Log
 
+## 8.1.1
+
+* Fix circular dependency issue due to usage of `success` method in `utils.js` file from `parser.js` file
+* Type generation fixes:
+  * Add ability to generate types directly to a specific file by passing a file path to `appwrite types output_path`, instead of just a directory
+  * Fix non-required attributes to not be null if default value is provided
+  * Fix `Models` import error
+  * Improve formatting and add auto-generated comments
+
 ## 8.1.0
 
 * Add multi-region support to `init` command
