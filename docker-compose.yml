@@ -441,12 +441,10 @@ services:
   appwrite-worker-builds:
     entrypoint: worker-builds
     <<: *x-logging
+    container_name: appwrite-worker-builds
     image: appwrite-dev
     networks:
       - appwrite
-    deploy:
-      mode: replicated
-      replicas: 2
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
