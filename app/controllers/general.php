@@ -75,7 +75,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 
     $errorView = __DIR__ . '/../views/general/error.phtml';
-    $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_DOMAIN', '');
+    $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
     if ($rule->isEmpty()) {
         $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
@@ -266,7 +266,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
 
             if (!$authorized) {
-                $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . "://" . System::getEnv('_APP_DOMAIN');
+                $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . "://" . System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
@@ -452,7 +452,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_DOMAIN');
         $endpoint = $protocol . '://' . $hostname . "/v1";
 
@@ -798,6 +798,7 @@ App::init()
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
+    ->inject('platforms')
     ->inject('geodb')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
@@ -810,7 +811,7 @@ App::init()
     ->inject('apiKey')
     ->inject('httpReferrer')
     ->inject('httpReferrerSafe')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $platforms, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe) {
         /*
         * Appwrite Router
         */
@@ -1029,11 +1030,12 @@ App::init()
         *  Skip this check for non-web platforms which are not required to send an origin header
         */
         $origin = $request->getOrigin($request->getReferer(''));
-        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+        $originValidator = new Origin($platforms);
 
         if (
-            !$originValidator->isValid($origin)
-            && $devKey->isEmpty()
+            $devKey->isEmpty()
+            && !empty($origin)
+            && !$originValidator->isValid($origin)
             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
