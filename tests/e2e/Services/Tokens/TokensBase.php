@@ -275,4 +275,75 @@ trait TokensBase
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
     }
+
+    public function testDownloadFileWithFileSecurity(): void
+    {
+        $bucket = $this->client->call(
+            Client::METHOD_POST,
+            '/storage/buckets',
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'name' => 'Test Bucket',
+                'bucketId' => ID::unique(),
+                'fileSecurity' => true,
+                'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
+            ]
+        );
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(
+            Client::METHOD_POST,
+            '/storage/buckets/' . $bucketId . '/files',
+            [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            ]
+        );
+
+        $fileId = $file['body']['$id'];
+
+        $token = $this->client->call(
+            Client::METHOD_POST,
+            '/tokens/buckets/' . $bucketId . '/files/' . $fileId,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]
+        );
+
+        $jwtToken = $token['body']['secret'];
+
+        $fileDownloaded = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download',
+            ['content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ],
+            [ 'token' =>  $jwtToken ]
+        );
+
+        $this->assertEquals(200, $fileDownloaded['headers']['status-code']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($fileDownloaded['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
+    }
 }
