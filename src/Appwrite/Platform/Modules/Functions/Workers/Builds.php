@@ -275,7 +275,7 @@ class Builds extends Action
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-            $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+            $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
         }
 
         $queueForRealtime
@@ -524,7 +524,7 @@ class Builds extends Action
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 
             $queueForRealtime
@@ -1058,7 +1058,7 @@ class Builds extends Action
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 
             $queueForRealtime
@@ -1113,7 +1113,7 @@ class Builds extends Action
                             $rulesUpdated = false;
                             $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
                                 $rulesUpdated = true;
-                                $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                                     'deploymentId' => $deployment->getId(),
                                     'deploymentInternalId' => $deployment->getSequence(),
                                 ]));
@@ -1138,7 +1138,7 @@ class Builds extends Action
                             ];
 
                             $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                                $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                                     'deploymentId' => $deployment->getId(),
                                     'deploymentInternalId' => $deployment->getSequence(),
                                 ]));
@@ -1184,8 +1184,7 @@ class Builds extends Action
                             'region' => $project->getAttribute('region')
                         ]));
                     } catch (Duplicate $err) {
-                        $rule = $dbForPlatform->getDocument('rules', $ruleId);
-                        $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                             'deploymentId' => $deployment->getId(),
                             'deploymentInternalId' => $deployment->getSequence(),
                         ]));
@@ -1201,7 +1200,7 @@ class Builds extends Action
                     ];
 
                     $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                        $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                             'deploymentId' => $deployment->getId(),
                             'deploymentInternalId' => $deployment->getSequence(),
                         ]));
@@ -1274,7 +1273,7 @@ class Builds extends Action
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 
             $queueForRealtime
