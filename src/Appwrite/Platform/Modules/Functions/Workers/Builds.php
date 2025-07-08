@@ -1093,62 +1093,62 @@ class Builds extends Action
                 } else {
                     $activateBuild = true;
                 }
+            }
 
-                if ($activateBuild) {
-                    switch ($resource->getCollection()) {
-                        case 'functions':
-                            $resource = $dbForProject->updateDocument('functions', $resource->getId(), new Document([
-                                'live' => true,
+            if ($activateBuild) {
+                switch ($resource->getCollection()) {
+                    case 'functions':
+                        $resource = $dbForProject->updateDocument('functions', $resource->getId(), new Document([
+                            'live' => true,
+                            'deploymentId' => $deployment->getId(),
+                            'deploymentInternalId' => $deployment->getSequence(),
+                            'deploymentCreatedAt' => $deployment->getCreatedAt(),
+                        ]));
+
+                        $queries = [
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+                            Query::equal('deploymentResourceType', ['function']),
+                            Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
+                        ];
+
+                        $rulesUpdated = false;
+                        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
+                            $rulesUpdated = true;
+                            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                                 'deploymentId' => $deployment->getId(),
                                 'deploymentInternalId' => $deployment->getSequence(),
-                                'deploymentCreatedAt' => $deployment->getCreatedAt(),
                             ]));
+                        }, $queries);
+                        break;
+                    case 'sites':
+                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document([
+                            'live' => true,
+                            'deploymentId' => $deployment->getId(),
+                            'deploymentInternalId' => $deployment->getSequence(),
+                            'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
+                            'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+                            'deploymentCreatedAt' => $deployment->getCreatedAt(),
+                        ]));
+                        $queries = [
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']),
+                            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+                            Query::equal('deploymentResourceType', ['site']),
+                            Query::equal('trigger', ['manual']),
+                            Query::equal('deploymentVcsProviderBranch', ['']),
+                        ];
 
-                            $queries = [
-                                Query::equal('projectInternalId', [$project->getSequence()]),
-                                Query::equal('type', ['deployment']),
-                                Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                                Query::equal('deploymentResourceType', ['function']),
-                                Query::equal('trigger', ['manual']),
-                                Query::equal('deploymentVcsProviderBranch', ['']),
-                            ];
-
-                            $rulesUpdated = false;
-                            $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
-                                $rulesUpdated = true;
-                                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                                    'deploymentId' => $deployment->getId(),
-                                    'deploymentInternalId' => $deployment->getSequence(),
-                                ]));
-                            }, $queries);
-                            break;
-                        case 'sites':
-                            $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document([
-                                'live' => true,
+                        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                                 'deploymentId' => $deployment->getId(),
                                 'deploymentInternalId' => $deployment->getSequence(),
-                                'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
-                                'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
-                                'deploymentCreatedAt' => $deployment->getCreatedAt(),
                             ]));
-                            $queries = [
-                                Query::equal('projectInternalId', [$project->getSequence()]),
-                                Query::equal('type', ['deployment']),
-                                Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                                Query::equal('deploymentResourceType', ['site']),
-                                Query::equal('trigger', ['manual']),
-                                Query::equal('deploymentVcsProviderBranch', ['']),
-                            ];
+                        }, $queries);
 
-                            $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                                    'deploymentId' => $deployment->getId(),
-                                    'deploymentInternalId' => $deployment->getSequence(),
-                                ]));
-                            }, $queries);
-
-                            break;
-                    }
+                        break;
                 }
             }
 
