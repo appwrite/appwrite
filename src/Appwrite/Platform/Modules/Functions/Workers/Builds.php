@@ -1187,7 +1187,7 @@ class Builds extends Action
                             'region' => $project->getAttribute('region')
                         ]));
                     } catch (Duplicate $err) {
-                        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                        $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
                             'deploymentId' => $deployment->getId(),
                             'deploymentInternalId' => $deployment->getSequence(),
                         ]));
