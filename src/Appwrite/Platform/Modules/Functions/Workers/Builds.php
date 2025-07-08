@@ -856,9 +856,7 @@ class Builds extends Action
 
                 $adapter = $resource->getAttribute('adapter', '');
                 if (empty($adapter)) {
-                    $resource->setAttribute('adapter', $detection->getName());
-                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document(['adapter' => $detection->getName(), 'fallbackFile' => $detection->getFallbackFile() ?? '']));
 
                     $deployment->setAttribute('adapter', $detection->getName());
                     $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
@@ -1083,18 +1081,10 @@ class Builds extends Action
                     $currentActiveDeployment = $dbForProject->getDocument('deployments', $currentActiveDeploymentId);
                     if (!$currentActiveDeployment->isEmpty()) {
                         $currentActiveStartTime = $currentActiveDeployment->getAttribute('buildStartedAt', '');
-                        $currentActiveEndTime = $currentActiveDeployment->getAttribute('buildEndedAt', '');
                         $deploymentStartTime = $deployment->getAttribute('buildStartedAt', '');
-                        $tentativeEndTime = DateTime::now();
-                        $deployment->setAttribute('buildEndedAt', $tentativeEndTime);
-                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document(['buildEndedAt' => $tentativeEndTime]));
-                        $deploymentEndTime = $deployment->getAttribute('buildEndedAt', '');
 
-                        // Skip auto-activation if:
-                        // 1. Current active deployment started later than deployment that is being activated, AND
-                        // 2. Current active deployment finished earlier than deployment that is being activated
-                        if ((!empty($currentActiveStartTime) && !empty($deploymentStartTime) && $currentActiveStartTime > $deploymentStartTime) &&
-                            (!empty($currentActiveEndTime) && !empty($deploymentEndTime) && $currentActiveEndTime < $deploymentEndTime)) {
+                        // Skip auto-activation if current active deployment started later than deployment that is being activated
+                        if (!empty($currentActiveStartTime) && !empty($deploymentStartTime) && $currentActiveStartTime > $deploymentStartTime) {
                             Console::info('Skipping auto-activation as current deployment is more recent');
                             $activateBuild = false;
                         }
@@ -1102,13 +1092,14 @@ class Builds extends Action
                 }
 
                 if ($activateBuild) {
-                    $resource->setAttribute('live', true);
                     switch ($resource->getCollection()) {
                         case 'functions':
-                            $resource->setAttribute('deploymentId', $deployment->getId());
-                            $resource->setAttribute('deploymentInternalId', $deployment->getSequence());
-                            $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
-                            $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                            $resource = $dbForProject->updateDocument('functions', $resource->getId(), new Document([
+                                'live' => true,
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getSequence(),
+                                'deploymentCreatedAt' => $deployment->getCreatedAt(),
+                            ]));
 
                             $queries = [
                                 Query::equal('projectInternalId', [$project->getSequence()]),
@@ -1122,19 +1113,21 @@ class Builds extends Action
                             $rulesUpdated = false;
                             $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
                                 $rulesUpdated = true;
-                                $rule = $rule
-                                    ->setAttribute('deploymentId', $deployment->getId())
-                                    ->setAttribute('deploymentInternalId', $deployment->getSequence());
-                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                                    'deploymentId' => $deployment->getId(),
+                                    'deploymentInternalId' => $deployment->getSequence(),
+                                ]));
                             }, $queries);
                             break;
                         case 'sites':
-                            $resource->setAttribute('deploymentId', $deployment->getId());
-                            $resource->setAttribute('deploymentInternalId', $deployment->getSequence());
-                            $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
-                            $resource->setAttribute('deploymentScreenshotLight', $deployment->getAttribute('screenshotLight', ''));
-                            $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
-                            $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                            $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document([
+                                'live' => true,
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getSequence(),
+                                'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
+                                'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+                                'deploymentCreatedAt' => $deployment->getCreatedAt(),
+                            ]));
                             $queries = [
                                 Query::equal('projectInternalId', [$project->getSequence()]),
                                 Query::equal('type', ['deployment']),
@@ -1145,10 +1138,10 @@ class Builds extends Action
                             ];
 
                             $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                                $rule = $rule
-                                    ->setAttribute('deploymentId', $deployment->getId())
-                                    ->setAttribute('deploymentInternalId', $deployment->getSequence());
-                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                                    'deploymentId' => $deployment->getId(),
+                                    'deploymentInternalId' => $deployment->getSequence(),
+                                ]));
                             }, $queries);
 
                             break;
@@ -1192,10 +1185,10 @@ class Builds extends Action
                         ]));
                     } catch (Duplicate $err) {
                         $rule = $dbForPlatform->getDocument('rules', $ruleId);
-                        $rule = $rule
-                            ->setAttribute('deploymentId', $deployment->getId())
-                            ->setAttribute('deploymentInternalId', $deployment->getSequence());
-                        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                            'deploymentId' => $deployment->getId(),
+                            'deploymentInternalId' => $deployment->getSequence(),
+                        ]));
                     }
 
                     $queries = [
@@ -1208,10 +1201,10 @@ class Builds extends Action
                     ];
 
                     $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                        $rule = $rule
-                                ->setAttribute('deploymentId', $deployment->getId())
-                                ->setAttribute('deploymentInternalId', $deployment->getSequence());
-                        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                            'deploymentId' => $deployment->getId(),
+                            'deploymentInternalId' => $deployment->getSequence(),
+                        ]));
                     }, $queries);
                 }
             }
