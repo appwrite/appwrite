@@ -1072,7 +1072,7 @@ class Builds extends Action
             Console::success("Build id: $deploymentId created");
 
             /** Set auto deploy */
-            $activateBuild = true;
+            $activateBuild = false;
             if ($deployment->getAttribute('activate') === true) {
                 // Check if current active deployment started later than this deployment
                 $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
@@ -1080,15 +1080,18 @@ class Builds extends Action
                 if (!empty($currentActiveDeploymentId)) {
                     $currentActiveDeployment = $dbForProject->getDocument('deployments', $currentActiveDeploymentId);
                     if (!$currentActiveDeployment->isEmpty()) {
-                        $currentActiveStartTime = $currentActiveDeployment->getAttribute('buildStartedAt', '');
-                        $deploymentStartTime = $deployment->getAttribute('buildStartedAt', '');
+                        $currentActiveStartTime = $currentActiveDeployment->getCreatedAt();
+                        $deploymentStartTime = $deployment->getCreatedAt();
 
                         // Skip auto-activation if current active deployment started later than deployment that is being activated
-                        if (!empty($currentActiveStartTime) && !empty($deploymentStartTime) && $currentActiveStartTime > $deploymentStartTime) {
+                        if (!empty($currentActiveStartTime) && !empty($deploymentStartTime) && $currentActiveStartTime < $deploymentStartTime) {
+                            $activateBuild = true;
+                        } else {
                             Console::info('Skipping auto-activation as current deployment is more recent');
-                            $activateBuild = false;
                         }
                     }
+                } else {
+                    $activateBuild = true;
                 }
 
                 if ($activateBuild) {
