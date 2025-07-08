@@ -330,18 +330,19 @@ trait TokensBase
 
         $jwtToken = $token['body']['secret'];
 
-        $guestHeaders = ['content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ];
-
         $endpoints = ['preview', 'view', 'download'];
 
         foreach ($endpoints as $endpoint) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 "/storage/buckets/{$bucketId}/files/{$fileId}/$endpoint",
-                $guestHeaders,
-                ['token' => $jwtToken]
+                [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ],
+                [
+                    'token' => $jwtToken
+                ]
             );
 
             $this->assertNotEmpty($response['body']);
