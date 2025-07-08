@@ -5,6 +5,8 @@ namespace Tests\E2E\Services\Tokens;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 trait TokensBase
 {
@@ -274,5 +276,89 @@ trait TokensBase
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
+    }
+
+    public function testFileAccessWithFileSecurity(): void
+    {
+        $bucket = $this->client->call(
+            Client::METHOD_POST,
+            '/storage/buckets',
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'name' => 'Test Bucket',
+                'bucketId' => ID::unique(),
+                'fileSecurity' => true,
+                'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
+            ]
+        );
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(
+            Client::METHOD_POST,
+            '/storage/buckets/' . $bucketId . '/files',
+            [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'fileId' => ID::unique(),
+                'permissions' => [ Permission::read(Role::label('devrel')) ],
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            ]
+        );
+
+        $fileId = $file['body']['$id'];
+
+        $token = $this->client->call(
+            Client::METHOD_POST,
+            '/tokens/buckets/' . $bucketId . '/files/' . $fileId,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]
+        );
+
+        $jwtToken = $token['body']['secret'];
+
+        $endpoints = ['preview', 'view', 'download'];
+
+        foreach ($endpoints as $endpoint) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                "/storage/buckets/$bucketId/files/$fileId/$endpoint",
+                [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ],
+                [
+                    'token' => $jwtToken
+                ]
+            );
+
+            $this->assertNotEmpty($response['body']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+
+            if ($endpoint === 'download') {
+                $image = new \Imagick();
+                $image->readImageBlob($response['body']);
+                $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+
+                $this->assertEquals($original->getImageWidth(), $image->getImageWidth());
+                $this->assertEquals($original->getImageHeight(), $image->getImageHeight());
+                $this->assertEquals('PNG', $image->getImageFormat());
+            }
+        }
+
     }
 }
