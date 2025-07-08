@@ -5,6 +5,8 @@ namespace Tests\E2E\Services\Tokens;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 trait TokensBase
 {
@@ -276,7 +278,7 @@ trait TokensBase
         $this->assertEquals('PNG', $image->getImageFormat());
     }
 
-    public function testDownloadFileWithFileSecurity(): void
+    public function testFileAccessWithFileSecurity(): void
     {
         $bucket = $this->client->call(
             Client::METHOD_POST,
@@ -309,6 +311,7 @@ trait TokensBase
             ],
             [
                 'fileId' => ID::unique(),
+                'permissions' => [ Permission::read(Role::label('devrel')) ],
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             ]
         );
@@ -327,23 +330,34 @@ trait TokensBase
 
         $jwtToken = $token['body']['secret'];
 
-        $fileDownloaded = $this->client->call(
-            Client::METHOD_GET,
-            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download',
-            ['content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ],
-            [ 'token' =>  $jwtToken ]
-        );
+        $guestHeaders = ['content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
 
-        $this->assertEquals(200, $fileDownloaded['headers']['status-code']);
+        $endpoints = ['preview', 'view', 'download'];
 
-        $image = new \Imagick();
-        $image->readImageBlob($fileDownloaded['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+        foreach ($endpoints as $endpoint) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                "/storage/buckets/{$bucketId}/files/{$fileId}/$endpoint",
+                $guestHeaders,
+                ['token' => $jwtToken]
+            );
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+            $this->assertNotEmpty($response['body']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+
+            if ($endpoint === 'download') {
+                $image = new \Imagick();
+                $image->readImageBlob($response['body']);
+                $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+
+                $this->assertEquals($original->getImageWidth(), $image->getImageWidth());
+                $this->assertEquals($original->getImageHeight(), $image->getImageHeight());
+                $this->assertEquals('PNG', $image->getImageFormat());
+            }
+        }
+
     }
 }
