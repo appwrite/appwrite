@@ -1,5 +1,5 @@
 
-> We just announced Bulk API for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-bulk-api)
+> We just announced Database Upsert for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-database-upsert)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
