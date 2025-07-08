@@ -1084,7 +1084,7 @@ class Builds extends Action
                         $deploymentStartTime = $deployment->getCreatedAt();
 
                         // Skip auto-activation if current active deployment started later than deployment that is being activated
-                        if (!empty($currentActiveStartTime) && !empty($deploymentStartTime) && $currentActiveStartTime < $deploymentStartTime) {
+                        if ($currentActiveStartTime < $deploymentStartTime) {
                             $activateBuild = true;
                         } else {
                             Console::info('Skipping auto-activation as current deployment is more recent');
