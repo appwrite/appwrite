@@ -1,4 +1,4 @@
-(CI/CD trigger 2)
+(CI/CD trigger 3)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 > [Join the Init kick off event 19th of May: The future of Appwrite with Founder & CEO Eldad Fux](https://www.youtube.com/watch?v=1g8tuogsp7A)
