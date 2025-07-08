@@ -299,6 +299,10 @@ class Realtime extends MessagingAdapter
                 break;
             case 'databases':
                 $resource = $parts[4] ?? '';
+                // bulk api for cases of databases
+                $isBulk = $payload->getAttribute('total') && $payload->getAttribute('documents');
+                $payload = $isBulk ? $payload->getAttribute('documents') : [$payload];
+
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
@@ -313,15 +317,22 @@ class Realtime extends MessagingAdapter
                     }
 
                     $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload[0]->getAttribute('$tableId') . '.rows';
+                    if (!$isBulk) {
+                        $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload[0]->getAttribute('$tableId') . '.rows.' . $payload[0]->getId();
+                    }
 
                     $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
-
+                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload[0]->getAttribute('$collectionId') . '.documents';
+                    if (!$isBulk) {
+                        $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload[0]->getAttribute('$collectionId') . '.documents.' . $payload[0]->getId();
+                    }
+                    $payloadReads = [];
+                    foreach ($payload as $document) {
+                        $payloadReads = \array_merge($payloadReads, $document->getRead());
+                    }
                     $roles = $collection->getAttribute('documentSecurity', false)
-                        ? \array_merge($collection->getRead(), $payload->getRead())
+                        ? \array_merge($collection->getRead(), $payloadReads)
                         : $collection->getRead();
                 }
                 break;
