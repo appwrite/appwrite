@@ -335,7 +335,7 @@ trait TokensBase
         foreach ($endpoints as $endpoint) {
             $response = $this->client->call(
                 Client::METHOD_GET,
-                "/storage/buckets/{$bucketId}/files/{$fileId}/$endpoint",
+                "/storage/buckets/$bucketId/files/$fileId/$endpoint",
                 [
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
