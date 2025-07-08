@@ -576,7 +576,6 @@ App::init()
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
