@@ -1,4 +1,3 @@
-
 > We just announced Database Upsert for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-database-upsert)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
@@ -233,7 +232,7 @@ Appwrite uses a microservices architecture that was designed for easy scaling an
 
 The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
 
-## Contributing
+## Contributing 🙌
 
 All code contributions, including those of people having commit access, must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
 
