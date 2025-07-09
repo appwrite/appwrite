@@ -481,7 +481,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $deploymentId = $this->setupDeployment($functionId, [
             'entrypoint' => 'index.js',
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('generic'),
             'activate' => true
         ]);
 
@@ -511,7 +511,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $deploymentId = $this->setupDeployment($functionId, [
             'entrypoint' => 'index.js',
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('generic'),
             'activate' => true
         ]);
 

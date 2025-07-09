@@ -1285,10 +1285,10 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'functionId' => ID::unique(),
-            'name' => 'Test',
+            'name' => 'Test timeout execution',
             'execute' => ['users'],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
 
@@ -1302,7 +1302,6 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'entrypoint' => 'index.php',
             'code' => $this->packageFunction('timeout'),
             'activate' => true
         ]);

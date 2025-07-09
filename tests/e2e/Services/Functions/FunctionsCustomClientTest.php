@@ -43,8 +43,8 @@ class FunctionsCustomClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -52,8 +52,7 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -82,15 +81,14 @@ class FunctionsCustomClientTest extends Scope
          */
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test',
+            'name' => 'Test ',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-fn'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -142,10 +140,10 @@ class FunctionsCustomClientTest extends Scope
          */
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test',
+            'name' => 'Test guest execution',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'vars' => [
                 'funcKey1' => 'funcValue1',
                 'funcKey2' => 'funcValue2',
@@ -154,8 +152,7 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-fn'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -193,15 +190,14 @@ class FunctionsCustomClientTest extends Scope
          */
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test',
+            'name' => 'Test synchronous execution',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-fn'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -244,7 +240,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.js',
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('generic'),
             'activate' => true
         ]);
 

@@ -322,8 +322,8 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -338,8 +338,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
             'x-sdk-language' => 'cli',
         ], [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -514,7 +513,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $data['functionId'];
 
         $deployment = $this->createDeployment($functionId, [
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -533,7 +532,7 @@ class FunctionsCustomServerTest extends Scope
         }, 50000, 500);
 
         $deployment = $this->createDeployment($functionId, [
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => 'false'
         ]);
 
@@ -573,7 +572,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $data['functionId'];
 
         $deployment = $this->createDeployment($functionId, [
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => 'false'
         ]);
 
@@ -1236,9 +1235,9 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test php-8.0',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test timeout execution',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [],
             'schedule' => '',
             'timeout' => 5, // Should timeout after 5 seconds
@@ -1344,7 +1343,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-        $this->assertStringContainsString('Amazing Function Log', $execution['body']['logs']);
+        $this->assertStringContainsString('log-works', $execution['body']['logs']);
         $this->assertEmpty($execution['body']['errors']);
 
         $executionId = $execution['body']['$id'] ?? '';
@@ -1357,7 +1356,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('Amazing Function Log', $executions['body']['executions'][0]['logs']);
+        $this->assertStringContainsString('log-works', $executions['body']['executions'][0]['logs']);
 
         $this->cleanupFunction($functionId);
     }
@@ -1488,17 +1487,16 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Event executions',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Event executions',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
             ],
             'timeout' => 15,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-event'),
+            'code' => $this->packageFunction('event-handler'),
             'activate' => true
         ]);
 
@@ -1541,17 +1539,16 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Scopes executions',
-            'commands' => 'bash setup.sh && composer install',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Scopes executions',
+            'commands' => 'bash setup.sh && npm install',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'scopes' => ['users.read'],
             'timeout' => 15,
         ]);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-scopes'),
+            'code' => $this->packageFunction('dynamic-api-key'),
             'activate' => true,
         ]);
 
@@ -1600,16 +1597,15 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Cookie executions',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Cookie executions',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
         ]);
         $this->assertNotEmpty($functionId);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-cookie'),
+            'code' => $this->packageFunction('cookies'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId);
@@ -1642,9 +1638,9 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Cookie executions',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Cookie executions',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'execute' => ['any']
         ]);
@@ -1652,8 +1648,7 @@ class FunctionsCustomServerTest extends Scope
         $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-cookie'),
+            'code' => $this->packageFunction('cookies'),
             'activate' => true
         ]);
 
@@ -1865,7 +1860,7 @@ class FunctionsCustomServerTest extends Scope
         $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('generic'),
             'activate' => true
         ]);
 
@@ -1958,7 +1953,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $functionId = $function['body']['$id'] ?? '';
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('generic'),
             'activate' => true
         ]);
 
@@ -1992,7 +1987,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($functionId);
 
         $deploymentId1 = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('generic'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId1);
@@ -2046,12 +2041,11 @@ class FunctionsCustomServerTest extends Scope
 
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'runtime' => 'php-8.0',
+            'runtime' => 'node-22',
             'name' => 'Re-activate Test',
-            'entrypoint' => 'index.php',
+            'entrypoint' => 'index.js',
         ]);
         $this->assertNotEmpty($functionId);
-
 
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
@@ -2063,7 +2057,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($function['body']['latestDeploymentStatus']);
 
         $deploymentId1 = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('php-cookie'),
+            'code' => $this->packageFunction('cookies'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId1);
@@ -2081,7 +2075,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('cookieValue', $execution['body']['responseBody']);
 
         $deploymentId2 = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId2);
@@ -2149,8 +2143,8 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test Error Pages',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'commands' => 'cd non-existing-directory',
             'execute' => ['any']
@@ -2160,8 +2154,7 @@ class FunctionsCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
 
         $deployment = $this->createDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -2178,8 +2171,7 @@ class FunctionsCustomServerTest extends Scope
 
         // canceled deployment
         $deployment = $this->createDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -2207,8 +2199,8 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test Error Pages',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'commands' => '',
             'execute' => ['users']
@@ -2219,7 +2211,7 @@ class FunctionsCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId);
@@ -2241,8 +2233,8 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test Error Pages',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'commands' => '',
             'execute' => ['any']
@@ -2253,7 +2245,7 @@ class FunctionsCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId);
