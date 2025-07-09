@@ -580,6 +580,11 @@ return [
         'description' => 'Site Template with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::SITE_INVALID_FILE_SIZE => [
+        'name' => Exception::SITE_INVALID_FILE_SIZE,
+        'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_COMPUTE_SIZE_LIMIT environment variable.',
+        'code' => 400,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
