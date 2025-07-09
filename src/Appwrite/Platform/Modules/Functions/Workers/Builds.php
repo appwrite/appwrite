@@ -959,8 +959,9 @@ class Builds extends Action
                                     $config['sleep'] = $framework['screenshotSleep'];
                                 }
 
+                                $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
                                 $fetchResponse = $client->fetch(
-                                    url: 'http://appwrite-browser:3000/v1/screenshots',
+                                    url: $browserEndpoint . '/screenshots',
                                     method: 'POST',
                                     body: $config
                                 );

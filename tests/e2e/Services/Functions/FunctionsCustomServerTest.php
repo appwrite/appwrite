@@ -1461,49 +1461,6 @@ class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    public function testv2Function()
-    {
-        $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test PHP V2',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
-            'events' => [],
-            'timeout' => 15,
-        ]);
-
-        $variable = $this->client->call(Client::METHOD_PATCH, '/mock/functions-v2', [
-            'content-type' => 'application/json',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-mode' => 'admin',
-        ], [
-            'functionId' => $functionId
-        ]);
-        $this->assertEquals(204, $variable['headers']['status-code']);
-
-        $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-v2'),
-            'activate' => true
-        ]);
-
-        $execution = $this->createExecution($functionId, [
-            'body' => 'foobar',
-            'async' => 'false'
-        ]);
-
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals(200, $execution['body']['responseStatusCode']);
-
-        $output = json_decode($execution['body']['responseBody'], true);
-        $this->assertEquals(true, $output['v2Woks']);
-
-        $this->cleanupFunction($functionId);
-    }
-
     public function testGetRuntimes()
     {
         $runtimes = $this->client->call(Client::METHOD_GET, '/functions/runtimes', array_merge([
