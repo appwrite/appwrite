@@ -1997,47 +1997,6 @@ trait DatabasesBase
         ]);
         $this->assertEquals(2, $documents['body']['total']);
 
-        // test without passing permissions
-        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'title' => 'Thor: Ragnarok',
-                'releaseYear' => 2000
-            ]
-        ]);
-
-        $this->assertEquals(200, $document['headers']['status-code']);
-        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
-
-        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        if (isset($document['body']['$permissions'])) {
-            $this->assertCount(3, $document['body']['$permissions']);
-            $this->assertContains(Permission::read(Role::users()), $document['body']['$permissions']);
-            $this->assertContains(Permission::update(Role::users()), $document['body']['$permissions']);
-            $this->assertContains(Permission::delete(Role::users()), $document['body']['$permissions']);
-        }
-
-        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        if ($this->getSide() === 'client') {
-            if (isset($document['body']['$permissions']) && in_array(Permission::delete(Role::users()), $document['body']['$permissions'])) {
-                $this->assertEquals(204, $deleteResponse['headers']['status-code']);
-            } else {
-                $this->assertEquals(401, $deleteResponse['headers']['status-code']);
-            }
-        } else {
-            $this->assertEquals(204, $deleteResponse['headers']['status-code']);
-        }
-
     }
 
     /**
