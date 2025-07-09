@@ -1118,7 +1118,7 @@ class Deletes extends Action
         $start = \microtime(true);
 
         $deleteBatchSize = Database::DELETE_BATCH_SIZE;
-        $deleteBatchSize = 500;
+        $deleteBatchSize = 500; // TODO: Set right value in DB library after investigation
 
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
