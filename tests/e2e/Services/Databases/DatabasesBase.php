@@ -1996,7 +1996,6 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(2, $documents['body']['total']);
-
     }
 
     /**
