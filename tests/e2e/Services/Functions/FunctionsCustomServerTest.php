@@ -1325,7 +1325,7 @@ class FunctionsCustomServerTest extends Scope
         $execution = $this->createExecution($functionId, [
             'async' => 'false'
         ]);
-        
+
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
