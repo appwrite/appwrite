@@ -26,6 +26,15 @@ class URLTest extends TestCase
         $this->assertEquals(null, $url['port']);
         $this->assertEquals('', $url['path']);
         $this->assertEquals('', $url['query']);
+
+        $url = URL::parse('appwrite-callback-project://');
+
+        $this->assertIsArray($url);
+        $this->assertEquals('appwrite-callback-project', $url['scheme']);
+        $this->assertEquals('', $url['host']);
+        $this->assertEquals(null, $url['port']);
+        $this->assertEquals('', $url['path']);
+        $this->assertEquals('', $url['query']);
     }
 
     public function testUnparse(): void
