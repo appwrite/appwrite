@@ -4309,7 +4309,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $data['$id'] = $documentId;
-        $data['$permissions'] = $permissions;
+        $data['$permissions'] = $permissions ?? [];
         $newDocument = new Document($data);
 
         $operations = 0;
