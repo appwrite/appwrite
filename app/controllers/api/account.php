@@ -1316,15 +1316,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('platforms')
+    ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, array $platforms, Document $devKey, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
-        $validateURL = new URL();
+        $redirect = new Redirect($platforms);
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
@@ -1351,11 +1353,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $state = $defaultState;
         }
 
-        if (!$validateURL->isValid($state['success'])) {
+        if ($devKey->isEmpty() && !$redirect->isValid($state['success'])) {
             throw new Exception(Exception::PROJECT_INVALID_SUCCESS_URL);
         }
 
-        if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
+        if ($devKey->isEmpty() && !empty($state['failure']) && !$redirect->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
         $failure = [];
@@ -1422,13 +1424,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
-        $userParam = \json_decode($request->getParam('user'), true);
+        $userParam = $request->getParam('user');
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
-        } elseif (is_array($userParam)) {
-            $nameParam = $userParam['name'];
-            if (is_array($nameParam) && isset($nameParam['firstName']) && isset($nameParam['lastName'])) {
-                $name = $nameParam['firstName'] . ' ' . $nameParam['lastName'];
+        } elseif ($userParam !== null) {
+            $user = \json_decode($userParam, true);
+            if (isset($user['name']['firstName']) && isset($user['name']['lastName'])) {
+                $name = $user['name']['firstName'] . ' ' . $user['name']['lastName'];
             }
         }
         $email = $oauth2->getUserEmail($accessToken);
@@ -1745,8 +1747,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
-
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
