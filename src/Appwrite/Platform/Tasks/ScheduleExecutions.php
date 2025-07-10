@@ -96,10 +96,10 @@ class ScheduleExecutions extends ScheduleBase
                         'schedules',
                         $schedule['$id'],
                     );
-
-                    unset($this->schedules[$schedule['$sequence']]);
                 }
             });
+
+            unset($this->schedules[$schedule['$sequence']]);
         }
     }
 }
