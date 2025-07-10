@@ -399,8 +399,8 @@ class WebhooksCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
 
@@ -439,8 +439,8 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'execute' => [Role::any()->toString()],
             'vars' => [
                 'key1' => 'value1',
@@ -496,7 +496,7 @@ class WebhooksCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'entrypoint' => 'index.php',
+            'entrypoint' => 'index.js',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
         ]);

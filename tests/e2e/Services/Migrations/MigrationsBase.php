@@ -854,8 +854,8 @@ trait MigrationsBase
 
         $this->assertEquals($functionId, $response['body']['$id']);
         $this->assertEquals('Test', $response['body']['name']);
-        $this->assertEquals('php-8.0', $response['body']['runtime']);
-        $this->assertEquals('index.php', $response['body']['entrypoint']);
+        $this->assertEquals('node-22', $response['body']['runtime']);
+        $this->assertEquals('index.js', $response['body']['entrypoint']);
 
 
         $this->assertEventually(function () use ($functionId) {
