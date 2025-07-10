@@ -57,11 +57,24 @@ class ScheduleExecutions extends ScheduleBase
             )->getAttribute('data', []);
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
+            $delay = max($delay, 0);
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
             \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data, $dbForPlatform) {
                 Co::sleep($delay);
+
+                // Calculate actual delay and execution time for late executions
+                $executedAt = new \DateTime();
+                $actualDelay = $executedAt->getTimestamp() - $scheduledAt->getTimestamp();
+
+                // Prepare headers to inform about late execution
+                $headers = $data['headers'] ?? [];
+                if ($actualDelay > 0) {
+                    $headers['x-appwrite-schedule-delay'] = (string)$actualDelay;
+                    $headers['x-appwrite-scheduled-at'] = $scheduledAt->format('Y-m-d\TH:i:s.v\Z');
+                    $headers['x-appwrite-executed-at'] = $executedAt->format('Y-m-d\TH:i:s.v\Z');
+                }
 
                 $result = $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
@@ -70,7 +83,7 @@ class ScheduleExecutions extends ScheduleBase
                     ->setExecution($schedule['resource'])
                     ->setMethod($data['method'] ?? 'POST')
                     ->setPath($data['path'] ?? '/')
-                    ->setHeaders($data['headers'] ?? [])
+                    ->setHeaders($headers)
                     ->setBody($data['body'] ?? '')
                     ->setProject($schedule['project'])
                     ->setUserId($data['userId'] ?? '')
@@ -84,10 +97,10 @@ class ScheduleExecutions extends ScheduleBase
                         'schedules',
                         $schedule['$id'],
                     );
+
+                    unset($this->schedules[$schedule['$sequence']]);
                 }
             });
-
-            unset($this->schedules[$schedule['$sequence']]);
         }
     }
 }
