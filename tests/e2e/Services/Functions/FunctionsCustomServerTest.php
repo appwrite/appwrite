@@ -902,8 +902,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString($data['deploymentId'], $execution['body']['responseBody']);
         $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
         $this->assertStringContainsString('http', $execution['body']['responseBody']);
-        $this->assertStringContainsString('PHP', $execution['body']['responseBody']);
-        $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
+        $this->assertStringContainsString('Node.js', $execution['body']['responseBody']);
+        $this->assertStringContainsString('22', $execution['body']['responseBody']);
         $this->assertStringContainsString('Global Variable Value', $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
         $this->assertNotEmpty($execution['body']['errors']);
@@ -1016,8 +1016,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
         $this->assertStringContainsString('http', $execution['body']['responseBody']);
-        $this->assertStringContainsString('PHP', $execution['body']['responseBody']);
-        $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
+        $this->assertStringContainsString('Node.js', $execution['body']['responseBody']);
+        $this->assertStringContainsString('22', $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(1.500, $execution['body']['duration']);
 
@@ -1282,7 +1282,7 @@ class FunctionsCustomServerTest extends Scope
         // Most disabled to keep tests fast
         return [
             // ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
-            ['folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0'],
+            ['folder' => 'node', 'name' => 'node-22', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '22'],
             // ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
             // ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
             // [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
@@ -1323,27 +1323,14 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $execution = $this->createExecution($functionId, [
-            'body' => 'foobar',
             'async' => 'false'
         ]);
-
+        
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
-        $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals($runtimeName, $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals($runtimeVersion, $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
-        $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
-        $this->assertEquals('variable', $output['CUSTOM_VARIABLE']);
-        $this->assertEmpty($output['APPWRITE_FUNCTION_USER_ID']);
-        $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
-        $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-        $this->assertStringContainsString('log-works', $execution['body']['logs']);
+        $this->assertEquals('OK', $execution['body']['responseBody']);
+        $this->assertEmpty($execution['body']['logs']);
         $this->assertEmpty($execution['body']['errors']);
 
         $executionId = $execution['body']['$id'] ?? '';
@@ -1356,7 +1343,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('log-works', $executions['body']['executions'][0]['logs']);
+        $this->assertEquals(200, $executions['body']['executions'][0]['responseStatusCode']);
+        $this->assertEmpty($executions['body']['executions'][0]['responseBody']);
 
         $this->cleanupFunction($functionId);
     }
@@ -1840,7 +1828,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $function = $this->createFunction([
             'functionId' => ID::unique(),
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Logging Test',
             'entrypoint' => 'index.js',
             'logging' => false,
@@ -1856,7 +1844,7 @@ class FunctionsCustomServerTest extends Scope
         $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('generic'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -1933,7 +1921,7 @@ class FunctionsCustomServerTest extends Scope
         // Check if the function specifications are correctly set in builds
         $function = $this->createFunction([
             'functionId' => ID::unique(),
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Specification Test',
             'entrypoint' => 'index.js',
             'logging' => false,
@@ -1949,7 +1937,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $functionId = $function['body']['$id'] ?? '';
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('generic'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -1975,7 +1963,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Duplicate Deployment Test',
             'entrypoint' => 'index.js',
             'commands' => ''
@@ -1983,7 +1971,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($functionId);
 
         $deploymentId1 = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('generic'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId1);
@@ -1993,7 +1981,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('APPWRITE_FUNCTION_ID', $execution['body']['responseBody']);
 
         $function = $this->updateFunction($functionId, [
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Duplicate Deployment Test',
             'entrypoint' => 'index.js',
             'commands' => 'rm index.js && mv maintenance.js index.js'

@@ -244,7 +244,7 @@ trait ProxyBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'code' => $this->packageFunction('generic'),
+            'code' => $this->packageFunction('basic'),
             'activate' => 'true'
         ]);
 

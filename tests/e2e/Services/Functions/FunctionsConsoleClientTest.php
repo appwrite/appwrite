@@ -21,8 +21,8 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -39,8 +39,8 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test Failure',
             'execute' => ['some-random-string'],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
         ]);
 
         $this->assertEquals(400, $function2['headers']['status-code']);
@@ -453,7 +453,7 @@ class FunctionsConsoleClientTest extends Scope
     {
         $function = $this->createFunction([
             'functionId' => ID::unique(),
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Variable E2E Test',
             'entrypoint' => 'index.js',
             'logging' => false,
@@ -481,7 +481,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $deploymentId = $this->setupDeployment($functionId, [
             'entrypoint' => 'index.js',
-            'code' => $this->packageFunction('generic'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -502,7 +502,7 @@ class FunctionsConsoleClientTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Download Test',
             'entrypoint' => 'index.js',
             'logging' => false,
@@ -511,7 +511,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $deploymentId = $this->setupDeployment($functionId, [
             'entrypoint' => 'index.js',
-            'code' => $this->packageFunction('generic'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
