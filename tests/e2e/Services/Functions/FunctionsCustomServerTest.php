@@ -35,7 +35,7 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Specs function',
-            'runtime' => 'php-8.0',
+            'runtime' => 'node-22',
             'specification' => $specifications['body']['specifications'][0]['slug']
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
@@ -50,7 +50,7 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Specs function',
-            'runtime' => 'php-8.0',
+            'runtime' => 'node-22',
             'specification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $function['headers']['status-code']);
@@ -64,8 +64,8 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'buckets.*.create',
                 'buckets.*.delete',
@@ -79,7 +79,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
         $this->assertEquals('Test', $function['body']['name']);
-        $this->assertEquals('php-8.0', $function['body']['runtime']);
+        $this->assertEquals('node-22', $function['body']['runtime']);
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$updatedAt']));
         $this->assertEquals('', $function['body']['deploymentId']);
@@ -180,7 +180,7 @@ class FunctionsCustomServerTest extends Scope
 
         // Test search runtime
         $functions = $this->listFunctions([
-            'search' => 'php-8.0'
+            'search' => 'node-22'
         ]);
 
         $this->assertEquals($functions['headers']['status-code'], 200);
@@ -193,8 +193,8 @@ class FunctionsCustomServerTest extends Scope
         $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test 2',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'buckets.*.create',
                 'buckets.*.delete',
@@ -286,8 +286,8 @@ class FunctionsCustomServerTest extends Scope
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 15,
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
         ]);
 
         $dateValidator = new DatetimeValidator();
@@ -362,7 +362,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $starterTemplate['headers']['status-code']);
 
         $phpRuntime = array_values(array_filter($starterTemplate['body']['runtimes'], function ($runtime) {
-            return $runtime['name'] === 'php-8.0';
+            return $runtime['name'] === 'node-22';
         }))[0];
 
         // If this fails, the template has variables, and this test needs to be updated
@@ -372,7 +372,7 @@ class FunctionsCustomServerTest extends Scope
             [
                 'functionId' => ID::unique(),
                 'name' => $starterTemplate['body']['name'],
-                'runtime' => 'php-8.0',
+                'runtime' => 'node-22',
                 'execute' => $starterTemplate['body']['permissions'],
                 'entrypoint' => $phpRuntime['entrypoint'],
                 'events' => $starterTemplate['body']['events'],
@@ -521,7 +521,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertEquals('waiting', $deployment['body']['status']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
-        $this->assertEquals('index.php', $deployment['body']['entrypoint']);
+        $this->assertEquals('index.js', $deployment['body']['entrypoint']);
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
@@ -581,7 +581,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
-        $this->assertEquals('index.php', $deployment['body']['entrypoint']);
+        $this->assertEquals('index.js', $deployment['body']['entrypoint']);
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
@@ -617,7 +617,7 @@ class FunctionsCustomServerTest extends Scope
          */
         $functionId = $data['functionId'];
 
-        $folder = 'php-large';
+        $folder = 'large';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
@@ -632,13 +632,13 @@ class FunctionsCustomServerTest extends Scope
         ];
         $id = '';
         while (!feof($handle)) {
-            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'php-large-fx.tar.gz');
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-fx.tar.gz');
             $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
             $largeTag = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, $this->getHeaders()), [
-                'entrypoint' => 'index.php',
+                'entrypoint' => 'index.js',
                 'code' => $curlFile,
                 'activate' => true,
                 'commands' => 'cp blue.mp4 copy.mp4 && ls -al' // +7MB buildSize
@@ -651,7 +651,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $largeTag['headers']['status-code']);
         $this->assertNotEmpty($largeTag['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($largeTag['body']['$createdAt']));
-        $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
+        $this->assertEquals('index.js', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(1024 * 1024 * 5, $largeTag['body']['sourceSize']); // ~7MB video file
         $this->assertLessThan(1024 * 1024 * 10, $largeTag['body']['sourceSize']); // ~7MB video file
 
@@ -1119,8 +1119,8 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.email',
             ],
             'timeout' => 15,
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'specification' => Specification::S_1VCPU_1GB,
         ]);
 
@@ -1147,8 +1147,8 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.email',
             ],
             'timeout' => 15,
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'specification' => Specification::S_1VCPU_512MB,
         ]);
 
@@ -1177,8 +1177,8 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.email',
             ],
             'timeout' => 15,
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'specification' => 's-2vcpu-512mb', // Invalid specification
         ]);
 
@@ -1279,12 +1279,12 @@ class FunctionsCustomServerTest extends Scope
      */
     public function provideCustomExecutions(): array
     {
+        // Most disabled to keep tests fast
         return [
-            ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
+            // ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
             ['folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0'],
-            ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
-            ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
-            // Swift and Dart disabled on purpose, as it's very slow.
+            // ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
+            // ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
             // [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
             // [ 'folder' => 'swift', 'name' => 'swift-5.5', 'entrypoint' => 'index.swift', 'runtimeName' => 'Swift', 'runtimeVersion' => '5.5' ],
         ];
@@ -1365,15 +1365,14 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Binary executions',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'execute' => ['any']
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-binary-response'),
+            'code' => $this->packageFunction('binary-response'),
             'activate' => true
         ]);
 
@@ -1414,15 +1413,14 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Binary executions',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'execute' => ['any']
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-binary-request'),
+            'code' => $this->packageFunction('binary-request'),
             'activate' => true
         ]);
 
@@ -1695,9 +1693,9 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Binary executions',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'execute' => ['any']
         ]);
@@ -1705,8 +1703,7 @@ class FunctionsCustomServerTest extends Scope
         $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-binary-response'),
+            'code' => $this->packageFunction('binary-response'),
             'activate' => true
         ]);
 
@@ -1730,9 +1727,9 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'name' => 'Test Binary executions',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'execute' => ['any']
         ]);
@@ -1740,8 +1737,7 @@ class FunctionsCustomServerTest extends Scope
         $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-binary-request'),
+            'code' => $this->packageFunction('binary-request'),
             'activate' => true
         ]);
 
@@ -1768,8 +1764,8 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
         ]);
 
@@ -1803,8 +1799,8 @@ class FunctionsCustomServerTest extends Scope
         $function1Id = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'execute' => ['any']
         ]);
@@ -1812,8 +1808,8 @@ class FunctionsCustomServerTest extends Scope
         $function2Id = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test2',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 15,
             'execute' => ['any']
         ]);

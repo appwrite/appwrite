@@ -3,9 +3,9 @@ module.exports = async(context) => {
     context.error('error-log-works');
     
     if(context.req.headers['x-appwrite-user-jwt']) {
-      context.log('jwt-is-invalid');
-    } else {
       context.log('jwt-is-valid');
+    } else {
+      context.log('jwt-is-invalid');
     }
     
     if(context.req.path === '/custom-response') {
@@ -18,7 +18,7 @@ module.exports = async(context) => {
     context.log('custom-header-is-' + (context.req.headers['x-custom-header'] ?? ''));
     context.log('method-is-' + (context.req.method ?? '').toLowerCase());
     context.log('path-is-' + (context.req.path ?? ''));
-    context.log('user-is-' + context.req.headers['x-appwrite-user-id'] ?? '');
+    context.log('user-is-' + (context.req.headers['x-appwrite-user-id'] ?? ''));
     
     const statusCode = context.req.query['code'] || '200';
 
