@@ -2657,7 +2657,7 @@ class SitesCustomServerTest extends Scope
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
             'name' => 'Astro SSR site',
-            'framework' => 'static',
+            'framework' => 'astro',
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
