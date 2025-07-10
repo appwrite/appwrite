@@ -1424,13 +1424,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
-        $userParam = \json_decode($request->getParam('user'), true);
+        $userParam = $request->getParam('user');
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
-        } elseif (is_array($userParam)) {
-            $nameParam = $userParam['name'];
-            if (is_array($nameParam) && isset($nameParam['firstName']) && isset($nameParam['lastName'])) {
-                $name = $nameParam['firstName'] . ' ' . $nameParam['lastName'];
+        } elseif ($userParam !== null) {
+            $user = \json_decode($userParam, true);
+            if (isset($user['name']['firstName']) && isset($user['name']['lastName'])) {
+                $name = $user['name']['firstName'] . ' ' . $user['name']['lastName'];
             }
         }
         $email = $oauth2->getUserEmail($accessToken);
@@ -1747,8 +1747,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
-
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
