@@ -64,11 +64,10 @@ class ScheduleExecutions extends ScheduleBase
             \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data, $dbForPlatform) {
                 Co::sleep($delay);
 
-                // Calculate actual delay and execution time for late executions
                 $executedAt = new \DateTime();
                 $actualDelay = $executedAt->getTimestamp() - $scheduledAt->getTimestamp();
 
-                // Prepare headers to inform about late execution
+                // Add headers for delayed executions
                 $headers = $data['headers'] ?? [];
                 if ($actualDelay > 0) {
                     $headers['x-appwrite-schedule-delay'] = (string)$actualDelay;
