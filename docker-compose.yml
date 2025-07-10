@@ -116,6 +116,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
@@ -213,7 +214,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:6.1.2
+    image: appwrite/console:6.1.12
     restart: unless-stopped
     networks:
       - appwrite
@@ -482,6 +483,7 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET

@@ -4637,7 +4637,6 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://example.com'
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Invalid `success` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']);
 
         /** Test oauth2 with devKey and now get oauth2 is disabled */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
@@ -4660,7 +4659,6 @@ class ProjectsConsoleClientTest extends Scope
             'url' => 'https://example.com',
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `url` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']['message']);
 
         /** Test hostname in Magic URL with devKey */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [

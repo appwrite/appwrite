@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '8.1.0',
+                'version' => '8.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -250,7 +250,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '17.0.0',
+                'version' => '17.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
