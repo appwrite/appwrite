@@ -68,9 +68,9 @@ class URL
 
         $parts['user'] = isset($url['user']) ? $url['user'] : '';
 
-        $parts['pass'] = isset($url['pass']) ? ':' . $url['pass'] : '';
+        $parts['pass'] = !empty($url['pass']) ? ':' . $url['pass'] : '';
 
-        $parts['pass'] = ($parts['user'] || $parts['pass']) ? $parts['pass'] . '@' : '';
+        $parts['pass'] = ($parts['user'] || !empty($parts['pass'])) ? $parts['pass'] . '@' : '';
 
         $parts['path'] = isset($url['path']) ? $url['path'] : '';
 

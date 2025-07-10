@@ -95,6 +95,19 @@ class URLTest extends TestCase
 
         $this->assertIsString($url);
         $this->assertEquals('https://eldad:fux@appwrite.io/#bottom', $url);
+
+        $url = URL::unparse([
+            'scheme' => 'https',
+            'user' => '',
+            'pass' => '',
+            'host' => 'appwrite.io',
+            'port' => null,
+            'path' => '',
+            'fragment' => '',
+        ]);
+
+        $this->assertIsString($url);
+        $this->assertEquals('https://appwrite.io/#', $url);
     }
 
     public function testParseQuery(): void
