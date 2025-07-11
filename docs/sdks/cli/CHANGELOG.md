@@ -1,5 +1,19 @@
 # Change Log
 
+## 8.2.0
+
+* Add `encrypt` attribute support
+* Add improved warnings on attribute recreation and deletion
+* Fix `null` parsing error when using create attribute command
+* Type generation fixes and improvements:
+  * Add `--strict` / `-s` flag to `appwrite types` command to generate types in strict mode. This automatically converts the casing of attributes to match the language's naming conventions
+  * Add automatic package import to `dart` language which uses package detection to import the correct package
+  * Add `Document` class extension to generated types in `dart` and `js` language to support internal attributes like `$id` and `$collectionId` etc.
+  * Add proper enum support to `js` language
+  * Fix indentation in `java`, `kotlin` and `swift` to use 2 spaces instead of 4 for consistency across all languages
+  * Fix doc comments to use correct syntax in various languages (for eg. `///` instead of `/*`)
+  * Update enums in `dart` to use lowerCamelCase in `strict` mode as per [constant_identifier_names](https://dart.dev/tools/diagnostics/constant_identifier_names?utm_source=dartdev&utm_medium=redir&utm_id=diagcode&utm_content=constant_identifier_names)
+
 ## 8.1.1
 
 * Fix circular dependency issue due to usage of `success` method in `utils.js` file from `parser.js` file
