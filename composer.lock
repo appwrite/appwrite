@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55bc52686a08d64930e6af7411ac0654",
+    "content-hash": "f53e1ccd394581428d9efcb53b46d479",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "11.1.0",
+            "version": "15.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "1d043f543acdb17b9fdb440b1b2dd208e400bad3"
+                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/1d043f543acdb17b9fdb440b1b2dd208e400bad3",
-                "reference": "1d043f543acdb17b9fdb440b1b2dd208e400bad3",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
+                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
                 "shasum": ""
             },
             "require": {
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/11.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/15.0.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2024-06-26T07:03:23+00:00"
+            "time": "2025-05-18T09:47:10+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -3993,20 +3993,20 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.10.4",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "0c85917482db172b3ccdc0704e42af3c1cc89361"
+                "reference": "d528a454d5c1ed6564b2843a39ff13297bcdb1af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0c85917482db172b3ccdc0704e42af3c1cc89361",
-                "reference": "0c85917482db172b3ccdc0704e42af3c1cc89361",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/d528a454d5c1ed6564b2843a39ff13297bcdb1af",
+                "reference": "d528a454d5c1ed6564b2843a39ff13297bcdb1af",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "11.*",
+                "appwrite/appwrite": "15.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
@@ -4043,9 +4043,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.10.4"
+                "source": "https://github.com/utopia-php/migration/tree/0.11.1"
             },
-            "time": "2025-07-02T18:31:09+00:00"
+            "time": "2025-07-11T13:46:37+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -4810,16 +4810,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.41.11",
+            "version": "0.41.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "60122cb613a5a1c82667ecc2217e351654a8d404"
+                "reference": "7381d2d303af3450f71d0f420f127564c8d4e3d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/60122cb613a5a1c82667ecc2217e351654a8d404",
-                "reference": "60122cb613a5a1c82667ecc2217e351654a8d404",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/7381d2d303af3450f71d0f420f127564c8d4e3d5",
+                "reference": "7381d2d303af3450f71d0f420f127564c8d4e3d5",
                 "shasum": ""
             },
             "require": {
@@ -4855,9 +4855,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.11"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.13"
             },
-            "time": "2025-07-04T09:56:24+00:00"
+            "time": "2025-07-11T10:18:51+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5084,16 +5084,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.23.0",
+            "version": "v1.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "9ab851dba4faa51a3c3223dd3d07044129021024"
+                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/9ab851dba4faa51a3c3223dd3d07044129021024",
-                "reference": "9ab851dba4faa51a3c3223dd3d07044129021024",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/0345f3b05f136801af8c339f9d16ef29e6b4df8a",
+                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a",
                 "shasum": ""
             },
             "require": {
@@ -5104,7 +5104,7 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.76.0",
+                "friendsofphp/php-cs-fixer": "^3.82.2",
                 "illuminate/view": "^11.45.1",
                 "larastan/larastan": "^3.5.0",
                 "laravel-zero/framework": "^11.45.0",
@@ -5149,7 +5149,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-07-03T10:37:47+00:00"
+            "time": "2025-07-10T18:09:32+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -8239,7 +8239,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8263,5 +8263,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

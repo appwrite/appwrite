@@ -264,7 +264,7 @@ class Builds extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         if ($deployment->getAttribute('status') === 'canceled') {
-            Console::info('Build has been canceled');
+            $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
             return;
         }
 
@@ -391,7 +391,7 @@ class Builds extends Action
                 Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
 
                 if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                    Console::info('Build has been canceled');
+                    $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
                     return;
                 }
 
@@ -656,7 +656,7 @@ class Builds extends Action
             $err = null;
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                Console::info('Build has been canceled');
+                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
                 return;
             }
 
@@ -807,7 +807,7 @@ class Builds extends Action
             ]);
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                Console::info('Build has been canceled');
+                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
                 return;
             }
 
@@ -955,8 +955,9 @@ class Builds extends Action
                                     $config['sleep'] = $framework['screenshotSleep'];
                                 }
 
+                                $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
                                 $fetchResponse = $client->fetch(
-                                    url: 'http://appwrite-browser:3000/v1/screenshots',
+                                    url: $browserEndpoint . '/screenshots',
                                     method: 'POST',
                                     body: $config
                                 );
@@ -1221,7 +1222,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                Console::info('Build has been canceled');
+                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
                 return;
             }
 
@@ -1244,7 +1245,7 @@ class Builds extends Action
             Console::error($th->getTraceAsString());
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                Console::info('Build has been canceled');
+                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
                 return;
             }
 
@@ -1529,5 +1530,23 @@ class Builds extends Action
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
+    }
+
+    private function cancelDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
+    {
+        Console::info('Build has been canceled');
+
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        $logs = $deployment->getAttribute('buildLogs', '');
+        $date = \date('H:i:s');
+        $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Build has been canceled. [0m\n";
+
+        $deployment->setAttribute('buildLogs', $logs);
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+        $queueForRealtime
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
     }
 }

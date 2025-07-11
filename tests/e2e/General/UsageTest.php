@@ -675,7 +675,8 @@ class UsageTest extends Scope
             [
                 'functionId' => 'unique()',
                 'name' => 'Test',
-                'runtime' => 'php-8.0',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
                 'vars' => [
                     'funcKey1' => 'funcValue1',
                     'funcKey2' => 'funcValue2',
@@ -697,8 +698,7 @@ class UsageTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true,
         ]);
         $this->assertNotEmpty($deploymentId);
