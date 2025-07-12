@@ -600,35 +600,24 @@ App::get('/v1/databases')
 
             $databaseId = $cursor->getValue();
 
-            try {
-                Console::info("Fetching cursor document for ID: {$databaseId}");
-                $cursorDocument = $dbForProject->getDocument('databases', $databaseId);
-                if ($cursorDocument->isEmpty()) {
-                    throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Database '{$databaseId}' for the 'cursor' value not found.");
-                }
-
-                $cursor->setValue($cursorDocument);
-            } catch (\Throwable $e) {
-                Console::error('[ERROR_CURSOR_DOCUMENT] ' . $e->getMessage());
-                Console::error($e->getTraceAsString());
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unexpected error while processing cursor.');
+           $cursorDocument = $dbForProject->getDocument('databases', $databaseId);
+            if ($cursorDocument->isEmpty()) {
+             throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Database '{$databaseId}' for the 'cursor' value not found.");
             }
+
+         $cursor->setValue($cursorDocument);
+
         }
 
         try {
-            Console::info('Running dbForProject->find("databases", queries)...');
-            $databases = $dbForProject->find('databases', $queries);
-            Console::info('Running dbForProject->count("databases", queries)...');
-            $total = $dbForProject->count('databases', $queries, APP_LIMIT_COUNT);
-        } catch (OrderException) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL);
-        } catch (QueryException) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID);
-        } catch (\Throwable $e) {
-            Console::error('[ERROR_FIND_DATABASES] ' . $e->getMessage());
-            Console::error($e->getTraceAsString());
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unexpected error while listing databases.');
-        }
+    $databases = $dbForProject->find('databases', $queries);
+    $total = $dbForProject->count('databases', $queries, APP_LIMIT_COUNT);
+} catch (OrderException) {
+    throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL);
+} catch (QueryException) {
+    throw new Exception(Exception::GENERAL_QUERY_INVALID);
+}
+
 
         $response->dynamic(new Document([
             'databases' => $databases,
