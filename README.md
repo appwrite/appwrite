@@ -1,3 +1,6 @@
+
+> We just announced Encrypted string attribute support for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-encrypted-string-attributes)
+
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
 <br />
