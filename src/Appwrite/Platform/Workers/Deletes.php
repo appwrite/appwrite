@@ -398,6 +398,8 @@ class Deletes extends Action
         /** @var Database $dbForProject*/
         $dbForProject = $getProjectDB($project);
 
+        $retention1d = DateTime::addSeconds(new \DateTime(), -1 * 365 * 24 * 60 * 60); // 1 year
+
         $selects = [...$this->selects, 'time'];
 
         // Delete Usage stats from projectDB
@@ -405,6 +407,14 @@ class Deletes extends Action
             Query::select($selects),
             Query::equal('period', ['1h']),
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
+            Query::orderDesc('time'),
+            Query::orderDesc(),
+        ], $dbForProject);
+
+        $this->deleteByGroup('stats', [
+            Query::select($selects),
+            Query::equal('period', ['1d']),
+            Query::lessThan('time', $retention1d),
             Query::orderDesc('time'),
             Query::orderDesc(),
         ], $dbForProject);
@@ -418,6 +428,14 @@ class Deletes extends Action
                 Query::select($selects),
                 Query::equal('period', ['1h']),
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
+                Query::orderDesc('time'),
+                Query::orderDesc(),
+            ], $dbForLogs);
+
+            $this->deleteByGroup('stats', [
+                Query::select($selects),
+                Query::equal('period', ['1d']),
+                Query::lessThan('time', $retention1d),
                 Query::orderDesc('time'),
                 Query::orderDesc(),
             ], $dbForLogs);
