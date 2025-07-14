@@ -147,8 +147,8 @@ class Realtime extends MessagingAdapter
             return;
         }
 
-        $isBulk = $payload['total'] && (
-            $payload['documents'] !== null || $payload['columns'] !== null
+        $isBulk = isset($payload['total']) && (
+            isset($payload['documents']) || isset($payload['columns'])
         );
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
@@ -159,12 +159,12 @@ class Realtime extends MessagingAdapter
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
             'userId' => $userId,
+            'bulk' => $isBulk,
             'data' => [
                 'events' => $events,
                 'channels' => $channels,
                 'timestamp' => DateTime::formatTz(DateTime::now()),
                 'payload' => $payload,
-                'isBulk' => $isBulk
             ]
         ]));
     }
@@ -247,17 +247,22 @@ class Realtime extends MessagingAdapter
 
         $auth = new Authorization(Database::PERMISSION_READ);
         $connectionDocsMap = [];
+        // lookup to check if duplicate documents for a single connectionId
+        $seenDocIdsMap = [];
 
         foreach ($documents as $document) {
             $doc = new Document((array) $document);
+            $docId = $doc->getId();
 
-            // Now check this doc against each subscriber's role
             foreach ($roleConnectionIdMap as $role => $connectionIds) {
                 $auth->setRole($role);
 
                 if ($auth->isValid($doc->getRead())) {
                     foreach ($connectionIds as $connectionId) {
-                        $connectionDocsMap[$connectionId][] = $doc->getArrayCopy();
+                        if (!isset($seenDocIdsMap[$connectionId][$docId])) {
+                            $seenDocIdsMap[$connectionId][$docId] = true;
+                            $connectionDocsMap[$connectionId][] = $doc->getArrayCopy();
+                        }
                     }
                 }
             }

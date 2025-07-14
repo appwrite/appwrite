@@ -467,37 +467,22 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
-                if (App::isDevelopment() && !empty($receivers)) {
-                    // var_dump($event);
-                    // var_dump($receivers);
-                    // Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    // Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
-                    // Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
-                }
-                $isbulk = $event['bulk'];
+                $isbulk = isset($event['bulk']) ? $event['bulk'] : false;
+
                 if ($isbulk) {
                     $documents = json_decode($payload)->data->payload->documents;
                     $connectionDocsMap = $realtime->getDocumentsPerSubscriber($event, $documents);
+                    if (App::isDevelopment() && !empty($connectionDocsMap)) {
+                        Console::log("[Debug][Worker {$workerId}] Receivers: " . count($connectionDocsMap));
+                        Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($connectionDocsMap));
+                        Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                    }
                     foreach ($connectionDocsMap as $connectionId => $docs) {
-                        // TODO: improve the filteration step
-                        $uniqueDocs = [];
-                        $seenDocIds = [];
 
-                        foreach ($docs as $doc) {
-                            $id = $doc['$id'];
-
-                            if (isset($seenDocIds[$id])) {
-                                continue;
-                            }
-
-                            $seenDocIds[$id] = true;
-                            $uniqueDocs[] = $doc;
-                        }
-
-                        if (!empty($uniqueDocs)) {
+                        if (!empty($docs)) {
                             $data = $event['data'];
-                            $data['payload']['documents'] = $uniqueDocs;
-                            $data['payload']['total'] = count($uniqueDocs);
+                            $data['payload']['documents'] = $docs;
+                            $data['payload']['total'] = count($docs);
                             $server->send(
                                 [$connectionId],
                                 json_encode([
@@ -509,6 +494,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 } else {
                     $receivers = $realtime->getSubscribers($event);
+                    if (App::isDevelopment() && !empty($receivers)) {
+                        Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                        Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                        Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                    }
                     $server->send(
                         $receivers,
                         json_encode([
