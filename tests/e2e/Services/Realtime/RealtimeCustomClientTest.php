@@ -426,7 +426,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*", $response['data']['events']);
 
         $lastEmail = $this->getLastEmail();
-        $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $verification = $tokens['secret'];
 
         /**
          * Test Account Verification Complete
@@ -623,7 +624,8 @@ class RealtimeCustomClientTest extends Scope
         $response = json_decode($client->receive(), true);
 
         $lastEmail = $this->getLastEmail();
-        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $recovery = $tokens['secret'];
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);

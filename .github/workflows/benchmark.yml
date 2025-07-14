@@ -64,8 +64,9 @@ jobs:
           sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
           sudo apt update
           sudo apt install oha
+          oha --version
       - name: Benchmark PR
-        run: 'oha -z 180s  http://localhost/v1/health/version --output-format json --output benchmark.json'
+        run: 'oha -z 180s http://localhost/v1/health/version --output-format json > benchmark.json'
       - name: Cleaning
         run: docker compose down -v
       - name: Installing latest version
@@ -78,7 +79,7 @@ jobs:
           docker compose up -d
           sleep 10
       - name: Benchmark Latest
-        run: 'oha -z 180s  http://localhost/v1/health/version --output-format json --output benchmark-latest.json'
+        run: oha -z 180s http://localhost/v1/health/version --output-format json > benchmark-latest.json
       - name: Prepare comment
         run: |
           echo '## :sparkles: Benchmark results' > benchmark.txt

@@ -26,6 +26,7 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     protected BrokerPool $publisher;
+    protected ?BrokerPool $publisherRedis = null;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -72,6 +73,13 @@ abstract class ScheduleBase extends Action
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
         $this->publisher = new BrokerPool($pools->get('publisher'));
+
+        try {
+            $this->publisherRedis = new BrokerPool($pools->get('publisherRedis'));
+        } catch (\Throwable) {
+            $this->publisherRedis = null;
+        }
+
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');

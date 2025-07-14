@@ -16,13 +16,6 @@ trait RealtimeBase
             $projectId = $this->getProject()['$id'];
         }
 
-        $headers = array_merge(
-            [
-                "Origin" => "appwrite.test",
-            ],
-            $headers
-        );
-
         $query = [
             "project" => $projectId,
             "channels" => $channels,
@@ -49,7 +42,7 @@ trait RealtimeBase
 
     public function testConnectionFailureMissingChannels(): void
     {
-        $client = $this->getWebsocket();
+        $client = $this->getWebsocket([]);
         $payload = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey("type", $payload);
@@ -64,14 +57,7 @@ trait RealtimeBase
 
     public function testConnectionFailureUnknownProject(): void
     {
-        $client = new WebSocketClient(
-            "ws://appwrite-traefik/v1/realtime?project=123",
-            [
-                "headers" => [
-                    "Origin" => "appwrite.test",
-                ],
-            ]
-        );
+        $client = $this->getWebsocket(projectId: '123');
         $payload = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey("type", $payload);

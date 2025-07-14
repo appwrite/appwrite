@@ -8,6 +8,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Pools\Group;
+use Utopia\System\System;
 
 class ScheduleFunctions extends ScheduleBase
 {
@@ -90,7 +91,13 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($this->publisher);
+                    $isRedisFallback = \str_contains(System::getEnv('_APP_WORKER_REDIS_FALLBACK', ''), 'functions');
+
+                    $queueForFunctions = new Func(
+                        $isRedisFallback
+                        ? $this->publisherRedis
+                        : $this->publisher
+                    );
 
                     $queueForFunctions
                         ->setType('schedule')

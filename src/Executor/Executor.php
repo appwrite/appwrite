@@ -64,7 +64,8 @@ class Executor
         string $destination = '',
         array $variables = [],
         string $command = null,
-        string $outputDirectory = ''
+        string $outputDirectory = '',
+        string $runtimeEntrypoint = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
@@ -87,7 +88,8 @@ class Executor
             'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
-            'outputDirectory' => $outputDirectory
+            'outputDirectory' => $outputDirectory,
+            'runtimeEntrypoint' => $runtimeEntrypoint
         ];
 
 
@@ -186,9 +188,9 @@ class Executor
         array $headers,
         float $cpus,
         int $memory,
-        string $runtimeEntrypoint = null,
         bool $logging,
-        int $requestTimeout = null
+        string $runtimeEntrypoint = '',
+        ?int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
             $headers['host'] = System::getEnv('_APP_DOMAIN', '');

@@ -50,7 +50,7 @@ class Get extends Base
             ->param('logId', '', new UID(), 'Log ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $logId, Response $response, Database $dbForProject)

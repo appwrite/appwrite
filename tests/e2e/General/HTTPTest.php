@@ -60,7 +60,7 @@ class HTTPTest extends Scope
             'origin' => 'http://localhost',
         ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code'], "Simple GET /robots.txt HTTP request failed: " . \json_encode($response));
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
     }
 
