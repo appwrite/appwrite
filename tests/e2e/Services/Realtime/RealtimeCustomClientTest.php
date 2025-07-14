@@ -1042,7 +1042,7 @@ class RealtimeCustomClientTest extends Scope
     public function testChannelDatabaseBulkOperationMultipleClient()
     {
         // user with api key will do operations and other valid users
-        $user1 = $this->getUser();
+        $user1 = $this->getUser(true);
         $user1Id = $user1['$id'];
         $session = $user1['session'] ?? '';
         $projectId = $this->getProject()['$id'];
