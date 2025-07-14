@@ -1710,6 +1710,11 @@ trait DatabasesBase
                 'title' => 'Thor: Ragnarok',
                 'releaseYear' => 2000
             ],
+            'permissions' => [
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
         ]);
 
         $this->assertEquals(200, $document['headers']['status-code']);
