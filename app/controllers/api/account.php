@@ -1461,9 +1461,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
         } elseif ($userParam !== null) {
-            $user = \json_decode($userParam, true);
-            if (isset($user['name']['firstName']) && isset($user['name']['lastName'])) {
-                $name = $user['name']['firstName'] . ' ' . $user['name']['lastName'];
+            $userDecoded = \json_decode($userParam, true);
+            if (isset($userDecoded['name']['firstName']) && isset($userDecoded['name']['lastName'])) {
+                $name = $userDecoded['name']['firstName'] . ' ' . $userDecoded['name']['lastName'];
             }
         }
         $email = $oauth2->getUserEmail($accessToken);
