@@ -1,3 +1,3 @@
 module.exports = async(context) => {
-  return context.res.send('OK');
-}
+  return context.res.empty();
+};
