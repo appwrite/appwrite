@@ -1303,6 +1303,8 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, StatsUsage $queue): void
     {
+        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+
         switch ($deployment->getAttribute('status')) {
             case 'ready':
                 $queue
