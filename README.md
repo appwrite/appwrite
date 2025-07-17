@@ -1,6 +1,5 @@
 
-> We just announced Auto-increment support for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-auto-increment-support)
-
+> We just announced Opt-in relationship loading for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-opt-in-relationship-loading)
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
 <br />
