@@ -276,6 +276,28 @@ class Executor
 
         return $response['body'];
     }
+    
+    /**
+     * Get Runtime
+     *
+     * Get runtime information
+     *
+     * @param string $runtimeId
+     * @return array
+     * @throws Exception
+     */
+    public function getRuntime(string $runtimeId): array
+    {
+        $response = $this->call($this->endpoint, self::METHOD_GET, "/runtimes/$runtimeId", [], [], true);
+
+        $status = $response['headers']['status-code'];
+        if ($status >= 400) {
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
+        }
+
+        return $response['body'];
+    }
 
     /**
      * Call
