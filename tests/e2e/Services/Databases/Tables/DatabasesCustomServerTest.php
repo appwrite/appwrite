@@ -3740,7 +3740,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newRow['body']);
         $this->assertEquals(1, count($newRow['body']['new_level_2']));
@@ -3850,7 +3854,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newRow['body']);
         $this->assertNotEmpty($newRow['body']['new_level_2']);
@@ -3960,7 +3968,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newRow['body']);
         $this->assertNotEmpty($newRow['body']['new_level_2']);
@@ -3971,7 +3983,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['*', 'level1.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('level1', $level2Row['body']);
         $this->assertNotEmpty($level2Row['body']['level1']);
@@ -4070,7 +4086,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newRow['body']);
         $this->assertNotEmpty($newRow['body']['new_level_2']);
@@ -4081,7 +4101,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['*', 'level1.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('level1', $level2Row['body']);
         $this->assertNotEmpty($level2Row['body']['level1']);
@@ -4426,6 +4450,14 @@ class DatabasesCustomServerTest extends Scope
 
         $createBulkRows();
 
+        /**
+         * Wait for database to purge cache...
+         *
+         * This test specifically failed on 1.6.x response format,
+         * could be due to the slow or overworked machine, but being safe here!
+         */
+        sleep(5);
+
         // TEST: Update all rows
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -4443,6 +4475,14 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(10, $response['body']['rows']);
+
+        /**
+         * Wait for database to purge cache...
+         *
+         * This test specifically failed on 1.6.x response format,
+         * could be due to the slow or overworked machine, but being safe here!
+         */
+        sleep(5);
 
         $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
             'content-type' => 'application/json',
