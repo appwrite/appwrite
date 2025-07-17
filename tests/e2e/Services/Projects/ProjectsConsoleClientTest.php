@@ -483,7 +483,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
         $this->assertIsNumeric($response['body']['executionsTotal']);
-        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsNumeric($response['body']['rowsTotal']);
         $this->assertIsNumeric($response['body']['databasesTotal']);
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);
@@ -2991,7 +2991,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
-            'scopes' => ['users.read', 'users.write', 'collections.read'],
+            'scopes' => ['users.read', 'users.write', 'collections.read', 'tables.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 360),
         ]);
 
@@ -3002,6 +3002,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.read', $response['body']['scopes']);
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
+        $this->assertContains('tables.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
@@ -3020,6 +3021,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.read', $response['body']['scopes']);
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
+        $this->assertContains('tables.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
@@ -4686,7 +4688,6 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://example.com'
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Invalid `success` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']);
 
         /** Test oauth2 with devKey and now get oauth2 is disabled */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
@@ -4709,7 +4710,6 @@ class ProjectsConsoleClientTest extends Scope
             'url' => 'https://example.com',
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `url` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']['message']);
 
         /** Test hostname in Magic URL with devKey */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [

@@ -70,8 +70,12 @@ trait ProjectCustom
                 'databases.write',
                 'collections.read',
                 'collections.write',
+                'tables.read',
+                'tables.write',
                 'documents.read',
                 'documents.write',
+                'rows.read',
+                'rows.write',
                 'files.read',
                 'files.write',
                 'buckets.read',
@@ -140,7 +144,7 @@ trait ProjectCustom
                 'teams.*',
                 'users.*'
             ],
-            'url' => 'http://request-catcher:5000/webhook',
+            'url' => 'http://request-catcher-webhook:5000/',
             'security' => false,
         ]);
 

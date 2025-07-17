@@ -145,7 +145,8 @@ jobs:
           Account,
           Avatars,
           Console,
-          Databases,
+          Databases/Legacy,
+          Databases/Tables,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -213,7 +214,8 @@ jobs:
             Account,
             Avatars,
             Console,
-            Databases,
+            Databases/Legacy,
+            Databases/Tables,
             Functions,
             FunctionsSchedule,
             GraphQL,
@@ -283,8 +285,6 @@ jobs:
     name: E2E Service Test (Dev Keys)
     runs-on: ubuntu-latest
     needs: setup
-    strategy:
-      fail-fast: false
     steps:
       - name: checkout
         uses: actions/checkout@v4
