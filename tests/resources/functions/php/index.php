@@ -12,6 +12,9 @@ return function ($context) {
     $context->log('method-is-' . \strtolower($context->req->method ?? ''));
     $context->log('path-is-' . ($context->req->path ?? ''));
     $context->log('user-is-' . $context->req->headers['x-appwrite-user-id'] ?? '');
+    $context->log('schedule-delay-is-' . ($context->req->headers['x-appwrite-schedule-delay'] ?? ''));
+    $context->log('scheduled-at-is-' . ($context->req->headers['x-appwrite-scheduled-at'] ?? ''));
+    $context->log('executed-at-is-' . ($context->req->headers['x-appwrite-executed-at'] ?? ''));
 
     if (empty($context->req->headers['x-appwrite-user-jwt'] ?? '')) {
         $context->log('jwt-is-invalid');

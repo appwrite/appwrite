@@ -56,7 +56,7 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             )->getAttribute('data', []);
 
-            $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
+            $delay = floor($scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp());
             $delay = max($delay, 0);
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
@@ -65,15 +65,12 @@ class ScheduleExecutions extends ScheduleBase
                 Co::sleep($delay);
 
                 $executedAt = new \DateTime();
-                $actualDelay = $executedAt->getTimestamp() - $scheduledAt->getTimestamp();
+                $executionDelay = $executedAt->getTimestamp() - $scheduledAt->getTimestamp();
 
-                // Add headers for delayed executions
                 $headers = $data['headers'] ?? [];
-                if ($actualDelay > 0) {
-                    $headers['x-appwrite-schedule-delay'] = (string)$actualDelay;
-                    $headers['x-appwrite-scheduled-at'] = $scheduledAt->format('Y-m-d\TH:i:s.v\Z');
-                    $headers['x-appwrite-executed-at'] = $executedAt->format('Y-m-d\TH:i:s.v\Z');
-                }
+                $headers['x-appwrite-schedule-delay'] = (string)$executionDelay;
+                $headers['x-appwrite-scheduled-at'] = $scheduledAt->format('Y-m-d\TH:i:s.v\Z');
+                $headers['x-appwrite-executed-at'] = $executedAt->format('Y-m-d\TH:i:s.v\Z');
 
                 $result = $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject

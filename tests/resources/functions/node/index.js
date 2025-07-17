@@ -1,5 +1,8 @@
 module.exports = async(context) => {
     context.log('Amazing Function Log');
+    context.log('schedule-delay-is-' + (context.req.headers['x-appwrite-schedule-delay'] ?? ''));
+    context.log('scheduled-at-is-' + (context.req.headers['x-appwrite-scheduled-at'] ?? ''));
+    context.log('executed-at-is-' + (context.req.headers['x-appwrite-executed-at'] ?? ''));
 
     return context.res.json({
         'APPWRITE_FUNCTION_ID' : process.env.APPWRITE_FUNCTION_ID ?? '',

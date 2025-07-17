@@ -139,6 +139,29 @@ class FunctionsScheduleTest extends Scope
             $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
             $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
+
+            $logs = explode("\n", $execution['body']['logs']);
+            $scheduleDelay = null;
+            $scheduledAt = null;
+            $executedAt = null;
+
+            foreach ($logs as $line) {
+                $line = trim($line);
+
+                if (str_starts_with($line, 'schedule-delay-is-')) {
+                    $scheduleDelay = (int) substr($line, strlen('schedule-delay-is-'));
+                } elseif (str_starts_with($line, 'scheduled-at-is-')) {
+                    $scheduledAt = substr($line, strlen('scheduled-at-is-'));
+                } elseif (str_starts_with($line, 'executed-at-is-')) {
+                    $executedAt = substr($line, strlen('executed-at-is-'));
+                }
+            }
+
+            $this->assertNotNull($scheduleDelay);
+            $this->assertLessThanOrEqual(5, $scheduleDelay);
+            $this->assertNotNull($scheduledAt);
+            $this->assertNotNull($executedAt);
+            $this->assertNotEquals($scheduledAt, $executedAt, );
         }, 10000, 500);
 
         /* Test for FAILURE */
