@@ -1,5 +1,13 @@
 # Change Log
 
+## 8.2.1
+
+* Added `--with-variables` option to the Sites command for adding/updating environment variables  
+* Fixed Functions environment variables not being pushed with `--with-variables`  
+* Removed `awaitPools` when wiping old variables  
+
+> **Note:** Storing environment variables in the `vars` attribute of `appwrite.json` is now deprecated due to security risks. Variables are now synced directly from the `.env` file in the root directory of the function’s or site’s folder.
+
 ## 8.2.0
 
 * Add `encrypt` attribute support
