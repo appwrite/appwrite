@@ -141,6 +141,7 @@ class Swagger2 extends Format
                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
+            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace() ?? 'default';
 
             $desc ??= '';
@@ -384,6 +385,7 @@ class Swagger2 extends Format
                         break;
                     case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
+                    case 'Appwrite\Network\Validator\Redirect':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';

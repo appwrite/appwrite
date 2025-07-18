@@ -116,6 +116,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
@@ -213,7 +214,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:6.0.41
+    image: appwrite/console:6.1.12
     restart: unless-stopped
     networks:
       - appwrite
@@ -323,7 +324,8 @@ services:
     depends_on:
       - redis
       - mariadb
-      - request-catcher
+      - request-catcher-sms
+      - request-catcher-webhook
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -454,6 +456,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_BROWSER_HOST
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -481,6 +484,7 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -951,7 +955,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.20
+    image: openruntimes/executor:0.7.22
     restart: unless-stopped
     networks:
       - appwrite
@@ -974,7 +978,7 @@ services:
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v5
+      - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -1075,12 +1079,21 @@ services:
     networks:
       - appwrite
 
-  request-catcher: # used mainly for dev tests
+  request-catcher-webhook: # used mainly for dev tests (mock HTTP webhook)
     image: appwrite/requestcatcher:1.0.0
-    container_name: appwrite-requestcatcher
+    container_name: appwrite-requestcatcher-webhook
     <<: *x-logging
     ports:
       - "9504:5000"
+    networks:
+      - appwrite
+
+  request-catcher-sms: # used mainly for dev tests (mock SMS auth secret)
+    image: appwrite/requestcatcher:1.0.0
+    container_name: appwrite-requestcatcher-sms
+    <<: *x-logging
+    ports:
+      - "9507:5000"
     networks:
       - appwrite
 

@@ -30,8 +30,6 @@ class ProjectsCustomServerTest extends Scope
             'domain' => $testId . '-api.appwrite.test',
         ]);
 
-        \var_dump($response);
-
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [

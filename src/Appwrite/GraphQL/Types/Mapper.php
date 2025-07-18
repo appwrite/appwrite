@@ -226,7 +226,7 @@ class Mapper
             ];
 
             if (!$rule['required']) {
-                $fields[$escapedKey]['defaultValue'] = $rule['default'];
+                $fields[$escapedKey]['defaultValue'] = $rule['default'] ?? null;
             }
         }
 
@@ -267,50 +267,53 @@ class Mapper
         }
 
         switch ((!empty($validator)) ? $validator::class : '') {
-            case 'Appwrite\Network\Validator\CNAME':
-            case 'Appwrite\Task\Validator\Cron':
-            case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Utopia\Validator\Domain':
-            case 'Appwrite\Network\Validator\Email':
+            case 'Appwrite\Auth\Validator\Password':
             case 'Appwrite\Event\Validator\Event':
             case 'Appwrite\Event\Validator\FunctionEvent':
+            case 'Appwrite\Network\Validator\CNAME':
+            case 'Appwrite\Network\Validator\Email':
+            case 'Appwrite\Network\Validator\Redirect':
+            case 'Appwrite\Network\Validator\DNS':
+            case 'Appwrite\Network\Validator\Origin':
+            case 'Appwrite\Task\Validator\Cron':
+            case 'Appwrite\Utopia\Database\Validator\CustomId':
+            case 'Utopia\Database\Validator\Key':
+            case 'Utopia\Database\Validator\UID':
+            case 'Utopia\Validator\Domain':
             case 'Utopia\Validator\HexColor':
             case 'Utopia\Validator\Host':
             case 'Utopia\Validator\IP':
-            case 'Utopia\Database\Validator\Key':
             case 'Utopia\Validator\Origin':
-            case 'Appwrite\Auth\Validator\Password':
             case 'Utopia\Validator\Text':
-            case 'Utopia\Database\Validator\UID':
             case 'Utopia\Validator\URL':
             case 'Utopia\Validator\WhiteList':
             default:
                 $type = Type::string();
                 break;
-            case 'Utopia\Database\Validator\Authorization':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Base':
             case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
             case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
             case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
             case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
             case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
-            case 'Utopia\Database\Validator\Queries\Documents':
             case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Files':
             case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
             case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
-            case 'Utopia\Database\Validator\Permissions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
-            case 'Utopia\Database\Validator\Queries':
-            case 'Utopia\Database\Validator\Roles':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
             case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
             case 'Appwrite\Utopia\Database\Validator\Queries\Users':
             case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
+            case 'Utopia\Database\Validator\Authorization':
+            case 'Utopia\Database\Validator\Permissions':
+            case 'Utopia\Database\Validator\Queries':
+            case 'Utopia\Database\Validator\Queries\Documents':
+            case 'Utopia\Database\Validator\Roles':
                 $type = Type::listOf(Type::string());
                 break;
             case 'Utopia\Validator\Boolean':
