@@ -42,7 +42,7 @@ class Update extends CollectionUpdate
                 namespace: $this->getSdkNamespace(),
                 group: null,
                 name: self::getName(),
-                description: '/docs/references/databases/update-collection.md',
+                description: '/docs/references/databases/update-table.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

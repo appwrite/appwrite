@@ -41,7 +41,7 @@ class Delete extends AttributesDelete
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/delete-attribute.md',
+                description: '/docs/references/databases/delete-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
