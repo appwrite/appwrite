@@ -360,6 +360,7 @@ class OpenAPI3 extends Format
                         break;
                     case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
+                    case 'Appwrite\Network\Validator\Redirect':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';

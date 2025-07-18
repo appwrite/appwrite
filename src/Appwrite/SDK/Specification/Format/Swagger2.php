@@ -385,6 +385,7 @@ class Swagger2 extends Format
                         break;
                     case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
+                    case 'Appwrite\Network\Validator\Redirect':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
