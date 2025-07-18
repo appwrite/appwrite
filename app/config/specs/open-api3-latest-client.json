@@ -4361,7 +4361,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 340,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4446,7 +4446,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 332,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4513,7 +4513,7 @@
                                     "model": "#\/components\/schemas\/documentList"
                                 }
                             ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -4611,7 +4611,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 333,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4690,7 +4690,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4706,7 +4706,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 336,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4738,7 +4738,7 @@
                                     "model": "#\/components\/schemas\/document"
                                 }
                             ],
-                            "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -4834,7 +4834,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 334,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4933,7 +4933,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 338,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5017,7 +5017,7 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 413,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5102,7 +5102,7 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 405,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5267,7 +5267,7 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 406,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5362,7 +5362,7 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 409,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5487,7 +5487,7 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 407,
+                    "weight": 406,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5586,7 +5586,7 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 411,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5670,7 +5670,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 441,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5745,7 +5745,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 439,
+                    "weight": 438,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5860,7 +5860,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 440,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5934,7 +5934,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 255,
+                    "weight": 254,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5986,7 +5986,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 254,
+                    "weight": 253,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -6454,7 +6454,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 301,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6537,7 +6537,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 305,
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
