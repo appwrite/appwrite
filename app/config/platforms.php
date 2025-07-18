@@ -72,7 +72,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-flutter.git',
                 'gitRepoName' => 'sdk-for-flutter',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev-chirag',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'apple',
@@ -389,7 +389,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-dart.git',
                 'gitRepoName' => 'sdk-for-dart',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev-chirag',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'kotlin',
