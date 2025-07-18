@@ -74,7 +74,7 @@ class Upsert extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documentId', '', new CustomId(), 'Document ID.')
             ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.')
-            ->param('permissions', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
@@ -133,7 +133,7 @@ class Upsert extends Action
         }
 
         $data['$id'] = $documentId;
-        $data['$permissions'] = $permissions;
+        $data['$permissions'] = \is_null($permissions) ? [] : $permissions;
         $newDocument = new Document($data);
 
         $operations = 0;
