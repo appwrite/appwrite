@@ -1,5 +1,17 @@
 # Change Log
 
+## 8.2.2
+
+* Fix object comparison logic when pushing settings
+* Type generation fixes:
+   * Dart: Fixed import casing to snake_case, removed `extends Document` and hardcoded attributes, removed unnecessary imports
+   * Java: Fixed indentation to 4 spaces, updated imports to `java.util.Objects`, fixed enum casing in strict mode as per [Oracle official docs](https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html)
+   * Javascript: Updated optional values formatting from `|null` to `| null`
+   * Kotlin: Fixed indentation to 4 spaces per [Kotlinlang official docs](https://kotlinlang.org/docs/coding-conventions.html#indentation)
+   * PHP: Fixed indentation to 4 spaces per [PHP Fig official docs](https://www.php-fig.org/psr/psr-2/)
+   * Swift: Fixed indentation to 4 spaces, improved `decodeIfPresent` usage for optionals, added missing `public` to `init` method
+   * Typescript: Fixed indentation to 4 spaces per [Typescript coding guidelines](https://github.com/microsoft/TypeScript/wiki/Coding-guidelines)
+
 ## 8.2.1
 
 * Added `--with-variables` option to the Sites command for adding/updating environment variables  

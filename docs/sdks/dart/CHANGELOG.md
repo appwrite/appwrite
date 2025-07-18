@@ -1,5 +1,13 @@
 # Change Log
 
+## 16.1.0
+
+* Add `gif` support to `ImageFormat` enum
+* Add support for `dart38` and `flutter332` runtimes
+* Add `upsertDocument()` method to Databases service
+* Fix `convertTo()` method in `Document` and `Preferences` models to correctly accept `Map<String, dynamic>`
+* Fix `upsertDocuments()` method to have `documents` attribute as required parameter
+
 ## 16.0.0
 
 * Add `<REGION>` to doc examples due to the new multi region endpoints
