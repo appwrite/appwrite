@@ -7,13 +7,13 @@ import (
 )
 
 func main() {
-    client := client.NewClient()
+    client := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
+        client.WithSession("") // The user session to authenticate with
+    )
 
-    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
-    client.SetSession("") // The user session to authenticate with
-
-    service := functions.NewFunctions(client)
+    service := functions.New(client)
     response, error := service.CreateExecution(
         "<FUNCTION_ID>",
         functions.WithCreateExecutionBody("<BODY>"),
