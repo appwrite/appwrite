@@ -376,7 +376,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '16.0.1',
+                'version' => '16.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
