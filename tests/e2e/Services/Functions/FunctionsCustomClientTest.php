@@ -43,8 +43,8 @@ class FunctionsCustomClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -52,8 +52,7 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -84,13 +83,12 @@ class FunctionsCustomClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-fn'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -107,8 +105,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('Node.js', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
+        $this->assertEquals('22', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals(APP_VERSION_STABLE, $output['APPWRITE_VERSION']);
         $this->assertEquals(System::getEnv('_APP_REGION', 'default'), $output['APPWRITE_REGION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
@@ -142,10 +140,10 @@ class FunctionsCustomClientTest extends Scope
          */
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test',
+            'name' => 'Test guest execution',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'vars' => [
                 'funcKey1' => 'funcValue1',
                 'funcKey2' => 'funcValue2',
@@ -154,8 +152,7 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-fn'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -175,8 +172,8 @@ class FunctionsCustomClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
 
@@ -193,15 +190,14 @@ class FunctionsCustomClientTest extends Scope
          */
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test',
+            'name' => 'Test synchronous execution',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-fn'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -214,11 +210,11 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals('Test synchronous execution', $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('Node.js', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
+        $this->assertEquals('22', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals(APP_VERSION_STABLE, $output['APPWRITE_VERSION']);
         $this->assertEquals(System::getEnv('_APP_REGION', 'default'), $output['APPWRITE_REGION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
@@ -239,12 +235,12 @@ class FunctionsCustomClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'entrypoint' => 'index.js'
         ]);
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.js',
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -340,7 +336,7 @@ class FunctionsCustomClientTest extends Scope
             'limit' => 5,
             'offset' => 2,
             'useCases' => ['databases'],
-            'runtimes' => ['node-16.0']
+            'runtimes' => ['node-22']
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
@@ -352,7 +348,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertContains($template['useCases'][0], ['databases']);
         }
 
-        $this->assertContains('node-16.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
+        $this->assertContains('node-22', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
 
         /**
          * Test for FAILURE
