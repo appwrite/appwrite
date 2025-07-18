@@ -75,7 +75,7 @@ class Builds extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -209,6 +209,9 @@ class Builds extends Action
         Executor $executor,
         array $plan
     ): void {
+        $startTime = DateTime::now();
+        $durationStart = \microtime(true);
+
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
@@ -259,9 +262,6 @@ class Builds extends Action
             ->setEvent($event)
             ->setParam($resourceKey, $resource->getId())
             ->setParam('deploymentId', $deployment->getId());
-
-        $startTime = DateTime::now();
-        $durationStart = \microtime(true);
 
         if ($deployment->getAttribute('status') === 'canceled') {
             Console::info('Build has been canceled');
@@ -445,7 +445,7 @@ class Builds extends Action
                     Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -747,6 +747,13 @@ class Builds extends Action
                                         if ($separator !== false) {
                                             $logs = \substr($logs, 0, $separator);
                                             $insideSeparation = true;
+
+                                            $leftover = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
+                                            $separator = \strpos($leftover, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                                            if ($separator !== false) {
+                                                $logs .= \substr($leftover, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+                                                $insideSeparation = false;
+                                            }
                                         }
                                     } else {
                                         $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
@@ -810,9 +817,6 @@ class Builds extends Action
                 throw $err;
             }
 
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-
             $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if (isset($plan['buildSize'])) {
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
@@ -821,10 +825,6 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
-            /** Update the build document */
-            $deployment->setAttribute('buildStartedAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
-            $deployment->setAttribute('buildEndedAt', $endTime);
-            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
             $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
@@ -836,18 +836,10 @@ class Builds extends Action
 
             // Separate logs for SSR detection
             $detectionLogs = '';
-            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
-            if ($separator !== false) {
-                $detectionLogs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR}'));
-                $separatorEnd = \strpos($detectionLogs, '{APPWRITE_DETECTION_SEPARATOR_END}');
-                $logs .= \substr($detectionLogs, $separatorEnd + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
-                $detectionLogs = \substr($detectionLogs, 0, $separatorEnd);
-                $logs = \substr($logs, 0, $separator);
-            }
-
-            if ($resource->getCollection() === 'sites') {
-                $date = \date('H:i:s');
-                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+            if (\str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
+                [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+                [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
+                $logs = ($logsBefore ?? '') . ($logsAfter ?? '');
             }
 
             $deployment->setAttribute('buildLogs', $logs);
@@ -877,15 +869,23 @@ class Builds extends Action
                 }
             }
 
-            $deployment->setAttribute('buildLogs', $logs);
-
-            $this->afterBuildSuccess($dbForProject, $deployment);
-
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
+
+            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
+            $logs = $deployment->getAttribute('buildLogs', '');
+
+            if ($resource->getCollection() === 'sites') {
+                $date = \date('H:i:s');
+                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+                $deployment->setAttribute('buildLogs', $logs);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+            }
 
             /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
@@ -1032,6 +1032,7 @@ class Builds extends Action
                     $date = \date('H:i:s');
                     $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n";
 
+                    $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     $queueForRealtime
@@ -1046,6 +1047,7 @@ class Builds extends Action
                     $date = \date('H:i:s');
                     $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n";
 
+                    $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
             }
@@ -1189,6 +1191,15 @@ class Builds extends Action
                 }
             }
 
+            $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
+            $deployment->setAttribute('buildEndedAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
                 return;
@@ -1223,16 +1234,12 @@ class Builds extends Action
                 $message = "[31m" . $message;
             }
 
-            $separator = \strpos($message, '{APPWRITE_DETECTION_SEPARATOR_START}');
-            if ($separator !== false) {
-                $error = \substr($message, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
-                $message = \substr($message, 0, $separator);
-                $message .= "\n[31m" . $error;
-            }
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
+            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
 
             // Combine with previous logs if deployment got past build process
             $previousLogs = '';
-            if (!empty($deployment->getAttribute('buildEndedAt', ''))) {
+            if (!is_null($deployment->getAttribute('buildSize', null))) {
                 $previousLogs = $deployment->getAttribute('buildLogs', '');
                 if (!empty($previousLogs)) {
                     $message = $previousLogs . "\n" . $message;
@@ -1317,12 +1324,14 @@ class Builds extends Action
     /**
      * Hook to run after build success
      *
+     * @param Realtime $queueForRealtime
      * @param Database $dbForProject
      * @param Document $deployment
      * @return void
      */
-    protected function afterBuildSuccess(Database $dbForProject, Document &$deployment): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment): void
     {
+        assert($queueForRealtime instanceof Realtime);
         assert($dbForProject instanceof Database);
         assert($deployment instanceof Document);
     }
@@ -1438,7 +1447,7 @@ class Builds extends Action
             $name = "{$resourceName} ({$projectName})";
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_DOMAIN');
+            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
             $projectId = $project->getId();
             $region = $project->getAttribute('region', 'default');
