@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f53e1ccd394581428d9efcb53b46d479",
+    "content-hash": "25ac1acb960988af5c10239c3bde258b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3493,16 +3493,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.71.9",
+            "version": "0.71.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "eb2f759020bba617e99dd67973a9bd949b47f54e"
+                "reference": "83278d663f9c63c25a11d9e71c7922da7ec48636"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/eb2f759020bba617e99dd67973a9bd949b47f54e",
-                "reference": "eb2f759020bba617e99dd67973a9bd949b47f54e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/83278d663f9c63c25a11d9e71c7922da7ec48636",
+                "reference": "83278d663f9c63c25a11d9e71c7922da7ec48636",
                 "shasum": ""
             },
             "require": {
@@ -3543,9 +3543,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.71.9"
+                "source": "https://github.com/utopia-php/database/tree/0.71.10"
             },
-            "time": "2025-07-02T16:37:41+00:00"
+            "time": "2025-07-18T00:05:55+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -3993,16 +3993,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.11.1",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "d528a454d5c1ed6564b2843a39ff13297bcdb1af"
+                "reference": "973a4daa283f711a104e9bb7cf5a79dec2988df0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/d528a454d5c1ed6564b2843a39ff13297bcdb1af",
-                "reference": "d528a454d5c1ed6564b2843a39ff13297bcdb1af",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/973a4daa283f711a104e9bb7cf5a79dec2988df0",
+                "reference": "973a4daa283f711a104e9bb7cf5a79dec2988df0",
                 "shasum": ""
             },
             "require": {
@@ -4043,9 +4043,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.11.1"
+                "source": "https://github.com/utopia-php/migration/tree/0.12.0"
             },
-            "time": "2025-07-11T13:46:37+00:00"
+            "time": "2025-07-17T12:20:11+00:00"
         },
         {
             "name": "utopia-php/orchestration",

@@ -22,7 +22,7 @@ class Get extends Action
 {
     public static function getName(): string
     {
-        return 'getUsage';
+        return 'getDatabaseUsage';
     }
 
     public function __construct()
@@ -37,7 +37,7 @@ class Get extends Action
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: null,
-                name: 'getUsage',
+                name: self::getName(),
                 description: '/docs/references/databases/get-database-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [
