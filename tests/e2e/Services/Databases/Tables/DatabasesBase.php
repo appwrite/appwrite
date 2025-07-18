@@ -1984,6 +1984,36 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(2, $rows['body']['total']);
+
+        // test without passing permissions
+        $row = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+                'releaseYear' => 2000
+            ]
+        ]);
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $row['body']['title']);
+
+        $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+
+        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $deleteResponse['headers']['status-code']);
     }
 
     /**
