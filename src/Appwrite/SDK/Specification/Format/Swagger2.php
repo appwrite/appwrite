@@ -417,6 +417,8 @@ class Swagger2 extends Format
                     case 'Utopia\Database\Validator\Queries':
                     case 'Utopia\Database\Validator\Queries\Document':
                     case 'Utopia\Database\Validator\Queries\Documents':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
                         $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [

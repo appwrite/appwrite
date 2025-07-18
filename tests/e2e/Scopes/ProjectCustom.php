@@ -70,8 +70,12 @@ trait ProjectCustom
                 'databases.write',
                 'collections.read',
                 'collections.write',
+                'tables.read',
+                'tables.write',
                 'documents.read',
                 'documents.write',
+                'rows.read',
+                'rows.write',
                 'files.read',
                 'files.write',
                 'buckets.read',
@@ -199,5 +203,18 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']['secret']);
 
         return $key['body']['secret'];
+    }
+    public function updateProjectinvalidateSessionsProperty(bool $value)
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . self::$project['$id'] . '/auth/session-invalidation', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]), [
+            'enabled' => $value,
+        ]);
+
+        return $response['headers']['status-code'];
     }
 }
