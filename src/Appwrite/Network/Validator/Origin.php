@@ -75,6 +75,10 @@ class Origin extends Validator
             return 'Invalid Origin.';
         }
 
+        if (!isset($platform)) {
+            return 'Invalid Scheme. The scheme used ( ' . $this->scheme . ' ) is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`';
+        }
+
         return 'Invalid Origin. Register your new client ' . $host . ' as a new '
             . $platform . ' platform on your project console dashboard';
     }
