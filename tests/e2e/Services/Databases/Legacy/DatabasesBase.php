@@ -4563,7 +4563,11 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $personCollection . '/documents/' . $person2['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*', 'libraries.*'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('$collection', $response['body']);
@@ -4573,7 +4577,11 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection . '/documents/library11', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['person_one_to_many.$id'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('person_one_to_many', $response['body']);
@@ -4723,7 +4731,11 @@ trait DatabasesBase
         $album = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/documents/album1', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*', 'artist.name', 'artist.$permissions'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $album['headers']['status-code']);
         $this->assertEquals('album1', $album['body']['$id']);
@@ -4735,7 +4747,11 @@ trait DatabasesBase
         $artist = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/documents/' . $album['body']['artist']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*', 'albums.$id', 'albums.name', 'albums.$permissions'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $artist['headers']['status-code']);
         $this->assertEquals('Artist 1', $artist['body']['name']);
@@ -4876,7 +4892,11 @@ trait DatabasesBase
         $sport = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/documents/sport1', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*', 'players.name', 'players.$permissions'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $sport['headers']['status-code']);
         $this->assertEquals('sport1', $sport['body']['$id']);
@@ -4890,7 +4910,11 @@ trait DatabasesBase
         $player = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $players['body']['$id'] . '/documents/' . $sport['body']['players'][0]['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*', 'sports.$id', 'sports.name', 'sports.$permissions'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $player['headers']['status-code']);
         $this->assertEquals('Player 1', $player['body']['name']);
@@ -4918,6 +4942,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::isNotNull('$id')->toString(),
+                Query::select(['*', 'libraries.*'])->toString(),
                 Query::startsWith('fullName', 'Stevie')->toString(),
                 Query::endsWith('fullName', 'Wonder')->toString(),
                 Query::between('$createdAt', '1975-12-06', '2050-12-01')->toString(),
