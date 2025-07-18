@@ -234,16 +234,17 @@ class Realtime extends MessagingAdapter
         $subscriptions = $this->subscriptions[$projectId] ?? [];
 
         $roleConnectionIdMap = [];
+        // lookup to check if duplicate conneciton id for a single role
+        $seenConnectionIdsMap = [];
         foreach ($subscriptions as $userRole => $allChannels) {
             $channels = $allChannels['documents'] ?? [];
             foreach ($channels as $connectionId => $canConnect) {
-                if ($canConnect) {
+                if ($canConnect && !isset($seenConnectionIdsMap[$userRole][$connectionId])) {
+                    $seenConnectionIdsMap[$userRole][$connectionId] = true;
                     $roleConnectionIdMap[$userRole][] = $connectionId;
                 }
             }
         }
-
-        $roleConnectionIdMap = array_map('array_unique', $roleConnectionIdMap);
 
         $auth = new Authorization(Database::PERMISSION_READ);
         $connectionDocsMap = [];

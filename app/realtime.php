@@ -38,6 +38,8 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
+use function Swoole\Coroutine\batch;
+
 /**
  * @var Registry $register
  */
@@ -477,21 +479,27 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($connectionDocsMap));
                         Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                     }
-                    foreach ($connectionDocsMap as $connectionId => $docs) {
+                    $sendBatches = [];
 
+                    foreach ($connectionDocsMap as $connectionId => $docs) {
                         if (!empty($docs)) {
-                            $data = $event['data'];
-                            $data['payload']['documents'] = $docs;
-                            $data['payload']['total'] = count($docs);
-                            $server->send(
-                                [$connectionId],
-                                json_encode([
-                                    'type' => 'event',
-                                    'data' => $data
-                                ])
-                            );
+                            $sendBatches[] = function () use ($server, $connectionId, $docs, $event) {
+                                $data = $event['data'];
+                                $data['payload']['documents'] = $docs;
+                                $data['payload']['total'] = count($docs);
+
+                                $server->send(
+                                    [$connectionId],
+                                    json_encode([
+                                        'type' => 'event',
+                                        'data' => $data
+                                    ])
+                                );
+                            };
                         }
                     }
+
+                    batch($sendBatches);
                 } else {
                     $receivers = $realtime->getSubscribers($event);
                     if (App::isDevelopment() && !empty($receivers)) {
