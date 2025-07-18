@@ -114,8 +114,21 @@ class XList extends Action
 
             $cursor->setValue($cursorDocument);
         }
+
+        $selectQueries = [];
+
         try {
-            $documents = $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
+            $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+
+            if (! empty($selectQueries)) {
+                // has selects, allow relationship on documents!
+                $documents = $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
+            } else {
+                // has no selects, disable relationship looping on documents!
+                /* @type Document[] $documents */
+                $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
+            }
+
             $total = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
@@ -150,24 +163,40 @@ class XList extends Action
         }, false);
 
         // Check if the SELECT query includes $databaseId and $collectionId
+        $hasWildcard = false;
         $hasDatabaseId = false;
         $hasCollectionId = false;
-        if ($select) {
-            $hasDatabaseId = \array_reduce($queries, function ($result, $query) {
-                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$databaseId', $query->getValues()));
-            }, false);
-            $hasCollectionId = \array_reduce($queries, function ($result, $query) {
-                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$collectionId', $query->getValues()));
-            }, false);
-        }
+        $hasSelectQueries = !empty($selectQueries);
 
-        if ($select) {
-            foreach ($documents as $document) {
-                if (!$hasDatabaseId) {
-                    $document->removeAttribute('$databaseId');
+        if ($hasSelectQueries) {
+            foreach ($selectQueries as $query) {
+                if ($query->getMethod() !== Query::TYPE_SELECT) {
+                    continue;
                 }
-                if (!$hasCollectionId) {
-                    $document->removeAttribute('$collectionId');
+
+                $values = $query->getValues();
+                if (\in_array('*', $values, true)) {
+                    $hasWildcard = true;
+                    break;
+                }
+
+                if (\in_array('$databaseId', $values, true)) {
+                    $hasDatabaseId = true;
+                }
+
+                if (\in_array('$collectionId', $values, true)) {
+                    $hasCollectionId = true;
+                }
+            }
+
+            if (!$hasWildcard) {
+                foreach ($documents as $document) {
+                    if (!$hasDatabaseId) {
+                        $document->removeAttribute('$databaseId');
+                    }
+                    if (!$hasCollectionId) {
+                        $document->removeAttribute('$collectionId');
+                    }
                 }
             }
         }

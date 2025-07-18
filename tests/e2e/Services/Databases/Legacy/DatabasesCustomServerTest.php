@@ -3794,7 +3794,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
         $this->assertEquals(1, count($newDocument['body']['new_level_2']));
@@ -3904,7 +3908,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
         $this->assertNotEmpty($newDocument['body']['new_level_2']);
@@ -4014,7 +4022,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
         $this->assertNotEmpty($newDocument['body']['new_level_2']);
@@ -4025,7 +4037,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['*', 'level1.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('level1', $level2Document['body']);
         $this->assertNotEmpty($level2Document['body']['level1']);
@@ -4124,7 +4140,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['new_level_2.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('new_level_2', $newDocument['body']);
         $this->assertNotEmpty($newDocument['body']['new_level_2']);
@@ -4135,7 +4155,11 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ]), [
+            'queries' => [
+                Query::select(['*', 'level1.*'])->toString()
+            ]
+        ]);
 
         $this->assertArrayHasKey('level1', $level2Document['body']);
         $this->assertNotEmpty($level2Document['body']['level1']);
@@ -4480,6 +4504,14 @@ class DatabasesCustomServerTest extends Scope
 
         $createBulkDocuments();
 
+        /**
+         * Wait for database to purge cache...
+         *
+         * This test specifically failed on 1.6.x response format,
+         * could be due to the slow or overworked machine, but being safe here!
+         */
+        sleep(5);
+
         // TEST: Update all documents
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -4497,6 +4529,14 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(10, $response['body']['documents']);
+
+        /**
+         * Wait for database to purge cache...
+         *
+         * This test specifically failed on 1.6.x response format,
+         * could be due to the slow or overworked machine, but being safe here!
+         */
+        sleep(5);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
