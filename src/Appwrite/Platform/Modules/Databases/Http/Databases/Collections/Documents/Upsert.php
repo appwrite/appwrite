@@ -133,7 +133,7 @@ class Upsert extends Action
         }
 
         $data['$id'] = $documentId;
-        $data['$permissions'] = $permissions;
+        $data['$permissions'] = $permissions ?? [];
         $newDocument = new Document($data);
 
         $operations = 0;
