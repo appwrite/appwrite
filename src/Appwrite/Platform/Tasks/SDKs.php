@@ -272,6 +272,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
                 }
 
+                $branch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
@@ -279,8 +280,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git init && \
                         git remote add origin ' . $gitUrl . ' && \
                         git fetch origin && \
-                        git checkout main || git checkout -b main && \
-                        git pull origin main && \
+                        git checkout ' . $branch . ' || git checkout -b ' . $branch . ' && \
+                        git pull origin ' . $branch . ' && \
                         git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
                         git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \

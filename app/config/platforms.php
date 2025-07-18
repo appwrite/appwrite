@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '8.2.1',
+                'version' => '8.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -231,6 +231,7 @@ return [
                 'gitRepoName' => 'sdk-for-cli',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'repoBranch' => 'master',
                 'exclude' => [
                     'services' => [
                         ['name' => 'assistant'],
