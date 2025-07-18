@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
+use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -42,6 +43,7 @@ class Delete extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('event', 'databases.[databaseId].collections.[collectionId].documents.delete')
             ->label('audits.event', 'documents.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -67,13 +69,14 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
+            ->inject('queueForEvents')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, array $plan): void
     {
-        $database = $dbForProject->getDocument('databases', $databaseId);
+        $database =  $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
@@ -124,6 +127,12 @@ class Delete extends Action
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
+
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database);
 
         $response->dynamic(new Document([
             'total' => $modified,

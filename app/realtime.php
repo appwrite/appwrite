@@ -38,6 +38,8 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
+use function Swoole\Coroutine\batch;
+
 /**
  * @var Registry $register
  */
@@ -467,26 +469,58 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
-                $receivers = $realtime->getSubscribers($event);
+                $isbulk = isset($event['bulk']) ? $event['bulk'] : false;
 
-                if (App::isDevelopment() && !empty($receivers)) {
-                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                if ($isbulk) {
+                    $documents = json_decode($payload)->data->payload->documents;
+                    $connectionDocsMap = $realtime->getDocumentsPerSubscriber($event, $documents);
+                    if (App::isDevelopment() && !empty($connectionDocsMap)) {
+                        Console::log("[Debug][Worker {$workerId}] Receivers: " . count($connectionDocsMap));
+                        Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($connectionDocsMap));
+                        Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                    }
+                    $sendBatches = [];
+
+                    foreach ($connectionDocsMap as $connectionId => $docs) {
+                        if (!empty($docs)) {
+                            $sendBatches[] = function () use ($server, $connectionId, $docs, $event) {
+                                $data = $event['data'];
+                                $data['payload']['documents'] = $docs;
+                                $data['payload']['total'] = count($docs);
+
+                                $server->send(
+                                    [$connectionId],
+                                    json_encode([
+                                        'type' => 'event',
+                                        'data' => $data
+                                    ])
+                                );
+                            };
+                        }
+                    }
+
+                    batch($sendBatches);
+                } else {
+                    $receivers = $realtime->getSubscribers($event);
+                    if (App::isDevelopment() && !empty($receivers)) {
+                        Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                        Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                        Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                    }
+                    $server->send(
+                        $receivers,
+                        json_encode([
+                            'type' => 'event',
+                            'data' => $event['data']
+                        ])
+                    );
+                    if (($num = count($receivers)) > 0) {
+                        $register->get('telemetry.messageSentCounter')->add($num);
+                        $stats->incr($event['project'], 'messages', $num);
+                    }
                 }
 
-                $server->send(
-                    $receivers,
-                    json_encode([
-                        'type' => 'event',
-                        'data' => $event['data']
-                    ])
-                );
 
-                if (($num = count($receivers)) > 0) {
-                    $register->get('telemetry.messageSentCounter')->add($num);
-                    $stats->incr($event['project'], 'messages', $num);
-                }
             });
         } catch (Throwable $th) {
             $logError($th, "pubSubConnection");
