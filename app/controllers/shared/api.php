@@ -714,6 +714,9 @@ App::shutdown()
             }
 
             $queueForFunctions
+                ->setHeaders([
+                    'x-appwrite-scheduled-at' => DateTime::formatTz(DateTime::now(), 'Y-m-d H:i:s'),
+                ])
                 ->from($queueForEvents)
                 ->trigger();
 
