@@ -90,6 +90,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Box',
     ],
+    'clerk' => [
+        'name' => 'Clerk',
+        'developers' => 'https://clerk.com/docs/authentication/configuration/sign-up-sign-in-options#identifiers',
+        'icon' => 'icon-clerk',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'clerk.phtml',
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Clerk',
+    ],
     'dailymotion' => [
         'name' => 'Dailymotion',
         'developers' => 'https://developers.dailymotion.com/api/',
