@@ -106,6 +106,13 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
+        if (\str_ends_with($domain, '.appwrite.network')) {
+            $subdomain = \str_replace('.appwrite.network', '', $domain);
+            if (\str_contains($subdomain, '.')) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sub-subdomains are not allowed for appwrite.network. Only one level of subdomain is permitted.');
+            }
+        }
+
         try {
             $domain = new Domain($domain);
         } catch (\Throwable) {
