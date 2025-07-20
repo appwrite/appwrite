@@ -1,5 +1,5 @@
 
-> We just announced Encrypted string attribute support for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-encrypted-string-attributes)
+> We just announced Auto-increment support for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-auto-increment-support)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
