@@ -2286,7 +2286,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
                     'placeholders' => ['description', 'clientInfo', 'securityPhrase']
                 ],
                 'sessionAlert' => [
-                    'file' => 'email-inner-base.tpl',
+                    'file' => 'email-session-alert.tpl',
                     'placeholders' => ['body', 'listDevice', 'listIpAddress', 'listCountry', 'footer']
                 ],
             ];
