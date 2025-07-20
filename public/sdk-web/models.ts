@@ -188,7 +188,7 @@ export namespace Models {
     /**
      * Document
      */
-    export type Document =  DocumentBase & {
+    export type Document = DocumentBase & {
         [key: string]: any;
     }
     /**
