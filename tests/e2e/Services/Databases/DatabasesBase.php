@@ -1344,7 +1344,10 @@ trait DatabasesBase
             'type' => 'key',
             'attributes' => ['actors'],
         ]);
-
+        /**
+         * Disabling array index due to mysql bug
+         * @link https://github.com/appwrite/appwrite/pull/10169
+         */
         $this->assertEquals(400, $actorsArray['headers']['status-code']);
         $this->assertEquals('Indexing an array attribute is temporarily disabled', $actorsArray['body']['message']);
 
@@ -1484,12 +1487,12 @@ trait DatabasesBase
         $this->assertEquals(400, $create['headers']['status-code']);
         $this->assertEquals('Indexing an array attribute is temporarily disabled', $create['body']['message']);
 
-//        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//            'x-appwrite-key' => $this->getProject()['apiKey']
-//        ]);
-//        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
+        //        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
+        //            'content-type' => 'application/json',
+        //            'x-appwrite-project' => $this->getProject()['$id'],
+        //            'x-appwrite-key' => $this->getProject()['apiKey']
+        //        ]);
+        //        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
 
         // Test case for count of lengths greater than attributes (should throw 400)
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
