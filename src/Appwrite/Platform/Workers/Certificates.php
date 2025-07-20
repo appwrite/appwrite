@@ -387,7 +387,7 @@ class Certificates extends Action
             ->setSubject($subject)
             ->setBody($body)
             ->setName('Appwrite Administrator')
-            ->setbodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
+            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
             ->setVariables($emailVariables)
             ->setRecipient(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')))
             ->trigger();

@@ -122,7 +122,7 @@ class Mail extends Event
      * @param string $bodyTemplate
      * @return self
      */
-    public function setbodyTemplate(string $bodyTemplate): self
+    public function setBodyTemplate(string $bodyTemplate): self
     {
         $this->bodyTemplate = $bodyTemplate;
 
@@ -134,7 +134,7 @@ class Mail extends Event
      *
      * @return string
      */
-    public function getbodyTemplate(): string
+    public function getBodyTemplate(): string
     {
         return $this->bodyTemplate;
     }
