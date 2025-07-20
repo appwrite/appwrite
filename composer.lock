@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f53e1ccd394581428d9efcb53b46d479",
+    "content-hash": "b4d42a24341e847fe3b74388b32d4664",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3493,16 +3493,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.71.10",
+            "version": "dev-cast-internals",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "83278d663f9c63c25a11d9e71c7922da7ec48636"
+                "reference": "3d809c86c306da87cde22c7e77cf0fda3677fe6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/83278d663f9c63c25a11d9e71c7922da7ec48636",
-                "reference": "83278d663f9c63c25a11d9e71c7922da7ec48636",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/3d809c86c306da87cde22c7e77cf0fda3677fe6c",
+                "reference": "3d809c86c306da87cde22c7e77cf0fda3677fe6c",
                 "shasum": ""
             },
             "require": {
@@ -3543,9 +3543,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.71.10"
+                "source": "https://github.com/utopia-php/database/tree/cast-internals"
             },
-            "time": "2025-07-18T00:05:55+00:00"
+            "time": "2025-07-18T00:11:52+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8237,9 +8237,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-cast-internals",
+            "alias": "0.71.10",
+            "alias_normalized": "0.71.10.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
