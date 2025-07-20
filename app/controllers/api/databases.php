@@ -2958,6 +2958,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $collection->getAttribute('attributes'),
             $dbForProject->getAdapter()->getMaxIndexLength(),
             $dbForProject->getAdapter()->getInternalIndexesKeys(),
+            $dbForProject->getAdapter()->getSupportForIndexArray(),
         );
 
         if (!$validator->isValid($index)) {

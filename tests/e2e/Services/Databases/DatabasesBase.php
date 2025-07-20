@@ -12,6 +12,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 trait DatabasesBase
 {
@@ -1344,7 +1345,8 @@ trait DatabasesBase
             'attributes' => ['actors'],
         ]);
 
-        $this->assertEquals(202, $actorsArray['headers']['status-code']);
+        $this->assertEquals(400, $actorsArray['headers']['status-code']);
+        $this->assertEquals('Indexing an array attribute is temporarily disabled', $actorsArray['body']['message']);
 
         $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1357,9 +1359,10 @@ trait DatabasesBase
             'orders' => ['DESC', 'DESC'],
         ]);
 
-        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
-        $this->assertEquals('DESC', $twoLevelsArray['body']['orders'][0]);
-        $this->assertEquals(null, $twoLevelsArray['body']['orders'][1]); // Overwrite by API (array)
+        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals('Indexing an array attribute is temporarily disabled', $twoLevelsArray['body']['message']);
+        //$this->assertEquals('DESC', $twoLevelsArray['body']['orders'][0]);
+        //$this->assertEquals(null, $twoLevelsArray['body']['orders'][1]); // Overwrite by API (array)
 
         $unknown = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1384,7 +1387,8 @@ trait DatabasesBase
             'attributes' => ['integers'], // array attribute
             'orders' => ['DESC'], // Check order is removed in API
         ]);
-        $this->assertEquals(202, $index1['headers']['status-code']);
+        $this->assertEquals(400, $index1['headers']['status-code']);
+        $this->assertEquals('Indexing an array attribute is temporarily disabled', $index1['body']['message']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1395,7 +1399,8 @@ trait DatabasesBase
             'type' => 'key',
             'attributes' => ['integers'], // array attribute
         ]);
-        $this->assertEquals(202, $index2['headers']['status-code']);
+        $this->assertEquals(400, $index2['headers']['status-code']);
+        $this->assertEquals('Indexing an array attribute is temporarily disabled', $index2['body']['message']);
 
         /**
          * Create Indexes by worker
@@ -1409,7 +1414,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertCount(4, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
@@ -1476,14 +1481,15 @@ trait DatabasesBase
             'attributes' => ['actors'],
             'lengths' => [120]
         ]);
-        $this->assertEquals(202, $create['headers']['status-code']);
+        $this->assertEquals(400, $create['headers']['status-code']);
+        $this->assertEquals('Indexing an array attribute is temporarily disabled', $create['body']['message']);
 
-        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
+//        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $this->getProject()['$id'],
+//            'x-appwrite-key' => $this->getProject()['apiKey']
+//        ]);
+//        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
 
         // Test case for count of lengths greater than attributes (should throw 400)
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
