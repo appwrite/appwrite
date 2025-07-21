@@ -782,7 +782,7 @@ class AccountCustomClientTest extends Scope
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $verification = $tokens['secret'];
-        $expectedExpire = DateTime::format(new \DateTime($response['body']['expire']));
+        $expectedExpire = DateTime::formatTz(new \DateTime($response['body']['expire']));
         $this->assertEquals($expectedExpire, $tokens['expire']);
 
         // Secret check
@@ -1099,7 +1099,7 @@ class AccountCustomClientTest extends Scope
         $this->assertArrayHasKey('expire', $tokens);
         $this->assertNotEmpty($tokens['expire']);
         $this->assertEquals(
-            DateTime::format(new \DateTime($response['body']['expire'])),
+            DateTime::formatTz(new \DateTime($response['body']['expire'])),
             $tokens['expire']
         );
 
