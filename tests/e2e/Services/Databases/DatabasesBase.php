@@ -2010,20 +2010,86 @@ trait DatabasesBase
 
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+        $this->assertCount(3, $document['body']['$permissions']);
+        $permissionsCreated = $document['body']['$permissions'];
+        // checking the default created permission
+        $defaultPermission = [Permission::read(Role::user($this->getUser()['$id'])),
+            Permission::update(Role::user($this->getUser()['$id'])),
+            Permission::delete(Role::user($this->getUser()['$id'])),];
+        // ignoring the order of the permission and checking the permissions
+        $this->assertEqualsCanonicalizing($defaultPermission, $permissionsCreated);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $document['headers']['status-code']);
 
-        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+        // updating the created doc
+        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+                'releaseYear' => 2002
+            ]
+        ]);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+        $this->assertEquals(2002, $document['body']['releaseYear']);
+        $this->assertCount(3, $document['body']['$permissions']);
+        $this->assertEquals($permissionsCreated, $document['body']['$permissions']);
+
+        // removing the delete permission
+        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+                'releaseYear' => 2002
+            ],
+            'permissions' => [
+                Permission::update(Role::user($this->getUser()['$id']))
+            ]
+        ]);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+        $this->assertEquals(2002, $document['body']['releaseYear']);
+        $this->assertCount(1, $document['body']['$permissions']);
+
+        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $deleteResponse['headers']['status-code']);
+
+        // giving the delete permission
+        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+                'releaseYear' => 2002
+            ],
+            'permissions' => [
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id']))
+            ]
+        ]);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+        $this->assertEquals(2002, $document['body']['releaseYear']);
+        $this->assertCount(2, $document['body']['$permissions']);
+
+        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()));
 
         $this->assertEquals(204, $deleteResponse['headers']['status-code']);
     }

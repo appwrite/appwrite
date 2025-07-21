@@ -4257,10 +4257,11 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('requestTimestamp')
     ->inject('response')
+    ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -4280,12 +4281,31 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
+        $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
             Database::PERMISSION_DELETE,
-        ]);
+        ];
+
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+        // if no permission , upsert permission from the old document if present(update scenario) else add default permission(create scenario)
+        if (\is_null($permissions)) {
+            $oldDocument = Authorization::skip(
+                fn () =>
+            $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId)
+            );
+            if ($oldDocument->isEmpty()) {
+                if (!empty($user->getId())) {
+                    $defaultPermissions = [];
+                    foreach ($allowedPermissions as $permission) {
+                        $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    }
+                    $permissions = $defaultPermissions;
+                }
+            } else {
+                $permissions = $oldDocument->getPermissions();
+            }
+        }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
