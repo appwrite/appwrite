@@ -52,7 +52,7 @@
         "utopia-php/cache": "0.13.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.72.*",
+        "utopia-php/database": "dev-fix-index-length as 0.72.10",
         "utopia-php/detector": "0.1.*",
         "utopia-php/domains": "0.8.*",
         "utopia-php/dsn": "0.2.1",

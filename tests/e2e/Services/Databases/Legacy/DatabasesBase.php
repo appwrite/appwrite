@@ -454,7 +454,7 @@ var_dump($attribute);
 
         sleep(1);
 var_dump($index);
-        $this->assertEquals('shmuel', 'dsdsd');
+        //$this->assertEquals('shmuel', 'dsdsd');
 
         /**
          * Update attribute size to exceed Index maximum length
