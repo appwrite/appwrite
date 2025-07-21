@@ -1384,7 +1384,9 @@ trait DatabasesBase
             'attributes' => ['integers'], // array attribute
             'orders' => ['DESC'], // Check order is removed in API
         ]);
-        $this->assertEquals(202, $index1['headers']['status-code']);
+
+        // Array attributes can not be indexed due  to MySQL bug
+        $this->assertEquals(400, $index1['headers']['status-code']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1395,7 +1397,9 @@ trait DatabasesBase
             'type' => 'key',
             'attributes' => ['integers'], // array attribute
         ]);
-        $this->assertEquals(202, $index2['headers']['status-code']);
+
+        // Array attributes can not be indexed due  to MySQL bug
+        $this->assertEquals(400, $index2['headers']['status-code']);
 
         /**
          * Create Indexes by worker
