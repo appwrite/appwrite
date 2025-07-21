@@ -1,12 +1,14 @@
+
+> We just announced Auto-increment support for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-auto-increment-support)
+
 > [Get started with Appwrite](https://apwr.dev/appcloud)
-> [Join the Init kick off event 19th of May: The future of Appwrite with Founder & CEO Eldad Fux](https://www.youtube.com/watch?v=1g8tuogsp7A)
 
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite banner, with logo and text saying "Build Like a Team of Hundreds"></a>
     <br />
     <br />
-    <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
+    <b>Appwrite is an all-in-one development platform for Web, Mobile, and Flutter applications. Use built-in backend infrastructure and web hosting, all from a single place. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
     <br />
     <br />
 </p>
@@ -25,7 +27,7 @@
 
 English | [简体中文](README-CN.md)
 
-Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
+Appwrite is an end-to-end platform for building Web, Mobile, Native, or Backend apps, packaged as a set of Docker microservices. It includes both a backend server and a fully integrated hosting solution for deploying static and server-side rendered frontends. Appwrite abstracts the complexity and repetitiveness required to build modern apps from scratch and allows you to build secure, full-stack applications faster.
 
 Using Appwrite, you can easily integrate your app with user authentication and multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, Cloud Functions, messaging, and [more services](https://appwrite.io/docs).
 
@@ -42,7 +44,7 @@ Find out more at: [https://appwrite.io](https://appwrite.io).
 
 Table of Contents:
 
-- [Getting Started](#getting-started)
+- [Installation \& Setup](#installation--setup)
 - [Self-Hosting](#self-hosting)
   - [Unix](#unix)
   - [Windows](#windows)
@@ -62,8 +64,9 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
 
-## Getting Started
-The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect you credit card information. 
+## Installation & Setup
+
+The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect your credit card information.
 
 ## Self-Hosting
 
@@ -128,19 +131,19 @@ Choose from one of the providers below:
     <td align="center" width="100" height="100">
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
         <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
-          <br /><sub><b>Gitpod</b></sub></a>    
+          <br /><sub><b>Gitpod</b></sub></a>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
         <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai Compute</b></sub></a>    
+          <br /><sub><b>Akamai Compute</b></sub></a>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
         <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
-          <br /><sub><b>AWS Marketplace</b></sub></a>    
+          <br /><sub><b>AWS Marketplace</b></sub></a>
       </a>
     </td>
   </tr>
@@ -186,6 +189,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 - [**Realtime**](https://appwrite.io/docs/realtime) - Listen to real-time events for any of your Appwrite services including users, storage, functions, databases, and more.
 - [**Locale**](https://appwrite.io/docs/references/cloud/client-web/locale) - Track your user's location and manage your app locale-based data.
 - [**Avatars**](https://appwrite.io/docs/references/cloud/client-web/avatars) - Manage your users' avatars, countries' flags, browser icons, and credit card symbols. Generate QR codes from links or plaintext strings.
+- [**MCP**](https://appwrite.io/docs/tooling/mcp) - Use Appwrite's Model Context Protocol (MCP) server to allow LLMs and AI tools like Claude Desktop, Cursor, and Windsurf Editor to directly interact with your Appwrite project through natural language.
+- [**Sites**](https://appwrite.io/docs/products/sites) - Develop, deploy, and scale your web applications directly from Appwrite, alongside your backend.
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
 
