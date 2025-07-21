@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "25ac1acb960988af5c10239c3bde258b",
+    "content-hash": "9a018b6bf824147378fb0b5b51ed8b58",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3493,16 +3493,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.71.10",
+            "version": "dev-fix-index-length",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "83278d663f9c63c25a11d9e71c7922da7ec48636"
+                "reference": "b743f4a1408efdafe664b381c2b29763d4363fde"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/83278d663f9c63c25a11d9e71c7922da7ec48636",
-                "reference": "83278d663f9c63c25a11d9e71c7922da7ec48636",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b743f4a1408efdafe664b381c2b29763d4363fde",
+                "reference": "b743f4a1408efdafe664b381c2b29763d4363fde",
                 "shasum": ""
             },
             "require": {
@@ -3543,9 +3543,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.71.10"
+                "source": "https://github.com/utopia-php/database/tree/fix-index-length"
             },
-            "time": "2025-07-18T00:05:55+00:00"
+            "time": "2025-07-21T12:57:09+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8237,9 +8237,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix-index-length",
+            "alias": "0.72.10",
+            "alias_normalized": "0.72.10.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
