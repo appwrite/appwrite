@@ -278,7 +278,6 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
