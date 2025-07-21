@@ -3,12 +3,14 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
-    .setKey('<YOUR_API_KEY>'); // Your secret API key
+    .setSession(''); // The user session to authenticate with
 
 Databases databases = Databases(client);
 
-DocumentList result = await databases.upsertDocuments(
+Document result = await databases.upsertDocument(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    documents: [],
+    documentId: '<DOCUMENT_ID>',
+    data: {},
+    permissions: ["read("any")"], // (optional)
 );
