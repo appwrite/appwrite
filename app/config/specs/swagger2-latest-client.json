@@ -5105,8 +5105,7 @@
                     "platforms": [
                         "console",
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5214,8 +5213,7 @@
                     "platforms": [
                         "console",
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5308,7 +5306,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 394,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5381,7 +5379,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 392,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5497,7 +5495,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 393,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5568,7 +5566,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 308,
+                    "weight": 307,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5641,7 +5639,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 307,
+                    "weight": 306,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -6122,7 +6120,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 354,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6206,7 +6204,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 358,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
