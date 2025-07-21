@@ -57,7 +57,6 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey)
 {
-    // add headers here as well
     $host = $request->getHostname() ?? '';
     if (!empty($previewHostname)) {
         $host = $previewHostname;

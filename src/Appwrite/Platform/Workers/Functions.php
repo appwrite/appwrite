@@ -522,12 +522,6 @@ class Functions extends Action
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
-            $executedAt = new \DateTime();
-            $scheduledAt = $headers['x-appwrite-scheduled-at'] ?? '';
-            $headers['x-appwrite-executed-at'] = $executedAt->format('Y-m-d\TH:i:s.v\Z');
-            $delay = $executedAt->getTimestamp() - (new \DateTime($scheduledAt))->getTimestamp();
-            $headers['x-appwrite-schedule-delay'] = (string)floor($delay);
-
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,

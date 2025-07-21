@@ -1576,6 +1576,9 @@ class FunctionsCustomServerTest extends Scope
             $this->assertStringContainsString("total", $execution['body']['logs']);
         }, 10000, 500);
 
+        $execution = $this->getExecution($functionId, $executionId);
+        var_dump($execution);
+
         $this->cleanupFunction($functionId);
     }
 

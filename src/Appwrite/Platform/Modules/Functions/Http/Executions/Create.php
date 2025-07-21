@@ -278,8 +278,6 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-                $scheduledAt = new \DateTime();
-                $headers['x-appwrite-scheduled-at'] = $scheduledAt->format('Y-m-d\TH:i:s.v\Z');
 
                 $queueForFunctions
                     ->setType('http')
