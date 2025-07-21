@@ -68,6 +68,14 @@ class ScheduleExecutions extends ScheduleBase
             \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data) {
                 Co::sleep($delay);
 
+                $rawHeaders = $data['headers'] ?? [];
+                $headers = [];
+                foreach ($rawHeaders as $key => $value) {
+                    if (is_string($key) && $key !== '' && $key !== 'null') {
+                        $headers[$key] = $value;
+                    }
+                }
+
                 $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
                     // TODO: Refactor to use function instead of functionId
@@ -75,7 +83,7 @@ class ScheduleExecutions extends ScheduleBase
                     ->setExecution($schedule['resource'])
                     ->setMethod($data['method'] ?? 'POST')
                     ->setPath($data['path'] ?? '/')
-                    ->setHeaders($data['headers'] ?? [])
+                    ->setHeaders($headers)
                     ->setBody($data['body'] ?? '')
                     ->setProject($schedule['project'])
                     ->setUserId($data['userId'] ?? '')
