@@ -106,5 +106,8 @@ class OriginTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid('ms-browser-extension://com.company.appname'));
         $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Edge Extension) platform on your project console dashboard', $validator->getDescription());
+
+        $this->assertEquals(false, $validator->isValid('random-scheme://localhost'));
+        $this->assertEquals('Invalid Scheme. The scheme used (random-scheme) in the Origin (random-scheme://localhost) is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`', $validator->getDescription());
     }
 }

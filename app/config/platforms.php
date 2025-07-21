@@ -59,7 +59,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '17.0.1',
+                'version' => '17.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '8.2.1',
+                'version' => '8.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -231,6 +231,7 @@ return [
                 'gitRepoName' => 'sdk-for-cli',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'repoBranch' => 'master',
                 'exclude' => [
                     'services' => [
                         ['name' => 'assistant'],
@@ -376,7 +377,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '16.0.0',
+                'version' => '16.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
