@@ -26,6 +26,7 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     protected BrokerPool $publisher;
+    protected ?BrokerPool $publisherRedis = null;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -72,6 +73,13 @@ abstract class ScheduleBase extends Action
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
         $this->publisher = new BrokerPool($pools->get('publisher'));
+
+        try {
+            $this->publisherRedis = new BrokerPool($pools->get('publisherRedis'));
+        } catch (\Throwable) {
+            $this->publisherRedis = null;
+        }
+
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
@@ -79,16 +87,16 @@ abstract class ScheduleBase extends Action
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
-        $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
+        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
 
         Console::success("Starting timers at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($pools, $dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
+            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
         });
 
         while (true) {
@@ -103,7 +111,7 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
+    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
@@ -115,7 +123,7 @@ abstract class ScheduleBase extends Action
          * @throws Exception
          * @var Document $schedule
          */
-        $getSchedule = function (Document $schedule) use ($pools, $dbForPlatform, $getProjectDB): array {
+        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
             $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
 
             $resource = $getProjectDB($project)->getDocument(
@@ -124,7 +132,7 @@ abstract class ScheduleBase extends Action
             );
 
             return [
-                '$internalId' => $schedule->getInternalId(),
+                '$sequence' => $schedule->getSequence(),
                 '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
@@ -175,19 +183,19 @@ abstract class ScheduleBase extends Action
             $total = $total + $sum;
 
             foreach ($results as $document) {
-                $localDocument = $this->schedules[$document->getInternalId()] ?? null;
+                $localDocument = $this->schedules[$document->getSequence()] ?? null;
 
                 if ($localDocument !== null) {
                     if (!$document['active']) {
                         Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
-                        unset($this->schedules[$document->getInternalId()]);
+                        unset($this->schedules[$document->getSequence()]);
                     } elseif (strtotime($localDocument['resourceUpdatedAt']) !== strtotime($document['resourceUpdatedAt'])) {
                         Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
-                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
+                        $this->schedules[$document->getSequence()] = $getSchedule($document);
                     }
                 } else {
                     try {
-                        $this->schedules[$document->getInternalId()] = $getSchedule($document);
+                        $this->schedules[$document->getSequence()] = $getSchedule($document);
                     } catch (\Throwable $th) {
                         $collectionId = static::getCollectionId();
                         Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");

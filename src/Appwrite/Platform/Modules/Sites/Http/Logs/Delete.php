@@ -55,7 +55,7 @@ class Delete extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $logId, Response $response, Database $dbForProject, Event $queueForEvents)
@@ -71,7 +71,7 @@ class Delete extends Base
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 
-        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getInternalId()) {
+        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getSequence()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 

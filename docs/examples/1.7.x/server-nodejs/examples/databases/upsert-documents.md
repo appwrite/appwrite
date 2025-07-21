@@ -10,5 +10,5 @@ const databases = new sdk.Databases(client);
 const result = await databases.upsertDocuments(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
-    [] // documents (optional)
+    [] // documents
 );

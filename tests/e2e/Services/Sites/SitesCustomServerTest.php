@@ -477,7 +477,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($domain);
 
         $deploymentId = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'true'
         ]);
         $this->assertNotEmpty($deploymentId);
@@ -856,7 +856,7 @@ class SitesCustomServerTest extends Scope
 
         $deployment = $this->createDeployment($siteId, [
             'siteId' => $siteId,
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => true,
         ]);
 
@@ -874,7 +874,7 @@ class SitesCustomServerTest extends Scope
         }, 50000, 500);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
         ]);
 
@@ -917,7 +917,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
         ]);
 
@@ -937,12 +937,12 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertEquals('canceled', $deployment['body']['status']);
 
-        /**
-         * Build worker still runs the build.
-         * 30s sleep gives worker enough time to finish build.
-         * After build finished, it should still be canceled, not ready.
-         */
-        \sleep(30);
+        // Ensures worker got eventually aware of cancellation and reacted properly
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertStringContainsString('Build has been canceled.', $deployment['body']['buildLogs']);
+        });
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
 
@@ -969,7 +969,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
         ]);
 
@@ -1014,7 +1014,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
         ]);
 
@@ -1022,7 +1022,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
         ]);
 
@@ -1193,7 +1193,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
         ]);
 
@@ -1318,7 +1318,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
         ]);
 
@@ -1446,7 +1446,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertStringContainsString("Page not found", $response['body']); // Title
         $this->assertStringContainsString("Go to homepage", $response['body']); // Button
-        $this->assertStringContainsString("Powered by", $response['body']); // Brand
+        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
 
         $this->cleanupSite($siteId);
     }
@@ -1502,7 +1502,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Customized 404 page", $response['body']);
-        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
+        $this->assertStringNotContainsString("Powered by", $response['body']); //brand
 
         $this->cleanupSite($siteId);
     }
@@ -1818,7 +1818,7 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $deploymentId = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => true
         ]);
 
@@ -2435,7 +2435,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($siteId);
 
         $deploymentId = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'true'
         ]);
 
@@ -2477,7 +2477,7 @@ class SitesCustomServerTest extends Scope
 
         // test canceled deployment error page
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'true'
         ]);
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -2517,7 +2517,7 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('View deployments', $response['body']);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('astro'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => 'true'
         ]);
 
@@ -2606,7 +2606,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => true
         ]);
         $this->assertEquals(202, $deployment['headers']['status-code']);
@@ -2635,7 +2635,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static'),
+            'code' => $this->packageSite('static-single-file'),
             'activate' => true
         ]);
         $this->assertEquals(202, $deployment['headers']['status-code']);

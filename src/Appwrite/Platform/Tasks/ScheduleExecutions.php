@@ -6,6 +6,7 @@ use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
+use Utopia\System\System;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -29,8 +30,15 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queueForFunctions = new Func($this->publisher);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
+
+        $isRedisFallback = \str_contains(System::getEnv('_APP_WORKER_REDIS_FALLBACK', ''), 'functions');
+
+        $queueForFunctions = new Func(
+            $isRedisFallback
+            ? $this->publisherRedis
+            : $this->publisher
+        );
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -39,7 +47,7 @@ class ScheduleExecutions extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                unset($this->schedules[$schedule['$internalId']]);
+                unset($this->schedules[$schedule['$sequence']]);
                 continue;
             }
 
@@ -81,7 +89,7 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             );
 
-            unset($this->schedules[$schedule['$internalId']]);
+            unset($this->schedules[$schedule['$sequence']]);
         }
     }
 }

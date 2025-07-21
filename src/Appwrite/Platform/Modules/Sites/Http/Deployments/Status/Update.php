@@ -57,7 +57,7 @@ class Update extends Action
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('executor')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -95,7 +95,7 @@ class Update extends Action
             'status' => 'canceled'
         ]));
 
-        if ($deployment->getInternalId() === $site->getAttribute('latestDeploymentInternalId', '')) {
+        if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
             $site = $site->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
             $dbForProject->updateDocument('sites', $site->getId(), $site);
         }

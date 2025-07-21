@@ -177,7 +177,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:6.0.11
+    image: <?php echo $organization; ?>/console:6.0.13
     restart: unless-stopped
     networks:
       - appwrite
@@ -841,7 +841,7 @@ $image = $this->getParam('image', '');
       - _APP_DB_PASS
 
   appwrite-assistant:
-    image: appwrite/assistant:0.4.0
+    image: appwrite/assistant:0.8.3
     container_name: appwrite-assistant
     <<: *x-logging
     restart: unless-stopped
@@ -864,7 +864,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.14
+    image: openruntimes/executor:0.7.22
     networks:
       - appwrite
       - runtimes

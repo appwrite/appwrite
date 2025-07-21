@@ -5,13 +5,13 @@
  */
 
 use Appwrite\Auth\Auth;
-use Appwrite\Network\Validator\Origin;
+use Appwrite\Network\Platform;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
 $console = [
     '$id' => ID::custom('console'),
-    '$internalId' => ID::custom('console'),
+    '$sequence' => ID::custom('console'),
     'name' => 'Appwrite',
     '$collection' => ID::custom('projects'),
     'description' => 'Appwrite core engine',
@@ -23,7 +23,7 @@ $console = [
         [
             '$collection' => ID::custom('platforms'),
             'name' => 'Localhost',
-            'type' => Origin::CLIENT_TYPE_WEB,
+            'type' => Platform::TYPE_WEB,
             'hostname' => 'localhost',
         ], // Current host is added on app init
     ],

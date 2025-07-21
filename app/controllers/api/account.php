@@ -21,6 +21,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -60,7 +61,6 @@ use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -190,7 +190,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         [
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
             'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -387,7 +387,7 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
@@ -397,7 +397,7 @@ App::post('/v1/account')
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => MESSAGE_TYPE_EMAIL,
                     'identifier' => $email,
                 ])));
@@ -907,7 +907,7 @@ App::post('/v1/account/sessions/email')
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -1056,7 +1056,7 @@ App::post('/v1/account/sessions/anonymous')
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
-        $user->removeAttribute('$internalId');
+        $user->removeAttribute('$sequence');
         Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
@@ -1069,7 +1069,7 @@ App::post('/v1/account/sessions/anonymous')
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -1182,16 +1182,23 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
-    ->param('failure', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('success', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('failure', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -1216,12 +1223,20 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
+        $host = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $redirectBase = $protocol . '://' . $host;
+        if ($protocol === 'https' && $port !== '443') {
+            $redirectBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $redirectBase .= ':' . $port;
+        }
+
         if (empty($success)) {
-            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+            $success = $redirectBase . $oauthDefaultSuccess;
         }
 
         if (empty($failure)) {
-            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
+            $failure = $redirectBase . $oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
@@ -1251,9 +1266,14 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
-
-        $domain = $request->getHostname();
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
         $params = $request->getParams();
         $params['project'] = $projectId;
@@ -1262,7 +1282,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+            ->redirect($callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
                 . \http_build_query($params));
     });
 
@@ -1282,9 +1302,14 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
-
-        $domain = $request->getHostname();
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
         $params = $request->getParams();
         $params['project'] = $projectId;
@@ -1293,7 +1318,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+            ->redirect($callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
                 . \http_build_query($params));
     });
 
@@ -1317,15 +1342,24 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('platforms')
+    ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
-        $protocol = $request->getProtocol();
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, array $platforms, Document $devKey, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
+        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
-        $validateURL = new URL();
+        $redirect = new Redirect($platforms);
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
@@ -1352,11 +1386,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $state = $defaultState;
         }
 
-        if (!$validateURL->isValid($state['success'])) {
+        if ($devKey->isEmpty() && !$redirect->isValid($state['success'])) {
             throw new Exception(Exception::PROJECT_INVALID_SUCCESS_URL);
         }
 
-        if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
+        if ($devKey->isEmpty() && !empty($state['failure']) && !$redirect->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
         $failure = [];
@@ -1423,13 +1457,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
-        $userParam = \json_decode($request->getParam('user'), true);
+        $userParam = $request->getParam('user');
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
-        } elseif (is_array($userParam)) {
-            $nameParam = $userParam['name'];
-            if (is_array($nameParam) && isset($nameParam['firstName']) && isset($nameParam['lastName'])) {
-                $name = $nameParam['firstName'] . ' ' . $nameParam['lastName'];
+        } elseif ($userParam !== null) {
+            $userDecoded = \json_decode($userParam, true);
+            if (isset($userDecoded['name']['firstName']) && isset($userDecoded['name']['lastName'])) {
+                $name = $userDecoded['name']['firstName'] . ' ' . $userDecoded['name']['lastName'];
             }
         }
         $email = $oauth2->getUserEmail($accessToken);
@@ -1440,7 +1474,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userInternalId', $user->getInternalId()),
+                Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
@@ -1554,7 +1588,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
-                    $user->removeAttribute('$internalId');
+                    $user->removeAttribute('$sequence');
                     $userDoc = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
@@ -1563,7 +1597,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                             Permission::delete(Role::user($user->getId())),
                         ],
                         'userId' => $userDoc->getId(),
-                        'userInternalId' => $userDoc->getInternalId(),
+                        'userInternalId' => $userDoc->getSequence(),
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
@@ -1582,7 +1616,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $identity = $dbForProject->findOne('identities', [
-            Query::equal('userInternalId', [$user->getInternalId()]),
+            Query::equal('userInternalId', [$user->getSequence()]),
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$oauth2ID]),
         ]);
@@ -1592,7 +1626,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userInternalId', $user->getInternalId()),
+                Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
                 $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
@@ -1605,7 +1639,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Permission::update(Role::user($userId)),
                     Permission::delete(Role::user($userId)),
                 ],
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'userId' => $userId,
                 'provider' => $provider,
                 'providerUid' => $oauth2ID,
@@ -1648,7 +1682,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $token = new Document([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'type' => Auth::TOKEN_TYPE_OAUTH2,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
@@ -1683,7 +1717,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => $provider,
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
@@ -1736,7 +1770,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 $target
                     ->setAttribute('sessionId', $session->getId())
-                    ->setAttribute('sessionInternalId', $session->getInternalId());
+                    ->setAttribute('sessionInternalId', $session->getSequence());
 
                 $dbForProject->updateDocument('targets', $target->getId(), $target);
             }
@@ -1746,8 +1780,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
-
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -1779,16 +1811,23 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
-    ->param('failure', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('success', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('failure', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -1813,12 +1852,20 @@ App::get('/v1/account/tokens/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
+        $host = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $redirectBase = $protocol . '://' . $host;
+        if ($protocol === 'https' && $port !== '443') {
+            $redirectBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $redirectBase .= ':' . $port;
+        }
+
         if (empty($success)) {
-            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+            $success = $redirectBase . $oauthDefaultSuccess;
         }
 
         if (empty($failure)) {
-            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
+            $failure = $redirectBase . $oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
@@ -1860,7 +1907,7 @@ App::post('/v1/account/tokens/magic-url')
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
@@ -1931,7 +1978,7 @@ App::post('/v1/account/tokens/magic-url')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -1941,7 +1988,7 @@ App::post('/v1/account/tokens/magic-url')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -1961,7 +2008,16 @@ App::post('/v1/account/tokens/magic-url')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if (empty($url)) {
-            $url = $request->getProtocol() . '://' . $request->getHostname() . '/console/auth/magic-url';
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $host = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+            $port = $request->getPort();
+            $callbackBase = $protocol . '://' . $host;
+            if ($protocol === 'https' && $port !== '443') {
+                $callbackBase .= ':' . $port;
+            } elseif ($protocol === 'http' && $port !== '80') {
+                $callbackBase .= ':' . $port;
+            }
+            $url = $callbackBase . '/console/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
@@ -2168,7 +2224,7 @@ App::post('/v1/account/tokens/email')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -2178,7 +2234,7 @@ App::post('/v1/account/tokens/email')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Auth::TOKEN_TYPE_EMAIL,
             'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -2460,7 +2516,7 @@ App::post('/v1/account/tokens/phone')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            $user->removeAttribute('$internalId');
+            $user->removeAttribute('$sequence');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
@@ -2470,7 +2526,7 @@ App::post('/v1/account/tokens/phone')
                         Permission::delete(Role::user($user->getId())),
                     ],
                     'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
+                    'userInternalId' => $user->getSequence(),
                     'providerType' => MESSAGE_TYPE_SMS,
                     'identifier' => $phone,
                 ])));
@@ -2501,7 +2557,7 @@ App::post('/v1/account/tokens/phone')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Auth::TOKEN_TYPE_PHONE,
             'secret' => Auth::hash($secret),
             'expire' => $expire,
@@ -2703,7 +2759,7 @@ App::get('/v1/account/logs')
 
         $audit = new EventAudit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
+        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
 
         $output = [];
 
@@ -2732,7 +2788,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
+            'total' => $audit->countLogsByUser($user->getSequence(), $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2900,7 +2956,7 @@ App::patch('/v1/account/email')
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
-            Query::notEqual('userInternalId', $user->getInternalId()),
+            Query::notEqual('userInternalId', $user->getSequence()),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
@@ -3146,7 +3202,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients', 'devKey'])
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3183,7 +3239,7 @@ App::post('/v1/account/recovery')
         $recovery = new Document([
             '$id' => ID::unique(),
             'userId' => $profile->getId(),
-            'userInternalId' => $profile->getInternalId(),
+            'userInternalId' => $profile->getSequence(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -3217,6 +3273,7 @@ App::post('/v1/account/recovery')
             ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
+            ->setParam('{{buttonText}}', $locale->getText("emails.recovery.buttonText"))
             ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"));
         $body = $message->render();
 
@@ -3412,7 +3469,7 @@ App::post('/v1/account/verification')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients', 'devKey']) // TODO add built-in confirm page
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -3438,7 +3495,7 @@ App::post('/v1/account/verification')
         $verification = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -3472,6 +3529,7 @@ App::post('/v1/account/verification')
             ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
+            ->setParam('{{buttonText}}', $locale->getText("emails.verification.buttonText"))
             ->setParam('{{signature}}', $locale->getText("emails.verification.signature"));
 
         $body = $message->render();
@@ -3685,7 +3743,7 @@ App::post('/v1/account/verification/phone')
         $verification = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Auth::TOKEN_TYPE_PHONE,
             'secret' => Auth::hash($secret),
             'expire' => $expire,
@@ -3880,7 +3938,7 @@ App::patch('/v1/account/mfa')
             if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
                 $factors[] = Type::PHONE;
             }
-            $factors = \array_unique($factors);
+            $factors = \array_values(\array_unique($factors));
 
             $session->setAttribute('factors', $factors);
             $dbForProject->updateDocument('sessions', $session->getId(), $session);
@@ -3979,7 +4037,7 @@ App::post('/v1/account/mfa/authenticators/:type')
         $authenticator = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => Type::TOTP,
             'verified' => false,
             'data' => [
@@ -4065,7 +4123,7 @@ App::put('/v1/account/mfa/authenticators/:type')
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
-        $factors = \array_unique($factors);
+        $factors = \array_values(\array_unique($factors));
 
         $session->setAttribute('factors', $factors);
         $dbForProject->updateDocument('sessions', $session->getId(), $session);
@@ -4292,7 +4350,7 @@ App::post('/v1/account/mfa/challenge')
         $code = Auth::codeGenerator();
         $challenge = new Document([
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => $factor,
             'token' => Auth::tokenGenerator(),
             'code' => $code,
@@ -4549,7 +4607,7 @@ App::put('/v1/account/mfa/challenge')
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
-        $factors = \array_unique($factors);
+        $factors = \array_values(\array_unique($factors));
 
         $session
             ->setAttribute('factors', $factors)
@@ -4621,12 +4679,12 @@ App::post('/v1/account/targets/push')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getInternalId() : null,
+                'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
                 'providerType' =>  MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'sessionId' => $session->getId(),
-                'sessionInternalId' => $session->getInternalId(),
+                'sessionInternalId' => $session->getSequence(),
                 'identifier' => $identifier,
                 'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
             ]));
@@ -4745,7 +4803,7 @@ App::delete('/v1/account/targets/:targetId/push')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        if ($user->getInternalId() !== $target->getAttribute('userInternalId')) {
+        if ($user->getSequence() !== $target->getAttribute('userInternalId')) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
@@ -4794,7 +4852,7 @@ App::get('/v1/account/identities')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
+        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 
         /**
             * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries

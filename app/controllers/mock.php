@@ -129,32 +129,6 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::patch('/v1/mock/functions-v2')
-    ->desc('Update Function Version to V2 (outdated code syntax)')
-    ->groups(['mock', 'api', 'functions'])
-    ->label('scope', 'functions.write')
-    ->label('docs', false)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $functionId, Response $response, Database $dbForProject) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-
-        if (!$isDevelopment) {
-            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-        }
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
-
-        $response->noContent();
-    });
-
 App::post('/v1/mock/api-key-unprefixed')
     ->desc('Create API Key (without standard prefix)')
     ->groups(['mock', 'api', 'projects'])
@@ -185,7 +159,7 @@ App::post('/v1/mock/api-key-unprefixed')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
+            'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => 'Outdated key',
             'scopes' => $scopes,
@@ -235,7 +209,7 @@ App::get('/v1/mock/github/callback')
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
-            $projectInternalId = $project->getInternalId();
+            $projectInternalId = $project->getSequence();
 
             $teamId = $project->getAttribute('teamId', '');
 

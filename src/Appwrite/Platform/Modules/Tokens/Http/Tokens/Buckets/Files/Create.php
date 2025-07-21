@@ -65,7 +65,7 @@ class Create extends Action
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
-        ->callback([$this, 'action']);
+        ->callback($this->action(...));
     }
 
     public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents): void
@@ -94,7 +94,7 @@ class Create extends Action
             '$id' => ID::unique(),
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
-            'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
+            'resourceInternalId' => $bucket->getSequence() . ':' . $file->getSequence(),
             'resourceType' => TOKENS_RESOURCE_TYPE_FILES,
             'expire' => $expire,
         ]));

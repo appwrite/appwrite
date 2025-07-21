@@ -1,5 +1,14 @@
 # Change Log
 
+## 17.0.2
+
+* Add `gif` support to `ImageFormat` enum
+* Fix `convertTo()` method in `Document` and `Preferences` models to correctly accept `Map<String, dynamic>`
+
+## 17.0.1
+
+* Fix `devKeys` support by conditionally including credentials during requests
+
 ## 17.0.0
 
 * Update `flutter_web_auth_2` dependency to version 4.1.0

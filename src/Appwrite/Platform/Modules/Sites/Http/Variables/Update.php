@@ -58,7 +58,7 @@ class Update extends Base
             ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -77,7 +77,7 @@ class Update extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getInternalId() || $variable->getAttribute('resourceType') !== 'site') {
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getSequence() || $variable->getAttribute('resourceType') !== 'site') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

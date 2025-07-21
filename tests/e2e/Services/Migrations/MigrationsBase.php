@@ -805,13 +805,12 @@ trait MigrationsBase
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php'
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js'
         ]);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -855,8 +854,8 @@ trait MigrationsBase
 
         $this->assertEquals($functionId, $response['body']['$id']);
         $this->assertEquals('Test', $response['body']['name']);
-        $this->assertEquals('php-8.0', $response['body']['runtime']);
-        $this->assertEquals('index.php', $response['body']['entrypoint']);
+        $this->assertEquals('node-22', $response['body']['runtime']);
+        $this->assertEquals('index.js', $response['body']['entrypoint']);
 
 
         $this->assertEventually(function () use ($functionId) {
@@ -871,7 +870,7 @@ trait MigrationsBase
             $this->assertEquals(1, $deployments['body']['total']);
 
             $this->assertEquals('ready', $deployments['body']['deployments'][0]['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployments['body']['deployments'][0], JSON_PRETTY_PRINT));
-        }, 50000, 500);
+        }, 100000, 500);
 
         // Attempt execution
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [

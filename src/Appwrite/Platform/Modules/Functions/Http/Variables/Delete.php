@@ -57,7 +57,7 @@ class Delete extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -74,7 +74,7 @@ class Delete extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getSequence() || $variable->getAttribute('resourceType') !== 'function') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

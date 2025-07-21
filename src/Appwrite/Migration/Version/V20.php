@@ -36,13 +36,13 @@ class V20 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
-        $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
+        $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
         // No need to migrate stats for console
-        if ($this->project->getInternalId() !== 'console') {
+        if ($this->project->getSequence() !== 'console') {
             $this->migrateUsageMetrics('project.$all.network.requests', 'network.requests');
             $this->migrateUsageMetrics('project.$all.network.outbound', 'network.outbound');
             $this->migrateUsageMetrics('project.$all.network.inbound', 'network.inbound');
@@ -71,7 +71,7 @@ class V20 extends Migration
      */
     private function migrateCollections(): void
     {
-        $internalProjectId = $this->project->getInternalId();
+        $internalProjectId = $this->project->getSequence();
         $collectionType = match ($internalProjectId) {
             'console' => 'console',
             default => 'projects',
@@ -510,7 +510,7 @@ class V20 extends Migration
             Console::log("Migrating Functions usage stats of {$function->getId()} ({$function->getAttribute('name')})");
 
             $functionId = $function->getId();
-            $functionInternalId = $function->getInternalId();
+            $functionInternalId = $function->getSequence();
 
             $this->migrateUsageMetrics("deployment.$functionId.storage.size", "function.$functionInternalId.deployments.storage");
             $this->migrateUsageMetrics("builds.$functionId.compute.total", "$functionInternalId.builds");
@@ -536,22 +536,22 @@ class V20 extends Migration
         foreach ($this->documentsIterator('databases') as $database) {
             Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
 
-            $databaseTable = "database_{$database->getInternalId()}";
+            $databaseTable = "database_{$database->getSequence()}";
 
             // Database level
             $databaseId = $database->getId();
-            $databaseInternalId = $database->getInternalId();
+            $databaseInternalId = $database->getSequence();
 
             $this->migrateUsageMetrics("collections.$databaseId.count.total", "$databaseInternalId.collections");
             $this->migrateUsageMetrics("documents.$databaseId.count.total", "$databaseInternalId.documents");
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
-                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
+                $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
                 Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
 
                 // Collection level
                 $collectionId =  $collection->getId();
-                $collectionInternalId =  $collection->getInternalId();
+                $collectionInternalId =  $collection->getSequence();
 
                 $this->migrateUsageMetrics("documents.$databaseId/$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
             }
@@ -573,12 +573,12 @@ class V20 extends Migration
         $this->migrateUsageMetrics('files.$all.storage.size', 'files.storage');
 
         foreach ($this->documentsIterator('buckets') as $bucket) {
-            $id = "bucket_{$bucket->getInternalId()}";
+            $id = "bucket_{$bucket->getSequence()}";
             Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             // Bucket level
             $bucketId = $bucket->getId();
-            $bucketInternalId = $bucket->getInternalId();
+            $bucketInternalId = $bucket->getSequence();
 
             $this->migrateUsageMetrics("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateUsageMetrics("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
@@ -605,7 +605,7 @@ class V20 extends Migration
                     $target = new Document([
                         '$id' => ID::unique(),
                         'userId' => $document->getId(),
-                        'userInternalId' => $document->getInternalId(),
+                        'userInternalId' => $document->getSequence(),
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $document->getAttribute('email'),
                     ]);
@@ -620,7 +620,7 @@ class V20 extends Migration
                     $target = new Document([
                         '$id' => ID::unique(),
                         'userId' => $document->getId(),
-                        'userInternalId' => $document->getInternalId(),
+                        'userInternalId' => $document->getSequence(),
                         'providerType' => MESSAGE_TYPE_SMS,
                         'identifier' => $document->getAttribute('phone'),
                     ]);

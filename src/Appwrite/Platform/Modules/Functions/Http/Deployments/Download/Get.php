@@ -61,7 +61,7 @@ class Get extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -105,9 +105,11 @@ class Get extends Action
 
         $response
             ->setContentType('application/gzip')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->addHeader('Expires', '0')
+            ->addHeader('Pragma', 'no-cache')
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
