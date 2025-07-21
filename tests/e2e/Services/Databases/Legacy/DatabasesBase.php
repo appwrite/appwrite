@@ -466,7 +466,7 @@ trait DatabasesBase
             'required' => true,
             'default' => null,
         ]);
-var_dump($attribute);
+        var_dump($attribute);
         $this->assertEquals(400, $attribute['headers']['status-code']);
         $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
     }
