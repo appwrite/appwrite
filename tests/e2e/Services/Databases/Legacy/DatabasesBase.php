@@ -438,7 +438,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(202, $attribute['headers']['status-code']);
         $this->assertEquals($attribute['body']['size'], 100);
-var_dump($attribute);
+
         sleep(1);
 
         $index = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/indexes', array_merge([
@@ -453,8 +453,6 @@ var_dump($attribute);
         $this->assertEquals(202, $index['headers']['status-code']);
 
         sleep(1);
-var_dump($index);
-        //$this->assertEquals('shmuel', 'dsdsd');
 
         /**
          * Update attribute size to exceed Index maximum length
