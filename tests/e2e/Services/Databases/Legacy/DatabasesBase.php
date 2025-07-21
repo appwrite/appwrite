@@ -438,7 +438,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(202, $attribute['headers']['status-code']);
         $this->assertEquals($attribute['body']['size'], 100);
-
+var_dump($attribute);
         sleep(1);
 
         $index = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/indexes', array_merge([
@@ -453,7 +453,7 @@ trait DatabasesBase
         $this->assertEquals(202, $index['headers']['status-code']);
 
         sleep(1);
-
+var_dump($index);
         /**
          * Update attribute size to exceed Index maximum length
          */
@@ -466,7 +466,7 @@ trait DatabasesBase
             'required' => true,
             'default' => null,
         ]);
-
+var_dump($attribute);
         $this->assertEquals(400, $attribute['headers']['status-code']);
         $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
     }
