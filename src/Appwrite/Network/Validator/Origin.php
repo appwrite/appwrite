@@ -12,6 +12,7 @@ class Origin extends Validator
     protected array $schemes = [];
     protected ?string $scheme = null;
     protected ?string $host = null;
+    protected string $origin = '';
 
     /**
      * Constructor
@@ -32,6 +33,7 @@ class Origin extends Validator
      */
     public function isValid($origin): bool
     {
+        $this->origin = $origin;
         $this->scheme = null;
         $this->host = null;
 
@@ -68,11 +70,15 @@ class Origin extends Validator
      */
     public function getDescription(): string
     {
-        $platform = $this->scheme ? Platform::getNameByScheme($this->scheme) : null;
+        $platform = $this->scheme ? Platform::getNameByScheme($this->scheme) : '';
         $host = $this->host ? '(' . $this->host . ')' : '';
 
         if (empty($this->host) && empty($this->scheme)) {
             return 'Invalid Origin.';
+        }
+
+        if (empty($platform)) {
+            return 'Invalid Scheme. The scheme used (' . $this->scheme . ') in the Origin (' . $this->origin . ') is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`';
         }
 
         return 'Invalid Origin. Register your new client ' . $host . ' as a new '
