@@ -1,5 +1,21 @@
 # Change Log
 
+## 18.0.0
+
+* **NEW**: Introduced `Tables` API support with improved terminology
+  * Added new Table-based methods:
+    * `createTable` (replaces `createCollection`)
+    * `createRow` (replaces `createDocument`)
+    * `updateRow` (replaces `updateDocument`)
+    * `deleteRow` (replaces `deleteDocument`)
+    * `getRow` (replaces `getDocument`)
+    * `listRows` (replaces `listDocuments`) and much more...
+  * **DEPRECATED**: Old Document-based methods are now deprecated and will not receive further updates
+  * Existing applications continue to work with deprecated methods
+  * For documentation on new terminology, see: https://appwrite.io/docs/products/databases/tables
+* Add `increment` and `decrement` attribute support to both new Tables API and old Document API - https://appwrite.io/blog/post/announcing-auto-increment-support
+* Fix `Document` autocompletion not working even when a generic type is provided
+
 ## 17.1.0
 
 * Add `upsertDocument` method

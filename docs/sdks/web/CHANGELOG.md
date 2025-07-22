@@ -14,6 +14,7 @@
   * Existing applications continue to work with deprecated methods
   * For documentation on new terminology, see: https://appwrite.io/docs/products/databases/tables 
 * Add `gif` support to `ImageFormat` enum
+* Add `increment` and `decrement` attribute support to both new Tables API and old Document API - https://appwrite.io/blog/post/announcing-auto-increment-support
 * Fix `Document` autocompletion not working even when a generic type is provided
 * Fix undefined `filePath` param in `chunkedUpload` method
 
