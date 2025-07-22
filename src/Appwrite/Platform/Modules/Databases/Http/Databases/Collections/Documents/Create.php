@@ -86,29 +86,29 @@ class Create extends Action
                         'replaceWith' => 'tables.createRow',
                     ],
                 ),
-                // new Method(
-                //     namespace: $this->getSdkNamespace(),
-                //     group: $this->getSdkGroup(),
-                //     name: $this->getBulkActionName(self::getName()),
-                //     description: '/docs/references/databases/create-documents.md',
-                //     auth: [AuthType::ADMIN, AuthType::KEY],
-                //     responses: [
-                //         new SDKResponse(
-                //             code: SwooleResponse::STATUS_CODE_CREATED,
-                //             model: $this->getBulkResponseModel(),
-                //         )
-                //     ],
-                //     contentType: ContentType::JSON,
-                //     parameters: [
-                //         new Parameter('databaseId', optional: false),
-                //         new Parameter('collectionId', optional: false),
-                //         new Parameter('documents', optional: false),
-                //     ],
-                //     deprecated: [
-                //         'since' => '1.8.0',
-                //         'replaceWith' => 'tables.createRows',
-                //     ],
-                // )
+                new Method(
+                    namespace: $this->getSdkNamespace(),
+                    group: $this->getSdkGroup(),
+                    name: $this->getBulkActionName(self::getName()),
+                    description: '/docs/references/databases/create-documents.md',
+                    auth: [AuthType::ADMIN, AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_CREATED,
+                            model: $this->getBulkResponseModel(),
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                    parameters: [
+                        new Parameter('databaseId', optional: false),
+                        new Parameter('collectionId', optional: false),
+                        new Parameter('documents', optional: false),
+                    ],
+                    deprecated: [
+                        'since' => '1.8.0',
+                        'replaceWith' => 'tables.createRows',
+                    ],
+                )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
