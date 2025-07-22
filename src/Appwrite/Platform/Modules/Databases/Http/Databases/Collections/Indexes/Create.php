@@ -187,6 +187,7 @@ class Create extends Action
             $collection->getAttribute('attributes'),
             $dbForProject->getAdapter()->getMaxIndexLength(),
             $dbForProject->getAdapter()->getInternalIndexesKeys(),
+            $dbForProject->getAdapter()->getSupportForIndexArray()
         );
 
         if (!$validator->isValid($index)) {
