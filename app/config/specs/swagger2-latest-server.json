@@ -30391,6 +30391,10 @@
             "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
         },
         {
+            "name": "tables",
+            "description": "The Tables service allows you to create structured tables of rows, query and filter lists of rows"
+        },
+        {
             "name": "locale",
             "description": "The Locale service allows you to customize your app based on your users' location."
         },

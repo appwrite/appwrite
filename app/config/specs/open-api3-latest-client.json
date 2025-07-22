@@ -5122,30 +5122,6 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
-                        },
-                        {
-                            "name": "createRows",
-                            "auth": {
-                                "Admin": [],
-                                "Key": []
-                            },
-                            "parameters": [
-                                "databaseId",
-                                "tableId",
-                                "rows"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "tableId",
-                                "rows"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/components\/schemas\/rowList"
-                                }
-                            ],
-                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -8413,6 +8389,10 @@
         {
             "name": "databases",
             "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
+        },
+        {
+            "name": "tables",
+            "description": "The Tables service allows you to create structured tables of rows, query and filter lists of rows"
         },
         {
             "name": "locale",

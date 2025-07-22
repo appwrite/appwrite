@@ -28016,6 +28016,7 @@
                                         "account",
                                         "avatars",
                                         "databases",
+                                        "tables",
                                         "locale",
                                         "health",
                                         "storage",
@@ -40315,6 +40316,10 @@
             "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
         },
         {
+            "name": "tables",
+            "description": "The Tables service allows you to create structured tables of rows, query and filter lists of rows"
+        },
+        {
             "name": "locale",
             "description": "The Locale service allows you to customize your app based on your users' location."
         },
@@ -46702,7 +46707,12 @@
                 },
                 "serviceStatusForDatabases": {
                     "type": "boolean",
-                    "description": "Databases service status",
+                    "description": "Databases (legacy) service status",
+                    "x-example": true
+                },
+                "serviceStatusForTables": {
+                    "type": "boolean",
+                    "description": "Tables service status",
                     "x-example": true
                 },
                 "serviceStatusForLocale": {
@@ -46804,6 +46814,7 @@
                 "serviceStatusForAccount",
                 "serviceStatusForAvatars",
                 "serviceStatusForDatabases",
+                "serviceStatusForTables",
                 "serviceStatusForLocale",
                 "serviceStatusForHealth",
                 "serviceStatusForStorage",

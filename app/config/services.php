@@ -55,7 +55,7 @@ return [
     ],
     'databases' => [
         'key' => 'databases',
-        'name' => 'Databases (Legacy)',
+        'name' => 'Databases (legacy)',
         'subtitle' => 'The Databases service allows you to create structured collections of documents, query and filter lists of documents',
         'description' => '/docs/services/databases.md',
         'controller' => '', // Uses modules
