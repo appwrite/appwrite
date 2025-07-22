@@ -16,7 +16,7 @@ class V20 extends Filter
         switch ($model) {
             case 'databases.getDocument':
             case 'databases.listDocuments':
-                $content = $this->manageSelectQueries($content, $model);
+                $content = $this->manageSelectQueries($content);
                 break;
         }
         return $content;
@@ -30,7 +30,7 @@ class V20 extends Filter
      * This filter preserves 1.7.x behavior by including all related documents for backward compatibility with
      * `listDocuments` and `getDocument` calls.
      */
-    protected function manageSelectQueries(array $content, string $model): array
+    protected function manageSelectQueries(array $content): array
     {
         $hasWildcard = false;
         if (! isset($content['queries'])) {
@@ -58,7 +58,10 @@ class V20 extends Filter
             }
         }
 
-        if ($hasWildcard && $model === 'databases.listDocuments') {
+        /**
+         * Add `keys.*` for all model types!
+         */
+        if ($hasWildcard) {
             $relatedKeys = $this->getRelatedCollectionKeys();
 
             if (! empty($relatedKeys)) {
