@@ -1344,7 +1344,8 @@ trait DatabasesBase
             'columns' => ['actors'],
         ]);
 
-        $this->assertEquals(202, $actorsArray['headers']['status-code']);
+        // Indexes on array attributes are disabled due to MySQL bug
+        $this->assertEquals(400, $actorsArray['headers']['status-code']);
 
         $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1357,9 +1358,8 @@ trait DatabasesBase
             'orders' => ['DESC', 'DESC'],
         ]);
 
-        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
-        $this->assertEquals('DESC', $twoLevelsArray['body']['orders'][0]);
-        $this->assertEquals(null, $twoLevelsArray['body']['orders'][1]); // Overwrite by API (array)
+        // Indexes on array attributes are disabled due to MySQL bug
+        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
 
         $unknown = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1384,6 +1384,8 @@ trait DatabasesBase
             'columns' => ['integers'], // array attribute
             'orders' => ['DESC'], // Check order is removed in API
         ]);
+
+        // Indexes on array attributes are disabled due to MySQL bug
         $this->assertEquals(400, $index1['headers']['status-code']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
@@ -1395,6 +1397,8 @@ trait DatabasesBase
             'type' => 'key',
             'columns' => ['integers'], // array attribute
         ]);
+
+        // Indexes on array attributes are disabled due to MySQL bug
         $this->assertEquals(400, $index2['headers']['status-code']);
 
         /**
@@ -1409,7 +1413,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertCount(4, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);

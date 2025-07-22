@@ -2523,7 +2523,7 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
     ->param('enabled', false, new Boolean(), 'Update authentication session invalidation status. Use this endpoint to enable or disable session invalidation on password change')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $invalidateSessions, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -2532,7 +2532,7 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['invalidateSessions'] = $invalidateSessions;
+        $auths['invalidateSessions'] = $enabled;
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
         ->setAttribute('auths', $auths));
 
