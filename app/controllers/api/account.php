@@ -2254,6 +2254,7 @@ App::post('/v1/account/tokens/email')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
+        $preview = $locale->getText("emails.otpSession.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -2339,6 +2340,7 @@ App::post('/v1/account/tokens/email')
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
