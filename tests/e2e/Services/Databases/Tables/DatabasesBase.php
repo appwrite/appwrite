@@ -1384,6 +1384,8 @@ trait DatabasesBase
             'columns' => ['integers'], // array attribute
             'orders' => ['DESC'], // Check order is removed in API
         ]);
+
+        // Indexes on array attributes are disabled due to MySQL bug
         $this->assertEquals(400, $index1['headers']['status-code']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
@@ -1395,6 +1397,8 @@ trait DatabasesBase
             'type' => 'key',
             'columns' => ['integers'], // array attribute
         ]);
+
+        // Indexes on array attributes are disabled due to MySQL bug
         $this->assertEquals(400, $index2['headers']['status-code']);
 
         /**
@@ -1409,7 +1413,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertCount(4, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
