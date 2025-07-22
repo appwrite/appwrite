@@ -4288,12 +4288,9 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         ];
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
-        // if no permission , upsert permission from the old document if present(update scenario) else add default permission(create scenario)
+        // if no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
-            $oldDocument = Authorization::skip(
-                fn () =>
-            $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId)
-            );
+            $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
             if ($oldDocument->isEmpty()) {
                 if (!empty($user->getId())) {
                     $defaultPermissions = [];
