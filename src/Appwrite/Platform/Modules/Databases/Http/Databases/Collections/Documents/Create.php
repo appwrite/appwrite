@@ -8,6 +8,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
@@ -80,7 +81,11 @@ class Create extends Action
                         new Parameter('documentId', optional: false),
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
-                    ]
+                    ],
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'tables.createRow',
+                    ),
                 ),
                 new Method(
                     namespace: $this->getSdkNamespace(),
@@ -99,7 +104,11 @@ class Create extends Action
                         new Parameter('databaseId', optional: false),
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
-                    ]
+                    ],
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'tables.createRows',
+                    ),
                 )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')

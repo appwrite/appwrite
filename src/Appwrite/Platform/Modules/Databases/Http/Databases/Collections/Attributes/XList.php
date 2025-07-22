@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attribu
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
@@ -50,7 +51,11 @@ class XList extends Action
                         code: SwooleResponse::STATUS_CODE_OK,
                         model: $this->getResponseModel()
                     )
-                ]
+                ],
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tables.listColumns',
+                ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

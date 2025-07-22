@@ -975,6 +975,8 @@ App::init()
                 )
         );
 
+        $warnings = [];
+
         /*
         * Response format
         */
@@ -996,7 +998,7 @@ App::init()
                 $response->addFilter(new ResponseV20());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
-                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+                $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";
             }
         }
 
@@ -1031,6 +1033,22 @@ App::init()
 
         if (!$devKey->isEmpty()) {
             $response->addHeader('Access-Control-Allow-Origin', '*');
+        }
+
+        /**
+         * Deprecation Warning
+         */
+        $sdk = $route->getLabel('sdk', false);
+        $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
+        $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
+        foreach ($sdkItems as $sdkItem) {
+            if ($sdkItem->isDeprecated()) {
+                $warnings[] = $deprecationWarning;
+            }
+        }
+
+        if (!empty($warnings)) {
+            $response->addHeader('X-Appwrite-Warning', implode(';', $warnings));
         }
 
         /*
@@ -1269,7 +1287,7 @@ App::error()
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
-                /** @var Appwrite\SDK\Method $sdk */
+                /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
             }
 

@@ -3,6 +3,7 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
@@ -102,6 +103,7 @@ class Swagger2 extends Format
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
+                /** @var Method $sdk */
                 $sdk = $sdk[0];
             }
 
@@ -155,13 +157,13 @@ class Swagger2 extends Format
                 'tags' => [$namespace],
                 'description' => $descContents,
                 'responses' => [],
+                'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
                     'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
-                    'deprecated' => $sdk->isDeprecated(),
                     'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
@@ -169,9 +171,16 @@ class Swagger2 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $sdk->isPackaging()
+                    'packaging' => $sdk->isPackaging(),
                 ],
             ];
+
+            if ($sdk->getDeprecated() instanceof Deprecated) {
+                $temp['x-appwrite']['deprecated'] = [
+                    'since' => $sdk->getDeprecated()->getSince(),
+                    'replaceWith' => $sdk->getDeprecated()->getReplaceWith(),
+                ];
+            }
 
             if ($produces) {
                 $temp['produces'][] = $produces;
