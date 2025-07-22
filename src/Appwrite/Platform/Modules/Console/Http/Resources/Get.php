@@ -68,6 +68,13 @@ class Get extends Action
     ) {
         if ($type === 'rules') {
             $validator = new Domain($value);
+            
+            if (\str_ends_with(\strtolower($value), '.appwrite.network')) {
+                $subdomain = \str_replace('.appwrite.network', '', strtolower($value));
+                if (\str_contains($subdomain, '.')) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sub-subdomains are not allowed for appwrite.network. Only one level of subdomain is permitted.');
+                }
+            }
 
             if (!$validator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
