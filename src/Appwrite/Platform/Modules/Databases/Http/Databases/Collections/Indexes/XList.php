@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
@@ -53,10 +54,10 @@ class XList extends Action
                     )
                 ],
                 contentType: ContentType::JSON,
-                deprecated: [
-                    'since' => '1.8.0',
-                    'replaceWith' => 'tables.listIndexes',
-                ],
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tables.listIndexes',
+                ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')

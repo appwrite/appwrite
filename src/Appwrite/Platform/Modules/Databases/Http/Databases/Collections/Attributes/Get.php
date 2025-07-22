@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attribu
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -57,10 +58,10 @@ class Get extends Action
                         model: $this->getResponseModel()
                     )
                 ],
-                deprecated: [
-                    'since' => '1.8.0',
-                    'replaceWith' => 'tables.getColumn',
-                ],
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tables.getColumn',
+                ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

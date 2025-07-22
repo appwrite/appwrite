@@ -8,6 +8,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -62,10 +63,10 @@ class Delete extends Action
                     )
                 ],
                 contentType: ContentType::NONE,
-                deprecated: [
-                    'since' => '1.8.0',
-                    'replaceWith' => 'tables.deleteRow',
-                ],
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tables.deleteRow',
+                ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')

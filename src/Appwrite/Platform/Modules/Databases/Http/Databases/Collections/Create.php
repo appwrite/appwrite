@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -62,10 +63,10 @@ class Create extends Action
                     )
                 ],
                 contentType: ContentType::JSON,
-                deprecated: [
-                    'since' => '1.8.0',
-                    'replaceWith' => 'tables.create',
-                ],
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tables.create',
+                ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')

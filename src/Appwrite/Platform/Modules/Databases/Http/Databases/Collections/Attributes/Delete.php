@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -54,10 +55,10 @@ class Delete extends Action
                     )
                 ],
                 contentType: ContentType::NONE,
-                deprecated: [
-                    'since' => '1.8.0',
-                    'replaceWith' => 'tables.deleteColumn',
-                ],
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tables.deleteColumn',
+                ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')

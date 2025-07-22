@@ -102,6 +102,7 @@ class Swagger2 extends Format
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
+                /** @var Method $sdk */
                 $sdk = $sdk[0];
             }
 
