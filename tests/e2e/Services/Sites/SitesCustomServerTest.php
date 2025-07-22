@@ -937,12 +937,12 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertEquals('canceled', $deployment['body']['status']);
 
-        /**
-         * Build worker still runs the build.
-         * 30s sleep gives worker enough time to finish build.
-         * After build finished, it should still be canceled, not ready.
-         */
-        \sleep(30);
+        // Ensures worker got eventually aware of cancellation and reacted properly
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertStringContainsString('Build has been canceled.', $deployment['body']['buildLogs']);
+        });
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
 

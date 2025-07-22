@@ -19,6 +19,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
@@ -79,9 +80,15 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
+App::setResource('publisherRedis', function () {
+    // Stub
+});
 App::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
+App::setResource('consumerRedis', function () {
+    // Stub
+});
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -121,11 +128,11 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('clients', function ($request, $console, $project) {
+App::setResource('platforms', function (Request $request, Document $console, Document $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
-        'type' => Origin::CLIENT_TYPE_WEB,
+        'type' => Platform::TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
@@ -138,39 +145,32 @@ App::setResource('clients', function ($request, $console, $project) {
         }
         $console->setAttribute('platforms', [
             '$collection' => ID::custom('platforms'),
-            'type' => Origin::CLIENT_TYPE_WEB,
+            'type' => Platform::TYPE_WEB,
             'name' => $hostname,
             'hostname' => $hostname,
         ], Document::SET_TYPE_APPEND);
     }
 
-    /**
-     * Get All verified client URLs for both console and current projects
-     * + Filter for duplicated entries
-     */
-    $clientsConsole = \array_map(
-        fn ($node) => $node['hostname'],
-        \array_filter(
-            $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
-        )
-    );
-
-    $clients = $clientsConsole;
-    $platforms = $project->getAttribute('platforms', []);
-
-    foreach ($platforms as $node) {
-        if (
-            isset($node['type']) &&
-            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
-            !empty($node['hostname'])
-        ) {
-            $clients[] = $node['hostname'];
-        }
+    // Add `exp` and `appwrite-callback-{projectId}` schemes
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $project->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Platform::TYPE_SCHEME,
+            'name' => 'Expo',
+            'key' => 'exp',
+        ], Document::SET_TYPE_APPEND);
+        $project->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Platform::TYPE_SCHEME,
+            'name' => 'Appwrite Callback',
+            'key' => 'appwrite-callback-' . $project->getId(),
+        ], Document::SET_TYPE_APPEND);
     }
 
-    return \array_unique($clients);
+    return [
+        ...$console->getAttribute('platforms', []),
+        ...$project->getAttribute('platforms', []),
+    ];
 }, ['request', 'console', 'project']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
@@ -222,7 +222,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if (APP_MODE_ADMIN !== $mode) {
+    if ($mode === APP_MODE_ADMIN) {
+        $user = $dbForPlatform->getDocument('users', Auth::$unique);
+    } else {
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
@@ -232,8 +234,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
                 $user = $dbForProject->getDocument('users', Auth::$unique);
             }
         }
-    } else {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
     }
 
     if (
@@ -264,7 +264,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtUserId = $payload['userId'] ?? '';
         if (!empty($jwtUserId)) {
-            $user = $dbForProject->getDocument('users', $jwtUserId);
+            if ($mode === APP_MODE_ADMIN) {
+                $user = $dbForPlatform->getDocument('users', $jwtUserId);
+            } else {
+                $user = $dbForProject->getDocument('users', $jwtUserId);
+            }
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
@@ -951,7 +955,7 @@ App::setResource('httpReferrer', function (Request $request): string {
     return $referrer;
 }, ['request']);
 
-App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $clients, Database $dbForPlatform, Document $project, App $utopia): string {
+App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $platforms, Database $dbForPlatform, Document $project, App $utopia): string {
     $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
     $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
@@ -964,8 +968,8 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     }
 
     // Safe if added as web platform
-    $validator = new Hostname($clients);
-    if ($validator->isValid($origin)) {
+    $originValidator = new Origin($platforms);
+    if ($originValidator->isValid($request->getOrigin($httpReferrer))) {
         return $referrer;
     }
 
@@ -993,4 +997,4 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
     return $referrer;
-}, ['request', 'httpReferrer', 'clients', 'dbForPlatform', 'project', 'utopia']);
+}, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);

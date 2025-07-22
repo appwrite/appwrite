@@ -14,6 +14,9 @@ class SitesConsoleClientTest extends Scope
     use SideConsole;
     use SitesBase;
 
+    /**
+     * @group screenshots
+    */
     public function testSiteScreenshot(): void
     {
         $siteId = $this->setupSite([

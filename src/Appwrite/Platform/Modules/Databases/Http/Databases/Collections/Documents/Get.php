@@ -91,7 +91,15 @@ class Get extends Action
         }
 
         try {
-            $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries);
+            $selects = Query::groupByType($queries)['selections'] ?? [];
+
+            if (! empty($selects)) {
+                // has selects, allow relationship on documents!
+                $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries);
+            } else {
+                // has no selects, disable relationship looping on documents!
+                $document = $dbForProject->skipRelationships(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries));
+            }
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }

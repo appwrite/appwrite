@@ -81,13 +81,14 @@ class Upsert extends Action
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('requestTimestamp')
             ->inject('response')
+            ->inject('user')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -108,12 +109,28 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
+        $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
             Database::PERMISSION_DELETE,
-        ]);
+        ];
+
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+        // if no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
+        if (\is_null($permissions)) {
+            $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            if ($oldDocument->isEmpty()) {
+                if (!empty($user->getId())) {
+                    $defaultPermissions = [];
+                    foreach ($allowedPermissions as $permission) {
+                        $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    }
+                    $permissions = $defaultPermissions;
+                }
+            } else {
+                $permissions = $oldDocument->getPermissions();
+            }
+        }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
@@ -137,9 +154,8 @@ class Upsert extends Action
         }
 
         $data['$id'] = $documentId;
-        $data['$permissions'] = $permissions;
+        $data['$permissions'] = $permissions ?? [];
         $newDocument = new Document($data);
-
         $operations = 0;
 
         $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {

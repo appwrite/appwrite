@@ -55,13 +55,26 @@ return [
     ],
     'databases' => [
         'key' => 'databases',
-        'name' => 'Databases',
+        'name' => 'Databases (legacy)',
         'subtitle' => 'The Databases service allows you to create structured collections of documents, query and filter lists of documents',
         'description' => '/docs/services/databases.md',
         'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/databases',
+        'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/databases.png',
+    ],
+    'tables' => [
+        'key' => 'tables',
+        'name' => 'Tables',
+        'subtitle' => 'The Tables service allows you to create structured tables of rows, query and filter lists of rows',
+        'description' => '/docs/services/tables.md',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/client/tables',
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/databases.png',

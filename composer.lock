@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "beacba1fc087db3ab9f9d718b28c5876",
+    "content-hash": "040a8234ecf1038a7e6dc16aa2dda084",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -68,110 +68,17 @@
             "time": "2025-02-18T01:00:50+00:00"
         },
         {
-            "name": "appwrite-labs/php-amqplib",
-            "version": "0.1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/appwrite-labs/php-amqplib.git",
-                "reference": "bd380cbd63c8c0f063a3893b7a0b889d40876861"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite-labs/php-amqplib/zipball/bd380cbd63c8c0f063a3893b7a0b889d40876861",
-                "reference": "bd380cbd63c8c0f063a3893b7a0b889d40876861",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "ext-sockets": "*",
-                "php": "^7.2||^8.0",
-                "phpseclib/phpseclib": "^2.0|^3.0"
-            },
-            "conflict": {
-                "php": "7.4.0 - 7.4.1"
-            },
-            "replace": {
-                "php-amqplib/php-amqplib": "self.version",
-                "videlalvaro/php-amqplib": "self.version"
-            },
-            "require-dev": {
-                "ext-curl": "*",
-                "nategood/httpful": "^0.2.20",
-                "phpunit/phpunit": "^7.5|^9.5",
-                "squizlabs/php_codesniffer": "^3.6",
-                "swoole/ide-helper": "^5.0"
-            },
-            "suggest": {
-                "ext-swoole": "For Swoole coroutine support"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "PhpAmqpLib\\": "PhpAmqpLib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Appwrite Labs",
-                    "email": "team@appwrite.io",
-                    "role": "Fork Maintainer"
-                },
-                {
-                    "name": "Alvaro Videla",
-                    "role": "Original Maintainer"
-                },
-                {
-                    "name": "Raúl Araya",
-                    "email": "nubeiro@gmail.com",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Luke Bakken",
-                    "email": "luke@bakken.io",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Ramūnas Dronga",
-                    "email": "github@ramuno.lt",
-                    "role": "Maintainer"
-                }
-            ],
-            "description": "Fork of php-amqplib with Swoole coroutine support. A pure PHP implementation of the AMQP protocol tested against RabbitMQ.",
-            "homepage": "https://github.com/appwrite-labs/php-amqplib/",
-            "keywords": [
-                "async",
-                "coroutine",
-                "message",
-                "queue",
-                "rabbitmq",
-                "swoole"
-            ],
-            "support": {
-                "source": "https://github.com/appwrite-labs/php-amqplib/tree/0.1.1"
-            },
-            "time": "2025-06-24T18:12:57+00:00"
-        },
-        {
             "name": "appwrite/appwrite",
-            "version": "11.1.0",
+            "version": "15.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "1d043f543acdb17b9fdb440b1b2dd208e400bad3"
+                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/1d043f543acdb17b9fdb440b1b2dd208e400bad3",
-                "reference": "1d043f543acdb17b9fdb440b1b2dd208e400bad3",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
+                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
                 "shasum": ""
             },
             "require": {
@@ -197,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/11.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/15.0.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2024-06-26T07:03:23+00:00"
+            "time": "2025-05-18T09:47:10+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1727,6 +1634,87 @@
                 "source": "https://github.com/paragonie/random_compat"
             },
             "time": "2020-10-15T08:29:30+00:00"
+        },
+        {
+            "name": "php-amqplib/php-amqplib",
+            "version": "v3.7.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-amqplib/php-amqplib.git",
+                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-amqplib/php-amqplib/zipball/9f50fe69a9f1a19e2cb25596a354d705de36fe59",
+                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "ext-sockets": "*",
+                "php": "^7.2||^8.0",
+                "phpseclib/phpseclib": "^2.0|^3.0"
+            },
+            "conflict": {
+                "php": "7.4.0 - 7.4.1"
+            },
+            "replace": {
+                "videlalvaro/php-amqplib": "self.version"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "nategood/httpful": "^0.2.20",
+                "phpunit/phpunit": "^7.5|^9.5",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PhpAmqpLib\\": "PhpAmqpLib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-2.1-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Alvaro Videla",
+                    "role": "Original Maintainer"
+                },
+                {
+                    "name": "Raúl Araya",
+                    "email": "nubeiro@gmail.com",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Luke Bakken",
+                    "email": "luke@bakken.io",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Ramūnas Dronga",
+                    "email": "github@ramuno.lt",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Formerly videlalvaro/php-amqplib.  This library is a pure PHP implementation of the AMQP protocol. It's been tested against RabbitMQ.",
+            "homepage": "https://github.com/php-amqplib/php-amqplib/",
+            "keywords": [
+                "message",
+                "queue",
+                "rabbitmq"
+            ],
+            "support": {
+                "issues": "https://github.com/php-amqplib/php-amqplib/issues",
+                "source": "https://github.com/php-amqplib/php-amqplib/tree/v3.7.3"
+            },
+            "time": "2025-02-18T20:11:13+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -3505,16 +3493,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.71.8",
+            "version": "0.72.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7dff6b67a54f1a7f9d3f210db4c6e40d7052b79e"
+                "reference": "fd24f3637bbf31ecb84793512b6f01f5f2863a90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7dff6b67a54f1a7f9d3f210db4c6e40d7052b79e",
-                "reference": "7dff6b67a54f1a7f9d3f210db4c6e40d7052b79e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/fd24f3637bbf31ecb84793512b6f01f5f2863a90",
+                "reference": "fd24f3637bbf31ecb84793512b6f01f5f2863a90",
                 "shasum": ""
             },
             "require": {
@@ -3555,9 +3543,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.71.8"
+                "source": "https://github.com/utopia-php/database/tree/0.72.3"
             },
-            "time": "2025-06-26T14:48:17+00:00"
+            "time": "2025-07-22T07:20:59+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -3954,16 +3942,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.18.1",
+            "version": "0.18.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "5d1245207a61d7ca065daddad7ac5f1d5640152f"
+                "reference": "0d364edacf4d4867964c7e17f653031dd39394bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/5d1245207a61d7ca065daddad7ac5f1d5640152f",
-                "reference": "5d1245207a61d7ca065daddad7ac5f1d5640152f",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0d364edacf4d4867964c7e17f653031dd39394bf",
+                "reference": "0d364edacf4d4867964c7e17f653031dd39394bf",
                 "shasum": ""
             },
             "require": {
@@ -3999,26 +3987,26 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.18.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.18.2"
             },
-            "time": "2025-06-26T18:26:07+00:00"
+            "time": "2025-07-21T18:27:03+00:00"
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.10.1",
+            "version": "0.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "ea1c585df7ec5f346f061a11581fc9a91679966f"
+                "reference": "b3c51e39f35efeb15431c6bc8f5bc6cf78fac9cc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ea1c585df7ec5f346f061a11581fc9a91679966f",
-                "reference": "ea1c585df7ec5f346f061a11581fc9a91679966f",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b3c51e39f35efeb15431c6bc8f5bc6cf78fac9cc",
+                "reference": "b3c51e39f35efeb15431c6bc8f5bc6cf78fac9cc",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "11.*",
+                "appwrite/appwrite": "15.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
@@ -4055,9 +4043,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.10.1"
+                "source": "https://github.com/utopia-php/migration/tree/0.13.1"
             },
-            "time": "2025-05-26T15:29:19+00:00"
+            "time": "2025-07-21T23:22:05+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -4111,16 +4099,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.7.9",
+            "version": "0.7.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "b061f523513b071ef7168e6dc1441364eb73f308"
+                "reference": "e3a4536c46f10988b1a446ec6b8dd8a9914be854"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/b061f523513b071ef7168e6dc1441364eb73f308",
-                "reference": "b061f523513b071ef7168e6dc1441364eb73f308",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/e3a4536c46f10988b1a446ec6b8dd8a9914be854",
+                "reference": "e3a4536c46f10988b1a446ec6b8dd8a9914be854",
                 "shasum": ""
             },
             "require": {
@@ -4129,7 +4117,7 @@
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
                 "utopia-php/framework": "0.33.*",
-                "utopia-php/queue": "^0.12.0"
+                "utopia-php/queue": "0.11.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -4155,9 +4143,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.7.9"
+                "source": "https://github.com/utopia-php/platform/tree/0.7.8"
             },
-            "time": "2025-06-24T20:21:05+00:00"
+            "time": "2025-05-30T10:05:43+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4266,21 +4254,21 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.12.0",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "3a7603ee712c592bfc54af4a76f0426c428b5574"
+                "reference": "06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/3a7603ee712c592bfc54af4a76f0426c428b5574",
-                "reference": "3a7603ee712c592bfc54af4a76f0426c428b5574",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5",
+                "reference": "06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5",
                 "shasum": ""
             },
             "require": {
-                "appwrite-labs/php-amqplib": "^0.1",
                 "php": ">=8.3",
+                "php-amqplib/php-amqplib": "^3.7",
                 "utopia-php/cli": "0.15.*",
                 "utopia-php/fetch": "0.4.*",
                 "utopia-php/framework": "0.33.*",
@@ -4326,9 +4314,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.12.0"
+                "source": "https://github.com/utopia-php/queue/tree/0.11.0"
             },
-            "time": "2025-06-24T18:58:38+00:00"
+            "time": "2025-05-30T09:52:38+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -4822,16 +4810,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.41.9",
+            "version": "0.41.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "61037c1ed9262308cab49c1d760f3278036ab694"
+                "reference": "ef5e9d952032deecffee7f825a941c40ed4c84b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/61037c1ed9262308cab49c1d760f3278036ab694",
-                "reference": "61037c1ed9262308cab49c1d760f3278036ab694",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ef5e9d952032deecffee7f825a941c40ed4c84b8",
+                "reference": "ef5e9d952032deecffee7f825a941c40ed4c84b8",
                 "shasum": ""
             },
             "require": {
@@ -4867,9 +4855,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.9"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.17"
             },
-            "time": "2025-06-27T10:16:17+00:00"
+            "time": "2025-07-18T08:18:48+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5096,16 +5084,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.22.1",
+            "version": "v1.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "941d1927c5ca420c22710e98420287169c7bcaf7"
+                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/941d1927c5ca420c22710e98420287169c7bcaf7",
-                "reference": "941d1927c5ca420c22710e98420287169c7bcaf7",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/0345f3b05f136801af8c339f9d16ef29e6b4df8a",
+                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a",
                 "shasum": ""
             },
             "require": {
@@ -5116,10 +5104,10 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.75.0",
-                "illuminate/view": "^11.44.7",
-                "larastan/larastan": "^3.4.0",
-                "laravel-zero/framework": "^11.36.1",
+                "friendsofphp/php-cs-fixer": "^3.82.2",
+                "illuminate/view": "^11.45.1",
+                "larastan/larastan": "^3.5.0",
+                "laravel-zero/framework": "^11.45.0",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.3.1",
                 "pestphp/pest": "^2.36.0"
@@ -5129,6 +5117,9 @@
             ],
             "type": "project",
             "autoload": {
+                "files": [
+                    "overrides/Runner/Parallel/ProcessFactory.php"
+                ],
                 "psr-4": {
                     "App\\": "app/",
                     "Database\\Seeders\\": "database/seeders/",
@@ -5158,7 +5149,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-05-08T08:38:12+00:00"
+            "time": "2025-07-10T18:09:32+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -5285,16 +5276,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.13.1",
+            "version": "1.13.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c"
+                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/1720ddd719e16cf0db4eb1c6eca108031636d46c",
-                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/faed855a7b5f4d4637717c2b3863e277116beb36",
+                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36",
                 "shasum": ""
             },
             "require": {
@@ -5333,7 +5324,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.1"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.3"
             },
             "funding": [
                 {
@@ -5341,7 +5332,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-04-29T12:36:36+00:00"
+            "time": "2025-07-05T12:25:42+00:00"
         },
         {
             "name": "nikic/php-parser",
