@@ -161,7 +161,9 @@ class Create extends Action
                 throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
             }
 
-            $lengths[$i] ??= null;
+            if (empty($lengths[$i])) {
+                $lengths[$i] = null;
+            }
 
             if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
