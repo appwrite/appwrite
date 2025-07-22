@@ -1997,6 +1997,160 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(204, $deleteResponse['headers']['status-code']);
+
+        if ($this->getSide() === 'client') {
+            // Skipped on server side: Creating a document with no permissions results in an empty permissions array, whereas on client side it assigns permissions to the current user
+
+            // test without passing permissions
+            $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'title' => 'Thor: Ragnarok',
+                    'releaseYear' => 2000
+                ]
+            ]);
+
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+            $this->assertCount(3, $document['body']['$permissions']);
+            $permissionsCreated = $document['body']['$permissions'];
+            // checking the default created permission
+            $defaultPermission = [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id']))
+            ];
+            // ignoring the order of the permission and checking the permissions
+            $this->assertEqualsCanonicalizing($defaultPermission, $permissionsCreated);
+
+            $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $document['headers']['status-code']);
+
+            // updating the created doc
+            $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'title' => 'Thor: Ragnarok',
+                    'releaseYear' => 2002
+                ]
+            ]);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+            $this->assertEquals(2002, $document['body']['releaseYear']);
+            $this->assertCount(3, $document['body']['$permissions']);
+            $this->assertEquals($permissionsCreated, $document['body']['$permissions']);
+
+            // removing the delete permission
+            $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'title' => 'Thor: Ragnarok',
+                    'releaseYear' => 2002
+                ],
+                'permissions' => [
+                    Permission::update(Role::user($this->getUser()['$id']))
+                ]
+            ]);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+            $this->assertEquals(2002, $document['body']['releaseYear']);
+            $this->assertCount(1, $document['body']['$permissions']);
+
+            $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()));
+
+            $this->assertEquals(401, $deleteResponse['headers']['status-code']);
+
+            // giving the delete permission
+            $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'title' => 'Thor: Ragnarok',
+                    'releaseYear' => 2002
+                ],
+                'permissions' => [
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id']))
+                ]
+            ]);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+            $this->assertEquals(2002, $document['body']['releaseYear']);
+            $this->assertCount(2, $document['body']['$permissions']);
+
+            $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()));
+
+            $this->assertEquals(204, $deleteResponse['headers']['status-code']);
+
+            // upsertion for the related document without passing permissions
+            // data should get added
+            $newPersonId = ID::unique();
+            $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'library' => [
+                        '$id' => 'library3',
+                        'libraryName' => 'Library 3',
+                    ],
+                ],
+            ]);
+
+            $this->assertEquals('Library 3', $personNoPerm['body']['library']['libraryName']);
+            $this->assertCount(3, $personNoPerm['body']['library']['$permissions']);
+            $this->assertCount(3, $personNoPerm['body']['$permissions']);
+            $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::select(['fullName', 'library.*'])->toString()
+                ],
+            ]);
+            $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
+            $documentsDetails = $documents['body']['documents'];
+            foreach ($documentsDetails as $doc) {
+                $this->assertCount(3, $doc['$permissions']);
+            }
+            $found = false;
+            foreach ($documents['body']['documents'] as $doc) {
+                if (isset($doc['library']['libraryName']) && $doc['library']['libraryName'] === 'Library 3') {
+                    $found = true;
+                    break;
+                }
+            }
+            $this->assertTrue($found, 'Library 3 should be present in the upserted documents.');
+
+            // Fetch the related library and assert on its permissions (should be default/inherited)
+            $library3 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/documents/library3', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $library3['headers']['status-code']);
+            $this->assertEquals('Library 3', $library3['body']['libraryName']);
+            $this->assertArrayHasKey('$permissions', $library3['body']);
+            $this->assertCount(3, $library3['body']['$permissions']);
+            $this->assertNotEmpty($library3['body']['$permissions']);
+        }
     }
 
     /**
