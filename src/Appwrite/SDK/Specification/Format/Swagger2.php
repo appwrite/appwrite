@@ -174,7 +174,7 @@ class Swagger2 extends Format
                 ],
             ];
 
-            if ($sdk->isDeprecated()) {
+            if ($sdk->getDeprecated() !== null) {
                 $temp['x-appwrite']['deprecated'] = $sdk->getDeprecated();
             }
 

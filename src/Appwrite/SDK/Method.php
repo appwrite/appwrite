@@ -180,9 +180,16 @@ class Method
         return $this->deprecated !== false;
     }
 
-    public function getDeprecated(): bool|Deprecated
+    public function getDeprecated(): array|null
     {
-        return $this->deprecated;
+        if ($this->deprecated instanceof Deprecated) {
+            return [
+                'since' => $this->deprecated->getSince(),
+                'replaceWith' => $this->deprecated->getReplaceWith(),
+            ];
+        }
+
+        return null;
     }
 
     public function isHidden(): bool|array

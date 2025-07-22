@@ -1990,7 +1990,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "deprecated": true,
                     "auth": {
                         "Project": []
                     }
@@ -2201,7 +2200,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "deprecated": true,
                     "auth": {
                         "Project": []
                     }

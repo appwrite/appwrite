@@ -170,7 +170,7 @@ class OpenAPI3 extends Format
                 ],
             ];
 
-            if ($sdk->isDeprecated()) {
+            if ($sdk->getDeprecated() !== null) {
                 $temp['x-appwrite']['deprecated'] = $sdk->getDeprecated();
             }
 
