@@ -7,12 +7,12 @@ import (
 )
 
 func main() {
-    client := client.NewClient()
+    client := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
+    )
 
-    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
-
-    service := account.NewAccount(client)
+    service := account.New(client)
     response, error := service.CreatePhoneToken(
         "<USER_ID>",
         "+12065550100",
