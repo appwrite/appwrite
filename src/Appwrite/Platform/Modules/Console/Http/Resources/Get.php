@@ -68,7 +68,6 @@ class Get extends Action
     ) {
         if ($type === 'rules') {
             $validator = new Domain($value);
-            
             if (\str_ends_with(\strtolower($value), '.appwrite.network')) {
                 $subdomain = \str_replace('.appwrite.network', '', strtolower($value));
                 if (\str_contains($subdomain, '.')) {
