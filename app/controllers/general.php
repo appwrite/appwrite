@@ -1039,10 +1039,11 @@ App::init()
          * Deprecation Warning
          */
         $sdk = $route->getLabel('sdk', false);
-        if (!empty($sdk)) {
-            /** @var \Appwrite\SDK\Method $sdk */
-            if ($sdk->isDeprecated()) {
-                $warnings[] = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
+        $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
+        $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
+        foreach ($sdkItems as $sdkItem) {
+            if ($sdkItem->isDeprecated()) {
+                $warnings[] = $deprecationWarning;
             }
         }
 
