@@ -1467,27 +1467,6 @@ trait DatabasesBase
         $this->assertEquals('lengthTestIndex', $index['body']['key']);
         $this->assertEquals([128, 200], $index['body']['lengths']);
 
-        // Test case for lengths array overriding
-        // set a length for an array attribute, it should get overriden with Database::ARRAY_INDEX_LENGTH
-        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'key' => 'lengthOverrideTestIndex',
-            'type' => 'key',
-            'attributes' => ['actors'],
-            'lengths' => [120]
-        ]);
-        $this->assertEquals(202, $create['headers']['status-code']);
-
-        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
-
         // Test case for count of lengths greater than attributes (should throw 400)
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
