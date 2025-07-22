@@ -1038,11 +1038,11 @@ App::init()
         /**
          * Deprecation Warning
          */
-        $sdk = $route->getLabel("sdk", false);
+        $sdk = $route->getLabel('sdk', false);
         if (!empty($sdk)) {
             /** @var \Appwrite\SDK\Method $sdk */
             if ($sdk->isDeprecated()) {
-                $warnings[] = 'This API is deprecated and uses outdated terminologies. See the updated documentation for improved compatibility and migration details.';
+                $warnings[] = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
             }
         }
 
