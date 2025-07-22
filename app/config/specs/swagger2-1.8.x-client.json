@@ -4637,6 +4637,30 @@
                                 }
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                        },
+                        {
+                            "name": "createDocuments",
+                            "auth": {
+                                "Admin": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/documentList"
+                                }
+                            ],
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -5257,6 +5281,30 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
+                        },
+                        {
+                            "name": "createRows",
+                            "auth": {
+                                "Admin": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rows"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rows"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/rowList"
+                                }
+                            ],
+                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
                         }
                     ],
                     "auth": {

@@ -5067,7 +5067,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createTable"
+                        "replaceWith": "tables.create"
                     },
                     "auth": {
                         "Project": []
@@ -5175,7 +5175,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getTable"
+                        "replaceWith": "tables.get"
                     },
                     "auth": {
                         "Project": []
@@ -5248,7 +5248,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateTable"
+                        "replaceWith": "tables.update"
                     },
                     "auth": {
                         "Project": []
@@ -5351,7 +5351,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteTable"
+                        "replaceWith": "tables.delete"
                     },
                     "auth": {
                         "Project": []
@@ -9133,7 +9133,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.decrementColumn"
+                        "replaceWith": "tables.decrementRowColumn"
                     },
                     "auth": {
                         "Project": []
@@ -9249,7 +9249,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.incrementColumn"
+                        "replaceWith": "tables.incrementRowColumn"
                     },
                     "auth": {
                         "Project": []
@@ -9364,7 +9364,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.listColumnIndexes"
+                        "replaceWith": "tables.listIndexes"
                     },
                     "auth": {
                         "Project": []
@@ -9450,7 +9450,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createColumnIndex"
+                        "replaceWith": "tables.createIndex"
                     },
                     "auth": {
                         "Project": []
@@ -9582,7 +9582,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getColumnIndex"
+                        "replaceWith": "tables.getIndex"
                     },
                     "auth": {
                         "Project": []
@@ -9657,7 +9657,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteColumnIndex"
+                        "replaceWith": "tables.deleteIndex"
                     },
                     "auth": {
                         "Project": []
@@ -9741,7 +9741,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.listTableLogs"
+                        "replaceWith": "tables.listLogs"
                     },
                     "auth": {
                         "Project": []
@@ -9828,7 +9828,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getTableUsage"
+                        "replaceWith": "tables.getUsage"
                     },
                     "auth": {
                         "Project": []
