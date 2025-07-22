@@ -3,6 +3,7 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
@@ -170,8 +171,11 @@ class OpenAPI3 extends Format
                 ],
             ];
 
-            if ($sdk->getDeprecated() !== null) {
-                $temp['x-appwrite']['deprecated'] = $sdk->getDeprecated();
+            if ($sdk->getDeprecated() instanceof Deprecated) {
+                $temp['x-appwrite']['deprecated'] = [
+                    'since' => $sdk->getDeprecated()->getSince(),
+                    'replaceWith' => $sdk->getDeprecated()->getReplaceWith(),
+                ];
             }
 
             if (!empty($additionalMethods)) {
