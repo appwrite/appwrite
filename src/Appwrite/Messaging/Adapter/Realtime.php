@@ -4,10 +4,12 @@ namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 
 class Realtime extends MessagingAdapter
 {
@@ -141,9 +143,13 @@ class Realtime extends MessagingAdapter
      */
     public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
-        if (empty($channels) || empty($roles) || empty($projectId)) {
+        if (empty($channels) ||  empty($roles) || empty($projectId)) {
             return;
         }
+
+        $isBulk = isset($payload['total']) && (
+            isset($payload['documents']) || isset($payload['columns'])
+        );
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
@@ -153,11 +159,12 @@ class Realtime extends MessagingAdapter
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
             'userId' => $userId,
+            'bulk' => $isBulk,
             'data' => [
                 'events' => $events,
                 'channels' => $channels,
                 'timestamp' => DateTime::formatTz(DateTime::now()),
-                'payload' => $payload
+                'payload' => $payload,
             ]
         ]));
     }
@@ -215,6 +222,53 @@ class Realtime extends MessagingAdapter
         }
 
         return array_keys($receivers);
+    }
+
+    public function getDocumentsPerSubscriber(array $event, array $documents)
+    {
+        $isbulk = $event['bulk'];
+        $projectId = $event['project'];
+        if (!$isbulk) {
+            return [];
+        }
+        $subscriptions = $this->subscriptions[$projectId] ?? [];
+
+        $roleConnectionIdMap = [];
+        // lookup to check if duplicate conneciton id for a single role
+        $seenConnectionIdsMap = [];
+        foreach ($subscriptions as $userRole => $allChannels) {
+            $channels = $allChannels['documents'] ?? [];
+            foreach ($channels as $connectionId => $canConnect) {
+                if ($canConnect && !isset($seenConnectionIdsMap[$userRole][$connectionId])) {
+                    $seenConnectionIdsMap[$userRole][$connectionId] = true;
+                    $roleConnectionIdMap[$userRole][] = $connectionId;
+                }
+            }
+        }
+
+        $auth = new Authorization(Database::PERMISSION_READ);
+        $connectionDocsMap = [];
+        // lookup to check if duplicate documents for a single connectionId
+        $seenDocIdsMap = [];
+
+        foreach ($documents as $document) {
+            $doc = new Document((array) $document);
+            $docId = $doc->getId();
+
+            foreach ($roleConnectionIdMap as $role => $connectionIds) {
+                $auth->setRole($role);
+
+                if ($auth->isValid($doc->getRead())) {
+                    foreach ($connectionIds as $connectionId) {
+                        if (!isset($seenDocIdsMap[$connectionId][$docId])) {
+                            $seenDocIdsMap[$connectionId][$docId] = true;
+                            $connectionDocsMap[$connectionId][] = $doc->getArrayCopy();
+                        }
+                    }
+                }
+            }
+        }
+        return $connectionDocsMap;
     }
 
     /**
@@ -299,6 +353,20 @@ class Realtime extends MessagingAdapter
                 break;
             case 'databases':
                 $resource = $parts[4] ?? '';
+                $isBulk = $payload->getAttribute('total') && (
+                    $payload->getAttribute('documents') !== null || $payload->getAttribute('columns') !== null
+                );
+
+                if ($isBulk) {
+                    if ($payload->getAttribute('documents') !== null) {
+                        $payload = $payload->getAttribute('documents');
+                    } elseif ($payload->getAttribute('columns') !== null) {
+                        $payload = $payload->getAttribute('columns');
+                    }
+                } else {
+                    $payload = [$payload];
+                }
+
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
@@ -313,16 +381,30 @@ class Realtime extends MessagingAdapter
                     }
 
                     $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload[0]->getAttribute('$tableId') . '.rows';
+                    if (!$isBulk) {
+                        $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload[0]->getAttribute('$tableId') . '.rows.' . $payload[0]->getId();
+                    }
 
                     $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload[0]->getAttribute('$collectionId') . '.documents';
+                    if (!$isBulk) {
+                        $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload[0]->getAttribute('$collectionId') . '.documents.' . $payload[0]->getId();
+                    }
 
-                    $roles = $collection->getAttribute('documentSecurity', false)
-                        ? \array_merge($collection->getRead(), $payload->getRead())
-                        : $collection->getRead();
+                    if ($isBulk) {
+                        if ($collection->getAttribute('documentSecurity', false)) {
+                            foreach ($payload as $document) {
+                                $roles[$document->getId()] = \array_merge($collection->getPermissions(), $document->getPermissions());
+                            }
+                        } else {
+                            $roles = $collection->getRead();
+                        }
+                    } else {
+                        $roles = $collection->getAttribute('documentSecurity', false)
+                            ? \array_merge($collection->getRead(), $payload[0]->getRead())
+                            : $collection->getRead();
+                    }
                 }
                 break;
             case 'buckets':

@@ -73,7 +73,6 @@ class Realtime extends Event
         }
 
         $allEvents = Event::generateEvents($this->getEvent(), $this->getParams());
-
         $payload = new Document($this->getPayload());
 
         $db = $this->getContext('database');
