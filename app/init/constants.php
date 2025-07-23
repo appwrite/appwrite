@@ -142,7 +142,7 @@ const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 // Function headers
-const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
+const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host', 'x-appwrite-scheduled-at'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Message types
 const MESSAGE_TYPE_EMAIL = 'email';

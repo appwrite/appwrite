@@ -221,6 +221,8 @@ class Create extends Base
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $currentTime = new \DateTime();
+        $headers['x-appwrite-scheduled-at'] = $currentTime->format('Y-m-d\TH:i:s.v\Z');
 
         $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
