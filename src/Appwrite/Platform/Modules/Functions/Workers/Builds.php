@@ -35,6 +35,7 @@ use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -980,6 +981,9 @@ class Builds extends Action
                         throw new \Exception($screenshotError);
                     }
 
+                    $mimeType = "image/png";
+                    $compressor = new GZIP();
+
                     foreach ($screenshots as $data) {
                         $key = $data['key'];
                         $screenshot = $data['screenshot'];
@@ -988,7 +992,7 @@ class Builds extends Action
                         $fileName = $fileId . '.png';
                         $path = $deviceForFiles->getPath($fileName);
                         $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                        $success = $deviceForFiles->write($path, $screenshot, "image/png");
+                        $success = $deviceForFiles->write($path, $compressor->compress($screenshot), $mimeType);
 
                         if (!$success) {
                             throw new \Exception("Screenshot failed to save");
@@ -1005,7 +1009,7 @@ class Builds extends Action
                             'name' => $fileName,
                             'path' => $path,
                             'signature' => $deviceForFiles->getFileHash($path),
-                            'mimeType' => $deviceForFiles->getFileMimeType($path),
+                            'mimeType' => $mimeType,
                             'sizeOriginal' => \strlen($screenshot),
                             'sizeActual' => $deviceForFiles->getFileSize($path),
                             'algorithm' => Compression::GZIP,
@@ -1017,7 +1021,7 @@ class Builds extends Action
                             'openSSLTag' => null,
                             'openSSLIV' => null,
                             'search' => implode(' ', [$fileId, $fileName]),
-                            'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
+                            'metadata' => ['content_type' => $mimeType],
                         ]);
 
                         Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
