@@ -192,7 +192,6 @@ class OpenAPI3 extends Format
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
-                        'security' => $methodSecurities,
                     ];
 
                     foreach ($method->getParameters() as $parameter) {
@@ -291,7 +290,7 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if (empty($additionalMethods) && !empty($scope)) {
+            if (!empty($scope)) {
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {

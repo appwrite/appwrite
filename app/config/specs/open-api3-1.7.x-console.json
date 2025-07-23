@@ -8047,12 +8047,7 @@
                                     "model": "#\/components\/schemas\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
-                            "security": {
-                                "Project": [],
-                                "Key": [],
-                                "JWT": []
-                            }
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         },
                         {
                             "name": "createDocuments",
@@ -8075,14 +8070,20 @@
                                     "model": "#\/components\/schemas\/documentList"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
-                            "security": {
-                                "Project": [],
-                                "Key": []
-                            }
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
-                    ]
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
                 },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
                 "parameters": [
                     {
                         "name": "databaseId",

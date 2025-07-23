@@ -198,7 +198,6 @@ class Swagger2 extends Format
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
-                        'security' => $methodSecurities,
                     ];
 
                     foreach ($method->getParameters() as $parameter) {
@@ -293,7 +292,7 @@ class Swagger2 extends Format
                 }
             }
 
-            if (empty($additionalMethods) && !empty($scope)) { //  && 'public' != $scope
+            if (!empty($scope)) { //  && 'public' != $scope
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
