@@ -7,12 +7,12 @@ use Utopia\Route;
 
 abstract class Filter
 {
-    private ?Route $route;
+    private array $params;
     private ?Database $dbForProject;
 
-    public function __construct(Database $dbForProject = null, Route $route = null)
+    public function __construct(Database $dbForProject = null, array $params = [])
     {
-        $this->route = $route;
+        $this->params = $params;
         $this->dbForProject = $dbForProject;
     }
 
@@ -47,7 +47,7 @@ abstract class Filter
     public function getParamValue(string $key, mixed $default = ''): mixed
     {
         try {
-            $value = $this->route?->getParamValue($key) ?? $default;
+            $value = $this->params[$key] ?? $default;
         } catch (\Exception $e) {
             $value = $default;
         }

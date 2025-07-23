@@ -854,7 +854,7 @@ App::init()
             }
             if (version_compare($requestFormat, '1.8.0', '<')) {
                 $dbForProject = $getProjectDB($project);
-                $request->addFilter(new RequestV20($dbForProject, $route));
+                $request->addFilter(new RequestV20($dbForProject, $request->getParams()));
             }
         }
 
