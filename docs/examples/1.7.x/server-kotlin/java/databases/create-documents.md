@@ -4,6 +4,7 @@ import io.appwrite.services.Databases;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setAdmin("") // 
     .setKey("<YOUR_API_KEY>"); // Your secret API key
 
 Databases databases = new Databases(client);

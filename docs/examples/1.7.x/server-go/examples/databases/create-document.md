@@ -9,6 +9,7 @@ import (
 func main() {
     client := client.New(
         client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        client.WithAdmin("") // 
         client.WithSession("") // The user session to authenticate with
         client.WithKey("<YOUR_API_KEY>") // Your secret API key
         client.WithJWT("<YOUR_JWT>") // Your secret JSON Web Token

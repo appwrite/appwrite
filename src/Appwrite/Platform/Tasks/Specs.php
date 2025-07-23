@@ -200,7 +200,6 @@ class Specs extends Action
 
                     foreach ($sdks as $sdk) {
                         /** @var Method $sdk */
-
                         $hide = $sdk->isHidden();
                         if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
                             continue;

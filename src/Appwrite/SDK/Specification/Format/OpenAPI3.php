@@ -176,13 +176,23 @@ class OpenAPI3 extends Format
                 foreach ($additionalMethods as $method) {
                     /** @var Method $method */
                     $desc = $method->getDescriptionFilePath();
+
+                    $methodSecurities = ['Project' => []];
+                    foreach ($method->getAuth() as $security) {
+                        /** @var AuthType $security */
+                        if (\array_key_exists($security->value, $this->keys)) {
+                            $methodSecurities[$security->value] = [];
+                        }
+                    }
+
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
-                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
+                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'security' => $methodSecurities,
                     ];
 
                     foreach ($method->getParameters() as $parameter) {
@@ -281,7 +291,7 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if ((!empty($scope))) {
+            if (empty($additionalMethods) && !empty($scope)) {
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {

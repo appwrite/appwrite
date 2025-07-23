@@ -2,6 +2,7 @@ import { Client, Databases } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setAdmin('') // 
     .setSession('') // 
     .setKey('<YOUR_API_KEY>') // Your secret API key
     .setJWT('<YOUR_JWT>'); // Your secret JSON Web Token

@@ -101,6 +101,9 @@ RUN if [ "$DEBUG" = "true" ]; then mkdir -p /tmp/xdebug; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20230831/xdebug.so; fi
 
+RUN git config --global user.email "chiragaggarwal5k@gmail.com"
+RUN apk add --update --no-cache openssh-client
+
 EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
