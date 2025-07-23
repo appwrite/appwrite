@@ -1072,10 +1072,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
-        if (empty($source)) {
-            $source = $deviceForFiles->read($path);
-        }
-
         try {
             $image = new Image($source);
         } catch (ImagickException $e) {

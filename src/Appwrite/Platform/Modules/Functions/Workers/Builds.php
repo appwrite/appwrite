@@ -35,7 +35,6 @@ use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -982,7 +981,6 @@ class Builds extends Action
                     }
 
                     $mimeType = "image/png";
-                    $compressor = new GZIP();
 
                     foreach ($screenshots as $data) {
                         $key = $data['key'];
@@ -992,7 +990,7 @@ class Builds extends Action
                         $fileName = $fileId . '.png';
                         $path = $deviceForFiles->getPath($fileName);
                         $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                        $success = $deviceForFiles->write($path, $compressor->compress($screenshot), $mimeType);
+                        $success = $deviceForFiles->write($path, $screenshot, $mimeType);
 
                         if (!$success) {
                             throw new \Exception("Screenshot failed to save");
@@ -1012,7 +1010,7 @@ class Builds extends Action
                             'mimeType' => $mimeType,
                             'sizeOriginal' => \strlen($screenshot),
                             'sizeActual' => $deviceForFiles->getFileSize($path),
-                            'algorithm' => Compression::GZIP,
+                            'algorithm' => Compression::NONE,
                             'comment' => '',
                             'chunksTotal' => 1,
                             'chunksUploaded' => 1,
