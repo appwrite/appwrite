@@ -4604,10 +4604,7 @@
                         {
                             "name": "createDocument",
                             "auth": {
-                                "Admin": [],
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -4628,20 +4625,15 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "security": {
+                                "Project": [],
+                                "Session": [],
+                                "JWT": []
+                            }
                         }
-                    ],
-                    "auth": {
-                        "Project": []
-                    }
+                    ]
                 },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
                 "parameters": [
                     {
                         "name": "databaseId",
