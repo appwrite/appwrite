@@ -109,7 +109,7 @@ class RedirectTest extends TestCase
             )
         );
 
-        // Empty values should be false for Redirect (unlike Origin which allows empty)
+        // Empty values should be false for Redirect (unlike Origin which may allow empty)
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
 
@@ -118,9 +118,10 @@ class RedirectTest extends TestCase
         $this->assertEquals(false, $validator->isValid('http://')); // HTTP missing hostname
         $this->assertEquals(false, $validator->isValid('://hostname')); // Missing scheme
 
-        // URLs with empty hostnames but valid schemes
+        // URLs with empty hostnames but valid schemes should work for custom schemes
         $this->assertEquals(true, $validator->isValid('exp://')); // This should be valid as 'exp' is an allowed scheme
         $this->assertEquals(true, $validator->isValid('exp:///'));
+        $this->assertEquals(true, $validator->isValid('appwrite-callback-test-project://'));
 
         // URLs with query parameters and fragments
         $this->assertEquals(true, $validator->isValid('https://appwrite.io/callback?token=abc123&session=xyz#fragment'));
@@ -162,14 +163,20 @@ class RedirectTest extends TestCase
     {
         $validator = new Redirect([]);
 
-        // Test with invalid scheme
-        $this->assertEquals(false, $validator->isValid('invalid-scheme://test'));
-        $description = $validator->getDescription();
-        $this->assertStringContainsString('Invalid URI', $description);
-
         // Test with empty value
         $this->assertEquals(false, $validator->isValid(''));
         $description = $validator->getDescription();
         $this->assertStringContainsString('Invalid URI', $description);
+
+        // Test with invalid scheme
+        $this->assertEquals(false, $validator->isValid('invalid-scheme://test'));
+        $description = $validator->getDescription();
+        $this->assertStringContainsString('not supported', $description);
+        $this->assertStringContainsString('appwrite-callback-<PROJECT_ID>', $description);
+
+        // Test with malformed URL (no scheme)
+        $this->assertEquals(false, $validator->isValid('://test'));
+        $description = $validator->getDescription();
+        $this->assertStringContainsString('Missing or invalid scheme', $description);
     }
 }
