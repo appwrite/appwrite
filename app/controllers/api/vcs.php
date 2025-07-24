@@ -1137,7 +1137,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
-        $repository['defaultBranch'] =  $repository["default_branch"] ?? '';
+        $repository['defaultBranch'] =  $repository['default_branch'] ?? '';
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
