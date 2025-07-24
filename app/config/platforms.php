@@ -417,7 +417,7 @@ return [
             [
                 'key' => 'swift',
                 'name' => 'Swift',
-                'version' => '10.1.0',
+                'version' => '10.2.0',
                 'url' => 'https://github.com/appwrite/sdk-for-swift',
                 'package' => 'https://github.com/appwrite/sdk-for-swift',
                 'enabled' => true,
