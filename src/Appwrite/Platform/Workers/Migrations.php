@@ -270,6 +270,16 @@ class Migrations extends Action
         $projectDocument = $this->dbForPlatform->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
+        $currentVersion = $projectDocument->getAttribute('version', '1.0.0'); // fallback to earliest supported
+        // Prefer constant if defined, else fallback to env, else fallback to 1.0.0
+        $targetVersion = defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : (\defined('Appwrite\\APP_VERSION_STABLE') ? \Appwrite\APP_VERSION_STABLE : System::getEnv('_APP_VERSION', '1.0.0'));
+
+        $getMajor = fn($v) => (int)explode('.', $v)[0];
+
+        if (abs($getMajor($targetVersion) - $getMajor($currentVersion)) > 1) {
+            throw new \Exception("You cannot upgrade more than one major version at a time. Please upgrade to the next major version first. (Current: $currentVersion, Target: $targetVersion)");
+        }
+
         $transfer = $source = $destination = null;
 
         try {
