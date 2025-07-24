@@ -126,7 +126,7 @@ class Create extends Base
         if (!is_null($scheduledAt)) {
             $validator = new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60);
             if (!$validator->isValid($scheduledAt)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled execution date must be at least 60 seconds in the future');
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Execution schedule must be a valid date, and at least 1 minute from now.');
             }
         }
 
