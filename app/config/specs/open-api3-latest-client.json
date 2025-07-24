@@ -4467,10 +4467,7 @@
                         {
                             "name": "createDocument",
                             "auth": {
-                                "Admin": [],
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
