@@ -283,7 +283,8 @@ class Specs extends Action
                 $routes,
                 $models,
                 $keys[$platform],
-                $authCounts[$platform] ?? 0
+                $authCounts[$platform] ?? 0,
+                $platforms[$platform]
             ];
 
             foreach (['swagger2', 'open-api3'] as $format) {

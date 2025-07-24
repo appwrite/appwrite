@@ -183,6 +183,32 @@ class Swagger2 extends Format
                     /** @var Method $method */
                     $desc = $method->getDescriptionFilePath();
 
+                    $methodSecurities = $method->getAuth();
+                    $methodSdkPlatforms = [];
+                    foreach ($methodSecurities as $value) {
+                        switch ($value) {
+                            case AuthType::SESSION:
+                                $methodSdkPlatforms[] = APP_PLATFORM_CLIENT;
+                                break;
+                            case AuthType::JWT:
+                            case AuthType::KEY:
+                                $methodSdkPlatforms[] = APP_PLATFORM_SERVER;
+                                break;
+                            case AuthType::ADMIN:
+                                $methodSdkPlatforms[] = APP_PLATFORM_CONSOLE;
+                                break;
+                        }
+                    }
+
+                    if (empty($methodSecurities)) {
+                        $methodSdkPlatforms[] = APP_PLATFORM_SERVER;
+                        $methodSdkPlatforms[] = APP_PLATFORM_CLIENT;
+                    }
+
+                    if ($this->platform !== APP_PLATFORM_CONSOLE && !\in_array($this->platform, $methodSdkPlatforms)) {
+                        continue;
+                    }
+
                     $methodSecurities = ['Project' => []];
                     foreach ($method->getAuth() as $security) {
                         /** @var AuthType $security */
