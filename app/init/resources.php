@@ -688,6 +688,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         },
     ];
 
+    // NOTE: `params` and `urls` are not used internally in the `Schema::build` function below!
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
             return [ 'queries' => $args['queries']];

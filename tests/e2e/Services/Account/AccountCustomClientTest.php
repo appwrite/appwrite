@@ -480,6 +480,29 @@ class AccountCustomClientTest extends Scope
         $password = $data['password'] ?? '';
         $session = $data['session'] ?? '';
 
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $email,
+                'password' => $password,
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            sleep(1);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $allSessions = array_map(fn ($sessionDetails) => $sessionDetails['$id'], $response['body']['sessions']);
+
         /**
          * Test for SUCCESS
          */
@@ -500,16 +523,139 @@ class AccountCustomClientTest extends Scope
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
+        $currentSessionId = $data['sessionId'] ?? '';
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        // checking the current session or not
+        $this->assertEquals($currentSessionId, $response['body']['sessions'][0]['$id']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
+
+        // checking for all non active sessions are cleared
+        foreach ($allSessions as $sessionId) {
+            if ($currentSessionId === $sessionId) {
+                $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+                ]));
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+            } else {
+                $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionId, array_merge([
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+                ]));
+
+                $this->assertEquals(404, $response['headers']['status-code']);
+            }
+        }
+
+        $newPassword = 'new-password';
+        // updating the invalidateSession to false to check sessions are not invalidated
+        $this->updateProjectinvalidateSessionsProperty(false);
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $email,
+                'password' => $newPassword,
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            sleep(1);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $allSessions = array_map(fn ($sessionDetails) => $sessionDetails['$id'], $response['body']['sessions']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'password' => $newPassword,
+            'oldPassword' => $newPassword,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        foreach ($allSessions as $sessionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionId, headers: array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            ]));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        // setting invalidateSession to true to check the sessions are cleared or not
+        $this->updateProjectinvalidateSessionsProperty(true);
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'password' => $newPassword,
+            'oldPassword' => $newPassword,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $allSessions = array_map(fn ($sessionDetails) => $sessionDetails['$id'], $response['body']['sessions']);
+
+        foreach ($allSessions as $sessionId) {
+            if ($currentSessionId !== $sessionId) {
+                $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionId, array_merge([
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+                ]));
+
+                $this->assertEquals(404, $response['headers']['status-code']);
+            }
+        }
+
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
-            'password' => 'new-password',
+            'password' => $newPassword,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+
 
         /**
          * Test for FAILURE

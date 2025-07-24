@@ -1,0 +1,2 @@
+appwrite proxy createAPIRule \
+        --domain ''

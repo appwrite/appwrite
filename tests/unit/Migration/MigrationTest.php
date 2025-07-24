@@ -41,6 +41,7 @@ abstract class MigrationTest extends TestCase
         foreach (Migration::$versions as $class) {
             $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\' . $class));
         }
+
         // Test if current version exists
         // Only test official releases - skip if latest is release candidate
         if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
