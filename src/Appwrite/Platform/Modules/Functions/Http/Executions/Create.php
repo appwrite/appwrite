@@ -123,9 +123,11 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
         }
 
-        $validator = new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60);
-        if (!$validator->isValid($scheduledAt)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled execution date must be at least 60 seconds in the future');
+        if (!is_null($scheduledAt)) {
+            $validator = new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60);
+            if (!$validator->isValid($scheduledAt)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled execution date must be at least 60 seconds in the future');
+            }
         }
 
         /**
