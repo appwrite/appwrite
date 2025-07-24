@@ -57,7 +57,7 @@ return [
                 ]
             ],
             [
-            'key' => 'flutter',
+                'key' => 'flutter',
                 'name' => 'Flutter',
                 'version' => '17.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '8.2.2',
+                'version' => '8.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -269,7 +269,7 @@ return [
             [
                 'key' => 'deno',
                 'name' => 'Deno',
-                'version' => '15.0.0',
+                'version' => '15.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-deno',
                 'package' => 'https://deno.land/x/appwrite',
                 'enabled' => true,
@@ -287,7 +287,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '15.0.0',
+                'version' => '15.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
