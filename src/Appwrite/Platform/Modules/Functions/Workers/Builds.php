@@ -516,7 +516,7 @@ class Builds extends Action
                     ->setPayload($deployment->getArrayCopy())
                     ->trigger();
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
 
             /** Request the executor to build the code... */
@@ -532,7 +532,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
 
             $deploymentModel = new Deployment();
@@ -1067,7 +1067,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
 
             Console::success("Build id: $deploymentId created");
@@ -1285,7 +1285,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
         } finally {
             $queueForRealtime
@@ -1439,7 +1439,8 @@ class Builds extends Action
         Document $resource,
         string $deploymentId,
         Database $dbForProject,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Realtime $queueForRealtime,
     ): void {
         try {
             if ($resource->getAttribute('providerSilentMode', false) === true) {
@@ -1544,6 +1545,10 @@ class Builds extends Action
 
             $deployment->setAttribute('buildLogs', $logs);
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
         }
     }
 
