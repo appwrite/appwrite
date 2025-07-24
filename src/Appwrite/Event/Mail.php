@@ -10,6 +10,7 @@ class Mail extends Event
     protected string $name = '';
     protected string $subject = '';
     protected string $body = '';
+    protected string $preview = '';
     protected array $smtp = [];
     protected array $variables = [];
     protected string $bodyTemplate = '';
@@ -91,6 +92,28 @@ class Mail extends Event
     public function getBody(): string
     {
         return $this->body;
+    }
+
+    /**
+     * Sets preview for the mail event.
+     *
+     * @return string
+     */
+    public function setPreview(string $preview): self
+    {
+        $this->preview = $preview;
+
+        return $this;
+    }
+
+    /**
+     * Returns preview for the mail event.
+     *
+     * @return string
+     */
+    public function getPreview(string $preview): string
+    {
+        return $this->preview;
     }
 
     /**
@@ -409,6 +432,7 @@ class Mail extends Event
             'subject' => $this->subject,
             'bodyTemplate' => $this->bodyTemplate,
             'body' => $this->body,
+            'preview' => $this->preview,
             'smtp' => $this->smtp,
             'variables' => $this->variables,
             'attachment' => $this->attachment,
