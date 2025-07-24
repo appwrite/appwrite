@@ -305,7 +305,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '11.0.0',
+                'version' => '11.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
@@ -323,7 +323,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '16.0.0',
+                'version' => '16.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
@@ -341,7 +341,7 @@ return [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => '0.8.0',
+                'version' => '0.7.1',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'package' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => true,
@@ -359,7 +359,7 @@ return [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '0.14.0',
+                'version' => '0.14.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
@@ -395,7 +395,7 @@ return [
             [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
-                'version' => '9.0.0',
+                'version' => '9.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-kotlin',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-kotlin',
                 'enabled' => true,
