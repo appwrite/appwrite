@@ -1870,7 +1870,7 @@ App::get('/v1/storage/usage')
         $total = [];
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
+                $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -1899,7 +1899,7 @@ App::get('/v1/storage/usage')
         };
 
         foreach ($metrics as $metric) {
-            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['total'] = $stats[$metric]['total'];
             $usage[$metric]['data'] = [];
             $leap = time() - ($days['limit'] * $days['factor']);
             while ($leap < time()) {
@@ -1917,8 +1917,8 @@ App::get('/v1/storage/usage')
             'filesTotal' => $usage[$metrics[1]]['total'],
             'filesStorageTotal' => $usage[$metrics[2]]['total'],
             'buckets' => $usage[$metrics[0]]['data'],
-            'files' =>  $usage[$metrics[1]]['data'],
-            'storage' =>  $usage[$metrics[2]]['data'],
+            'files' => $usage[$metrics[1]]['data'],
+            'storage' => $usage[$metrics[2]]['data'],
         ]), Response::MODEL_USAGE_STORAGE);
     });
 
@@ -1970,7 +1970,7 @@ App::get('/v1/storage/:bucketId/usage')
                     ? $dbForLogs
                     : $dbForProject;
 
-                $result =  $db->findOne('stats', [
+                $result = $db->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -2000,7 +2000,7 @@ App::get('/v1/storage/:bucketId/usage')
         };
 
         foreach ($metrics as $metric) {
-            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['total'] = $stats[$metric]['total'];
             $usage[$metric]['data'] = [];
             $leap = time() - ($days['limit'] * $days['factor']);
             while ($leap < time()) {
