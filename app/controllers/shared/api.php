@@ -713,7 +713,10 @@ App::shutdown()
                 $queueForEvents->setPayload($responsePayload);
             }
 
+            $scheduledAt = new \DateTime();
+
             $queueForFunctions
+                ->setHeaders(['x-appwrite-scheduled-at' => $scheduledAt->format('Y-m-d\TH:i:s.v\Z')])
                 ->from($queueForEvents)
                 ->trigger();
 
