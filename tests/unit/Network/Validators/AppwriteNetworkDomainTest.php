@@ -11,6 +11,7 @@ class AppwriteNetworkDomainTest extends TestCase
 
     public function setUp(): void
     {
+        putenv('_APP_DOMAIN_SITES=.appwrite.network');
         $this->validator = new AppwriteNetworkDomain();
     }
 
