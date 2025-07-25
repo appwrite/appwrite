@@ -111,7 +111,7 @@ class Create extends Action
         if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
-       
+
         $appwriteNetworkValidator = new AppwriteNetworkDomain();
         if (!$appwriteNetworkValidator->isValid($domain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());

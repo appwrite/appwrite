@@ -29,7 +29,7 @@ class AppwriteNetworkDomainTest extends TestCase
         $this->assertEquals(true, $this->validator->isValid('123.appwrite.network'));
         $this->assertEquals(true, $this->validator->isValid('my-app.appwrite.network'));
         $this->assertEquals(true, $this->validator->isValid('a.appwrite.network'));
-        
+
         // Test case insensitivity
         $this->assertEquals(true, $this->validator->isValid('API.APPWRITE.NETWORK'));
         $this->assertEquals(true, $this->validator->isValid('Api.Appwrite.Network'));
@@ -45,7 +45,7 @@ class AppwriteNetworkDomainTest extends TestCase
         $this->assertEquals(false, $this->validator->isValid('a.b.appwrite.network'));
         $this->assertEquals(false, $this->validator->isValid('very.long.subdomain.appwrite.network'));
         $this->assertEquals(false, $this->validator->isValid('multi.level.deep.appwrite.network'));
-        
+
         // Test case insensitivity
         $this->assertEquals(false, $this->validator->isValid('API.STAGING.APPWRITE.NETWORK'));
         $this->assertEquals(false, $this->validator->isValid('Api.Dev.Appwrite.Network'));
@@ -61,7 +61,7 @@ class AppwriteNetworkDomainTest extends TestCase
         $this->assertEquals(true, $this->validator->isValid('sub.domain.test.io'));
         $this->assertEquals(true, $this->validator->isValid('localhost'));
         $this->assertEquals(true, $this->validator->isValid('127.0.0.1'));
-        
+
         // Similar but different domains
         $this->assertEquals(true, $this->validator->isValid('appwrite.com'));
         $this->assertEquals(true, $this->validator->isValid('api.appwrite.com'));
@@ -84,10 +84,10 @@ class AppwriteNetworkDomainTest extends TestCase
         $this->assertEquals(true, $this->validator->isValid(false));
         $this->assertEquals(true, $this->validator->isValid(123));
         $this->assertEquals(true, $this->validator->isValid([]));
-        
+
         // Just the root domain (unlikely but should be valid)
         $this->assertEquals(true, $this->validator->isValid('appwrite.network'));
-        
+
         // Domain with trailing/leading dots
         $this->assertEquals(false, $this->validator->isValid('api.test.appwrite.network.'));
         $this->assertEquals(false, $this->validator->isValid('.api.test.appwrite.network'));
@@ -101,4 +101,4 @@ class AppwriteNetworkDomainTest extends TestCase
         $this->assertEquals(false, $this->validator->isArray());
         $this->assertEquals('string', $this->validator->getType());
     }
-} 
+}

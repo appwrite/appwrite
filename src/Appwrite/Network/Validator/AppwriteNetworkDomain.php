@@ -44,4 +44,4 @@ class AppwriteNetworkDomain extends Validator
     {
         return self::TYPE_STRING;
     }
-} 
+}
