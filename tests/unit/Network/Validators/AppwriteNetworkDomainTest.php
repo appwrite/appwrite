@@ -95,7 +95,9 @@ class AppwriteNetworkDomainTest extends TestCase
 
     public function testValidatorProperties(): void
     {
-        $this->assertEquals('Sub-subdomains are not allowed for appwrite.network. Only one level of subdomain is permitted.', $this->validator->getDescription());
+        $suffix = getenv('_APP_DOMAIN_SITES') ?: '.appwrite.network';
+        $expectedDescription = "Sub-subdomains are not allowed for {$suffix}. Only one level of subdomain is permitted.";
+        $this->assertEquals($expectedDescription, $this->validator->getDescription());
         $this->assertEquals(false, $this->validator->isArray());
         $this->assertEquals('string', $this->validator->getType());
     }

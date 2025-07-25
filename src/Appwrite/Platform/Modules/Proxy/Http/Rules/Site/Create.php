@@ -112,7 +112,6 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
-       
         $appwriteNetworkValidator = new AppwriteNetworkDomain();
         if (!$appwriteNetworkValidator->isValid($domain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());

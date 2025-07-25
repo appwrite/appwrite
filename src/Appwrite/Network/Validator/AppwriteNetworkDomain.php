@@ -8,24 +8,27 @@ class AppwriteNetworkDomain extends Validator
 {
     public function getDescription(): string
     {
-        return 'Sub-subdomains are not allowed for appwrite.network. Only one level of subdomain is permitted.';
+        $suffix = getenv('_APP_DOMAIN_SITES') ?: '.appwrite.network';
+        return "Sub-subdomains are not allowed for {$suffix}. Only one level of subdomain is permitted.";
     }
 
     public function isValid($value): bool
     {
+        $suffix = getenv('_APP_DOMAIN_SITES') ?: '.appwrite.network';
+
         if (!is_string($value) || empty($value)) {
             return true;
         }
         if (\str_starts_with($value, '.')) {
             return false;
         }
-        if (\str_ends_with($value, '.appwrite.network.')) {
+        if (\str_ends_with($value, $suffix . '.')) {
             return false;
         }
-        if (!\str_ends_with(\strtolower($value), '.appwrite.network')) {
+        if (!\str_ends_with(\strtolower($value), $suffix)) {
             return true;
         }
-        $subdomain = substr(strtolower($value), 0, -strlen('.appwrite.network'));
+        $subdomain = \str_replace($suffix, '', \strtolower($value));
         if (\str_contains($subdomain, '.')) {
             return false;
         }
