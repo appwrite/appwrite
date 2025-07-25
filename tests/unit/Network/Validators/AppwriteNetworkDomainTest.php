@@ -77,30 +77,30 @@ class AppwriteNetworkDomainTest extends TestCase
         $this->assertEquals(true, $this->validator->isValid('foo.bar.baz.example.com'));
     }
 
-            public function testEdgeCases(): void
-        {
-            // Empty and invalid values should pass (let other validators handle them)
-            $this->assertEquals(true, $this->validator->isValid(''));
-            $this->assertEquals(true, $this->validator->isValid(null));
-            $this->assertEquals(true, $this->validator->isValid(false));
-            $this->assertEquals(true, $this->validator->isValid(123));
-            $this->assertEquals(true, $this->validator->isValid([]));
+    public function testEdgeCases(): void
+    {
+        // Empty and invalid values should pass (let other validators handle them)
+        $this->assertEquals(true, $this->validator->isValid(''));
+        $this->assertEquals(true, $this->validator->isValid(null));
+        $this->assertEquals(true, $this->validator->isValid(false));
+        $this->assertEquals(true, $this->validator->isValid(123));
+        $this->assertEquals(true, $this->validator->isValid([]));
 
-            // Just the root domain (unlikely but should be valid)
-            $this->assertEquals(true, $this->validator->isValid('appwrite.network'));
+        // Just the root domain (unlikely but should be valid)
+        $this->assertEquals(true, $this->validator->isValid('appwrite.network'));
 
-            // Domain with trailing/leading dots
-            $this->assertEquals(false, $this->validator->isValid('api.test.appwrite.network.'));
-            $this->assertEquals(false, $this->validator->isValid('.api.test.appwrite.network'));
+        // Domain with trailing/leading dots
+        $this->assertEquals(false, $this->validator->isValid('api.test.appwrite.network.'));
+        $this->assertEquals(false, $this->validator->isValid('.api.test.appwrite.network'));
 
-            // Domains with spaces should be invalid
-            $this->assertEquals(false, $this->validator->isValid('my app.appwrite.network'));
-            $this->assertEquals(false, $this->validator->isValid('api .appwrite.network'));
-            $this->assertEquals(false, $this->validator->isValid(' api.appwrite.network'));
-            $this->assertEquals(false, $this->validator->isValid('api.appwrite.network '));
-            $this->assertEquals(false, $this->validator->isValid('api.app write.network'));
-            $this->assertEquals(false, $this->validator->isValid("api\tapp.appwrite.network"));
-        }
+        // Domains with spaces should be invalid
+        $this->assertEquals(false, $this->validator->isValid('my app.appwrite.network'));
+        $this->assertEquals(false, $this->validator->isValid('api .appwrite.network'));
+        $this->assertEquals(false, $this->validator->isValid(' api.appwrite.network'));
+        $this->assertEquals(false, $this->validator->isValid('api.appwrite.network '));
+        $this->assertEquals(false, $this->validator->isValid('api.app write.network'));
+        $this->assertEquals(false, $this->validator->isValid("api\tapp.appwrite.network"));
+    }
 
     public function testValidatorProperties(): void
     {
