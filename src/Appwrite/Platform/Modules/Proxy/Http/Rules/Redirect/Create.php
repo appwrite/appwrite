@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\AppwriteNetworkDomain;
 use Appwrite\Network\Validator\DNS;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -114,11 +115,10 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
-        if (\str_ends_with(\strtolower($domain), '.appwrite.network')) {
-            $subdomain = \str_replace('.appwrite.network', '', strtolower($domain));
-            if (\str_contains($subdomain, '.')) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sub-subdomains are not allowed for appwrite.network. Only one level of subdomain is permitted.');
-            }
+       
+        $appwriteNetworkValidator = new AppwriteNetworkDomain();
+        if (!$appwriteNetworkValidator->isValid($domain)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
         }
 
         try {

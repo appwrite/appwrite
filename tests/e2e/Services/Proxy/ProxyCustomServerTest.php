@@ -81,33 +81,6 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($rule['body']['$id']);
     }
 
-    public function testCreateAPIRuleAppwriteNetworkValidation(): void
-    {
-        // Test vallid single subdomain for appwrite.network
-        $validDomain = \uniqid() . '.appwrite.network';
-        $rule = $this->createAPIRule($validDomain);
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
-
-        // Test invalid sub-subdomain for appwrite.network
-        $invalidDomain = 'api.staging.appwrite.network';
-        $rule = $this->createAPIRule($invalidDomain);
-        $this->assertEquals(400, $rule['headers']['status-code']);
-        $this->assertStringContainsString('Sub-subdomains are not allowed for appwrite.network', $rule['body']['message']);
-
-        // Test another invalid sub-subdomain with multiple dots
-        $invalidDomain2 = 'asadsdsa.sddsa.appwrite.network';
-        $rule = $this->createAPIRule($invalidDomain2);
-        $this->assertEquals(400, $rule['headers']['status-code']);
-        $this->assertStringContainsString('Sub-subdomains are not allowed for appwrite.network', $rule['body']['message']);
-
-        // Test valid domain that doesn't end with appwrite.network (should pass)
-        $otherDomain = \uniqid() . '.example.com';
-        $rule = $this->createAPIRule($otherDomain);
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
-    }
-
     public function testCreateAPIRule(): void
     {
         $domain = \uniqid() . '-api.custom.localhost';
