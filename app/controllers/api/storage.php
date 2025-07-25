@@ -1112,10 +1112,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         //Do not update transformedAt if it's a console user
         if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
-            $transformedAt = $file->getAttribute('transformedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-                $file->setAttribute('transformedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+            try {
+                $transformedAt = $file->getAttribute('transformedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                    $file->setAttribute('transformedAt', DateTime::now());
+                    Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                }
+            } catch (\Throwable $e) {
+                // Gracefully handle cases where transformedAt attribute doesn't exist (migration incomplete)
+                Console::warning("transformedAt attribute not found for file {$file->getId()} in bucket {$bucketId}: {$e->getMessage()}");
             }
         }
 
