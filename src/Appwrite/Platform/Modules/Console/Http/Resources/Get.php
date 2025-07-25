@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\AppwriteNetworkDomain;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -68,6 +69,11 @@ class Get extends Action
     ) {
         if ($type === 'rules') {
             $validator = new Domain($value);
+
+            $appwriteNetworkValidator = new AppwriteNetworkDomain();
+            if (!$appwriteNetworkValidator->isValid($value)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
+            }
 
             if (!$validator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
