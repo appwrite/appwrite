@@ -444,7 +444,7 @@ class Builds extends Action
                     Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email '. \escapeshellarg(APP_VCS_GITHUB_EMAIL) .' && git config --global user.name '. \escapeshellarg(APP_VCS_GITHUB_USERNAME) .' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -516,7 +516,7 @@ class Builds extends Action
                     ->setPayload($deployment->getArrayCopy())
                     ->trigger();
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
 
             /** Request the executor to build the code... */
@@ -532,7 +532,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
 
             $deploymentModel = new Deployment();
@@ -980,6 +980,8 @@ class Builds extends Action
                         throw new \Exception($screenshotError);
                     }
 
+                    $mimeType = "image/png";
+
                     foreach ($screenshots as $data) {
                         $key = $data['key'];
                         $screenshot = $data['screenshot'];
@@ -988,7 +990,7 @@ class Builds extends Action
                         $fileName = $fileId . '.png';
                         $path = $deviceForFiles->getPath($fileName);
                         $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                        $success = $deviceForFiles->write($path, $screenshot, "image/png");
+                        $success = $deviceForFiles->write($path, $screenshot, $mimeType);
 
                         if (!$success) {
                             throw new \Exception("Screenshot failed to save");
@@ -1005,10 +1007,10 @@ class Builds extends Action
                             'name' => $fileName,
                             'path' => $path,
                             'signature' => $deviceForFiles->getFileHash($path),
-                            'mimeType' => $deviceForFiles->getFileMimeType($path),
+                            'mimeType' => $mimeType,
                             'sizeOriginal' => \strlen($screenshot),
                             'sizeActual' => $deviceForFiles->getFileSize($path),
-                            'algorithm' => Compression::GZIP,
+                            'algorithm' => Compression::NONE,
                             'comment' => '',
                             'chunksTotal' => 1,
                             'chunksUploaded' => 1,
@@ -1017,7 +1019,7 @@ class Builds extends Action
                             'openSSLTag' => null,
                             'openSSLIV' => null,
                             'search' => implode(' ', [$fileId, $fileName]),
-                            'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
+                            'metadata' => ['content_type' => $mimeType],
                         ]);
 
                         Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
@@ -1067,7 +1069,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
 
             Console::success("Build id: $deploymentId created");
@@ -1285,7 +1287,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
         } finally {
             $queueForRealtime
@@ -1439,98 +1441,116 @@ class Builds extends Action
         Document $resource,
         string $deploymentId,
         Database $dbForProject,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Realtime $queueForRealtime,
     ): void {
-        if ($resource->getAttribute('providerSilentMode', false) === true) {
-            return;
-        }
-
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-        $commentId = $deployment->getAttribute('providerCommentId', '');
-
-        if (!empty($providerCommitHash)) {
-            $message = match ($status) {
-                'ready' => 'Build succeeded.',
-                'failed' => 'Build failed.',
-                'processing' => 'Building...',
-                default => $status
-            };
-
-            $state = match ($status) {
-                'ready' => 'success',
-                'failed' => 'failure',
-                'processing' => 'pending',
-                default => $status
-            };
-
-            $resourceName = $resource->getAttribute('name');
-            $projectName = $project->getAttribute('name');
-
-            $name = "{$resourceName} ({$projectName})";
-
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
-
-            $projectId = $project->getId();
-            $region = $project->getAttribute('region', 'default');
-            $resourceId = $resource->getId();
-            $providerTargetUrl = match ($resource->getCollection()) {
-                'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
-                'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
-                default => throw new \Exception('Invalid resource type')
-            };
-
-            $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
-        }
-
-        if (!empty($commentId)) {
-            $retries = 0;
-
-            while (true) {
-                $retries++;
-
-                try {
-                    $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                        '$id' => $commentId
-                    ]));
-                    break;
-                } catch (\Throwable $err) {
-                    if ($retries >= 9) {
-                        throw $err;
-                    }
-
-                    \sleep(1);
-                }
+        try {
+            if ($resource->getAttribute('providerSilentMode', false) === true) {
+                return;
             }
 
-            // Wrap in try/finally to ensure lock file gets deleted
-            try {
-                $resourceType = match($resource->getCollection()) {
-                    'functions' => 'function',
-                    'sites' => 'site',
-                    default => throw new \Exception('Invalid resource type')
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            $commentId = $deployment->getAttribute('providerCommentId', '');
+
+            if (!empty($providerCommitHash)) {
+                $message = match ($status) {
+                    'ready' => 'Build succeeded.',
+                    'failed' => 'Build failed.',
+                    'processing' => 'Building...',
+                    default => $status
                 };
 
-                $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-                    Query::equal("projectInternalId", [$project->getSequence()]),
-                    Query::equal("type", ["deployment"]),
-                    Query::equal("deploymentInternalId", [$deployment->getSequence()]),
-                ]));
+                $state = match ($status) {
+                    'ready' => 'success',
+                    'failed' => 'failure',
+                    'processing' => 'pending',
+                    default => $status
+                };
+
+                $resourceName = $resource->getAttribute('name');
+                $projectName = $project->getAttribute('name');
+
+                $name = "{$resourceName} ({$projectName})";
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                $previewUrl = match($resource->getCollection()) {
-                    'functions' => '',
-                    'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
+                $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+
+                $projectId = $project->getId();
+                $region = $project->getAttribute('region', 'default');
+                $resourceId = $resource->getId();
+                $providerTargetUrl = match ($resource->getCollection()) {
+                    'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
+                    'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
                     default => throw new \Exception('Invalid resource type')
                 };
 
-                $comment = new Comment();
-                $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
-                $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
-            } finally {
-                $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
+                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
             }
+
+            if (!empty($commentId)) {
+                $retries = 0;
+
+                while (true) {
+                    $retries++;
+
+                    try {
+                        $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                            '$id' => $commentId
+                        ]));
+                        break;
+                    } catch (\Throwable $err) {
+                        if ($retries >= 9) {
+                            throw $err;
+                        }
+
+                        \sleep(1);
+                    }
+                }
+
+                // Wrap in try/finally to ensure lock file gets deleted
+                try {
+                    $resourceType = match($resource->getCollection()) {
+                        'functions' => 'function',
+                        'sites' => 'site',
+                        default => throw new \Exception('Invalid resource type')
+                    };
+
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                        Query::equal("projectInternalId", [$project->getSequence()]),
+                        Query::equal("type", ["deployment"]),
+                        Query::equal("deploymentInternalId", [$deployment->getSequence()]),
+                    ]));
+
+                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+                    $previewUrl = match($resource->getCollection()) {
+                        'functions' => '',
+                        'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
+                        default => throw new \Exception('Invalid resource type')
+                    };
+
+                    $comment = new Comment();
+                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+                    $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+                } finally {
+                    $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
+                }
+            }
+        } catch (\Throwable $th) {
+            Console::warning("Git action failed:");
+            Console::warning($th->getMessage());
+            Console::warning($th->getTraceAsString());
+
+            $logs = $deployment->getAttribute('buildLogs', '');
+            $date = \date('H:i:s');
+            $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Git action failed. Deployment will continue. [0m\n";
+
+            $deployment->setAttribute('buildLogs', $logs);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
         }
     }
 
