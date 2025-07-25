@@ -19,6 +19,9 @@ class AppwriteNetworkDomain extends Validator
         if (!is_string($value) || empty($value)) {
             return true;
         }
+        if (\preg_match('/\s/', $value)) {
+            return false;
+        }
         if (\str_starts_with($value, '.')) {
             return false;
         }
