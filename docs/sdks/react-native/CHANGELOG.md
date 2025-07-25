@@ -1,6 +1,6 @@
 # Change log
 
-## 0.10.2
+## 0.11.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
 * Add `sequence` support to `Document` model
