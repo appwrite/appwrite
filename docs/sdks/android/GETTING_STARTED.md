@@ -18,7 +18,7 @@ In order to capture the Appwrite OAuth callback url, the following activity need
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="appwrite-callback-[PROJECT_ID]" />
+                <data android:scheme="appwrite-callback-<PROJECT_ID>" />
             </intent-filter>
         </activity>
     </application>
@@ -34,8 +34,8 @@ import io.appwrite.Client
 import io.appwrite.services.Account
 
 val client = Client(context)
-  .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-  .setProject("5df5acd0d48c2") // Your project ID
+  .setEndpoint("https://<HOSTNAME_OR_IP>/v1") // Your API Endpoint
+  .setProject("<PROJECT_ID>") // Your project ID
   .setSelfSigned(true) // Remove in production
 ```
 
@@ -66,8 +66,8 @@ import io.appwrite.services.Account
 import io.appwrite.ID
 
 val client = Client(context)
-  .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-  .setProject("5df5acd0d48c2") // Your project ID
+  .setEndpoint("https://<HOSTNAME_OR_IP>/v1") // Your API Endpoint
+  .setProject("<PROJECT_ID>") // Your project ID
   .setSelfSigned(true) // Remove in production
 
 val account = Account(client)

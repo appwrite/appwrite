@@ -1,5 +1,10 @@
 # Change Log
 
+## 17.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Fix autocompletion not working for `Document` model even when generic is passed
+
 ## 17.1.0
 
 * Add `upsertDocument` method

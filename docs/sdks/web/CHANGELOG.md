@@ -1,5 +1,12 @@
 # Change Log
 
+## 18.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `gif` support to `ImageFormat` enum
+* Fix undefined `fileParam` error in `chunkedUpload` method
+* Fix autocompletion not working for `Document` model even when generic is passed
+
 ## 18.1.1
 
 * Fix using `devKeys` resulting in an error by conditionally removing credentials
