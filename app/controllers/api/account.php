@@ -133,6 +133,16 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
             ->setSmtpSenderName($senderName);
     }
 
+    // session alerts should always have a client name!
+    $clientName = $session->getAttribute('clientName');
+    if (empty($clientName)) {
+        // fallback to the user agent and then unknown!
+        $userAgent = $session->getAttribute('userAgent');
+        $clientName = !empty($userAgent) ? $userAgent : 'UNKNOWN';
+
+        $session->setAttribute('clientName', $clientName);
+    }
+
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
         'date' => (new \DateTime())->format('F j'),
