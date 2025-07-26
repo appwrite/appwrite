@@ -200,7 +200,6 @@ class Specs extends Action
 
                     foreach ($sdks as $sdk) {
                         /** @var Method $sdk */
-
                         $hide = $sdk->isHidden();
                         if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
                             continue;
@@ -284,7 +283,8 @@ class Specs extends Action
                 $routes,
                 $models,
                 $keys[$platform],
-                $authCounts[$platform] ?? 0
+                $authCounts[$platform] ?? 0,
+                $platforms[$platform]
             ];
 
             foreach (['swagger2', 'open-api3'] as $format) {
