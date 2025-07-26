@@ -56,7 +56,7 @@ class V18Test extends TestCase
         return [
             'remove scheduledAt' => [
                 [
-                    'scheduledAt' => '2025-07-13T09:00:00.000Z',
+                    'scheduledAt' => (new \DateTime('+1 year'))->format('Y-m-d\TH:i:s.v\Z'),
                 ],
                 [
                 ]

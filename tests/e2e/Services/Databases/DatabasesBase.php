@@ -2639,7 +2639,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::greaterThan('birthDay', '16/01/2025 12:00:00AM')->toString(),
+                Query::greaterThan('birthDay', '1970-01-01T00:00:00Z')->toString(),
             ],
         ]);
 
