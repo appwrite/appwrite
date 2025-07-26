@@ -61,6 +61,7 @@ suspend fun main() {
 
 The Appwrite Kotlin SDK provides type safety when working with database documents through generic methods. Methods like `listDocuments`, `getDocument`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
 
+**Kotlin:**
 ```kotlin
 data class Book(
     val name: String,
@@ -85,6 +86,60 @@ try {
     }
 } catch (e: AppwriteException) {
     Log.e("Appwrite", e.message ?: "Unknown error")
+}
+```
+
+**Java:**
+```java
+public class Book {
+    private String name;
+    private String author;
+    private String releaseYear;
+    private String category;
+    private List<String> genre;
+    private boolean isCheckedOut;
+
+    // Constructor
+    public Book(String name, String author, boolean isCheckedOut) {
+        this.name = name;
+        this.author = author;
+        this.isCheckedOut = isCheckedOut;
+    }
+
+    // Getters and setters
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getAuthor() { return author; }
+    public void setAuthor(String author) { this.author = author; }
+    
+    public String getReleaseYear() { return releaseYear; }
+    public void setReleaseYear(String releaseYear) { this.releaseYear = releaseYear; }
+    
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    
+    public List<String> getGenre() { return genre; }
+    public void setGenre(List<String> genre) { this.genre = genre; }
+    
+    public boolean isCheckedOut() { return isCheckedOut; }
+    public void setCheckedOut(boolean checkedOut) { isCheckedOut = checkedOut; }
+}
+
+Databases databases = new Databases(client);
+
+try {
+    DocumentList<Book> documents = databases.listDocuments(
+        "your-database-id",
+        "your-collection-id",
+        Book.class // Pass in your custom model type
+    );
+    
+    for (Book book : documents.getDocuments()) {
+        Log.d("Appwrite", "Book: " + book.getName() + " by " + book.getAuthor()); // Now you have full type safety
+    }
+} catch (AppwriteException e) {
+    Log.e("Appwrite", e.getMessage() != null ? e.getMessage() : "Unknown error");
 }
 ```
 
