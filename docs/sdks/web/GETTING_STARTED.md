@@ -38,6 +38,7 @@ account.create(ID.unique(), "email@example.com", "password", "Walter O'Brien")
 ```
 
 ### Full Example
+
 ```js
 // Init your Web SDK
 const client = new Client();
