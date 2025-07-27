@@ -232,6 +232,14 @@ class Swagger2 extends Format
                         'description' => ($desc) ? \file_get_contents($desc) : '',
                     ];
 
+                    // add deprecation only if method has it!
+                    if ($methodObj->getDeprecated() instanceof Deprecated) {
+                        $additionalMethod['deprecated'] = [
+                            'since' => $methodObj->getDeprecated()->getSince(),
+                            'replaceWith' => $methodObj->getDeprecated()->getReplaceWith(),
+                        ];
+                    }
+
                     // If additional method has no parameters, inherit from route
                     if (empty($methodObj->getParameters())) {
                         foreach ($route->getParams() as $name => $param) {
