@@ -4720,8 +4720,19 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -5358,8 +5369,18 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,

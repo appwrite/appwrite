@@ -4723,7 +4723,10 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
+                            "parameters": [
+                                "queries",
+                                "search"
+                            ],
                             "required": [],
                             "responses": [
                                 {
@@ -4739,7 +4742,10 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
+                            "parameters": [
+                                "queries",
+                                "search"
+                            ],
                             "required": [],
                             "responses": [
                                 {
@@ -4829,8 +4835,15 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "name",
+                                "enabled"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "name"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -4845,8 +4858,15 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "name",
+                                "enabled"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "name"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -4945,7 +4965,9 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
+                            "parameters": [
+                                "range"
+                            ],
                             "required": [],
                             "responses": [
                                 {
@@ -4961,7 +4983,9 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
+                            "parameters": [
+                                "range"
+                            ],
                             "required": [],
                             "responses": [
                                 {
@@ -5049,8 +5073,12 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
@@ -5065,8 +5093,12 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
@@ -5142,8 +5174,15 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "name",
+                                "enabled"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "name"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
@@ -5158,8 +5197,15 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "name",
+                                "enabled"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "name"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
@@ -5254,8 +5300,12 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 204
@@ -5269,8 +5319,12 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 204
@@ -8635,8 +8689,16 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -9025,8 +9087,19 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -13767,8 +13840,16 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rows"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rows"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -14141,8 +14222,18 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -14816,8 +14907,13 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "queries"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
@@ -14832,8 +14928,13 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "queries"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
@@ -14920,8 +15021,13 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "range"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
@@ -14936,8 +15042,13 @@
                             "auth": {
                                 "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "range"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
                             "responses": [
                                 {
                                     "code": 200,
