@@ -44,7 +44,7 @@ class Upsert extends DocumentsUpsert
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: self::getName(),
-                    description: '/docs/references/databases/upsert-rows.md',
+                    description: '/docs/references/grids/upsert-rows.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(

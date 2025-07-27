@@ -38,7 +38,7 @@ class XList extends CollectionXList
                 namespace: $this->getSdkNamespace(),
                 group: null,
                 name: self::getName(),
-                description: '/docs/references/databases/list-tables.md',
+                description: '/docs/references/grids/list-tables.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

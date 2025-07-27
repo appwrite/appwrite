@@ -43,7 +43,7 @@ class Create extends CollectionCreate
                 namespace: $this->getSdkNamespace(),
                 group: null,
                 name: self::getName(),
-                description: '/docs/references/databases/create-table.md',
+                description: '/docs/references/grids/create-table.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

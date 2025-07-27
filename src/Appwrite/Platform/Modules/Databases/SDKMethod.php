@@ -7,6 +7,17 @@ use Appwrite\SDK\Method;
 
 class SDKMethod
 {
+    private const array SDK_INFO_MAP = [
+        'create'     => ['name' => 'createDatabase', 'docs' => 'create-database'],
+        'list'       => ['name' => 'listDatabases', 'docs' => 'list-databases'],
+        'get'        => ['name' => 'getDatabase', 'docs' => 'get-database'],
+        'update'     => ['name' => 'updateDatabase', 'docs' => 'update-database'],
+        'delete'     => ['name' => 'deleteDatabase', 'docs' => 'delete-database'],
+        'listLogs'   => ['name' => 'listDatabaseLogs', 'docs' => 'list-database-logs'],
+        'listUsage'  => ['name' => 'listDatabaseUsage', 'docs' => 'list-database-usage'],
+        'getDatabaseUsage'  => ['name' => 'getDatabaseUsage', 'docs' => 'get-database-usage'],
+    ];
+
     /**
      * @return Method[]
      */
@@ -43,20 +54,19 @@ class SDKMethod
 
     private static function transformNameForGrids(string $original): string
     {
-        return match ($original) {
-            'create' => 'createDatabase',
-            'list'   => 'listDatabases',
-            'get'    => 'getDatabase',
-            'update' => 'updateDatabase',
-            'delete' => 'deleteDatabase',
-            'listLogs' => 'listDatabaseLogs',
-            'listUsage' => 'listDatabaseUsage',
-            default  => $original /* `getDatabaseUsage` is already correct! */
-        };
+        return self::SDK_INFO_MAP[$original]['name'] ?? $original;
     }
 
     private static function transformDocsPathForGrids(string $original): string
     {
-        return str_replace('/databases/', '/grids/', $original);
+        $path = str_replace('/databases/', '/grids/', $original);
+
+        foreach (self::SDK_INFO_MAP as $from => $mapped) {
+            if (str_ends_with($path, "/$from.md")) {
+                return substr($path, 0, -strlen("$from.md")) . $mapped['docs'] . '.md';
+            }
+        }
+
+        return $path;
     }
 }

@@ -45,7 +45,7 @@ class Create extends IndexCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: 'createIndex', // getName needs to be different from parent action to avoid conflict in path name
-                description: '/docs/references/databases/create-index.md',
+                description: '/docs/references/grids/create-index.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

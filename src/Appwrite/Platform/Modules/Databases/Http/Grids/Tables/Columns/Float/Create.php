@@ -41,7 +41,7 @@ class Create extends FloatCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-float-column.md',
+                description: '/docs/references/grids/create-float-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

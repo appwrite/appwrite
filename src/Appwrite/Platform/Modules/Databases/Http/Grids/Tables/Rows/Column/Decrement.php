@@ -44,7 +44,7 @@ class Decrement extends DecrementDocumentAttribute
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/decrement-row-column.md',
+                description: '/docs/references/grids/decrement-row-column.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

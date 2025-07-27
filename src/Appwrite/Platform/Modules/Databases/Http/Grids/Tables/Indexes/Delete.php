@@ -44,7 +44,7 @@ class Delete extends IndexDelete
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: 'deleteIndex', // getName needs to be different from parent action to avoid conflict in path name
-                description: '/docs/references/databases/delete-index.md',
+                description: '/docs/references/grids/delete-index.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

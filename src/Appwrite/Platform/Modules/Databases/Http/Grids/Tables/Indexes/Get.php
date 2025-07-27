@@ -37,7 +37,7 @@ class Get extends IndexGet
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: 'getIndex', // getName needs to be different from parent action to avoid conflict in path name
-                description: '/docs/references/databases/get-index.md',
+                description: '/docs/references/grids/get-index.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

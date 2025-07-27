@@ -44,7 +44,7 @@ class Update extends DocumentsUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-rows.md',
+                description: '/docs/references/grids/update-rows.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

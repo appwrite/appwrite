@@ -33,7 +33,7 @@ class XList extends CollectionLogXList
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/get-table-logs.md',
+                description: '/docs/references/grids/get-table-logs.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

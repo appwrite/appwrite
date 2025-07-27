@@ -37,7 +37,7 @@ class XList extends IndexXList
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: 'listIndexes', // getName needs to be different from parent action to avoid conflict in path name
-                description: '/docs/references/databases/list-indexes.md',
+                description: '/docs/references/grids/list-indexes.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

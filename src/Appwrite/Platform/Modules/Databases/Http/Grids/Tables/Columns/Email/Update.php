@@ -43,7 +43,7 @@ class Update extends EmailUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-email-column.md',
+                description: '/docs/references/grids/update-email-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

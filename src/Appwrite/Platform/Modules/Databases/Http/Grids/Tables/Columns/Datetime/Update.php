@@ -44,7 +44,7 @@ class Update extends DatetimeUpdate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/update-datetime-column.md',
+                description: '/docs/references/grids/update-datetime-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

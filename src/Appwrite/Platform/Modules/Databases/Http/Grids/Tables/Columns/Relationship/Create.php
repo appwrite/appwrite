@@ -42,7 +42,7 @@ class Create extends RelationshipCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-relationship-column.md',
+                description: '/docs/references/grids/create-relationship-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

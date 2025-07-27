@@ -40,7 +40,7 @@ class Create extends BooleanCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-boolean-column.md',
+                description: '/docs/references/grids/create-boolean-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

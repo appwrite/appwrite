@@ -36,7 +36,7 @@ class Get extends CollectionGet
                 namespace: $this->getSdkNamespace(),
                 group: null,
                 name: self::getName(),
-                description: '/docs/references/databases/get-table.md',
+                description: '/docs/references/grids/get-table.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

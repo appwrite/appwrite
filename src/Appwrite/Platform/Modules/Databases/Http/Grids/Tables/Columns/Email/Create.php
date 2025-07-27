@@ -41,7 +41,7 @@ class Create extends EmailCreate
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/databases/create-email-column.md',
+                description: '/docs/references/grids/create-email-column.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
