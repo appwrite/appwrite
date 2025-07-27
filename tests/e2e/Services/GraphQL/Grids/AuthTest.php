@@ -128,7 +128,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
+                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -154,7 +154,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
+                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -178,8 +178,8 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
-                'rowId' => $row['body']['data']['tablesCreateRow']['_id'],
+                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
+                'rowId' => $row['body']['data']['gridsCreateRow']['_id'],
             ]
         ];
         $row = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -188,7 +188,7 @@ class AuthTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
-        $this->assertIsArray($row['body']['data']['tablesGetRow']);
+        $this->assertIsArray($row['body']['data']['gridsGetRow']);
         $this->assertArrayNotHasKey('errors', $row['body']);
 
         // Try to read as account 2
@@ -213,7 +213,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
+                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -237,8 +237,8 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['tablesCreate']['_id'],
-                'rowId' => $row['body']['data']['tablesCreateRow']['_id'],
+                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
+                'rowId' => $row['body']['data']['gridsCreateRow']['_id'],
             ]
         ];
         $row = $this->client->call(Client::METHOD_POST, '/graphql', [
