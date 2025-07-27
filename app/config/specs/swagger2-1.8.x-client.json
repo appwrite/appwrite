@@ -4633,7 +4633,11 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.createRow"
+                            }
                         }
                     ],
                     "auth": {
@@ -4867,7 +4871,11 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.upsertRow"
+                            }
                         }
                     ],
                     "auth": {

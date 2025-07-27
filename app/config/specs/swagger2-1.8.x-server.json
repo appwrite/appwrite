@@ -4245,7 +4245,11 @@
                                     "model": "#\/definitions\/databaseList"
                                 }
                             ],
-                            "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results."
+                            "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.listDatabases"
+                            }
                         },
                         {
                             "name": "listDatabases",
@@ -4368,7 +4372,11 @@
                                     "model": "#\/definitions\/database"
                                 }
                             ],
-                            "description": "Create a new Database.\n"
+                            "description": "Create a new Database.\n",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.createDatabase"
+                            }
                         },
                         {
                             "name": "createDatabase",
@@ -4502,7 +4510,11 @@
                                     "model": "#\/definitions\/database"
                                 }
                             ],
-                            "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata."
+                            "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.getDatabase"
+                            }
                         },
                         {
                             "name": "getDatabase",
@@ -4613,7 +4625,11 @@
                                     "model": "#\/definitions\/database"
                                 }
                             ],
-                            "description": "Update a database by its unique ID."
+                            "description": "Update a database by its unique ID.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.updateDatabase"
+                            }
                         },
                         {
                             "name": "updateDatabase",
@@ -4742,7 +4758,11 @@
                                     "code": 204
                                 }
                             ],
-                            "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database."
+                            "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.deleteDatabase"
+                            }
                         },
                         {
                             "name": "deleteDatabase",
@@ -8007,7 +8027,11 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.createRow"
+                            }
                         },
                         {
                             "name": "createDocuments",
@@ -8032,7 +8056,11 @@
                                     "model": "#\/definitions\/documentList"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.createRows"
+                            }
                         }
                     ],
                     "auth": {
@@ -8173,7 +8201,11 @@
                                     "model": "#\/definitions\/documentList"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n"
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.upsertRows"
+                            }
                         }
                     ],
                     "auth": {
@@ -8580,7 +8612,11 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.upsertRow"
+                            }
                         }
                     ],
                     "auth": {
