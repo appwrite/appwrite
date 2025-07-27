@@ -4,9 +4,7 @@ import io.appwrite.services.Databases;
 
 Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .setSession("") // The user session to authenticate with
-    .setKey("") // 
-    .setJWT("<YOUR_JWT>"); // Your secret JSON Web Token
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
 
 Databases databases = new Databases(client);
 
@@ -14,6 +12,8 @@ databases.upsertDocument(
     "<DATABASE_ID>", // databaseId 
     "<COLLECTION_ID>", // collectionId 
     "<DOCUMENT_ID>", // documentId 
+    mapOf( "a" to "b" ), // data 
+    listOf("read("any")"), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

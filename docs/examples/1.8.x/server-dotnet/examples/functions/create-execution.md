@@ -17,5 +17,5 @@ Execution result = await functions.CreateExecution(
     path: "<PATH>", // optional
     method: ExecutionMethod.GET, // optional
     headers: [object], // optional
-    scheduledAt: "" // optional
+    scheduledAt: "<SCHEDULED_AT>" // optional
 );
