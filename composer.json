@@ -12,8 +12,8 @@
     ],
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint",
+        "lint": "vendor/bin/pint --test --config pint.json",
+        "format": "vendor/bin/pint --config pint.json",
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon"
     },
