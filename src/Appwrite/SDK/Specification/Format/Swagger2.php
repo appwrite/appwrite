@@ -232,11 +232,21 @@ class Swagger2 extends Format
                         'description' => ($desc) ? \file_get_contents($desc) : '',
                     ];
 
-                    foreach ($methodObj->getParameters() as $parameter) {
-                        $additionalMethod['parameters'][] = $parameter->getName();
-
-                        if (!$parameter->getOptional()) {
-                            $additionalMethod['required'][] = $parameter->getName();
+                    // If additional method has no parameters, inherit from route
+                    if (empty($methodObj->getParameters())) {
+                        foreach ($route->getParams() as $name => $param) {
+                            $additionalMethod['parameters'][] = $name;
+                            if (!$param['optional']) {
+                                $additionalMethod['required'][] = $name;
+                            }
+                        }
+                    } else {
+                        // Use method's own parameters
+                        foreach ($methodObj->getParameters() as $parameter) {
+                            $additionalMethod['parameters'][] = $parameter->getName();
+                            if (!$parameter->getOptional()) {
+                                $additionalMethod['required'][] = $parameter->getName();
+                            }
                         }
                     }
 
