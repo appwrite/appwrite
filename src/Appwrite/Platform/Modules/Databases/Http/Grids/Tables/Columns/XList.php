@@ -36,7 +36,7 @@ class XList extends AttributesXList
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
                 name: self::getName(),
-                description: '/docs/references/grids/list-attributes.md',
+                description: '/docs/references/grids/list-columns.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

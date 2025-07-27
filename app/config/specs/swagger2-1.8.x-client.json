@@ -4610,6 +4610,7 @@
                     "methods": [
                         {
                             "name": "createDocument",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -4843,6 +4844,7 @@
                     "methods": [
                         {
                             "name": "upsertDocument",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -5132,7 +5134,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/list-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -5213,7 +5215,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -5226,6 +5228,7 @@
                     "methods": [
                         {
                             "name": "createRow",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -5349,7 +5352,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/get-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -5438,7 +5441,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/upsert-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -5451,6 +5454,7 @@
                     "methods": [
                         {
                             "name": "upsertRow",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -5556,7 +5560,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -5652,7 +5656,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/delete-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",

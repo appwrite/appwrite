@@ -4559,6 +4559,7 @@
                     "methods": [
                         {
                             "name": "list",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -4574,6 +4575,7 @@
                         },
                         {
                             "name": "listDatabases",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -4585,7 +4587,7 @@
                                     "model": "#\/components\/schemas\/databaseList"
                                 }
                             ],
-                            "description": ""
+                            "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results."
                         }
                     ],
                     "auth": {
@@ -4664,6 +4666,7 @@
                     "methods": [
                         {
                             "name": "create",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -4679,6 +4682,7 @@
                         },
                         {
                             "name": "createDatabase",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -4690,7 +4694,7 @@
                                     "model": "#\/components\/schemas\/database"
                                 }
                             ],
-                            "description": ""
+                            "description": "Create a new Database.\n"
                         }
                     ],
                     "auth": {
@@ -4775,6 +4779,7 @@
                     "methods": [
                         {
                             "name": "listUsage",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -4790,6 +4795,7 @@
                         },
                         {
                             "name": "listDatabaseUsage",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -4879,6 +4885,7 @@
                     "methods": [
                         {
                             "name": "get",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -4894,6 +4901,7 @@
                         },
                         {
                             "name": "getDatabase",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -4905,7 +4913,7 @@
                                     "model": "#\/components\/schemas\/database"
                                 }
                             ],
-                            "description": ""
+                            "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata."
                         }
                     ],
                     "auth": {
@@ -4970,6 +4978,7 @@
                     "methods": [
                         {
                             "name": "update",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -4985,6 +4994,7 @@
                         },
                         {
                             "name": "updateDatabase",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -4996,7 +5006,7 @@
                                     "model": "#\/components\/schemas\/database"
                                 }
                             ],
-                            "description": ""
+                            "description": "Update a database by its unique ID."
                         }
                     ],
                     "auth": {
@@ -5078,6 +5088,7 @@
                     "methods": [
                         {
                             "name": "delete",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -5085,14 +5096,14 @@
                             "required": [],
                             "responses": [
                                 {
-                                    "code": 204,
-                                    "model": "#\/components\/schemas\/none"
+                                    "code": 204
                                 }
                             ],
                             "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database."
                         },
                         {
                             "name": "deleteDatabase",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -5100,11 +5111,10 @@
                             "required": [],
                             "responses": [
                                 {
-                                    "code": 204,
-                                    "model": "#\/components\/schemas\/none"
+                                    "code": 204
                                 }
                             ],
-                            "description": ""
+                            "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database."
                         }
                     ],
                     "auth": {
@@ -8336,6 +8346,7 @@
                     "methods": [
                         {
                             "name": "createDocument",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -8362,6 +8373,7 @@
                         },
                         {
                             "name": "createDocuments",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -8499,6 +8511,7 @@
                     "methods": [
                         {
                             "name": "upsertDocuments",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -8905,6 +8918,7 @@
                     "methods": [
                         {
                             "name": "upsertDocument",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -10097,7 +10111,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/list-tables.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-tables.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-tables.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10180,7 +10194,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-table.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-table.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10284,7 +10298,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/get-table.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10353,7 +10367,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-table.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-table.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10452,7 +10466,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/delete-table.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-table.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10502,7 +10516,7 @@
                 "tags": [
                     "grids"
                 ],
-                "description": "List attributes in the collection.",
+                "description": "List columns in the table.",
                 "responses": {
                     "200": {
                         "description": "Columns List",
@@ -10523,7 +10537,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/list-columns.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-attributes.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-columns.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10607,7 +10621,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-boolean-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-boolean-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10713,7 +10727,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-boolean-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-boolean-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10824,7 +10838,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-datetime-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-datetime-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10930,7 +10944,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-datetime-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-datetime-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11041,7 +11055,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-email-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-email-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11147,7 +11161,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-email-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-email-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11258,7 +11272,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-enum-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-enum-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11373,7 +11387,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-enum-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-enum-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11493,7 +11507,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-float-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-float-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11609,7 +11623,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-float-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-float-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11730,7 +11744,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-integer-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-integer-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11846,7 +11860,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-integer-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-integer-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11967,7 +11981,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-ip-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-ip-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12073,7 +12087,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-ip-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-ip-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12184,7 +12198,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-relationship-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-relationship-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12315,7 +12329,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-string-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-string-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12432,7 +12446,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-string-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-string-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12548,7 +12562,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-url-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-url-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12654,7 +12668,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-url-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-url-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12796,7 +12810,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/get-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12867,7 +12881,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/delete-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12947,7 +12961,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-relationship-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-relationship-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13034,7 +13048,7 @@
                 "tags": [
                     "grids"
                 ],
-                "description": "List indexes in the collection.",
+                "description": "List indexes in the table.",
                 "responses": {
                     "200": {
                         "description": "Column Indexes List",
@@ -13055,7 +13069,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/list-indexes.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-indexes.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-indexes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13116,7 +13130,7 @@
                 "tags": [
                     "grids"
                 ],
-                "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
+                "description": "Creates an index on the columns listed. Your index should include all the columns you will query in a single request.\nColumns can be `key`, `fulltext`, and `unique`.",
                 "responses": {
                     "202": {
                         "description": "Index",
@@ -13137,7 +13151,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-index.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13265,7 +13279,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/get-index.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-index.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13336,7 +13350,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/delete-index.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-index.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13411,12 +13425,12 @@
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "listTableLogs",
-                    "group": "grids",
+                    "group": "tables",
                     "weight": 375,
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/list-table-logs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table-logs.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-table-logs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13499,7 +13513,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/list-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13584,7 +13598,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/create-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -13598,6 +13612,7 @@
                     "methods": [
                         {
                             "name": "createRow",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -13624,6 +13639,7 @@
                         },
                         {
                             "name": "createRows",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -13744,7 +13760,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/upsert-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/upsert-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -13757,6 +13773,7 @@
                     "methods": [
                         {
                             "name": "upsertRows",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -13853,7 +13870,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -13947,7 +13964,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/delete-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-rows.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -14038,7 +14055,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/get-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -14133,7 +14150,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/upsert-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -14147,6 +14164,7 @@
                     "methods": [
                         {
                             "name": "upsertRow",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -14256,7 +14274,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/update-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -14355,7 +14373,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/delete-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -14439,7 +14457,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/list-row-logs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row-logs.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-row-logs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -14532,7 +14550,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/decrement-row-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-row-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -14644,7 +14662,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/increment-row-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-row-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -14756,7 +14774,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "grids\/get-table-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-table-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -14860,6 +14878,7 @@
                     "methods": [
                         {
                             "name": "listLogs",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -14875,6 +14894,7 @@
                         },
                         {
                             "name": "listDatabaseLogs",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -14886,7 +14906,7 @@
                                     "model": "#\/components\/schemas\/logList"
                                 }
                             ],
-                            "description": ""
+                            "description": "Get the database activity logs list by its unique ID."
                         }
                     ],
                     "auth": {
@@ -14965,6 +14985,7 @@
                     "methods": [
                         {
                             "name": "getDatabaseUsage",
+                            "namespace": "databases",
                             "auth": {
                                 "Project": []
                             },
@@ -14980,6 +15001,7 @@
                         },
                         {
                             "name": "getDatabaseUsage",
+                            "namespace": "grids",
                             "auth": {
                                 "Project": []
                             },
@@ -14991,7 +15013,7 @@
                                     "model": "#\/components\/schemas\/usageDatabase"
                                 }
                             ],
-                            "description": ""
+                            "description": "Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days."
                         }
                     ],
                     "auth": {
