@@ -39698,6 +39698,11 @@
                         "description": "Is VCS (Version Control System) repository private?",
                         "x-example": true
                     },
+                    "defaultBranch": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) repository's default branch name.",
+                        "x-example": "main"
+                    },
                     "pushedAt": {
                         "type": "string",
                         "description": "Last commit date in ISO 8601 format.",
@@ -39710,6 +39715,7 @@
                     "organization",
                     "provider",
                     "private",
+                    "defaultBranch",
                     "pushedAt"
                 ]
             },
@@ -39742,6 +39748,11 @@
                         "description": "Is VCS (Version Control System) repository private?",
                         "x-example": true
                     },
+                    "defaultBranch": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) repository's default branch name.",
+                        "x-example": "main"
+                    },
                     "pushedAt": {
                         "type": "string",
                         "description": "Last commit date in ISO 8601 format.",
@@ -39759,6 +39770,7 @@
                     "organization",
                     "provider",
                     "private",
+                    "defaultBranch",
                     "pushedAt",
                     "framework"
                 ]
@@ -39792,6 +39804,11 @@
                         "description": "Is VCS (Version Control System) repository private?",
                         "x-example": true
                     },
+                    "defaultBranch": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) repository's default branch name.",
+                        "x-example": "main"
+                    },
                     "pushedAt": {
                         "type": "string",
                         "description": "Last commit date in ISO 8601 format.",
@@ -39809,6 +39826,7 @@
                     "organization",
                     "provider",
                     "private",
+                    "defaultBranch",
                     "pushedAt",
                     "runtime"
                 ]

@@ -170,6 +170,7 @@ trait AccountBase
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmail();
+
         $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
@@ -178,6 +179,7 @@ trait AccountBase
         $code = ($matches[0] ?? [])[0] ?? '';
 
         $this->assertNotEmpty($code);
+        $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires in 15 minutes.', $lastEmail['text']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
