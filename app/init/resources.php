@@ -97,10 +97,10 @@ App::setResource('consumerDatabases', function (BrokerPool $consumer) {
 }, ['consumer']);
 App::setResource('consumerMigrations', function (BrokerPool $consumer) {
     return $consumer;
-}, ['publisher']);
+}, ['consumer']);
 App::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
     return $consumer;
-}, ['publisher']);
+}, ['consumer']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
