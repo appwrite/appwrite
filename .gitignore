@@ -16,4 +16,5 @@ app/sdks
 dev/yasd_init.php
 .phpunit.result.cache
 Makefile
+appwrite.config.json
 /.zed/
