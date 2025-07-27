@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Tables;
+namespace Tests\E2E\Services\Databases\Grids;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -35,7 +35,7 @@ class DatabasesCustomClientTest extends Scope
         $databaseId = $database['body']['$id'];
 
         // Collection aliases write to create, update, delete
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -54,7 +54,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $moviesId . '/columns/string', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $moviesId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -69,7 +69,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(202, $response['headers']['status-code']);
 
         // Document aliases write to update, delete
-        $row1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $moviesId . '/rows', array_merge([
+        $row1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $moviesId . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -91,7 +91,7 @@ class DatabasesCustomClientTest extends Scope
          */
 
         // Document does not allow create permission
-        $row2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $moviesId . '/rows', array_merge([
+        $row2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $moviesId . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -133,7 +133,7 @@ class DatabasesCustomClientTest extends Scope
 
         $databaseId = $database['body']['$id'];
         // Create collection
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -146,7 +146,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // Add attribute to collection
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/permissionCheck/columns/string', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/permissionCheck/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -161,7 +161,7 @@ class DatabasesCustomClientTest extends Scope
         sleep(2);
 
         // Creating document by server, give read permission to our user + some other user
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/permissionCheck/rows', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/permissionCheck/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -182,7 +182,7 @@ class DatabasesCustomClientTest extends Scope
 
         // Update document
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/permissionCheck/rows/permissionCheckDocument', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/permissionCheck/rows/permissionCheckDocument', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -194,7 +194,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Get name of the document, should be the new one
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/permissionCheck/rows/permissionCheckDocument', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/permissionCheck/rows/permissionCheckDocument', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -203,7 +203,7 @@ class DatabasesCustomClientTest extends Scope
 
         // Cleanup to prevent collision with other tests
         // Delete collection
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/permissionCheck', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/permissionCheck', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -216,7 +216,7 @@ class DatabasesCustomClientTest extends Scope
         sleep(2);
 
         // Make sure collection has been deleted
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/permissionCheck', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/permissionCheck', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -242,7 +242,7 @@ class DatabasesCustomClientTest extends Scope
 
 
         // Creating collection 1
-        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -259,7 +259,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Creating collection 2
-        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -278,7 +278,7 @@ class DatabasesCustomClientTest extends Scope
         \sleep(2);
 
         // Creating two way relationship between collection 1 and collection 2 from collection 1
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -294,7 +294,7 @@ class DatabasesCustomClientTest extends Scope
         \sleep(3);
 
         // Update relation from collection 2 to on delete restrict
-        $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $table2['body']['$id'] . '/columns/' . $table1['body']['$id'] . '/relationship', array_merge([
+        $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $table2['body']['$id'] . '/columns/' . $table1['body']['$id'] . '/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -303,7 +303,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Fetching attributes after updating relation to compare
-        $table1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'], [
+        $table1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -330,7 +330,7 @@ class DatabasesCustomClientTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -346,7 +346,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -364,7 +364,7 @@ class DatabasesCustomClientTest extends Scope
 
         \sleep(2);
 
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -382,7 +382,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertEquals('same_key', $relation['body']['twoWayKey']);
 
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -401,7 +401,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals('Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.', $relation['body']['message']);
 
         // twoWayKey is null TwoWayKey is default
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -419,7 +419,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertArrayHasKey('twoWayKey', $relation['body']);
 
         // twoWayKey is null,   TwoWayKey is default, second POST
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -437,7 +437,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(409, $relation['body']['code']);
 
         // RelationshipManyToMany
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -456,7 +456,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertArrayHasKey('twoWayKey', $relation['body']);
 
         // Second RelationshipManyToMany on Same collections
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -490,7 +490,7 @@ class DatabasesCustomClientTest extends Scope
         $databaseId = $database['body']['$id'];
 
         // Creating collection 1
-        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -506,7 +506,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Creating collection 2
-        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -519,7 +519,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        $table3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -534,7 +534,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        $table4 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table4 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -547,7 +547,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        $table5 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $table5 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -563,7 +563,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Creating one to one relationship from collection 1 to colletion 2
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -576,7 +576,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Creating one to one relationship from collection 2 to colletion 3
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table2['body']['$id'] . '/columns/relationship', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table2['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -589,7 +589,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Creating one to one relationship from collection 3 to colletion 4
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table3['body']['$id'] . '/columns/relationship', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table3['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -602,7 +602,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Creating one to one relationship from collection 4 to colletion 5
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table4['body']['$id'] . '/columns/relationship', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table4['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -614,7 +614,7 @@ class DatabasesCustomClientTest extends Scope
             'key' => $table5['body']['$id']
         ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -626,7 +626,7 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
         ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table2['body']['$id'] . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table2['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -638,7 +638,7 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
         ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table3['body']['$id'] . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table3['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -650,7 +650,7 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
         ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table4['body']['$id'] . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table4['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -662,7 +662,7 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
         ]);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table5['body']['$id'] . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table5['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -676,7 +676,7 @@ class DatabasesCustomClientTest extends Scope
 
         \sleep(2);
         // Creating parent document with a child reference to test the permissions
-        $parentDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/rows', array_merge([
+        $parentDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -705,7 +705,7 @@ class DatabasesCustomClientTest extends Scope
 
         $this->assertEquals(201, $parentDocument['headers']['status-code']);
         // This is the point of the test. We should not need any authorization permission to update the document with same data.
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -734,7 +734,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals($parentDocument['body'], $response['body']);
 
         // Giving update permission of collection 3 to user.
-        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tables/collection3', array_merge([
+        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/grids/tables/collection3', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -751,7 +751,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -780,7 +780,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(11, $response['body'][$table2['body']['$id']]['collection3']['Rating']);
 
         // We should not be allowed to update the document as we do not have permission for collection 2.
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -797,7 +797,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         // We should not be allowed to update the document as we do not have permission for collection 2.
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $table2['body']['$id'] . '/rows/' . $table2['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $table2['body']['$id'] . '/rows/' . $table2['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -809,7 +809,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         // Removing update permission from collection 3.
-        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tables/collection3', array_merge([
+        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/grids/tables/collection3', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -825,7 +825,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Giving update permission to collection 2.
-        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tables/collection2', array_merge([
+        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/grids/tables/collection2', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -842,7 +842,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         // Creating collection 3 new document
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $table3['body']['$id'] . '/rows', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table3['body']['$id'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -856,7 +856,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // We should be allowed to link a new document from collection 3 to collection 2.
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -873,7 +873,7 @@ class DatabasesCustomClientTest extends Scope
 
 
         // We should be allowed to link and create a new document from collection 3 to collection 2.
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $table1['body']['$id'] . '/rows/' . $table1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

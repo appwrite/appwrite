@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Tables;
+namespace Tests\E2E\Services\Databases\Grids;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -44,7 +44,7 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
 
-        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/tables', $this->getServerHeader(), [
+        $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/grids/tables', $this->getServerHeader(), [
             'tableId' => ID::custom('table1'),
             'name' => 'Table 1',
             'permissions' => [
@@ -57,13 +57,13 @@ class DatabasesPermissionsTeamTest extends Scope
 
         $this->tables['table1'] = $table1['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/tables/' . $this->tables['table1'] . '/columns/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/grids/tables/' . $this->tables['table1'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/tables', $this->getServerHeader(), [
+        $table2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/grids/tables', $this->getServerHeader(), [
             'tableId' => ID::custom('table2'),
             'name' => 'Table 2',
             'permissions' => [
@@ -76,7 +76,7 @@ class DatabasesPermissionsTeamTest extends Scope
 
         $this->tables['table2'] = $table2['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/tables/' . $this->tables['table2'] . '/columns/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/grids/tables/' . $this->tables['table2'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -140,7 +140,7 @@ class DatabasesPermissionsTeamTest extends Scope
 
         $this->createTables($this->teams);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/tables/' . $this->tables['table1'] . '/rows', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/grids/tables/' . $this->tables['table1'] . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -148,7 +148,7 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/tables/' . $this->tables['table2'] . '/rows', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/grids/tables/' . $this->tables['table2'] . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
@@ -166,7 +166,7 @@ class DatabasesPermissionsTeamTest extends Scope
      */
     public function testReadRows($user, $table, $success, $users)
     {
-        $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $this->databaseId . '/tables/' . $table  . '/rows', [
+        $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $this->databaseId . '/grids/tables/' . $table  . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -186,7 +186,7 @@ class DatabasesPermissionsTeamTest extends Scope
      */
     public function testWriteRows($user, $table, $success, $users)
     {
-        $rows = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/tables/' . $table  . '/rows', [
+        $rows = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/grids/tables/' . $table  . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

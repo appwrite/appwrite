@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Tables;
+namespace Tests\E2E\Services\Databases\Grids;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -31,7 +31,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals('InvalidRowDatabase', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
-        $publicMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', $this->getServerHeader(), [
+        $publicMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', $this->getServerHeader(), [
             'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
@@ -41,7 +41,7 @@ class DatabasesPermissionsGuestTest extends Scope
                 Permission::delete(Role::any()),
             ],
         ]);
-        $privateMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', $this->getServerHeader(), [
+        $privateMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', $this->getServerHeader(), [
             'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [],
@@ -51,12 +51,12 @@ class DatabasesPermissionsGuestTest extends Scope
         $publicTable = ['id' => $publicMovies['body']['$id']];
         $privateTable = ['id' => $privateMovies['body']['$id']];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $publicTable['id'] . '/columns/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $publicTable['id'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $privateTable['id'] . '/columns/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $privateTable['id'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -93,14 +93,14 @@ class DatabasesPermissionsGuestTest extends Scope
         $privateTableId = $data['privateTableId'];
         $databaseId = $data['databaseId'];
 
-        $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $publicTableId . '/rows', $this->getServerHeader(), [
+        $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $publicTableId . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
             'permissions' => $permissions,
         ]);
-        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $privateTableId . '/rows', $this->getServerHeader(), [
+        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $privateTableId . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -114,11 +114,11 @@ class DatabasesPermissionsGuestTest extends Scope
         $roles = Authorization::getRoles();
         Authorization::cleanRoles();
 
-        $publicRows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $publicTableId  . '/rows', [
+        $publicRows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $publicTableId  . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
-        $privateRows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $privateTableId  . '/rows', [
+        $privateRows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $privateTableId  . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
@@ -148,7 +148,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $roles = Authorization::getRoles();
         Authorization::cleanRoles();
 
-        $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $publicTableId . '/rows', [
+        $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $publicTableId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -161,7 +161,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $publicRowId = $publicResponse['body']['$id'];
         $this->assertEquals(201, $publicResponse['headers']['status-code']);
 
-        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $privateTableId . '/rows', [
+        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $privateTableId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -174,7 +174,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals(401, $privateResponse['headers']['status-code']);
 
         // Create a row in private collection with API key so we can test that update and delete are also not allowed
-        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $privateTableId . '/rows', $this->getServerHeader(), [
+        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $privateTableId . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -184,7 +184,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals(201, $privateResponse['headers']['status-code']);
         $privateRowId = $privateResponse['body']['$id'];
 
-        $publicRow = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $publicTableId . '/rows/' . $publicRowId, [
+        $publicRow = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $publicTableId . '/rows/' . $publicRowId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -196,7 +196,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals(200, $publicRow['headers']['status-code']);
         $this->assertEquals('Thor: Ragnarok', $publicRow['body']['title']);
 
-        $privateRow = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $privateTableId . '/rows/' . $privateRowId, [
+        $privateRow = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $privateTableId . '/rows/' . $privateRowId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -207,14 +207,14 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $this->assertEquals(401, $privateRow['headers']['status-code']);
 
-        $publicRow = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $publicTableId . '/rows/' . $publicRowId, [
+        $publicRow = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $publicTableId . '/rows/' . $publicRowId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals(204, $publicRow['headers']['status-code']);
 
-        $privateRow = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $privateTableId . '/rows/' . $privateRowId, [
+        $privateRow = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $privateTableId . '/rows/' . $privateRowId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
@@ -240,7 +240,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals('GuestPermissionsWrite', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', $this->getServerHeader(), [
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', $this->getServerHeader(), [
             'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
@@ -251,7 +251,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $moviesId = $movies['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $moviesId . '/columns/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $moviesId . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -259,7 +259,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         sleep(1);
 
-        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $moviesId . '/rows', [
+        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $moviesId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
