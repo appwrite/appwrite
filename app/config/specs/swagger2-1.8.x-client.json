@@ -4520,7 +4520,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.listRows"
+                        "replaceWith": "grids.listRows"
                     },
                     "auth": {
                         "Project": []
@@ -4605,7 +4605,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createRow"
+                        "replaceWith": "grids.createRow"
                     },
                     "methods": [
                         {
@@ -4746,7 +4746,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getRow"
+                        "replaceWith": "grids.getRow"
                     },
                     "auth": {
                         "Project": []
@@ -4839,7 +4839,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.upsertRow"
+                        "replaceWith": "grids.upsertRow"
                     },
                     "methods": [
                         {
@@ -4976,7 +4976,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateRow"
+                        "replaceWith": "grids.updateRow"
                     },
                     "auth": {
                         "Project": []
@@ -5076,7 +5076,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteRow"
+                        "replaceWith": "grids.deleteRow"
                     },
                     "auth": {
                         "Project": []

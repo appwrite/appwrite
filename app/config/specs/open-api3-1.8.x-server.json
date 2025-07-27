@@ -4057,7 +4057,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "list",
                     "group": "databases",
@@ -4074,6 +4074,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.listDatabases"
+                    },
                     "methods": [
                         {
                             "name": "list",
@@ -4173,7 +4177,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "create",
                     "group": "databases",
@@ -4190,6 +4194,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.createDatabase"
+                    },
                     "methods": [
                         {
                             "name": "create",
@@ -4303,7 +4311,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "get",
                     "group": "databases",
@@ -4320,6 +4328,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.getDatabase"
+                    },
                     "methods": [
                         {
                             "name": "get",
@@ -4407,7 +4419,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "update",
                     "group": "databases",
@@ -4424,6 +4436,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.updateDatabase"
+                    },
                     "methods": [
                         {
                             "name": "update",
@@ -4534,7 +4550,7 @@
                         "description": "No content"
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "delete",
                     "group": "databases",
@@ -4551,6 +4567,10 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.deleteDatabase"
+                    },
                     "methods": [
                         {
                             "name": "delete",
@@ -4657,7 +4677,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.list"
+                        "replaceWith": "grids.listTables"
                     },
                     "auth": {
                         "Project": [],
@@ -4745,7 +4765,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.create"
+                        "replaceWith": "grids.createTable"
                     },
                     "auth": {
                         "Project": [],
@@ -4854,7 +4874,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.get"
+                        "replaceWith": "grids.getTable"
                     },
                     "auth": {
                         "Project": [],
@@ -4928,7 +4948,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.update"
+                        "replaceWith": "grids.updateTable"
                     },
                     "auth": {
                         "Project": [],
@@ -5032,7 +5052,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.delete"
+                        "replaceWith": "grids.deleteTable"
                     },
                     "auth": {
                         "Project": [],
@@ -5108,7 +5128,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.listColumns"
+                        "replaceWith": "grids.listColumns"
                     },
                     "auth": {
                         "Project": [],
@@ -5197,7 +5217,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createBooleanColumn"
+                        "replaceWith": "grids.createBooleanColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5308,7 +5328,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateBooleanColumn"
+                        "replaceWith": "grids.updateBooleanColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5424,7 +5444,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createDatetimeColumn"
+                        "replaceWith": "grids.createDatetimeColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5535,7 +5555,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateDatetimeColumn"
+                        "replaceWith": "grids.updateDatetimeColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5651,7 +5671,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createEmailColumn"
+                        "replaceWith": "grids.createEmailColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5762,7 +5782,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateEmailColumn"
+                        "replaceWith": "grids.updateEmailColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5878,7 +5898,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createEnumColumn"
+                        "replaceWith": "grids.createEnumColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5998,7 +6018,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateEnumColumn"
+                        "replaceWith": "grids.updateEnumColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6123,7 +6143,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createFloatColumn"
+                        "replaceWith": "grids.createFloatColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6244,7 +6264,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateFloatColumn"
+                        "replaceWith": "grids.updateFloatColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6370,7 +6390,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createIntegerColumn"
+                        "replaceWith": "grids.createIntegerColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6491,7 +6511,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateIntegerColumn"
+                        "replaceWith": "grids.updateIntegerColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6617,7 +6637,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createIpColumn"
+                        "replaceWith": "grids.createIpColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6728,7 +6748,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateIpColumn"
+                        "replaceWith": "grids.updateIpColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6844,7 +6864,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createRelationshipColumn"
+                        "replaceWith": "grids.createRelationshipColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6980,7 +7000,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createStringColumn"
+                        "replaceWith": "grids.createStringColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7102,7 +7122,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateStringColumn"
+                        "replaceWith": "grids.updateStringColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7223,7 +7243,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createUrlColumn"
+                        "replaceWith": "grids.createUrlColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7334,7 +7354,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateUrlColumn"
+                        "replaceWith": "grids.updateUrlColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7481,7 +7501,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getColumn"
+                        "replaceWith": "grids.getColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7557,7 +7577,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteColumn"
+                        "replaceWith": "grids.deleteColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7642,7 +7662,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateRelationshipColumn"
+                        "replaceWith": "grids.updateRelationshipColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7757,7 +7777,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.listRows"
+                        "replaceWith": "grids.listRows"
                     },
                     "auth": {
                         "Project": [],
@@ -7848,7 +7868,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createRow"
+                        "replaceWith": "grids.createRow"
                     },
                     "methods": [
                         {
@@ -8017,7 +8037,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.upsertRows"
+                        "replaceWith": "grids.upsertRows"
                     },
                     "methods": [
                         {
@@ -8141,7 +8161,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateRows"
+                        "replaceWith": "grids.updateRows"
                     },
                     "auth": {
                         "Project": [],
@@ -8240,7 +8260,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteRows"
+                        "replaceWith": "grids.deleteRows"
                     },
                     "auth": {
                         "Project": [],
@@ -8337,7 +8357,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getRow"
+                        "replaceWith": "grids.getRow"
                     },
                     "auth": {
                         "Project": [],
@@ -8438,7 +8458,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.upsertRow"
+                        "replaceWith": "grids.upsertRow"
                     },
                     "methods": [
                         {
@@ -8583,7 +8603,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateRow"
+                        "replaceWith": "grids.updateRow"
                     },
                     "auth": {
                         "Project": [],
@@ -8688,7 +8708,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteRow"
+                        "replaceWith": "grids.deleteRow"
                     },
                     "auth": {
                         "Project": [],
@@ -8777,7 +8797,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.decrementRowColumn"
+                        "replaceWith": "grids.decrementRowColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -8894,7 +8914,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.incrementRowColumn"
+                        "replaceWith": "grids.incrementRowColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -9010,7 +9030,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.listIndexes"
+                        "replaceWith": "grids.listIndexes"
                     },
                     "auth": {
                         "Project": [],
@@ -9097,7 +9117,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createIndex"
+                        "replaceWith": "grids.createIndex"
                     },
                     "auth": {
                         "Project": [],
@@ -9230,7 +9250,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getIndex"
+                        "replaceWith": "grids.getIndex"
                     },
                     "auth": {
                         "Project": [],
@@ -9306,7 +9326,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteIndex"
+                        "replaceWith": "grids.deleteIndex"
                     },
                     "auth": {
                         "Project": [],
