@@ -4,9 +4,10 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\SDKMethod;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
+use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -35,20 +36,40 @@ class Update extends Action
             ->label('event', 'databases.[databaseId].update')
             ->label('audits.event', 'database.update')
             ->label('audits.resource', 'database/{response.$id}')
-            ->label('sdk', SDKMethod::withGridsAPI(
-                namespace: 'databases',
-                group: 'databases',
-                name: 'update',
-                description: '/docs/references/databases/update.md',
-                auth: [AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_DATABASE,
+            ->label('sdk', [
+                new Method(
+                    namespace: 'databases',
+                    group: 'databases',
+                    name: 'update',
+                    description: '/docs/references/databases/update.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_DATABASE,
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'grids.updateDatabase',
                     )
-                ],
-                contentType: ContentType::JSON
-            ))
+                ),
+                new Method(
+                    namespace: 'grids',
+                    group: 'grids',
+                    name: 'updateDatabase',
+                    description: '/docs/references/grids/update-database.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_DATABASE,
+                        )
+                    ],
+                    contentType: ContentType::JSON
+                ),
+            ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)

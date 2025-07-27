@@ -3,9 +3,10 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\SDKMethod;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
+use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -35,20 +36,40 @@ class XList extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('sdk', SDKMethod::withGridsAPI(
-                namespace: 'databases',
-                group: 'databases',
-                name: 'list',
-                description: '/docs/references/databases/list.md',
-                auth: [AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_DATABASE_LIST,
+            ->label('sdk', [
+                new Method(
+                    namespace: 'databases',
+                    group: 'databases',
+                    name: 'list',
+                    description: '/docs/references/databases/list.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_DATABASE_LIST,
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'grids.listDatabases',
                     )
-                ],
-                contentType: ContentType::JSON
-            ))
+                ),
+                new Method(
+                    namespace: 'grids',
+                    group: 'grids',
+                    name: 'listDatabases',
+                    description: '/docs/references/grids/list-databases.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_DATABASE_LIST,
+                        )
+                    ],
+                    contentType: ContentType::JSON
+                ),
+            ])
             ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')

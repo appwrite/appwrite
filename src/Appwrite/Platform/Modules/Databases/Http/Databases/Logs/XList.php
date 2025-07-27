@@ -3,9 +3,10 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Logs;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\SDKMethod;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
+use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use DeviceDetector\DeviceDetector as Detector;
@@ -41,20 +42,40 @@ class XList extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('sdk', SDKMethod::withGridsAPI(
-                namespace: 'databases',
-                group: 'logs',
-                name: 'listLogs',
-                description: '/docs/references/databases/get-logs.md',
-                auth: [AuthType::ADMIN],
-                responses: [
-                    new SDKResponse(
-                        code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_LOG_LIST,
+            ->label('sdk', [
+                new Method(
+                    namespace: 'databases',
+                    group: 'logs',
+                    name: 'listLogs',
+                    description: '/docs/references/databases/get-logs.md',
+                    auth: [AuthType::ADMIN],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_LOG_LIST,
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'grids.listDatabaseLogs',
                     )
-                ],
-                contentType: ContentType::JSON
-            ))
+                ),
+                new Method(
+                    namespace: 'grids',
+                    group: 'logs',
+                    name: 'listDatabaseLogs',
+                    description: '/docs/references/grids/list-database-logs.md',
+                    auth: [AuthType::ADMIN],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_LOG_LIST,
+                        )
+                    ],
+                    contentType: ContentType::JSON
+                ),
+            ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')
