@@ -14,7 +14,9 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Mongo\Client as MongoClient;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -108,6 +110,16 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
+
+    $fallbackForMongoDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => 'mongodb',
+        'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT', '27017'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
@@ -125,9 +137,9 @@ $register->set('pools', function () {
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => $fallbackForDB,
+            'dsns' => $fallbackForMongoDB,
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mongodb', 'mariadb', 'mysql'],
         ],
         'logs' => [
             'type' => 'database',
@@ -193,7 +205,7 @@ $register->set('pools', function () {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
-
+            
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
             $dsnPort = $dsn->getPort();
@@ -213,6 +225,7 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
+
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -225,6 +238,11 @@ $register->set('pools', function () {
                             \PDO::ATTR_STRINGIFY_FETCHES => true
                         ]);
                     });
+                },
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass);
+                    $mongo->connect();
+                    return $mongo;
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
@@ -246,6 +264,7 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
+                            'mongodb' => new Mongo($resource()),
                             default => null
                         };
 

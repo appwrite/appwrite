@@ -1042,6 +1042,38 @@ services:
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
 
+  mongodb:
+    image: mongo:latest
+    container_name: appwrite-mongodb
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+
+  appwrite-mongo-express:
+    image: mongo-express
+    container_name: appwrite-mongo-express
+    networks:
+      - appwrite
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: appwrite-mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${_APP_DB_ROOT_PASS}
+      ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
+
+
   redis:
     image: redis:7.2.4-alpine
     <<: *x-logging
@@ -1140,6 +1172,7 @@ networks:
 
 volumes:
   appwrite-mariadb:
+  appwrite-mongodb:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
