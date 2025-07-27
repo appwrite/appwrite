@@ -56,7 +56,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function getSdkGroup(): string
     {
-        return $this->isCollectionsAPI() ? 'collections' : 'grids';
+        return $this->isCollectionsAPI() ? 'collections' : 'tables';
     }
 
     /**

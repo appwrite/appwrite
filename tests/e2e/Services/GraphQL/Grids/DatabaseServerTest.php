@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL\Tables;
+namespace Tests\E2E\Services\GraphQL\Grids;
 
 use Exception;
 use Tests\E2E\Client;
