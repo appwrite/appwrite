@@ -215,6 +215,7 @@ class OpenAPI3 extends Format
 
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
+                        'namespace' => $methodObj->getNamespace(),
                         'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
@@ -237,10 +238,16 @@ class OpenAPI3 extends Format
                                 'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $response->getModel())
                             ];
                         } else {
-                            $additionalMethod['responses'][] = [
+                            $responseData = [
                                 'code' => $response->getCode(),
-                                'model' => '#/components/schemas/' . $response->getModel()
                             ];
+
+                            // lets not assume stuff here!
+                            if ($response->getCode() !== 204) {
+                                $responseData['model'] = '#/components/schemas/' . $response->getModel();
+                            }
+
+                            $additionalMethod['responses'][] = $responseData;
                         }
                     }
 

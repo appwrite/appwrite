@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "497a684d3c93c08d4741f5bb886a5474",
+    "content-hash": "7f1ef097cd83efca1018c4eb84b7bb05",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4810,16 +4810,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.41.23",
+            "version": "dev-feat-multiple-namespaces",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "188dff738ff7b9f1f9209b34ac2092b5456b1001"
+                "reference": "3130f9a952166f86f680b8385ca4441dcc1b7f0b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/188dff738ff7b9f1f9209b34ac2092b5456b1001",
-                "reference": "188dff738ff7b9f1f9209b34ac2092b5456b1001",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3130f9a952166f86f680b8385ca4441dcc1b7f0b",
+                "reference": "3130f9a952166f86f680b8385ca4441dcc1b7f0b",
                 "shasum": ""
             },
             "require": {
@@ -4855,9 +4855,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.23"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-multiple-namespaces"
             },
-            "time": "2025-07-25T06:47:04+00:00"
+            "time": "2025-07-27T07:52:16+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8239,7 +8239,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

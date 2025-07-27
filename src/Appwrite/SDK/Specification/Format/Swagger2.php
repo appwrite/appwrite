@@ -224,6 +224,7 @@ class Swagger2 extends Format
 
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
+                        'namespace' => $methodObj->getNamespace(),
                         'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
@@ -247,10 +248,16 @@ class Swagger2 extends Format
                                 'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
                             ];
                         } else {
-                            $additionalMethod['responses'][] = [
+                            $responseData = [
                                 'code' => $response->getCode(),
-                                'model' => '#/definitions/' . $response->getModel()
                             ];
+
+                            // lets not assume stuff here!
+                            if ($response->getCode() !== 204) {
+                                $responseData['model'] = '#/definitions/' . $response->getModel();
+                            }
+
+                            $additionalMethod['responses'][] = $responseData;
                         }
                     }
 

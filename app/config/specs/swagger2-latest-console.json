@@ -4716,6 +4716,40 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "list",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/databaseList"
+                                }
+                            ],
+                            "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results."
+                        },
+                        {
+                            "name": "listDatabases",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/databaseList"
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4788,6 +4822,40 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "create",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/database"
+                                }
+                            ],
+                            "description": "Create a new Database.\n"
+                        },
+                        {
+                            "name": "createDatabase",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/database"
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4870,6 +4938,40 @@
                         "console"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "listUsage",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/usageDatabases"
+                                }
+                            ],
+                            "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections\/tables, documents\/rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days."
+                        },
+                        {
+                            "name": "listDatabaseUsage",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/usageDatabases"
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4940,6 +5042,40 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "get",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/database"
+                                }
+                            ],
+                            "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata."
+                        },
+                        {
+                            "name": "getDatabase",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/database"
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4999,6 +5135,40 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "update",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/database"
+                                }
+                            ],
+                            "description": "Update a database by its unique ID."
+                        },
+                        {
+                            "name": "updateDatabase",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/database"
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -5077,6 +5247,38 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "delete",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database."
+                        },
+                        {
+                            "name": "deleteDatabase",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -8264,10 +8466,9 @@
                     "methods": [
                         {
                             "name": "createDocument",
+                            "namespace": "databases",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -8292,9 +8493,9 @@
                         },
                         {
                             "name": "createDocuments",
+                            "namespace": "databases",
                             "auth": {
-                                "Admin": [],
-                                "Key": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -8430,9 +8631,9 @@
                     "methods": [
                         {
                             "name": "upsertDocuments",
+                            "namespace": "databases",
                             "auth": {
-                                "Admin": [],
-                                "Key": []
+                                "Project": []
                             },
                             "parameters": [],
                             "required": [],
@@ -8820,10 +9021,9 @@
                     "methods": [
                         {
                             "name": "upsertDocument",
+                            "namespace": "databases",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [],
                             "required": [],
@@ -9930,86 +10130,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/logs": {
-            "get": {
-                "summary": "List database logs",
-                "operationId": "databasesListLogs",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "databases"
-                ],
-                "description": "Get the database activity logs list by its unique ID.",
-                "responses": {
-                    "200": {
-                        "description": "Logs List",
-                        "schema": {
-                            "$ref": "#\/definitions\/logList"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "listLogs",
-                    "group": "logs",
-                    "weight": 321,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "databases\/list-logs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-logs.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "databases.read",
-                    "platforms": [
-                        "console"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Only supported methods are limit and offset",
-                        "required": false,
-                        "type": "array",
-                        "collectionFormat": "multi",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": [],
-                        "in": "query"
-                    }
-                ]
-            }
-        },
-        "\/databases\/{databaseId}\/tables": {
+        "\/databases\/{databaseId}\/grids\/tables": {
             "get": {
                 "summary": "List tables",
-                "operationId": "tablesList",
+                "operationId": "gridsListTables",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get a list of all tables that belong to the provided databaseId. You can use the search parameter to filter your results.",
                 "responses": {
@@ -10022,12 +10152,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "list",
+                    "method": "listTables",
                     "group": null,
                     "weight": 374,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/list.md",
+                    "demo": "grids\/list-tables.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-tables.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10081,7 +10211,7 @@
             },
             "post": {
                 "summary": "Create table",
-                "operationId": "tablesCreate",
+                "operationId": "gridsCreateTable",
                 "consumes": [
                     "application\/json"
                 ],
@@ -10089,7 +10219,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a new Table. Before using this route, you should create a new database resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
                 "responses": {
@@ -10102,12 +10232,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "create",
+                    "method": "createTable",
                     "group": null,
                     "weight": 370,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create.md",
+                    "demo": "grids\/create-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10185,16 +10315,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}": {
             "get": {
                 "summary": "Get table",
-                "operationId": "tablesGet",
+                "operationId": "gridsGetTable",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get a table by its unique ID. This endpoint response returns a JSON object with the table metadata.",
                 "responses": {
@@ -10207,12 +10337,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "get",
+                    "method": "getTable",
                     "group": null,
                     "weight": 371,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/get.md",
+                    "demo": "grids\/get-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10253,7 +10383,7 @@
             },
             "put": {
                 "summary": "Update table",
-                "operationId": "tablesUpdate",
+                "operationId": "gridsUpdateTable",
                 "consumes": [
                     "application\/json"
                 ],
@@ -10261,7 +10391,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update a table by its unique ID.",
                 "responses": {
@@ -10274,12 +10404,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "update",
+                    "method": "updateTable",
                     "group": null,
                     "weight": 372,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update.md",
+                    "demo": "grids\/update-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10359,13 +10489,13 @@
             },
             "delete": {
                 "summary": "Delete table",
-                "operationId": "tablesDelete",
+                "operationId": "gridsDeleteTable",
                 "consumes": [
                     "application\/json"
                 ],
                 "produces": [],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Delete a table by its unique ID. Only users with write permissions have access to delete this resource.",
                 "responses": {
@@ -10375,12 +10505,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "delete",
+                    "method": "deleteTable",
                     "group": null,
                     "weight": 373,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/delete.md",
+                    "demo": "grids\/delete-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10420,16 +10550,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns": {
             "get": {
                 "summary": "List columns",
-                "operationId": "tablesListColumns",
+                "operationId": "gridsListColumns",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "List attributes in the collection.",
                 "responses": {
@@ -10447,7 +10577,7 @@
                     "weight": 379,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/list-columns.md",
+                    "demo": "grids\/list-columns.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-attributes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10499,10 +10629,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/boolean": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/boolean": {
             "post": {
                 "summary": "Create boolean column",
-                "operationId": "tablesCreateBooleanColumn",
+                "operationId": "gridsCreateBooleanColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -10510,7 +10640,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a boolean column.\n",
                 "responses": {
@@ -10528,7 +10658,7 @@
                     "weight": 380,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-boolean-column.md",
+                    "demo": "grids\/create-boolean-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10605,10 +10735,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/boolean\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/boolean\/{key}": {
             "patch": {
                 "summary": "Update boolean column",
-                "operationId": "tablesUpdateBooleanColumn",
+                "operationId": "gridsUpdateBooleanColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -10616,7 +10746,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update a boolean column. Changing the `default` value will not update already existing rows.",
                 "responses": {
@@ -10634,7 +10764,7 @@
                     "weight": 381,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-boolean-column.md",
+                    "demo": "grids\/update-boolean-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10713,10 +10843,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/datetime": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/datetime": {
             "post": {
                 "summary": "Create datetime column",
-                "operationId": "tablesCreateDatetimeColumn",
+                "operationId": "gridsCreateDatetimeColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -10724,7 +10854,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a date time column according to the ISO 8601 standard.",
                 "responses": {
@@ -10742,7 +10872,7 @@
                     "weight": 382,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-datetime-column.md",
+                    "demo": "grids\/create-datetime-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10819,10 +10949,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/datetime\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/datetime\/{key}": {
             "patch": {
                 "summary": "Update dateTime column",
-                "operationId": "tablesUpdateDatetimeColumn",
+                "operationId": "gridsUpdateDatetimeColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -10830,7 +10960,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update a date time column. Changing the `default` value will not update already existing rows.",
                 "responses": {
@@ -10848,7 +10978,7 @@
                     "weight": 383,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-datetime-column.md",
+                    "demo": "grids\/update-datetime-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10927,10 +11057,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/email": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/email": {
             "post": {
                 "summary": "Create email column",
-                "operationId": "tablesCreateEmailColumn",
+                "operationId": "gridsCreateEmailColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -10938,7 +11068,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create an email column.\n",
                 "responses": {
@@ -10956,7 +11086,7 @@
                     "weight": 384,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-email-column.md",
+                    "demo": "grids\/create-email-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11033,10 +11163,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/email\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/email\/{key}": {
             "patch": {
                 "summary": "Update email column",
-                "operationId": "tablesUpdateEmailColumn",
+                "operationId": "gridsUpdateEmailColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11044,7 +11174,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update an email column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -11062,7 +11192,7 @@
                     "weight": 385,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-email-column.md",
+                    "demo": "grids\/update-email-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11141,10 +11271,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/enum": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/enum": {
             "post": {
                 "summary": "Create enum column",
-                "operationId": "tablesCreateEnumColumn",
+                "operationId": "gridsCreateEnumColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11152,7 +11282,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create an enumeration column. The `elements` param acts as a white-list of accepted values for this column.",
                 "responses": {
@@ -11170,7 +11300,7 @@
                     "weight": 386,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-enum-column.md",
+                    "demo": "grids\/create-enum-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11257,10 +11387,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/enum\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/enum\/{key}": {
             "patch": {
                 "summary": "Update enum column",
-                "operationId": "tablesUpdateEnumColumn",
+                "operationId": "gridsUpdateEnumColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11268,7 +11398,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update an enum column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -11286,7 +11416,7 @@
                     "weight": 387,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-enum-column.md",
+                    "demo": "grids\/update-enum-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11375,10 +11505,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/float": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/float": {
             "post": {
                 "summary": "Create float column",
-                "operationId": "tablesCreateFloatColumn",
+                "operationId": "gridsCreateFloatColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11386,7 +11516,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a float column. Optionally, minimum and maximum values can be provided.\n",
                 "responses": {
@@ -11404,7 +11534,7 @@
                     "weight": 388,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-float-column.md",
+                    "demo": "grids\/create-float-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11493,10 +11623,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/float\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/float\/{key}": {
             "patch": {
                 "summary": "Update float column",
-                "operationId": "tablesUpdateFloatColumn",
+                "operationId": "gridsUpdateFloatColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11504,7 +11634,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update a float column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -11522,7 +11652,7 @@
                     "weight": 389,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-float-column.md",
+                    "demo": "grids\/update-float-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11613,10 +11743,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/integer": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/integer": {
             "post": {
                 "summary": "Create integer column",
-                "operationId": "tablesCreateIntegerColumn",
+                "operationId": "gridsCreateIntegerColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11624,7 +11754,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create an integer column. Optionally, minimum and maximum values can be provided.\n",
                 "responses": {
@@ -11642,7 +11772,7 @@
                     "weight": 390,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-integer-column.md",
+                    "demo": "grids\/create-integer-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11731,10 +11861,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/integer\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/integer\/{key}": {
             "patch": {
                 "summary": "Update integer column",
-                "operationId": "tablesUpdateIntegerColumn",
+                "operationId": "gridsUpdateIntegerColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11742,7 +11872,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update an integer column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -11760,7 +11890,7 @@
                     "weight": 391,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-integer-column.md",
+                    "demo": "grids\/update-integer-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11851,10 +11981,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/ip": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/ip": {
             "post": {
                 "summary": "Create IP address column",
-                "operationId": "tablesCreateIpColumn",
+                "operationId": "gridsCreateIpColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11862,7 +11992,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create IP address column.\n",
                 "responses": {
@@ -11880,7 +12010,7 @@
                     "weight": 392,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-ip-column.md",
+                    "demo": "grids\/create-ip-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -11957,10 +12087,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/ip\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/ip\/{key}": {
             "patch": {
                 "summary": "Update IP address column",
-                "operationId": "tablesUpdateIpColumn",
+                "operationId": "gridsUpdateIpColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11968,7 +12098,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update an ip column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -11986,7 +12116,7 @@
                     "weight": 393,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-ip-column.md",
+                    "demo": "grids\/update-ip-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12065,10 +12195,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/relationship": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/relationship": {
             "post": {
                 "summary": "Create relationship column",
-                "operationId": "tablesCreateRelationshipColumn",
+                "operationId": "gridsCreateRelationshipColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -12076,7 +12206,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create relationship column. [Learn more about relationship columns](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-columns).\n",
                 "responses": {
@@ -12094,7 +12224,7 @@
                     "weight": 394,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-relationship-column.md",
+                    "demo": "grids\/create-relationship-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12198,10 +12328,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/string": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/string": {
             "post": {
                 "summary": "Create string column",
-                "operationId": "tablesCreateStringColumn",
+                "operationId": "gridsCreateStringColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -12209,7 +12339,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a string column.\n",
                 "responses": {
@@ -12227,7 +12357,7 @@
                     "weight": 396,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-string-column.md",
+                    "demo": "grids\/create-string-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12317,10 +12447,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/string\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/string\/{key}": {
             "patch": {
                 "summary": "Update string column",
-                "operationId": "tablesUpdateStringColumn",
+                "operationId": "gridsUpdateStringColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -12328,7 +12458,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update a string column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -12346,7 +12476,7 @@
                     "weight": 397,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-string-column.md",
+                    "demo": "grids\/update-string-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12431,10 +12561,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/url": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/url": {
             "post": {
                 "summary": "Create URL column",
-                "operationId": "tablesCreateUrlColumn",
+                "operationId": "gridsCreateUrlColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -12442,7 +12572,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a URL column.\n",
                 "responses": {
@@ -12460,7 +12590,7 @@
                     "weight": 398,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-url-column.md",
+                    "demo": "grids\/create-url-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12537,10 +12667,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/url\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/url\/{key}": {
             "patch": {
                 "summary": "Update URL column",
-                "operationId": "tablesUpdateUrlColumn",
+                "operationId": "gridsUpdateUrlColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -12548,7 +12678,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update an url column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -12566,7 +12696,7 @@
                     "weight": 399,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-url-column.md",
+                    "demo": "grids\/update-url-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12645,16 +12775,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/{key}": {
             "get": {
                 "summary": "Get column",
-                "operationId": "tablesGetColumn",
+                "operationId": "gridsGetColumn",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get column by ID.",
                 "responses": {
@@ -12703,7 +12833,7 @@
                     "weight": 377,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/get-column.md",
+                    "demo": "grids\/get-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12751,13 +12881,13 @@
             },
             "delete": {
                 "summary": "Delete column",
-                "operationId": "tablesDeleteColumn",
+                "operationId": "gridsDeleteColumn",
                 "consumes": [
                     "application\/json"
                 ],
                 "produces": [],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Deletes a column.",
                 "responses": {
@@ -12772,7 +12902,7 @@
                     "weight": 378,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/delete-column.md",
+                    "demo": "grids\/delete-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12819,10 +12949,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/columns\/{key}\/relationship": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/columns\/{key}\/relationship": {
             "patch": {
                 "summary": "Update relationship column",
-                "operationId": "tablesUpdateRelationshipColumn",
+                "operationId": "gridsUpdateRelationshipColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -12830,7 +12960,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update relationship column. [Learn more about relationship columns](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-columns).\n",
                 "responses": {
@@ -12848,7 +12978,7 @@
                     "weight": 395,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-relationship-column.md",
+                    "demo": "grids\/update-relationship-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -12923,16 +13053,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/indexes": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/indexes": {
             "get": {
                 "summary": "List indexes",
-                "operationId": "tablesListIndexes",
+                "operationId": "gridsListIndexes",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "List indexes in the collection.",
                 "responses": {
@@ -12950,7 +13080,7 @@
                     "weight": 403,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/list-indexes.md",
+                    "demo": "grids\/list-indexes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-indexes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13003,7 +13133,7 @@
             },
             "post": {
                 "summary": "Create index",
-                "operationId": "tablesCreateIndex",
+                "operationId": "gridsCreateIndex",
                 "consumes": [
                     "application\/json"
                 ],
@@ -13011,7 +13141,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
                 "responses": {
@@ -13029,7 +13159,7 @@
                     "weight": 400,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-index.md",
+                    "demo": "grids\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13129,16 +13259,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/indexes\/{key}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/indexes\/{key}": {
             "get": {
                 "summary": "Get index",
-                "operationId": "tablesGetIndex",
+                "operationId": "gridsGetIndex",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get index by ID.",
                 "responses": {
@@ -13156,7 +13286,7 @@
                     "weight": 401,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/get-index.md",
+                    "demo": "grids\/get-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13204,13 +13334,13 @@
             },
             "delete": {
                 "summary": "Delete index",
-                "operationId": "tablesDeleteIndex",
+                "operationId": "gridsDeleteIndex",
                 "consumes": [
                     "application\/json"
                 ],
                 "produces": [],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Delete an index.",
                 "responses": {
@@ -13225,7 +13355,7 @@
                     "weight": 402,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/delete-index.md",
+                    "demo": "grids\/delete-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13272,16 +13402,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/logs": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/logs": {
             "get": {
                 "summary": "List table logs",
-                "operationId": "tablesListLogs",
+                "operationId": "gridsListTableLogs",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get the table activity logs list by its unique ID.",
                 "responses": {
@@ -13294,12 +13424,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "listLogs",
-                    "group": "tables",
+                    "method": "listTableLogs",
+                    "group": "grids",
                     "weight": 375,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/list-logs.md",
+                    "demo": "grids\/list-table-logs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table-logs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13350,16 +13480,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/rows": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows": {
             "get": {
                 "summary": "List rows",
-                "operationId": "tablesListRows",
+                "operationId": "gridsListRows",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
                 "responses": {
@@ -13377,7 +13507,7 @@
                     "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/list-rows.md",
+                    "demo": "grids\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13432,7 +13562,7 @@
             },
             "post": {
                 "summary": "Create row",
-                "operationId": "tablesCreateRow",
+                "operationId": "gridsCreateRow",
                 "consumes": [
                     "application\/json"
                 ],
@@ -13440,7 +13570,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
                 "responses": {
@@ -13458,7 +13588,7 @@
                     "weight": 404,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-row.md",
+                    "demo": "grids\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -13472,10 +13602,9 @@
                     "methods": [
                         {
                             "name": "createRow",
+                            "namespace": "grids",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -13500,9 +13629,9 @@
                         },
                         {
                             "name": "createRows",
+                            "namespace": "grids",
                             "auth": {
-                                "Admin": [],
-                                "Key": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -13594,7 +13723,7 @@
             },
             "put": {
                 "summary": "Create or update rows",
-                "operationId": "tablesUpsertRows",
+                "operationId": "gridsUpsertRows",
                 "consumes": [
                     "application\/json"
                 ],
@@ -13602,7 +13731,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.\n",
                 "responses": {
@@ -13620,7 +13749,7 @@
                     "weight": 409,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/upsert-rows.md",
+                    "demo": "grids\/upsert-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -13634,9 +13763,9 @@
                     "methods": [
                         {
                             "name": "upsertRows",
+                            "namespace": "grids",
                             "auth": {
-                                "Admin": [],
-                                "Key": []
+                                "Project": []
                             },
                             "parameters": [],
                             "required": [],
@@ -13701,7 +13830,7 @@
             },
             "patch": {
                 "summary": "Update rows",
-                "operationId": "tablesUpdateRows",
+                "operationId": "gridsUpdateRows",
                 "consumes": [
                     "application\/json"
                 ],
@@ -13709,7 +13838,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update all rows that match your queries, if no queries are submitted then all rows are updated. You can pass only specific fields to be updated.",
                 "responses": {
@@ -13727,7 +13856,7 @@
                     "weight": 407,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-rows.md",
+                    "demo": "grids\/update-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -13793,7 +13922,7 @@
             },
             "delete": {
                 "summary": "Delete rows",
-                "operationId": "tablesDeleteRows",
+                "operationId": "gridsDeleteRows",
                 "consumes": [
                     "application\/json"
                 ],
@@ -13801,7 +13930,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Bulk delete rows using queries, if no queries are passed then all rows are deleted.",
                 "responses": {
@@ -13819,7 +13948,7 @@
                     "weight": 411,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/delete-rows.md",
+                    "demo": "grids\/delete-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-rows.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -13878,16 +14007,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}": {
             "get": {
                 "summary": "Get row",
-                "operationId": "tablesGetRow",
+                "operationId": "gridsGetRow",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
                 "responses": {
@@ -13905,7 +14034,7 @@
                     "weight": 405,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/get-row.md",
+                    "demo": "grids\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13968,7 +14097,7 @@
             },
             "put": {
                 "summary": "Create or update a row",
-                "operationId": "tablesUpsertRow",
+                "operationId": "gridsUpsertRow",
                 "consumes": [
                     "application\/json"
                 ],
@@ -13976,7 +14105,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
                 "responses": {
@@ -13994,7 +14123,7 @@
                     "weight": 408,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/upsert-row.md",
+                    "demo": "grids\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -14008,10 +14137,9 @@
                     "methods": [
                         {
                             "name": "upsertRow",
+                            "namespace": "grids",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [],
                             "required": [],
@@ -14088,7 +14216,7 @@
             },
             "patch": {
                 "summary": "Update row",
-                "operationId": "tablesUpdateRow",
+                "operationId": "gridsUpdateRow",
                 "consumes": [
                     "application\/json"
                 ],
@@ -14096,7 +14224,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
                 "responses": {
@@ -14114,7 +14242,7 @@
                     "weight": 406,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-row.md",
+                    "demo": "grids\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -14189,13 +14317,13 @@
             },
             "delete": {
                 "summary": "Delete row",
-                "operationId": "tablesDeleteRow",
+                "operationId": "gridsDeleteRow",
                 "consumes": [
                     "application\/json"
                 ],
                 "produces": [],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Delete a row by its unique ID.",
                 "responses": {
@@ -14210,7 +14338,7 @@
                     "weight": 410,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/delete-row.md",
+                    "demo": "grids\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -14260,16 +14388,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/logs": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}\/logs": {
             "get": {
                 "summary": "List row logs",
-                "operationId": "tablesListRowLogs",
+                "operationId": "gridsListRowLogs",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get the row activity logs list by its unique ID.",
                 "responses": {
@@ -14287,7 +14415,7 @@
                     "weight": 413,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/list-row-logs.md",
+                    "demo": "grids\/list-row-logs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row-logs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -14346,10 +14474,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/decrement": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}\/{column}\/decrement": {
             "patch": {
                 "summary": "Decrement row column",
-                "operationId": "tablesDecrementRowColumn",
+                "operationId": "gridsDecrementRowColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -14357,7 +14485,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Decrement a specific column of a row by a given value.",
                 "responses": {
@@ -14375,7 +14503,7 @@
                     "weight": 415,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/decrement-row-column.md",
+                    "demo": "grids\/decrement-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -14452,10 +14580,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/increment": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}\/{column}\/increment": {
             "patch": {
                 "summary": "Increment row column",
-                "operationId": "tablesIncrementRowColumn",
+                "operationId": "gridsIncrementRowColumn",
                 "consumes": [
                     "application\/json"
                 ],
@@ -14463,7 +14591,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Increment a specific column of a row by a given value.",
                 "responses": {
@@ -14481,7 +14609,7 @@
                     "weight": 414,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/increment-row-column.md",
+                    "demo": "grids\/increment-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -14558,16 +14686,16 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/usage": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/usage": {
             "get": {
                 "summary": "Get table usage stats",
-                "operationId": "tablesGetUsage",
+                "operationId": "gridsGetTableUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get usage metrics and statistics for a table. Returning the total number of rows. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
@@ -14580,12 +14708,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "getUsage",
+                    "method": "getTableUsage",
                     "group": null,
                     "weight": 376,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/get-usage.md",
+                    "demo": "grids\/get-table-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-table-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -14624,7 +14752,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "DatabaseUsageRange",
+                        "x-enum-name": "GridUsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -14640,6 +14768,110 @@
                         "type": "string",
                         "x-example": "<TABLE_ID>",
                         "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/databases\/{databaseId}\/logs": {
+            "get": {
+                "summary": "List database logs",
+                "operationId": "databasesListLogs",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Get the database activity logs list by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Logs List",
+                        "schema": {
+                            "$ref": "#\/definitions\/logList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listLogs",
+                    "group": "logs",
+                    "weight": 321,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/list-logs.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-logs.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "databases.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "listLogs",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/logList"
+                                }
+                            ],
+                            "description": "Get the database activity logs list by its unique ID."
+                        },
+                        {
+                            "name": "listDatabaseLogs",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/logList"
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Only supported methods are limit and offset",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
                     }
                 ]
             }
@@ -14681,6 +14913,40 @@
                         "console"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "getDatabaseUsage",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/usageDatabase"
+                                }
+                            ],
+                            "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days."
+                        },
+                        {
+                            "name": "getDatabaseUsage",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/usageDatabase"
+                                }
+                            ],
+                            "description": ""
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -16731,7 +16997,7 @@
                                     "type": "string",
                                     "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "<SCHEDULED_AT>"
                                 }
                             }
                         }
@@ -43629,9 +43895,24 @@
             "description": "Index",
             "type": "object",
             "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Index ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Index creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Index update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "key": {
                     "type": "string",
-                    "description": "Index Key.",
+                    "description": "Index key.",
                     "x-example": "index1"
                 },
                 "type": {
@@ -43674,6 +43955,28 @@
                     },
                     "x-example": [],
                     "x-nullable": true
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "key",
+                "type",
+                "status",
+                "error",
+                "attributes",
+                "lengths"
+            ]
+        },
+        "columnIndex": {
+            "description": "Index",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Index ID.",
+                    "x-example": "5e5ea5c16897e"
                 },
                 "$createdAt": {
                     "type": "string",
@@ -43684,23 +43987,7 @@
                     "type": "string",
                     "description": "Index update date in ISO 8601 format.",
                     "x-example": "2020-10-15T06:38:00.000+00:00"
-                }
-            },
-            "required": [
-                "key",
-                "type",
-                "status",
-                "error",
-                "attributes",
-                "lengths",
-                "$createdAt",
-                "$updatedAt"
-            ]
-        },
-        "columnIndex": {
-            "description": "Index",
-            "type": "object",
-            "properties": {
+                },
                 "key": {
                     "type": "string",
                     "description": "Index Key.",
@@ -43746,27 +44033,18 @@
                     },
                     "x-example": [],
                     "x-nullable": true
-                },
-                "$createdAt": {
-                    "type": "string",
-                    "description": "Index creation date in ISO 8601 format.",
-                    "x-example": "2020-10-15T06:38:00.000+00:00"
-                },
-                "$updatedAt": {
-                    "type": "string",
-                    "description": "Index update date in ISO 8601 format.",
-                    "x-example": "2020-10-15T06:38:00.000+00:00"
                 }
             },
             "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
                 "key",
                 "type",
                 "status",
                 "error",
                 "columns",
-                "lengths",
-                "$createdAt",
-                "$updatedAt"
+                "lengths"
             ]
         },
         "row": {
@@ -45922,6 +46200,11 @@
                     "description": "Is VCS (Version Control System) repository private?",
                     "x-example": true
                 },
+                "defaultBranch": {
+                    "type": "string",
+                    "description": "VCS (Version Control System) repository's default branch name.",
+                    "x-example": "main"
+                },
                 "pushedAt": {
                     "type": "string",
                     "description": "Last commit date in ISO 8601 format.",
@@ -45934,6 +46217,7 @@
                 "organization",
                 "provider",
                 "private",
+                "defaultBranch",
                 "pushedAt"
             ]
         },
@@ -45966,6 +46250,11 @@
                     "description": "Is VCS (Version Control System) repository private?",
                     "x-example": true
                 },
+                "defaultBranch": {
+                    "type": "string",
+                    "description": "VCS (Version Control System) repository's default branch name.",
+                    "x-example": "main"
+                },
                 "pushedAt": {
                     "type": "string",
                     "description": "Last commit date in ISO 8601 format.",
@@ -45983,6 +46272,7 @@
                 "organization",
                 "provider",
                 "private",
+                "defaultBranch",
                 "pushedAt",
                 "framework"
             ]
@@ -46016,6 +46306,11 @@
                     "description": "Is VCS (Version Control System) repository private?",
                     "x-example": true
                 },
+                "defaultBranch": {
+                    "type": "string",
+                    "description": "VCS (Version Control System) repository's default branch name.",
+                    "x-example": "main"
+                },
                 "pushedAt": {
                     "type": "string",
                     "description": "Last commit date in ISO 8601 format.",
@@ -46033,6 +46328,7 @@
                 "organization",
                 "provider",
                 "private",
+                "defaultBranch",
                 "pushedAt",
                 "runtime"
             ]
