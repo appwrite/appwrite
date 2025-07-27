@@ -42,8 +42,6 @@ COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
 
-COPY ./vendor/appwrite/sdk-generator /usr/src/code/vendor/appwrite/sdk-generator
-
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/imports && \
