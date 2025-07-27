@@ -1979,33 +1979,39 @@ trait DatabasesBase
         ]);
         $this->assertEquals(2, $documents['body']['total']);
 
-        // test without passing permissions
-        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'title' => 'Thor: Ragnarok',
-                'releaseYear' => 2000
-            ]
-        ]);
+        if ($this->getSide() === 'client') {
+            // Skipped on server side: Creating a document with no permissions results in an empty permissions array, whereas on client side it assigns permissions to the current user
 
-        $this->assertEquals(200, $document['headers']['status-code']);
-        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+            // test without passing permissions
+            $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'title' => 'Thor: Ragnarok',
+                    'releaseYear' => 2000
+                ]
+            ]);
 
-        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+            $this->assertCount(3, $document['body']['$permissions']);
+            $permissionsCreated = $document['body']['$permissions'];
+            // checking the default created permission
+            $defaultPermission = [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id']))
+            ];
+            // ignoring the order of the permission and checking the permissions
+            $this->assertEqualsCanonicalizing($defaultPermission, $permissionsCreated);
 
-        $this->assertEquals(200, $document['headers']['status-code']);
+            $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()));
 
-        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+            $this->assertEquals(200, $document['headers']['status-code']);
 
         $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 

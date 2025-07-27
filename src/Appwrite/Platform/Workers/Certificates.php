@@ -382,9 +382,11 @@ class Certificates extends Action
         ];
 
         $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
+        $preview = \sprintf($locale->getText("emails.certificate.preview"), $domain);
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setName('Appwrite Administrator')
             ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
