@@ -779,6 +779,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Account Verification', $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Verify your email to activate your ' . $this->getProject()['name'] . ' account.', $lastEmail['text']);
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $verification = $tokens['secret'];
@@ -1082,6 +1083,8 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset', $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
+
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
@@ -1286,6 +1289,7 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['expire']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
+        $this->assertStringContainsStringIgnoringCase('New login detected on '. $this->getProject()['name'], $lastEmail['text']);
 
         $userId = $response['body']['userId'];
 
@@ -2545,6 +2549,7 @@ class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Sign in to '. $this->getProject()['name'] . ' with your secure link. Expires in 1 hour.', $lastEmail['text']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
