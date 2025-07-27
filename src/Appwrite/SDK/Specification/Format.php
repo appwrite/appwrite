@@ -114,6 +114,7 @@ abstract class Format
 
     protected function getEnumName(string $service, string $method, string $param): ?string
     {
+        /* `$service` is `$namespace` */
         switch ($service) {
             case 'proxy':
                 switch ($method) {
@@ -206,12 +207,14 @@ abstract class Format
                         }
                 }
                 break;
-            case 'tables':
+            case 'grids':
                 switch ($method) {
-                    case 'getUsage':
+                    case 'getDatabaseUsage':
+                    case 'listDatabaseUsage':
+                    case 'getTableUsage':
                         switch ($param) {
                             case 'range':
-                                return 'DatabaseUsageRange';
+                                return 'GridUsageRange';
                         }
                         break;
                     case 'createRelationshipColumn':
@@ -478,16 +481,17 @@ abstract class Format
                 switch ($method) {
                     /*case 'getUsage':*/
                     case 'listUsage':
-                    case 'getTableUsage':
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
-            case 'tables':
+            case 'grids':
                 switch ($method) {
-                    case 'getUsage':
+                    case 'getDatabaseUsage':
+                    case 'listDatabaseUsage':
+                    case 'getTableUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }

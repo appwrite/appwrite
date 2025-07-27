@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\SDKMethod;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -29,7 +29,7 @@ class Get extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('sdk', new Method(
+            ->label('sdk', SDKMethod::withGridsAPI(
                 namespace: 'databases',
                 group: 'databases',
                 name: 'get',

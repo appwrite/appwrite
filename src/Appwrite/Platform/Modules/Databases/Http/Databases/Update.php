@@ -4,9 +4,9 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\SDKMethod;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -35,7 +35,7 @@ class Update extends Action
             ->label('event', 'databases.[databaseId].update')
             ->label('audits.event', 'database.update')
             ->label('audits.resource', 'database/{response.$id}')
-            ->label('sdk', new Method(
+            ->label('sdk', SDKMethod::withGridsAPI(
                 namespace: 'databases',
                 group: 'databases',
                 name: 'update',

@@ -5,9 +5,9 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\SDKMethod;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -34,7 +34,7 @@ class Delete extends Action
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
-            ->label('sdk', new Method(
+            ->label('sdk', SDKMethod::withGridsAPI(
                 namespace: 'databases',
                 group: 'databases',
                 name: 'delete',
