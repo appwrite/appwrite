@@ -176,6 +176,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
         }
 
+
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -398,6 +399,8 @@ class Create extends Action
 
 
         if ($isBulk) {
+            $queueForEvents
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.create');
             $response->dynamic(new Document([
                 'total' => count($documents),
                 $this->getSdkGroup() => $documents
