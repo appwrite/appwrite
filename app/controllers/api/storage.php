@@ -93,8 +93,7 @@ App::post('/v1/storage/buckets')
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
         // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions);
-        $permissions ??= [];
+        $permissions = Permission::aggregate($permissions) ?? [];
         $compression ??= Compression::NONE;
         $encryption ??= true;
         try {
