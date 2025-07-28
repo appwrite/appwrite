@@ -138,8 +138,8 @@ class AppwriteDomainTest extends TestCase
         $description = $this->validator->getDescription();
         $this->assertIsString($description);
 
-                       // Get the environment suffix to check it's in the description
-               $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
+        // Get the environment suffix to check it's in the description
+        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
         $this->assertStringContainsString($envSuffix, $description);
         $this->assertStringContainsString('one-level subdomain', $description);
     }
