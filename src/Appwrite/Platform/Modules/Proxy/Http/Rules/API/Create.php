@@ -80,10 +80,11 @@ class Create extends Action
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         $deniedDomains[] = $mainDomain;
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        if (!empty($sitesDomain)) {
-            $deniedDomains[] = $sitesDomain;
-        }
+        // Don't add sites domain to denied list - it should be allowed for subdomains
+        // $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        // if (!empty($sitesDomain)) {
+        //     $deniedDomains[] = $sitesDomain;
+        // }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
@@ -108,15 +109,18 @@ class Create extends Action
         }
 
         // Validate domain format and appwrite.network specific rules
-        $appwriteNetworkValidator = new AppwriteDomain();
-        if (!$appwriteNetworkValidator->isValid($domain)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        if (!empty($sitesDomain) && \str_ends_with($domain, '.' . ltrim($sitesDomain, '.'))) {
+            $appwriteNetworkValidator = new AppwriteDomain();
+            if (!$appwriteNetworkValidator->isValid($domain)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
+            }
         }
 
         // Create domain object for further processing
         try {
             $domain = new Domain($domain);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 

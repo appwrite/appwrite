@@ -14,6 +14,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -68,9 +69,12 @@ class Get extends Action
     ) {
         if ($type === 'rules') {
             // Validate domain format and appwrite.network specific rules
-            $appwriteNetworkValidator = new AppwriteDomain();
-            if (!$appwriteNetworkValidator->isValid($value)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
+            $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+            if (!empty($sitesDomain) && \str_ends_with($value, '.' . ltrim($sitesDomain, '.'))) {
+                $appwriteNetworkValidator = new AppwriteDomain();
+                if (!$appwriteNetworkValidator->isValid($value)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
+                }
             }
 
             $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [

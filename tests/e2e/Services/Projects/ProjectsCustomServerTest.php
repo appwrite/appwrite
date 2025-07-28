@@ -27,7 +27,7 @@ class ProjectsCustomServerTest extends Scope
         ]);
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
-            'domain' => $testId . '-api.appwrite.test',
+            'domain' => $testId . '-api.' . System::getEnv('_APP_DOMAIN_SITES', 'appwrite.network'),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
