@@ -1515,6 +1515,9 @@ class FunctionsCustomServerTest extends Scope
             $this->assertArrayHasKey('x-appwrite-execution-delay', $requestHeaders);
             $this->assertIsNumeric($requestHeaders['x-appwrite-execution-delay']);
             $this->assertGreaterThan($requestHeaders['x-appwrite-scheduled-at'], $requestHeaders['x-appwrite-executed-at']);
+            $this->assertStringContainsString('execution-delay-is-valid', $lastExecution['logs']);
+            $this->assertStringContainsString('scheduled-at-is-valid', $lastExecution['logs']);
+            $this->assertStringContainsString('executed-at-is-valid', $lastExecution['logs']);
 
         }, 10000, 500);
 
