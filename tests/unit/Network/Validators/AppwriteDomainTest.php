@@ -2,17 +2,18 @@
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Validator\AppwriteNetworkDomain;
+use Appwrite\Network\Validator\AppwriteDomain;
 use PHPUnit\Framework\TestCase;
+use Utopia\System\System;
 
-class AppwriteNetworkDomainTest extends TestCase
+class AppwriteDomainTest extends TestCase
 {
-    protected ?AppwriteNetworkDomain $validator = null;
+    protected ?AppwriteDomain $validator = null;
 
     public function setUp(): void
     {
-        putenv('_APP_DOMAIN_SITES=.appwrite.network');
-        $this->validator = new AppwriteNetworkDomain();
+        putenv('_APP_DOMAIN_SITES=' . APP_DOMAIN_SITES);
+        $this->validator = new AppwriteDomain();
     }
 
     public function tearDown(): void
@@ -54,40 +55,40 @@ class AppwriteNetworkDomainTest extends TestCase
 
     public function testNonAppwriteNetworkDomains(): void
     {
-        // Non-appwrite.network domains should pass validation (not our concern)
-        $this->assertEquals(true, $this->validator->isValid('example.com'));
-        $this->assertEquals(true, $this->validator->isValid('api.example.com'));
-        $this->assertEquals(true, $this->validator->isValid('deep.nested.example.com'));
-        $this->assertEquals(true, $this->validator->isValid('google.com'));
-        $this->assertEquals(true, $this->validator->isValid('sub.domain.test.io'));
-        $this->assertEquals(true, $this->validator->isValid('localhost'));
-        $this->assertEquals(true, $this->validator->isValid('127.0.0.1'));
+        // Non-appwrite.network domains should be rejected by this validator
+        $this->assertEquals(false, $this->validator->isValid('example.com'));
+        $this->assertEquals(false, $this->validator->isValid('api.example.com'));
+        $this->assertEquals(false, $this->validator->isValid('deep.nested.example.com'));
+        $this->assertEquals(false, $this->validator->isValid('google.com'));
+        $this->assertEquals(false, $this->validator->isValid('sub.domain.test.io'));
+        $this->assertEquals(false, $this->validator->isValid('localhost'));
+        $this->assertEquals(false, $this->validator->isValid('127.0.0.1'));
 
         // Similar but different domains
-        $this->assertEquals(true, $this->validator->isValid('appwrite.com'));
-        $this->assertEquals(true, $this->validator->isValid('api.appwrite.com'));
-        $this->assertEquals(true, $this->validator->isValid('test.appwrite.org'));
-        $this->assertEquals(true, $this->validator->isValid('notappwrite.network'));
+        $this->assertEquals(false, $this->validator->isValid('appwrite.com'));
+        $this->assertEquals(false, $this->validator->isValid('api.appwrite.com'));
+        $this->assertEquals(false, $this->validator->isValid('test.appwrite.org'));
+        $this->assertEquals(false, $this->validator->isValid('notappwrite.network'));
     }
 
     public function testDoubleSubdomainCustomDomain(): void
     {
-        // Double subdomain for a custom domain should be allowed
-        $this->assertEquals(true, $this->validator->isValid('stage.dashboard.example.com'));
-        $this->assertEquals(true, $this->validator->isValid('foo.bar.baz.example.com'));
+        // Double subdomain for a custom domain should be rejected by this validator
+        $this->assertEquals(false, $this->validator->isValid('stage.dashboard.example.com'));
+        $this->assertEquals(false, $this->validator->isValid('foo.bar.baz.example.com'));
     }
 
     public function testEdgeCases(): void
     {
-        // Empty and invalid values should pass (let other validators handle them)
-        $this->assertEquals(true, $this->validator->isValid(''));
-        $this->assertEquals(true, $this->validator->isValid(null));
-        $this->assertEquals(true, $this->validator->isValid(false));
-        $this->assertEquals(true, $this->validator->isValid(123));
-        $this->assertEquals(true, $this->validator->isValid([]));
+        // Empty and invalid values should be rejected
+        $this->assertEquals(false, $this->validator->isValid(''));
+        $this->assertEquals(false, $this->validator->isValid(null));
+        $this->assertEquals(false, $this->validator->isValid(false));
+        $this->assertEquals(false, $this->validator->isValid(123));
+        $this->assertEquals(false, $this->validator->isValid([]));
 
         // Just the root domain (unlikely but should be valid)
-        $this->assertEquals(true, $this->validator->isValid('appwrite.network'));
+        $this->assertEquals(false, $this->validator->isValid('appwrite.network'));
 
         // Domain with trailing/leading dots
         $this->assertEquals(false, $this->validator->isValid('api.test.appwrite.network.'));
@@ -104,8 +105,8 @@ class AppwriteNetworkDomainTest extends TestCase
 
     public function testValidatorProperties(): void
     {
-        $suffix = getenv('_APP_DOMAIN_SITES') ?: '.appwrite.network';
-        $expectedDescription = "Sub-subdomains are not allowed for {$suffix}. Only one level of subdomain is permitted.";
+        $suffix = System::getEnv('_APP_DOMAIN_SITES') ?: APP_DOMAIN_SITES;
+        $expectedDescription = "Must be a valid domain and sub-subdomains are not allowed for {$suffix}. Only one level of subdomain is permitted.";
         $this->assertEquals($expectedDescription, $this->validator->getDescription());
         $this->assertEquals(false, $this->validator->isArray());
         $this->assertEquals('string', $this->validator->getType());

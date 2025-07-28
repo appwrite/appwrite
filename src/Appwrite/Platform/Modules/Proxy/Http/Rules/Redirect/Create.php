@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\AppwriteNetworkDomain;
+use Appwrite\Network\Validator\AppwriteDomain;
 use Appwrite\Network\Validator\DNS;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -115,11 +115,13 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
-        $appwriteNetworkValidator = new AppwriteNetworkDomain();
+        // Validate domain format and appwrite.network specific rules
+        $appwriteNetworkValidator = new AppwriteDomain();
         if (!$appwriteNetworkValidator->isValid($domain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
         }
 
+        // Create domain object for further processing
         try {
             $domain = new Domain($domain);
         } catch (\Throwable) {

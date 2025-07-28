@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\AppwriteNetworkDomain;
+use Appwrite\Network\Validator\AppwriteDomain;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -14,7 +14,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Domain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -68,15 +67,10 @@ class Get extends Action
         Database $dbForPlatform
     ) {
         if ($type === 'rules') {
-            $validator = new Domain($value);
-
-            $appwriteNetworkValidator = new AppwriteNetworkDomain();
+            // Validate domain format and appwrite.network specific rules
+            $appwriteNetworkValidator = new AppwriteDomain();
             if (!$appwriteNetworkValidator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $appwriteNetworkValidator->getDescription());
-            }
-
-            if (!$validator->isValid($value)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
             }
 
             $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
