@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f1ef097cd83efca1018c4eb84b7bb05",
+    "content-hash": "ee81ef96c463854d58fd5678c28ad896",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4810,16 +4810,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-feat-multiple-namespaces",
+            "version": "0.41.24",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3130f9a952166f86f680b8385ca4441dcc1b7f0b"
+                "reference": "c9ebf8daa25332ca701515d42e8d0c4a7be6a489"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3130f9a952166f86f680b8385ca4441dcc1b7f0b",
-                "reference": "3130f9a952166f86f680b8385ca4441dcc1b7f0b",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c9ebf8daa25332ca701515d42e8d0c4a7be6a489",
+                "reference": "c9ebf8daa25332ca701515d42e8d0c4a7be6a489",
                 "shasum": ""
             },
             "require": {
@@ -4855,9 +4855,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/feat-multiple-namespaces"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.24"
             },
-            "time": "2025-07-27T07:52:16+00:00"
+            "time": "2025-07-28T06:27:00+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5336,16 +5336,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.5.0",
+            "version": "v5.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9"
+                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/ae59794362fe85e051a58ad36b289443f57be7a9",
-                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/221b0d0fdf1369c71047ad1d18bb5880017bbc56",
+                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56",
                 "shasum": ""
             },
             "require": {
@@ -5388,9 +5388,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.5.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.6.0"
             },
-            "time": "2025-05-31T08:24:38+00:00"
+            "time": "2025-07-27T20:03:57+00:00"
         },
         {
             "name": "phar-io/manifest",
