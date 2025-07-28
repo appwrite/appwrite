@@ -20,7 +20,7 @@ class AppwriteDomain extends Validator
 
     public function __construct()
     {
-        $this->suffix = System::getEnv('_APP_DOMAIN_SITES', 'appwrite.network');
+        $this->suffix = System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
     }
 
     /**

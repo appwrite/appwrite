@@ -23,7 +23,7 @@ class AppwriteDomainTest extends TestCase
     {
         // Get the actual configured suffix from environment (in Docker it's sites.localhost)
         // But test both the environment value and the default value
-        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', 'appwrite.network');
+        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
 
         // Valid one-level subdomains with environment suffix
         $this->assertEquals(true, $this->validator->isValid('api.' . $envSuffix));
@@ -138,8 +138,8 @@ class AppwriteDomainTest extends TestCase
         $description = $this->validator->getDescription();
         $this->assertIsString($description);
 
-        // Get the environment suffix to check it's in the description
-        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', 'appwrite.network');
+                       // Get the environment suffix to check it's in the description
+               $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
         $this->assertStringContainsString($envSuffix, $description);
         $this->assertStringContainsString('one-level subdomain', $description);
     }
