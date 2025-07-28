@@ -121,6 +121,11 @@
 
 <body style="direction: {{direction}}">
 
+<div style="display: none; overflow: hidden; max-height: 0; max-width: 0; opacity: 0; line-height: 1px;">
+    {{preview}}
+    <div>{{previewWhitespace}}</div>
+</div>
+
 <div style="max-width:650px; word-wrap: break-word; overflow-wrap: break-word;
   word-break: normal; margin:0 auto;">
     <table style="margin-top: 32px">
