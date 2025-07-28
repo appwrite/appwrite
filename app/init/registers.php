@@ -213,7 +213,6 @@ $register->set('pools', function () {
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getPath();
-
             if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
@@ -225,7 +224,7 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
-
+            
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -240,9 +239,14 @@ $register->set('pools', function () {
                     });
                 },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass);
-                    $mongo->connect();
-                    return $mongo;
+                    try {
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
+                        $mongo->connect();
+                        return $mongo;
+                    } catch (\Throwable $e) {
+                        Console::error("MongoDB connection failed: " . $e->getMessage());
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+                    }
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
@@ -266,7 +270,7 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             'mongodb' => new Mongo($resource()),
                             default => null
-                        };
+                         };
 
                         $adapter->setDatabase($dsn->getPath());
                         return $adapter;
@@ -296,7 +300,7 @@ $register->set('pools', function () {
 
         Config::setParam('pools-' . $key, $config);
     }
-
+   
     return $group;
 });
 
