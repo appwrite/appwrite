@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\AppwriteDomain;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -67,10 +68,11 @@ class Get extends Action
         Database $dbForPlatform
     ) {
         if ($type === 'rules') {
-            $validator = new Domain($value);
+            $domainValidator = new Domain($value);
+            $appwriteDomainValidator = new AppwriteDomain();
 
-            if (!$validator->isValid($value)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+            if (!$domainValidator->isValid($value) && !$appwriteDomainValidator->isValid($value)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Value must be a valid domain name or a valid Appwrite subdomain.');
             }
 
             $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [

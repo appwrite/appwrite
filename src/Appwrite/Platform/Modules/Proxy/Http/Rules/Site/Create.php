@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Site;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\AppwriteDomain;
 use Appwrite\Network\Validator\DNS;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -62,7 +63,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
-            ->param('domain', null, new ValidatorDomain(), 'Domain name.')
+            ->param('domain', null, new AnyOf([new ValidatorDomain(), new AppwriteDomain()]), 'Domain name.')
             ->param('siteId', '', new UID(), 'ID of site to be executed.')
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
@@ -76,6 +77,19 @@ class Create extends Action
 
     public function action(string $domain, string $siteId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
     {
+        // 1. Domain format validations
+        try {
+            $domain = new Domain($domain);
+        } catch (\Throwable) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
+        }
+
+        // 2. Domain prefix validations
+        if (\str_starts_with($domain->get(), 'commit-') || \str_starts_with($domain->get(), 'branch-')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
+        }
+
+        // 3. Denied domains check
         $deniedDomains = [
             'localhost',
             APP_HOSTNAME_INTERNAL
@@ -103,18 +117,8 @@ class Create extends Action
             $deniedDomains[] = $denyListDomain;
         }
 
-        if (\in_array($domain, $deniedDomains)) {
+        if (\in_array($domain->get(), $deniedDomains)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        try {
-            $domain = new Domain($domain);
-        } catch (\Throwable) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
         $site = $dbForProject->getDocument('sites', $siteId);
