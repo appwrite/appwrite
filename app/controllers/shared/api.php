@@ -70,8 +70,11 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
         ->setParam('userId', $document->getId())
         ->setPayload($response->output($document, Response::MODEL_USER));
 
+    $scheduledAt = new \DateTime();
+
     // Trigger functions, webhooks, and realtime events
     $queueForFunctions
+        ->setHeaders(['x-appwrite-scheduled-at' => $scheduledAt->format('Y-m-d\TH:i:s.v\Z')])
         ->from($queueForEvents)
         ->trigger();
 
@@ -713,10 +716,7 @@ App::shutdown()
                 $queueForEvents->setPayload($responsePayload);
             }
 
-            $scheduledAt = new \DateTime();
-
             $queueForFunctions
-                ->setHeaders(['x-appwrite-scheduled-at' => $scheduledAt->format('Y-m-d\TH:i:s.v\Z')])
                 ->from($queueForEvents)
                 ->trigger();
 

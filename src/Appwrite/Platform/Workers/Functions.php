@@ -164,7 +164,8 @@ class Functions extends Action
                         method: 'POST',
                         headers: [
                             'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
-                            'content-type' => 'application/json'
+                            'content-type' => 'application/json',
+                            'x-appwrite-scheduled-at' => $headers['x-appwrite-scheduled-at'] ?? '',
                         ],
                         data: null,
                         user: $user,

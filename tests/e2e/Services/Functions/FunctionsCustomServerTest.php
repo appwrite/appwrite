@@ -1508,6 +1508,14 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
             $this->assertStringContainsString($userId, $lastExecution['logs']);
             $this->assertStringContainsString('Event User', $lastExecution['logs']);
+
+            $requestHeaders = array_column($lastExecution['requestHeaders'], 'value', 'name');
+            $this->assertArrayHasKey('x-appwrite-scheduled-at', $requestHeaders);
+            $this->assertArrayHasKey('x-appwrite-executed-at', $requestHeaders);
+            $this->assertArrayHasKey('x-appwrite-execution-delay', $requestHeaders);
+            $this->assertIsNumeric($requestHeaders['x-appwrite-execution-delay']);
+            $this->assertGreaterThan($requestHeaders['x-appwrite-scheduled-at'], $requestHeaders['x-appwrite-executed-at']);
+
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);
