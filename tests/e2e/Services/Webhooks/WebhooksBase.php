@@ -409,7 +409,7 @@ trait WebhooksBase
         /**
          * Test for SUCCESS
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -460,7 +460,7 @@ trait WebhooksBase
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
-        $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
+        $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -470,7 +470,7 @@ trait WebhooksBase
             'required' => true,
         ]);
 
-        $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
+        $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -480,7 +480,7 @@ trait WebhooksBase
             'required' => true,
         ]);
 
-        $extra = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
+        $extra = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -518,7 +518,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['key']);
         $this->assertEquals($webhook['data']['key'], 'extra');
 
-        $removed = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $data['actorsId'] . '/columns/' . $extra['body']['key'], array_merge([
+        $removed = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $data['actorsId'] . '/columns/' . $extra['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -558,7 +558,7 @@ trait WebhooksBase
         /**
          * Test for SUCCESS
          */
-        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $actorsId . '/rows', array_merge([
+        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -621,7 +621,7 @@ trait WebhooksBase
         /**
          * Test for SUCCESS
          */
-        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $actorsId . '/rows/' . $data['rowId'], array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/rows/' . $data['rowId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -682,7 +682,7 @@ trait WebhooksBase
         /**
          * Test for SUCCESS
          */
-        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $actorsId . '/rows', array_merge([
+        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -704,7 +704,7 @@ trait WebhooksBase
         $this->assertEquals($row['headers']['status-code'], 201);
         $this->assertNotEmpty($row['body']['$id']);
 
-        $row = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $actorsId . '/rows/' . $row['body']['$id'], array_merge([
+        $row = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/rows/' . $row['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

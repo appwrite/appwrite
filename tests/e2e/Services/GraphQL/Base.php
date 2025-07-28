@@ -21,7 +21,14 @@ trait Base
     public static string $UPDATE_COLLECTION = 'update_collection';
     public static string $DELETE_COLLECTION = 'delete_collection';
 
-    // Tables
+    // Grid databases
+    public static string $GRIDS_CREATE_DATABASE = 'grids_create_database';
+    public static string $GRIDS_GET_DATABASES = 'grids_get_databases';
+    public static string $GRIDS_GET_DATABASE = 'grids_get_database';
+    public static string $GRIDS_UPDATE_DATABASE = 'grids_update_database';
+    public static string $GRIDS_DELETE_DATABASE = 'grids_delete_database';
+
+    // Grid tables
     public static string $CREATE_TABLE = 'create_table';
     public static string $GET_TABLE = 'get_table';
     public static string $GET_TABLES = 'list_tables';
@@ -55,7 +62,7 @@ trait Base
     public static string $GET_ATTRIBUTE = 'get_attribute';
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
 
-    // Columns
+    // Grids columns
     public static string $CREATE_STRING_COLUMN = 'create_string_column';
     public static string $CREATE_INTEGER_COLUMN = 'create_integer_column';
     public static string $CREATE_FLOAT_COLUMN = 'create_float_column';
@@ -88,7 +95,7 @@ trait Base
     public static string $GET_INDEX = 'get_attribute_index';
     public static string $DELETE_INDEX = 'delete_attribute_index';
 
-    // Column Indexes
+    // Grid column indexes
     public static string $CREATE_COLUMN_INDEX = 'create_column_index';
     public static string $GET_COLUMN_INDEXES = 'get_column_indexes';
     public static string $GET_COLUMN_INDEX = 'get_column_index';
@@ -102,13 +109,13 @@ trait Base
     public static string $UPSERT_DOCUMENT  = 'upsert_document';
     public static string $DELETE_DOCUMENT = 'delete_document';
 
-    // Documents Bulk APIs
+    // Documents - Bulk APIs
     public static string $CREATE_DOCUMENTS = 'create_documents_rest';
     public static string $UPDATE_DOCUMENTS = 'update_documents';
     public static string $UPSERT_DOCUMENTS = 'upsert_documents';
     public static string $DELETE_DOCUMENTS = 'delete_documents';
 
-    // Rows
+    // Grid rows
     public static string $CREATE_ROW = 'create_row_rest';
     public static string $GET_ROWS = 'list_rows';
     public static string $GET_ROW = 'get_row';
@@ -116,7 +123,7 @@ trait Base
     public static string $UPSERT_ROW  = 'upsert_row';
     public static string $DELETE_ROW = 'delete_row';
 
-    // Rows Bulk APIs
+    // Grid rows - Bulk APIs
     public static string $CREATE_ROWS = 'create_rows_rest';
     public static string $UPDATE_ROWS = 'update_rows';
     public static string $UPSERT_ROWS = 'upsert_rows';
@@ -534,6 +541,43 @@ trait Base
                         status
                     }
                 }';
+            case self::$GRIDS_CREATE_DATABASE:
+                return 'mutation gridsCreateDatabase($databaseId: String!, $name: String!) {
+                    gridsCreateDatabase(databaseId: $databaseId, name: $name) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$GRIDS_GET_DATABASES:
+                return 'query gridsListDatabases {
+                    gridsListDatabases {
+                        total
+                        databases {
+                            _id
+                            name
+                        }
+                    }
+                }';
+            case self::$GRIDS_GET_DATABASE:
+                return 'query gridsGetDatabase($databaseId: String!) {
+                    gridsGetDatabase(databaseId: $databaseId) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$GRIDS_UPDATE_DATABASE:
+                return 'mutation gridsUpdateDatabase($databaseId: String!, $name: String!) {
+                    gridsUpdateDatabase(databaseId: $databaseId, name: $name) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$GRIDS_DELETE_DATABASE:
+                return 'mutation gridsDeleteDatabase($databaseId: String!) {
+                    gridsDeleteDatabase(databaseId: $databaseId) {
+                        status
+                    }
+                }';
             case self::$GET_COLLECTION:
                 return 'query getCollection($databaseId: String!, $collectionId: String!) {
                     databasesGetCollection(databaseId: $databaseId, collectionId: $collectionId) {
@@ -580,8 +624,8 @@ trait Base
                     }
                 }';
             case self::$GET_TABLE:
-                return 'query tablesGet($databaseId: String!, $tableId: String!) {
-                    tablesGet(databaseId: $databaseId, tableId: $tableId) {
+                return 'query gridsGetTable($databaseId: String!, $tableId: String!) {
+                    gridsGetTable(databaseId: $databaseId, tableId: $tableId) {
                         _id
                         _permissions
                         rowSecurity
@@ -589,8 +633,8 @@ trait Base
                     }
                 }';
             case self::$GET_TABLES:
-                return 'query tablesList($databaseId: String!) {
-                    tablesList(databaseId: $databaseId) {
+                return 'query gridsListTables($databaseId: String!) {
+                    gridsListTables(databaseId: $databaseId) {
                         total
                         tables {
                             _id
@@ -601,8 +645,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TABLE:
-                return 'mutation tablesCreate($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!]!) {
-                    tablesCreate(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions) {
+                return 'mutation gridsCreateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!]!) {
+                    gridsCreateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions) {
                         _id
                         _permissions
                         rowSecurity
@@ -610,8 +654,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TABLE:
-                return 'mutation tablesUpdate($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!], $enabled: Boolean) {
-                    tablesUpdate(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions, enabled: $enabled) {
+                return 'mutation gridsUpdateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!], $enabled: Boolean) {
+                    gridsUpdateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions, enabled: $enabled) {
                         _id
                         _permissions
                         rowSecurity
@@ -619,8 +663,8 @@ trait Base
                     }
                 }';
             case self::$DELETE_TABLE:
-                return 'mutation tablesDelete($databaseId: String!, $tableId: String!) {
-                    tablesDelete(databaseId: $databaseId, tableId: $tableId) {
+                return 'mutation gridsDeleteTable($databaseId: String!, $tableId: String!) {
+                    gridsDeleteTable(databaseId: $databaseId, tableId: $tableId) {
                         status
                     }
                 }';
@@ -802,7 +846,7 @@ trait Base
                     }';
             case self::$CREATE_STRING_COLUMN:
                 return 'mutation createStringColumn($databaseId: String!, $tableId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
-                    tablesCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, size: $size, required: $required, default: $default, array: $array) {
+                    gridsCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, size: $size, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -811,7 +855,7 @@ trait Base
                 }';
             case self::$CREATE_INTEGER_COLUMN:
                 return 'mutation createIntegerColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
-                    tablesCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                    gridsCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -822,7 +866,7 @@ trait Base
                 }';
             case self::$CREATE_FLOAT_COLUMN:
                 return 'mutation createFloatColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
-                    tablesCreateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                    gridsCreateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -833,7 +877,7 @@ trait Base
                 }';
             case self::$CREATE_BOOLEAN_COLUMN:
                 return 'mutation createBooleanColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
-                    tablesCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    gridsCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -842,7 +886,7 @@ trait Base
                 }';
             case self::$CREATE_URL_COLUMN:
                 return 'mutation createUrlColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    tablesCreateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    gridsCreateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -851,7 +895,7 @@ trait Base
                 }';
             case self::$CREATE_EMAIL_COLUMN:
                 return 'mutation createEmailColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    tablesCreateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    gridsCreateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -860,7 +904,7 @@ trait Base
                 }';
             case self::$CREATE_IP_COLUMN:
                 return 'mutation createIpColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    tablesCreateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    gridsCreateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -869,7 +913,7 @@ trait Base
                 }';
             case self::$CREATE_ENUM_COLUMN:
                 return 'mutation createEnumColumn($databaseId: String!, $tableId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
-                    tablesCreateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
+                    gridsCreateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
                         key
                         elements
                         required
@@ -879,7 +923,7 @@ trait Base
                 }';
             case self::$CREATE_DATETIME_COLUMN:
                 return 'mutation createDatetimeColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    tablesCreateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    gridsCreateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -888,7 +932,7 @@ trait Base
                 }';
             case self::$CREATE_RELATIONSHIP_COLUMN:
                 return 'mutation createRelationshipColumn($databaseId: String!, $tableId: String!, $relatedTableId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
-                    tablesCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
+                    gridsCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
                         relatedTable
                         relationType
                         twoWay
@@ -899,14 +943,14 @@ trait Base
                 }';
             case self::$UPDATE_STRING_COLUMN:
                 return 'mutation updateStringColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    tablesUpdateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    gridsUpdateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
             case self::$UPDATE_INTEGER_COLUMN:
                 return 'mutation updateIntegerColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
-                    tablesUpdateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, min: $min, max: $max, default: $default) {
+                    gridsUpdateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, min: $min, max: $max, default: $default) {
                         required
                         min
                         max
@@ -915,7 +959,7 @@ trait Base
                 }';
             case self::$UPDATE_FLOAT_COLUMN:
                 return 'mutation updateFloatColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
-                    tablesUpdateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default) {
+                    gridsUpdateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default) {
                         required
                         min
                         max
@@ -924,35 +968,35 @@ trait Base
                 }';
             case self::$UPDATE_BOOLEAN_COLUMN:
                 return 'mutation updateBooleanColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: Boolean){
-                    tablesUpdateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    gridsUpdateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
             case self::$UPDATE_URL_COLUMN:
                 return 'mutation updateUrlColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    tablesUpdateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    gridsUpdateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
             case self::$UPDATE_EMAIL_COLUMN:
                 return 'mutation updateEmailColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    tablesUpdateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    gridsUpdateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
             case self::$UPDATE_IP_COLUMN:
                 return 'mutation updateIpColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    tablesUpdateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    gridsUpdateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
             case self::$UPDATE_ENUM_COLUMN:
                 return 'mutation updateEnumColumn($databaseId: String!, $tableId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
-                    tablesUpdateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default) {
+                    gridsUpdateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default) {
                         elements
                         required
                         default
@@ -960,14 +1004,14 @@ trait Base
                 }';
             case self::$UPDATE_DATETIME_COLUMN:
                 return 'mutation updateDatetimeColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    tablesUpdateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    gridsUpdateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
             case self::$UPDATE_RELATIONSHIP_COLUMN:
                 return 'mutation updateRelationshipColumn($databaseId: String!, $tableId: String!, $key: String!, $onDelete: String){
-                    tablesUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
+                    gridsUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
                         relatedTable
                         relationType
                         twoWay
@@ -1011,7 +1055,7 @@ trait Base
                 }';
             case self::$CREATE_COLUMN_INDEX:
                 return 'mutation createIndex($databaseId: String!, $tableId: String!, $key: String!, $type: String!, $columns: [String!]!, $orders: [String!]){
-                    tablesCreateIndex(databaseId: $databaseId, tableId: $tableId, key: $key, type: $type, columns: $columns, orders: $orders) {
+                    gridsCreateIndex(databaseId: $databaseId, tableId: $tableId, key: $key, type: $type, columns: $columns, orders: $orders) {
                         key
                         type
                         status
@@ -1019,7 +1063,7 @@ trait Base
                 }';
             case self::$GET_COLUMN_INDEXES:
                 return 'query listIndexes($databaseId: String!, $tableId: String!) {
-                    tablesListIndexes(databaseId: $databaseId, tableId: $tableId) {
+                    gridsListIndexes(databaseId: $databaseId, tableId: $tableId) {
                         total
                         indexes {
                             key
@@ -1030,7 +1074,7 @@ trait Base
                 }';
             case self::$GET_COLUMN_INDEX:
                 return 'query getIndex($databaseId: String!, $tableId: String!, $key: String!) {
-                    tablesGetIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    gridsGetIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         key
                         type
                         status
@@ -1038,7 +1082,7 @@ trait Base
                 }';
             case self::$DELETE_COLUMN_INDEX:
                 return 'mutation deleteIndex($databaseId: String!, $tableId: String!, $key: String!) {
-                    tablesDeleteIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    gridsDeleteIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         status
                     }
                 }';
@@ -1065,7 +1109,7 @@ trait Base
                 }';
             case self::$GET_COLUMNS:
                 return 'query listColumns($databaseId: String!, $tableId: String!) {
-                    tablesListColumns(databaseId: $databaseId, tableId: $tableId) {
+                    gridsListColumns(databaseId: $databaseId, tableId: $tableId) {
                         total
                         columns {
                             ...columnProperties
@@ -1074,13 +1118,13 @@ trait Base
                 }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
             case self::$GET_COLUMN:
                 return 'query getColumn($databaseId: String!, $tableId: String!, $key: String!) {
-                    tablesGetColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    gridsGetColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         ...columnProperties
                     }
                 }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
             case self::$DELETE_COLUMN:
                 return 'mutation deleteColumn($databaseId: String!, $tableId: String!, $key: String!) {
-                    tablesDeleteColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    gridsDeleteColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         status
                     }
                 }';
@@ -1127,7 +1171,7 @@ trait Base
                 }';
             case self::$CREATE_ROWS:
                 return 'mutation createRows($databaseId: String!, $tableId: String!, $rows: [Json!]!) {
-                    tablesCreateRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
+                    gridsCreateRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
                         rows {
                             _id
                             _tableId
@@ -1138,7 +1182,7 @@ trait Base
                 }';
             case self::$GET_ROW:
                 return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!) {
-                    tablesGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                    gridsGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
                         _id
                         _tableId
                         _permissions
@@ -1147,7 +1191,7 @@ trait Base
                 }';
             case self::$GET_ROWS:
                 return 'query listRows($databaseId: String!, $tableId: String!, $queries: [String!] = []) {
-                    tablesListRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
+                    gridsListRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
                         total
                         rows {
                             _id
@@ -1160,7 +1204,7 @@ trait Base
                 }';
             case self::$CREATE_ROW:
                 return 'mutation createRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]) {
-                    tablesCreateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                    gridsCreateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
                         _tableId
                         _permissions
@@ -1288,7 +1332,7 @@ trait Base
                 }';
             case self::$UPDATE_ROW:
                 return 'mutation updateRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]) {
-                    tablesUpdateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                    gridsUpdateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
                         _tableId
                         data
@@ -1296,7 +1340,7 @@ trait Base
                 }';
             case self::$UPSERT_ROW:
                 return 'mutation upsertRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!] = []) {
-                    tablesUpsertRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                    gridsUpsertRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
                         _databaseId
                         _tableId
@@ -1305,13 +1349,13 @@ trait Base
                 }';
             case self::$DELETE_ROW:
                 return 'mutation deleteRow($databaseId: String!, $tableId: String!, $rowId: String!) {
-                    tablesDeleteRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                    gridsDeleteRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
                         status
                     }
                 }';
             case self::$UPDATE_ROWS:
                 return 'mutation updateRows($databaseId: String!, $tableId: String!, $data: Json!, $queries: [String!]) {
-                    tablesUpdateRows(databaseId: $databaseId, tableId: $tableId, data: $data, queries: $queries) {
+                    gridsUpdateRows(databaseId: $databaseId, tableId: $tableId, data: $data, queries: $queries) {
                         total
                         rows {
                             _id
@@ -1324,7 +1368,7 @@ trait Base
                 }';
             case self::$UPSERT_ROWS:
                 return 'mutation upsertRows($databaseId: String!, $tableId: String!, $rows: [Json!]!) {
-                    tablesUpsertRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
+                    gridsUpsertRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
                         total
                         rows {
                             _id
@@ -1337,7 +1381,7 @@ trait Base
                 }';
             case self::$DELETE_ROWS:
                 return 'mutation deleteRows($databaseId: String!, $tableId: String!, $queries: [String!] = []) {
-                    tablesDeleteRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
+                    gridsDeleteRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
                         total
                         rows {
                             _id
@@ -3070,7 +3114,7 @@ trait Base
                         _id
                         name
                     }
-                    tablesCreate(databaseId: $databaseId, tableId: $tableId, name: $tableName, rowSecurity: $rowSecurity, permissions: $tablePermissions) {
+                    gridsCreate(databaseId: $databaseId, tableId: $tableId, name: $tableName, rowSecurity: $rowSecurity, permissions: $tablePermissions) {
                         _id
                         _createdAt
                         _updatedAt
@@ -3087,7 +3131,7 @@ trait Base
                             status
                         }
                     }
-                    tablesCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: "name", size: 255, required: true) {
+                    gridsCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: "name", size: 255, required: true) {
                         key
                         type
                         status
@@ -3096,7 +3140,7 @@ trait Base
                         default
                         array
                     }
-                    tablesCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: "age", min: 0, max: 150, required: true) {
+                    gridsCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: "age", min: 0, max: 150, required: true) {
                         key
                         type
                         status
@@ -3106,7 +3150,7 @@ trait Base
                         default
                         array
                     }
-                    tablesCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: "alive", required: false, default: true) {
+                    gridsCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: "alive", required: false, default: true) {
                         key
                         type
                         status
