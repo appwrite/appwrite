@@ -2294,7 +2294,7 @@ class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    public function testExecutionHeaders()
+    public function testAsyncExecutionHeaders()
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
@@ -2340,6 +2340,46 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('execution-delay-is-valid', $execution['body']['logs']);
         $this->assertStringContainsString('scheduled-at-is-valid', $execution['body']['logs']);
         $this->assertStringContainsString('executed-at-is-valid', $execution['body']['logs']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testSyncExecutionHeaders()
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test sync execution headers',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+
+        $deployment = $this->getDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        $execution = $this->createExecution($functionId, [
+            'async' => false,
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertGreaterThan(0, $execution['body']['duration']);
+        $this->assertNotEmpty($execution['body']['logs']);
+        $this->assertNotEmpty($execution['body']['responseHeaders']);
+
+        $requestHeaders = array_column($execution['body']['requestHeaders'], 'value', 'name');
+        $this->assertArrayHasKey('x-appwrite-scheduled-at', $requestHeaders);
+        $this->assertArrayHasKey('x-appwrite-executed-at', $requestHeaders);
+        $this->assertArrayHasKey('x-appwrite-execution-delay', $requestHeaders);
+        $this->assertEquals('0', $requestHeaders['x-appwrite-execution-delay']);
+        $this->assertGreaterThanOrEqual($requestHeaders['x-appwrite-scheduled-at'], $requestHeaders['x-appwrite-executed-at']);
 
         $this->cleanupFunction($functionId);
     }

@@ -231,6 +231,12 @@ class Create extends Base
         $currentTime = new \DateTime();
         $headers['x-appwrite-scheduled-at'] = $currentTime->format('Y-m-d\TH:i:s.v\Z');
 
+        if (!$async) {
+            $executedAt = new \DateTime();
+            $headers['x-appwrite-executed-at'] = $executedAt->format('Y-m-d\TH:i:s.v\Z');
+            $headers['x-appwrite-execution-delay'] = '0';
+        }
+
         $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
             $record = $geodb->get($ip);

@@ -57,7 +57,6 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey)
 {
-    // add headers here as well
     $host = $request->getHostname() ?? '';
     if (!empty($previewHostname)) {
         $host = $previewHostname;
@@ -371,8 +370,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $jwtKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-jwt'] = '';
-        // add here
-        // in API - for sync executions, hard code delay to 0
+        // add headers for sync executions
+        $currentTime = new \DateTime();
+        $headers['x-appwrite-scheduled-at'] = $currentTime->format('Y-m-d\TH:i:s.v\Z');
+        $headers['x-appwrite-executed-at'] = $currentTime->format('Y-m-d\TH:i:s.v\Z');
+        $headers['x-appwrite-execution-delay'] = '0';
 
         $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
