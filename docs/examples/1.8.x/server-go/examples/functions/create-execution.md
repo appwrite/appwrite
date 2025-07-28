@@ -21,7 +21,7 @@ func main() {
         functions.WithCreateExecutionPath("<PATH>"),
         functions.WithCreateExecutionMethod("GET"),
         functions.WithCreateExecutionHeaders(map[string]interface{}{}),
-        functions.WithCreateExecutionScheduledAt("<SCHEDULED_AT>"),
+        functions.WithCreateExecutionScheduledAt(""),
     )
 
     if error != nil {

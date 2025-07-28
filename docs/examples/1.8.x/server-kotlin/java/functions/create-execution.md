@@ -16,7 +16,7 @@ functions.createExecution(
     "<PATH>", // path (optional)
     ExecutionMethod.GET, // method (optional)
     mapOf( "a" to "b" ), // headers (optional)
-    "<SCHEDULED_AT>", // scheduledAt (optional)
+    "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

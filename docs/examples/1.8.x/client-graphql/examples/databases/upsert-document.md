@@ -2,9 +2,7 @@ mutation {
     databasesUpsertDocument(
         databaseId: "<DATABASE_ID>",
         collectionId: "<COLLECTION_ID>",
-        documentId: "<DOCUMENT_ID>",
-        data: "{}",
-        permissions: ["read("any")"]
+        documentId: "<DOCUMENT_ID>"
     ) {
         _id
         _sequence

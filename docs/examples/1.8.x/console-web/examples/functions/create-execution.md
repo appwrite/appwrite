@@ -13,7 +13,7 @@ const result = await functions.createExecution(
     '<PATH>', // path (optional)
     ExecutionMethod.GET, // method (optional)
     {}, // headers (optional)
-    '<SCHEDULED_AT>' // scheduledAt (optional)
+    '' // scheduledAt (optional)
 );
 
 console.log(result);

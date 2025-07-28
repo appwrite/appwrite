@@ -5,13 +5,12 @@ use Appwrite\Services\Databases;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
-    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setAdmin('') // 
     ->setKey('<YOUR_API_KEY>'); // Your secret API key
 
 $databases = new Databases($client);
 
 $result = $databases->upsertDocuments(
     databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
-    documents: []
+    collectionId: '<COLLECTION_ID>'
 );

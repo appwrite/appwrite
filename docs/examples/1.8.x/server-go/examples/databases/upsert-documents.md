@@ -9,7 +9,7 @@ import (
 func main() {
     client := client.New(
         client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
+        client.WithAdmin("") // 
         client.WithKey("<YOUR_API_KEY>") // Your secret API key
     )
 
@@ -17,7 +17,6 @@ func main() {
     response, error := service.UpsertDocuments(
         "<DATABASE_ID>",
         "<COLLECTION_ID>",
-        []interface{}{},
     )
 
     if error != nil {

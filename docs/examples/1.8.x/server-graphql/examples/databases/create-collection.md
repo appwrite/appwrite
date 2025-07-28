@@ -17,9 +17,6 @@ mutation {
         documentSecurity
         attributes
         indexes {
-            _id
-            _createdAt
-            _updatedAt
             key
             type
             status
@@ -27,6 +24,8 @@ mutation {
             attributes
             lengths
             orders
+            _createdAt
+            _updatedAt
         }
     }
 }

@@ -4,8 +4,9 @@ import io.appwrite.services.Databases;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("<YOUR_PROJECT_ID>") // Your project ID
-    .setSession(""); // The user session to authenticate with
+    .setSession("") // The user session to authenticate with
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+    .setJWT("<YOUR_JWT>"); // Your secret JSON Web Token
 
 Databases databases = new Databases(client);
 

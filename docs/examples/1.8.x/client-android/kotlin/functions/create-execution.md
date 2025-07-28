@@ -15,5 +15,5 @@ val result = functions.createExecution(
     path = "<PATH>", // (optional)
     method = ExecutionMethod.GET, // (optional)
     headers = mapOf( "a" to "b" ), // (optional)
-    scheduledAt = "<SCHEDULED_AT>", // (optional)
+    scheduledAt = "", // (optional)
 )

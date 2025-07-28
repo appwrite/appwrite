@@ -14,5 +14,5 @@ const result = await functions.createExecution(
     '<PATH>', // path (optional)
     sdk.ExecutionMethod.GET, // method (optional)
     {}, // headers (optional)
-    '<SCHEDULED_AT>' // scheduledAt (optional)
+    '' // scheduledAt (optional)
 );
