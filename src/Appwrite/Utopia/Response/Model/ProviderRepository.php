@@ -41,6 +41,12 @@ class ProviderRepository extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('defaultBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => "VCS (Version Control System) repository's default branch name.",
+                'default' => '',
+                'example' => 'main',
+            ])
             ->addRule('pushedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Last commit date in ISO 8601 format.',
