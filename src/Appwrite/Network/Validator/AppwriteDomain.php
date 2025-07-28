@@ -57,9 +57,9 @@ class AppwriteDomain extends Validator
         // Extract subdomain and check for sub-subdomains
         $subdomain = \str_replace($suffix, '', \strtolower($value));
 
-        // If there's no subdomain (just the root domain), it's valid
+        // If there's no subdomain (just the root domain), it's invalid for this validator
         if (empty($subdomain)) {
-            return true;
+            return false;
         }
 
         // Check if the subdomain contains dots (sub-subdomains)
