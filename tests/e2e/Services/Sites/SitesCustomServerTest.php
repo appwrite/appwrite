@@ -133,7 +133,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']); // domain unavailable
 
-        $nonExistingDomain = "non-existent-subdomain.sites.localhost";
+        $nonExistingDomain = "non-existent-subdomain." . System::getEnv('_APP_DOMAIN_SITES', 'appwrite.network');
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
@@ -2453,7 +2453,7 @@ class SitesCustomServerTest extends Scope
     public function testErrorPages(): void
     {
         // non-existent domain page
-        $domain = 'non-existent-page.sites.localhost';
+        $domain = 'non-existent-page.' . System::getEnv('_APP_DOMAIN_SITES', 'appwrite.network');
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 

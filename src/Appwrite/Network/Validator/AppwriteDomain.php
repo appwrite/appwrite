@@ -43,19 +43,28 @@ class AppwriteDomain extends Validator
             return false;
         }
 
-        // If the domain doesn't end with our suffix, reject it
-        // (this validator is specifically for appwrite.network domains)
-        if (!\str_ends_with(\strtolower($value), $suffix)) {
+        // Remove leading dot from suffix for comparison
+        $suffixForComparison = ltrim($suffix, '.');
+
+        // Check if domain ends with the suffix
+        $domainLower = \strtolower($value);
+        $suffixLower = \strtolower($suffixForComparison);
+
+        if (!\str_ends_with($domainLower, $suffixLower)) {
             return false;
         }
 
-        // For appwrite.network domains, apply our specific rules
-        if (\str_ends_with($value, $suffix . '.')) {
+        // Check that the domain has the correct structure (subdomain.suffix)
+        // This prevents domains like 'notappwrite.network' from being accepted
+        $expectedSuffix = '.' . $suffixLower;
+        if (!\str_ends_with($domainLower, $expectedSuffix)) {
             return false;
         }
 
-        // Extract subdomain and check for sub-subdomains
-        $subdomain = \str_replace($suffix, '', \strtolower($value));
+        // Extract subdomain by removing the suffix from the end
+        $subdomain = \substr($domainLower, 0, -\strlen($suffixLower));
+        // Remove trailing dot if present
+        $subdomain = rtrim($subdomain, '.');
 
         // If there's no subdomain (just the root domain), it's invalid for this validator
         if (empty($subdomain)) {
