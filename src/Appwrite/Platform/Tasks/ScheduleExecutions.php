@@ -62,7 +62,7 @@ class ScheduleExecutions extends ScheduleBase
                 $executionDelay = $executedAt->getTimestamp() - $scheduledAt->getTimestamp();
 
                 $headers = $data['headers'] ?? [];
-                $headers['x-appwrite-schedule-delay'] = (string)$executionDelay;
+                $headers['x-appwrite-execution-delay'] = (string)$executionDelay;
                 $headers['x-appwrite-scheduled-at'] = $scheduledAt->format('Y-m-d\TH:i:s.v\Z');
                 $headers['x-appwrite-executed-at'] = $executedAt->format('Y-m-d\TH:i:s.v\Z');
 
