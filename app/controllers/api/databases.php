@@ -3453,6 +3453,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         } else {
                             $relation->removeAttribute('$collectionId');
                             $relation->removeAttribute('$databaseId');
+                            $relation->removeAttribute('$sequence');
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
@@ -3484,6 +3485,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
                 }
             }
+
+            // Remove sequence if set
+            unset($document['$sequence']);
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
@@ -4073,6 +4077,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         if (\is_null($permissions)) {
             $permissions = $document->getPermissions() ?? [];
         }
+
+        // Remove sequence if set
+        unset($data['$sequence']);
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
@@ -4707,6 +4714,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
             }
         }
+
+        // Remove sequence if set
+        unset($data['$sequence']);
 
         $documents = [];
 
