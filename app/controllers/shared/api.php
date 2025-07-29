@@ -22,6 +22,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -563,7 +564,7 @@ App::init()
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
-            $timestamp = 60 * 60 * 24 * 30;
+            $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
@@ -575,7 +576,6 @@ App::init()
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
@@ -797,6 +797,12 @@ App::shutdown()
         }
 
         if (!empty($queueForDatabase->getType())) {
+            Console::info("Triggering database event: \n" .  \json_encode([
+                'projectId' => $project->getId(),
+                'databaseId' => $queueForDatabase->getDatabase()?->getId(),
+                'tableId' => $queueForDatabase->getTable()?->getId() ?? $queueForDatabase->getCollection()?->getId(),
+                'rowId' => $queueForDatabase->getRow()?->getId() ?? $queueForDatabase->getDocument()?->getId(),
+            ]));
             $queueForDatabase->trigger();
         }
 
@@ -824,6 +830,10 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
+                $cache = new Cache(
+                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                );
+
                 $key = $request->cacheIdentifier();
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -841,12 +851,11 @@ App::shutdown()
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                    // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
+                    $cache->save($key, $data['payload']);
                 }
 
                 if ($signature !== $cacheLog->getAttribute('signature')) {
-                    $cache = new Cache(
-                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                    );
                     $cache->save($key, $data['payload']);
                 }
             }

@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\System\System;
 
 class SitesCustomClientTest extends Scope
 {
@@ -121,6 +122,7 @@ class SitesCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $template = $this->getTemplate('starter-for-react');
+        $hostname = System::getEnv('_APP_DOMAIN') ?: '';
         $this->assertEquals(200, $template['headers']['status-code']);
         $this->assertIsArray($template['body']);
         $this->assertEquals('starter-for-react', $template['body']['key']);
@@ -129,8 +131,8 @@ class SitesCustomClientTest extends Scope
         $this->assertEquals('github', $template['body']['vcsProvider']);
         $this->assertEquals('Simple React application integrated with Appwrite SDK.', $template['body']['tagline']);
         $this->assertIsArray($template['body']['frameworks']);
-        $this->assertEquals('http://localhost/images/sites/templates/starter-for-react-dark.png', $template['body']['screenshotDark']);
-        $this->assertEquals('http://localhost/images/sites/templates/starter-for-react-light.png', $template['body']['screenshotLight']);
+        $this->assertEquals('http://'. $hostname . '/images/sites/templates/starter-for-react-dark.png', $template['body']['screenshotDark']);
+        $this->assertEquals('http://' . $hostname . '/images/sites/templates/starter-for-react-light.png', $template['body']['screenshotLight']);
 
         /**
          * Test for FAILURE

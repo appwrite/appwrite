@@ -8,8 +8,8 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\Origin;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -127,6 +127,7 @@ App::post('/v1/projects')
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
+            'invalidateSessions' => true
         ];
 
         foreach ($auth as $method) {
@@ -1790,7 +1791,7 @@ App::post('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY, Origin::CLIENT_TYPE_REACT_NATIVE_IOS, Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Platform::TYPE_WEB, Platform::TYPE_FLUTTER_WEB, Platform::TYPE_FLUTTER_IOS, Platform::TYPE_FLUTTER_ANDROID, Platform::TYPE_FLUTTER_LINUX, Platform::TYPE_FLUTTER_MACOS, Platform::TYPE_FLUTTER_WINDOWS, Platform::TYPE_APPLE_IOS, Platform::TYPE_APPLE_MACOS,  Platform::TYPE_APPLE_WATCHOS, Platform::TYPE_APPLE_TVOS, Platform::TYPE_ANDROID, Platform::TYPE_UNITY, Platform::TYPE_REACT_NATIVE_IOS, Platform::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -2175,7 +2176,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
                 ->setSmtpSenderName($senderName)
                 ->setRecipient($email)
                 ->setName('')
-                ->setbodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
+                ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
                 ->setBody($template->render())
                 ->setVariables([])
                 ->setSubject($subject)
@@ -2268,15 +2269,53 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
 
         $localeObj = new Locale($locale);
         if (is_null($template)) {
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            /**
+             * different templates, different placeholders.
+             */
+            $templateConfigs = [
+                'magicSession' => [
+                    'file' => 'email-magic-url.tpl',
+                    'placeholders' => ['optionButton', 'buttonText', 'optionUrl', 'clientInfo', 'securityPhrase']
+                ],
+                'mfaChallenge' => [
+                    'file' => 'email-mfa-challenge.tpl',
+                    'placeholders' => ['description', 'clientInfo']
+                ],
+                'otpSession' => [
+                    'file' => 'email-otp.tpl',
+                    'placeholders' => ['description', 'clientInfo', 'securityPhrase']
+                ],
+                'sessionAlert' => [
+                    'file' => 'email-session-alert.tpl',
+                    'placeholders' => ['body', 'listDevice', 'listIpAddress', 'listCountry', 'footer']
+                ],
+            ];
+
+            // fallback to the base template.
+            $config = $templateConfigs[$type] ?? [
+                'file' => 'email-inner-base.tpl',
+                'placeholders' => ['buttonText', 'body', 'footer']
+            ];
+
+            $templateString = file_get_contents(__DIR__ . '/../../config/locale/templates/' . $config['file']);
+
+            // We use `fromString` due to the replace above
+            $message = Template::fromString($templateString);
+
+            // Set type-specific parameters
+            foreach ($config['placeholders'] as $param) {
+                $escapeHtml = !in_array($param, ['clientInfo', 'body', 'footer', 'description']);
+                $message->setParam("{{{$param}}}", $localeObj->getText("emails.{$type}.{$param}"), escapeHtml: $escapeHtml);
+            }
+
             $message
+                // common placeholders on all the templates
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-                ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
-                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
-                ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
-            $message = $message->render();
+                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"));
+
+            // `useContent: false` will strip new lines!
+            $message = $message->render(useContent: true);
 
             $template = [
                 'message' => $message,
@@ -2498,4 +2537,41 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
             'replyTo' => $template['replyTo'],
             'message' => $template['message']
         ]), Response::MODEL_EMAIL_TEMPLATE);
+    });
+
+App::patch('/v1/projects/:projectId/auth/session-invalidation')
+    ->desc('Update invalidate session option of the project')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateSessionInvalidation',
+        description: '/docs/references/projects/update-session-invalidation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('enabled', false, new Boolean(), 'Update authentication session invalidation status. Use this endpoint to enable or disable session invalidation on password change')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['invalidateSessions'] = $enabled;
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+        ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });

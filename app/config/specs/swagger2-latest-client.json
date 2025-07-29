@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.7.4",
+        "version": "1.8.0",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -90,13 +90,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "get",
                     "group": "account",
                     "weight": 10,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get.md",
                     "rate-limit": 0,
@@ -141,13 +141,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "create",
                     "group": "account",
                     "weight": 9,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create.md",
                     "rate-limit": 10,
@@ -232,13 +232,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "account",
                     "weight": 35,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-email.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email.md",
                     "rate-limit": 0,
@@ -310,13 +310,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listIdentities",
                     "group": "identities",
                     "weight": 58,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-identities.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-identities.md",
                     "rate-limit": 0,
@@ -372,13 +372,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteIdentity",
                     "group": "identities",
                     "weight": 59,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-identity.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-identity.md",
                     "rate-limit": 0,
@@ -435,13 +435,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createJWT",
                     "group": "tokens",
                     "weight": 30,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-j-w-t.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "rate-limit": 100,
@@ -484,13 +484,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
                     "weight": 32,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-logs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-logs.md",
                     "rate-limit": 0,
@@ -551,13 +551,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMFA",
                     "group": "mfa",
                     "weight": 45,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-m-f-a.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "rate-limit": 0,
@@ -624,13 +624,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
                     "weight": 47,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-mfa-authenticator.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-authenticator.md",
                     "rate-limit": 0,
@@ -690,13 +690,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
                     "weight": 48,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-mfa-authenticator.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-authenticator.md",
                     "rate-limit": 0,
@@ -769,13 +769,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
                     "weight": 52,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-mfa-authenticator.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-mfa-authenticator.md",
                     "rate-limit": 0,
@@ -837,13 +837,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
                     "weight": 53,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-mfa-challenge.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-challenge.md",
                     "rate-limit": 10,
@@ -914,13 +914,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
                     "weight": 54,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-mfa-challenge.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-challenge.md",
                     "rate-limit": 10,
@@ -992,13 +992,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
                     "weight": 46,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-mfa-factors.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-mfa-factors.md",
                     "rate-limit": 0,
@@ -1043,13 +1043,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
                     "weight": 51,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get-mfa-recovery-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-mfa-recovery-codes.md",
                     "rate-limit": 0,
@@ -1094,13 +1094,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
                     "weight": 49,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-mfa-recovery-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-recovery-codes.md",
                     "rate-limit": 0,
@@ -1145,13 +1145,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
                     "weight": 50,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-mfa-recovery-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-recovery-codes.md",
                     "rate-limit": 0,
@@ -1198,13 +1198,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "account",
                     "weight": 33,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-name.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-name.md",
                     "rate-limit": 0,
@@ -1271,13 +1271,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePassword",
                     "group": "account",
                     "weight": 34,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-password.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-password.md",
                     "rate-limit": 10,
@@ -1350,13 +1350,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePhone",
                     "group": "account",
                     "weight": 36,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-phone.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone.md",
                     "rate-limit": 0,
@@ -1428,13 +1428,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "account",
                     "weight": 31,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-prefs.md",
                     "rate-limit": 0,
@@ -1479,13 +1479,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "account",
                     "weight": 37,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-prefs.md",
                     "rate-limit": 0,
@@ -1552,13 +1552,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createRecovery",
                     "group": "recovery",
                     "weight": 39,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-recovery.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-recovery.md",
                     "rate-limit": 10,
@@ -1633,13 +1633,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateRecovery",
                     "group": "recovery",
                     "weight": 40,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-recovery.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-recovery.md",
                     "rate-limit": 10,
@@ -1718,13 +1718,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listSessions",
                     "group": "sessions",
                     "weight": 12,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/list-sessions.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-sessions.md",
                     "rate-limit": 0,
@@ -1764,13 +1764,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteSessions",
                     "group": "sessions",
                     "weight": 13,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-sessions.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-sessions.md",
                     "rate-limit": 100,
@@ -1817,13 +1817,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createAnonymousSession",
                     "group": "sessions",
                     "weight": 18,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-anonymous-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-anonymous.md",
                     "rate-limit": 50,
@@ -1868,13 +1868,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createEmailPasswordSession",
                     "group": "sessions",
                     "weight": 17,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-email-password-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-email-password.md",
                     "rate-limit": 10,
@@ -1946,13 +1946,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMagicURLSession",
                     "group": "sessions",
                     "weight": 27,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
                     "demo": "account\/update-magic-u-r-l-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
@@ -2019,13 +2019,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createOAuth2Session",
                     "group": "sessions",
                     "weight": 20,
                     "cookies": false,
                     "type": "webAuth",
-                    "deprecated": false,
                     "demo": "account\/create-o-auth2session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-oauth2.md",
                     "rate-limit": 50,
@@ -2156,13 +2156,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updatePhoneSession",
                     "group": "sessions",
                     "weight": 28,
                     "cookies": false,
                     "type": "",
-                    "deprecated": true,
                     "demo": "account\/update-phone-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
@@ -2234,13 +2234,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createSession",
                     "group": "sessions",
                     "weight": 19,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
@@ -2310,13 +2310,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getSession",
                     "group": "sessions",
                     "weight": 14,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/get-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-session.md",
                     "rate-limit": 0,
@@ -2371,13 +2371,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateSession",
                     "group": "sessions",
                     "weight": 16,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-session.md",
                     "rate-limit": 10,
@@ -2427,13 +2427,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteSession",
                     "group": "sessions",
                     "weight": 15,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-session.md",
                     "rate-limit": 100,
@@ -2490,13 +2490,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateStatus",
                     "group": "account",
                     "weight": 38,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-status.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-status.md",
                     "rate-limit": 0,
@@ -2543,13 +2543,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createPushTarget",
                     "group": "pushTargets",
                     "weight": 55,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-push-target.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
@@ -2627,13 +2627,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePushTarget",
                     "group": "pushTargets",
                     "weight": 56,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-push-target.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
@@ -2699,13 +2699,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deletePushTarget",
                     "group": "pushTargets",
                     "weight": 57,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/delete-push-target.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
@@ -2760,13 +2760,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createEmailToken",
                     "group": "tokens",
                     "weight": 26,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-email-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-email.md",
                     "rate-limit": 10,
@@ -2847,13 +2847,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMagicURLToken",
                     "group": "tokens",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-magic-u-r-l-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "rate-limit": 60,
@@ -2935,13 +2935,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createOAuth2Token",
                     "group": "tokens",
                     "weight": 24,
                     "cookies": false,
                     "type": "webAuth",
-                    "deprecated": false,
                     "demo": "account\/create-o-auth2token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "rate-limit": 50,
@@ -3072,13 +3072,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createPhoneToken",
                     "group": "tokens",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-phone-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-phone.md",
                     "rate-limit": 10,
@@ -3153,13 +3153,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createVerification",
                     "group": "verification",
                     "weight": 41,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-email-verification.md",
                     "rate-limit": 10,
@@ -3224,13 +3224,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateVerification",
                     "group": "verification",
                     "weight": 42,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email-verification.md",
                     "rate-limit": 10,
@@ -3304,13 +3304,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createPhoneVerification",
                     "group": "verification",
                     "weight": 43,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/create-phone-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-phone-verification.md",
                     "rate-limit": 10,
@@ -3358,13 +3358,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
                     "group": "verification",
                     "weight": 44,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "account\/update-phone-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone-verification.md",
                     "rate-limit": 10,
@@ -3436,13 +3436,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getBrowser",
                     "group": null,
                     "weight": 61,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-browser.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-browser.md",
                     "rate-limit": 0,
@@ -3451,7 +3451,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3561,13 +3560,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getCreditCard",
                     "group": null,
                     "weight": 60,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-credit-card.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-credit-card.md",
                     "rate-limit": 0,
@@ -3576,7 +3575,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3692,13 +3690,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFavicon",
                     "group": null,
                     "weight": 64,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-favicon.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-favicon.md",
                     "rate-limit": 0,
@@ -3707,7 +3705,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3755,13 +3752,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFlag",
                     "group": null,
                     "weight": 62,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-flag.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-flag.md",
                     "rate-limit": 0,
@@ -3770,7 +3767,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4242,13 +4238,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getImage",
                     "group": null,
                     "weight": 63,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-image.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-image.md",
                     "rate-limit": 0,
@@ -4257,7 +4253,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4325,13 +4320,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getInitials",
                     "group": null,
                     "weight": 66,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-initials.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-initials.md",
                     "rate-limit": 0,
@@ -4340,7 +4335,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4416,13 +4410,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getQR",
                     "group": null,
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "avatars\/get-q-r.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "rate-limit": 0,
@@ -4431,7 +4425,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4507,13 +4500,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 110,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "databases\/list-documents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
@@ -4522,10 +4515,13 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.listRows"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -4589,13 +4585,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 109,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "databases\/create-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
@@ -4603,20 +4599,20 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
-                        "console",
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.createRow"
+                    },
                     "methods": [
                         {
                             "name": "createDocument",
+                            "namespace": "databases",
                             "auth": {
-                                "Admin": [],
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -4637,30 +4633,11 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
-                        },
-                        {
-                            "name": "createDocuments",
-                            "auth": {
-                                "Key": []
-                            },
-                            "parameters": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "collectionId",
-                                "documents"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/definitions\/documentList"
-                                }
-                            ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.createRow"
+                            }
                         }
                     ],
                     "auth": {
@@ -4753,13 +4730,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 111,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "databases\/get-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
@@ -4768,10 +4745,13 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.getRow"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -4823,7 +4803,7 @@
                 ]
             },
             "put": {
-                "summary": "Upsert document",
+                "summary": "Create or update a document",
                 "operationId": "databasesUpsertDocument",
                 "consumes": [
                     "application\/json"
@@ -4834,22 +4814,22 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Document",
                         "schema": {
                             "$ref": "#\/definitions\/document"
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 114,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "databases\/upsert-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
@@ -4858,10 +4838,46 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.upsertRow"
+                    },
+                    "methods": [
+                        {
+                            "name": "upsertDocument",
+                            "namespace": "databases",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/document"
+                                }
+                            ],
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.upsertRow"
+                            }
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4948,13 +4964,13 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 113,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "databases\/update-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
@@ -4963,10 +4979,13 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.updateRow"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -5045,13 +5064,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 119,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "databases\/delete-document.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,
@@ -5060,10 +5079,13 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "grids.deleteRow"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -5103,44 +5125,40 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
-            "patch": {
-                "summary": "Decrement document attribute",
-                "operationId": "databasesDecrementDocumentAttribute",
-                "consumes": [
-                    "application\/json"
-                ],
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows": {
+            "get": {
+                "summary": "List rows",
+                "operationId": "gridsListRows",
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "databases"
+                    "grids"
                 ],
-                "description": "Decrement a specific attribute of a document by a given value.",
+                "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
-                        "description": "Document",
+                        "description": "Rows List",
                         "schema": {
-                            "$ref": "#\/definitions\/document"
+                            "$ref": "#\/definitions\/rowList"
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
-                    "method": "decrementDocumentAttribute",
-                    "group": "documents",
-                    "weight": 116,
+                    "method": "listRows",
+                    "group": "rows",
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
-                    "demo": "databases\/decrement-document-attribute.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "demo": "grids\/list-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-rows.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
                     "platforms": [
-                        "console",
-                        "server",
                         "client",
                         "server"
                     ],
@@ -5166,26 +5184,121 @@
                         "in": "path"
                     },
                     {
-                        "name": "collectionId",
-                        "description": "Collection ID.",
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "type": "string",
-                        "x-example": "<COLLECTION_ID>",
+                        "x-example": "<TABLE_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "documentId",
-                        "description": "Document ID.",
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create row",
+                "operationId": "gridsCreateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "grids"
+                ],
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createRow",
+                    "group": "rows",
+                    "weight": 404,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "grids\/create-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createRow",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
                         "required": true,
                         "type": "string",
-                        "x-example": "<DOCUMENT_ID>",
+                        "x-example": "<DATABASE_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "attribute",
-                        "description": "Attribute key.",
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate). Make sure to define columns before creating rows.",
                         "required": true,
                         "type": "string",
+                        "x-example": "<TABLE_ID>",
                         "in": "path"
                     },
                     {
@@ -5194,17 +5307,35 @@
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "value": {
-                                    "type": "number",
-                                    "description": "Value to decrement the attribute by. The value must be a number.",
-                                    "default": 1,
-                                    "x-example": null
+                                "rowId": {
+                                    "type": "string",
+                                    "description": "Row ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "default": "",
+                                    "x-example": "<ROW_ID>"
                                 },
-                                "min": {
-                                    "type": "number",
-                                    "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "rows": {
+                                    "type": "array",
+                                    "description": "Array of documents data as JSON objects.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
                                 }
                             }
                         }
@@ -5212,44 +5343,40 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
-            "patch": {
-                "summary": "Increment document attribute",
-                "operationId": "databasesIncrementDocumentAttribute",
-                "consumes": [
-                    "application\/json"
-                ],
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}": {
+            "get": {
+                "summary": "Get row",
+                "operationId": "gridsGetRow",
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "databases"
+                    "grids"
                 ],
-                "description": "Increment a specific attribute of a document by a given value.",
+                "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
                 "responses": {
                     "200": {
-                        "description": "Document",
+                        "description": "Row",
                         "schema": {
-                            "$ref": "#\/definitions\/document"
+                            "$ref": "#\/definitions\/row"
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
-                    "method": "incrementDocumentAttribute",
-                    "group": "documents",
-                    "weight": 115,
+                    "method": "getRow",
+                    "group": "rows",
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
-                    "demo": "databases\/increment-document-attribute.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "documents.write",
+                    "demo": "grids\/get-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-row.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
                     "platforms": [
-                        "console",
-                        "server",
                         "client",
                         "server"
                     ],
@@ -5275,26 +5402,136 @@
                         "in": "path"
                     },
                     {
-                        "name": "collectionId",
-                        "description": "Collection ID.",
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
                         "required": true,
                         "type": "string",
-                        "x-example": "<COLLECTION_ID>",
+                        "x-example": "<TABLE_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "documentId",
-                        "description": "Document ID.",
+                        "name": "rowId",
+                        "description": "Row ID.",
                         "required": true,
                         "type": "string",
-                        "x-example": "<DOCUMENT_ID>",
+                        "x-example": "<ROW_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "attribute",
-                        "description": "Attribute key.",
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Create or update a row",
+                "operationId": "gridsUpsertRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "grids"
+                ],
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "upsertRow",
+                    "group": "rows",
+                    "weight": 408,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "grids\/upsert-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/upsert-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "upsertRow",
+                            "namespace": "grids",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
                         "required": true,
                         "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
                         "in": "path"
                     },
                     {
@@ -5303,20 +5540,196 @@
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "value": {
-                                    "type": "number",
-                                    "description": "Value to increment the attribute by. The value must be a number.",
-                                    "default": 1,
-                                    "x-example": null
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
+                                    "default": [],
+                                    "x-example": "{}"
                                 },
-                                "max": {
-                                    "type": "number",
-                                    "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update row",
+                "operationId": "gridsUpdateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "grids"
+                ],
+                "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateRow",
+                    "group": "rows",
+                    "weight": 406,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "grids\/update-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete row",
+                "operationId": "gridsDeleteRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "grids"
+                ],
+                "description": "Delete a row by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteRow",
+                    "group": "rows",
+                    "weight": 410,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "grids\/delete-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-row.md",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
                     }
                 ]
             }
@@ -5341,13 +5754,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 394,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "functions\/list-executions.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a list of all the current user function execution logs. You can use the query params to filter your results.",
                     "rate-limit": 0,
@@ -5356,7 +5769,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5415,13 +5827,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 392,
+                    "weight": 438,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "functions\/create-execution.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterTrigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.",
                     "rate-limit": 0,
@@ -5430,7 +5842,6 @@
                     "scope": "execution.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5504,7 +5915,7 @@
                                     "type": "string",
                                     "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "<SCHEDULED_AT>"
                                 }
                             }
                         }
@@ -5532,13 +5943,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 393,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "functions\/get-execution.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a function execution log by its unique ID.",
                     "rate-limit": 0,
@@ -5547,7 +5958,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5604,13 +6014,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 308,
+                    "weight": 254,
                     "cookies": false,
                     "type": "graphql",
-                    "deprecated": false,
                     "demo": "graphql\/query.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "rate-limit": 60,
@@ -5619,8 +6029,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5678,13 +6087,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 307,
+                    "weight": 253,
                     "cookies": false,
                     "type": "graphql",
-                    "deprecated": false,
                     "demo": "graphql\/mutation.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "rate-limit": 60,
@@ -5693,8 +6102,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5750,13 +6158,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 124,
+                    "weight": 70,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/get-locale.md",
                     "rate-limit": 0,
@@ -5765,7 +6173,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5802,13 +6209,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 125,
+                    "weight": 71,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-codes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-locale-codes.md",
                     "rate-limit": 0,
@@ -5817,7 +6224,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5854,13 +6260,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 129,
+                    "weight": 75,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-continents.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-continents.md",
                     "rate-limit": 0,
@@ -5869,7 +6275,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5906,13 +6311,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 126,
+                    "weight": 72,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-countries.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries.md",
                     "rate-limit": 0,
@@ -5921,7 +6326,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5958,13 +6362,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 127,
+                    "weight": 73,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-countries-e-u.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "rate-limit": 0,
@@ -5973,7 +6377,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6010,13 +6413,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 128,
+                    "weight": 74,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-countries-phones.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-phones.md",
                     "rate-limit": 0,
@@ -6025,7 +6428,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6062,13 +6464,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 130,
+                    "weight": 76,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-currencies.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-currencies.md",
                     "rate-limit": 0,
@@ -6077,7 +6479,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6114,13 +6515,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 131,
+                    "weight": 77,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "locale\/list-languages.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-languages.md",
                     "rate-limit": 0,
@@ -6129,7 +6530,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6168,13 +6568,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 354,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "messaging\/create-subscriber.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/create-subscriber.md",
                     "rate-limit": 0,
@@ -6184,8 +6584,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -6253,13 +6652,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 358,
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "messaging\/delete-subscriber.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/delete-subscriber.md",
                     "rate-limit": 0,
@@ -6269,8 +6668,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -6324,13 +6722,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 214,
+                    "weight": 161,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/list-files.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/list-files.md",
                     "rate-limit": 0,
@@ -6339,7 +6737,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6407,13 +6804,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 213,
+                    "weight": 160,
                     "cookies": false,
                     "type": "upload",
-                    "deprecated": false,
                     "demo": "storage\/create-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/create-file.md",
                     "rate-limit": 60,
@@ -6422,7 +6819,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6497,13 +6893,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 215,
+                    "weight": 162,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/get-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file.md",
                     "rate-limit": 0,
@@ -6512,7 +6908,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6567,13 +6962,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 220,
+                    "weight": 167,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/update-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/update-file.md",
                     "rate-limit": 60,
@@ -6582,7 +6977,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6656,13 +7050,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 221,
+                    "weight": 168,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "storage\/delete-file.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/delete-file.md",
                     "rate-limit": 60,
@@ -6671,7 +7065,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6726,13 +7119,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 217,
+                    "weight": 164,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "storage\/get-file-download.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-download.md",
                     "rate-limit": 0,
@@ -6741,7 +7134,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6805,13 +7197,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 216,
+                    "weight": 163,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "storage\/get-file-preview.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-preview.md",
                     "rate-limit": 0,
@@ -6820,7 +7212,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7012,13 +7403,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 218,
+                    "weight": 165,
                     "cookies": false,
                     "type": "location",
-                    "deprecated": false,
                     "demo": "storage\/get-file-view.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-view.md",
                     "rate-limit": 0,
@@ -7027,7 +7418,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7091,13 +7481,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 225,
+                    "weight": 172,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/list.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-teams.md",
                     "rate-limit": 0,
@@ -7106,7 +7496,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7166,13 +7555,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 224,
+                    "weight": 171,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team.md",
                     "rate-limit": 0,
@@ -7181,7 +7570,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7256,13 +7644,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 226,
+                    "weight": 173,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team.md",
                     "rate-limit": 0,
@@ -7271,7 +7659,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7318,13 +7705,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 228,
+                    "weight": 175,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-name.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-name.md",
                     "rate-limit": 0,
@@ -7333,7 +7720,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7393,13 +7779,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 230,
+                    "weight": 177,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/delete.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team.md",
                     "rate-limit": 0,
@@ -7408,7 +7794,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7455,13 +7840,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 232,
+                    "weight": 179,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/list-memberships.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-team-members.md",
                     "rate-limit": 0,
@@ -7470,7 +7855,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7538,13 +7922,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 231,
+                    "weight": 178,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/create-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team-membership.md",
                     "rate-limit": 10,
@@ -7553,7 +7937,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7651,13 +8034,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 233,
+                    "weight": 180,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/get-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-member.md",
                     "rate-limit": 0,
@@ -7666,7 +8049,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7721,13 +8103,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 234,
+                    "weight": 181,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership.md",
                     "rate-limit": 0,
@@ -7736,7 +8118,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7807,13 +8188,13 @@
                         "description": "No content"
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 236,
+                    "weight": 183,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/delete-membership.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team-membership.md",
                     "rate-limit": 0,
@@ -7822,7 +8203,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7879,13 +8259,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 235,
+                    "weight": 182,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-membership-status.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership-status.md",
                     "rate-limit": 0,
@@ -7973,13 +8353,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 227,
+                    "weight": 174,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/get-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-prefs.md",
                     "rate-limit": 0,
@@ -8034,13 +8414,13 @@
                         }
                     }
                 },
+                "deprecated": false,
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 229,
+                    "weight": 176,
                     "cookies": false,
                     "type": "",
-                    "deprecated": false,
                     "demo": "teams\/update-prefs.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-prefs.md",
                     "rate-limit": 0,
@@ -8108,6 +8488,10 @@
             "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
         },
         {
+            "name": "tables",
+            "description": "The Tables service allows you to create structured tables of rows, query and filter lists of rows"
+        },
+        {
             "name": "locale",
             "description": "The Locale service allows you to customize your app based on your users' location."
         },
@@ -8170,13 +8554,38 @@
             "type": "object",
             "additionalProperties": true
         },
+        "rowList": {
+            "description": "Rows List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of rows rows that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "rows": {
+                    "type": "array",
+                    "description": "List of rows.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/row"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "rows"
+            ]
+        },
         "documentList": {
             "description": "Documents List",
             "type": "object",
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of documents documents that matched your query.",
+                    "description": "Total number of documents rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8201,7 +8610,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of sessions documents that matched your query.",
+                    "description": "Total number of sessions rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8226,7 +8635,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of identities documents that matched your query.",
+                    "description": "Total number of identities rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8251,7 +8660,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of logs documents that matched your query.",
+                    "description": "Total number of logs rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8276,7 +8685,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of files documents that matched your query.",
+                    "description": "Total number of files rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8301,7 +8710,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of teams documents that matched your query.",
+                    "description": "Total number of teams rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8326,7 +8735,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of memberships documents that matched your query.",
+                    "description": "Total number of memberships rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8351,7 +8760,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of executions documents that matched your query.",
+                    "description": "Total number of executions rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8376,7 +8785,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of countries documents that matched your query.",
+                    "description": "Total number of countries rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8401,7 +8810,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of continents documents that matched your query.",
+                    "description": "Total number of continents rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8426,7 +8835,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of languages documents that matched your query.",
+                    "description": "Total number of languages rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8451,7 +8860,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of currencies documents that matched your query.",
+                    "description": "Total number of currencies rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8476,7 +8885,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of phones documents that matched your query.",
+                    "description": "Total number of phones rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8501,7 +8910,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of localeCodes documents that matched your query.",
+                    "description": "Total number of localeCodes rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8518,6 +8927,63 @@
             "required": [
                 "total",
                 "localeCodes"
+            ]
+        },
+        "row": {
+            "description": "Row",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Row ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "$sequence": {
+                    "type": "integer",
+                    "description": "Row automatically incrementing ID.",
+                    "x-example": 1,
+                    "format": "int32"
+                },
+                "$tableId": {
+                    "type": "string",
+                    "description": "Table ID.",
+                    "x-example": "5e5ea5c15117e"
+                },
+                "$databaseId": {
+                    "type": "string",
+                    "description": "Database ID.",
+                    "x-example": "5e5ea5c15117e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Row creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Row update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$permissions": {
+                    "type": "array",
+                    "description": "Row permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "read(\"any\")"
+                    ]
+                }
+            },
+            "additionalProperties": true,
+            "required": [
+                "$id",
+                "$sequence",
+                "$tableId",
+                "$databaseId",
+                "$createdAt",
+                "$updatedAt",
+                "$permissions"
             ]
         },
         "document": {

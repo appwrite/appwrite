@@ -522,12 +522,11 @@ App::get('/v1/health/queue/databases')
     ))
     ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
+    ->inject('publisherDatabases')
     ->inject('response')
-    ->action(function (string $name, int|string $threshold, Publisher $publisher, Response $response) {
+    ->action(function (string $name, int|string $threshold, Publisher $publisherDatabases, Response $response) {
         $threshold = \intval($threshold);
-
-        $size = $publisher->getQueueSize(new Queue($name));
+        $size = $publisherDatabases->getQueueSize(new Queue($name));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -654,12 +653,12 @@ App::get('/v1/health/queue/migrations')
         contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
+    ->inject('publisherMigrations')
     ->inject('response')
-    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisherMigrations, Response $response) {
         $threshold = \intval($threshold);
 
-        $size = $publisher->getQueueSize(new Queue(Event::MIGRATIONS_QUEUE_NAME));
+        $size = $publisherMigrations->getQueueSize(new Queue(Event::MIGRATIONS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");

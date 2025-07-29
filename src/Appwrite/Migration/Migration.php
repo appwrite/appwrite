@@ -120,6 +120,7 @@ abstract class Migration
      * @param Document $project
      * @param Database $dbForProject
      * @param Database $dbForPlatform
+     * @param callable|null $getProjectDB
      * @return self
      */
     public function setProject(

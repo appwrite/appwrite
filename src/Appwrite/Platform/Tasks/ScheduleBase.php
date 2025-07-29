@@ -11,7 +11,6 @@ use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -26,6 +25,7 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     protected BrokerPool $publisher;
+    protected BrokerPool $publisherMigrations;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -35,7 +35,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
-    abstract protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void;
+    abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -43,7 +43,8 @@ abstract class ScheduleBase extends Action
 
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('pools')
+            ->inject('publisher')
+            ->inject('publisherMigrations')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
@@ -66,12 +67,14 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
-        $this->publisher = new BrokerPool($pools->get('publisher'));
+        $this->publisher = $publisher;
+        $this->publisherMigrations = $publisherMigrations;
+
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
@@ -93,7 +96,7 @@ abstract class ScheduleBase extends Action
 
         while (true) {
             try {
-                go(fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB));
+                go(fn () => $this->enqueueResources($dbForPlatform, $getProjectDB));
                 $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
                 sleep(static::ENQUEUE_TIMER);
             } catch (\Throwable $th) {

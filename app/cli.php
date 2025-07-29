@@ -188,16 +188,24 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         return $database;
     };
 }, ['pools', 'cache']);
-
+CLI::setResource('publisher', function (Group $pools) {
+    return new BrokerPool(publisher: $pools->get('publisher'));
+}, ['pools']);
+CLI::setResource('publisherDatabases', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+CLI::setResource('publisherMigrations', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+CLI::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
 CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
-CLI::setResource('publisher', function (Group $pools) {
-    return new BrokerPool(publisher: $pools->get('publisher'));
-}, ['pools']);
 CLI::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);

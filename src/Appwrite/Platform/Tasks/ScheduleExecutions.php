@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -27,10 +26,11 @@ class ScheduleExecutions extends ScheduleBase
         return 'executions';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queueForFunctions = new Func($this->publisher);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
+
+        $queueForFunctions = new Func($this->publisher);
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {

@@ -32,6 +32,19 @@ use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Collection;
+use Appwrite\Utopia\Response\Model\Column;
+use Appwrite\Utopia\Response\Model\ColumnBoolean;
+use Appwrite\Utopia\Response\Model\ColumnDatetime;
+use Appwrite\Utopia\Response\Model\ColumnEmail;
+use Appwrite\Utopia\Response\Model\ColumnEnum;
+use Appwrite\Utopia\Response\Model\ColumnFloat;
+use Appwrite\Utopia\Response\Model\ColumnIndex;
+use Appwrite\Utopia\Response\Model\ColumnInteger;
+use Appwrite\Utopia\Response\Model\ColumnIP;
+use Appwrite\Utopia\Response\Model\ColumnList;
+use Appwrite\Utopia\Response\Model\ColumnRelationship;
+use Appwrite\Utopia\Response\Model\ColumnString;
+use Appwrite\Utopia\Response\Model\ColumnURL;
 use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
@@ -88,12 +101,14 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\ResourceToken;
+use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Site;
 use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
+use Appwrite\Utopia\Response\Model\Table;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
@@ -116,6 +131,7 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageSite;
 use Appwrite\Utopia\Response\Model\UsageSites;
 use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageTable;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
@@ -147,6 +163,7 @@ class Response extends SwooleResponse
     public const MODEL_ERROR_DEV = 'errorDev';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
@@ -162,12 +179,16 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_TABLE = 'table';
+    public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
     public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_COLUMN_INDEX = 'columnIndex';
+    public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
-    public const MODEL_TRANSACTION = 'transaction';
-    public const MODEL_TRANSACTION_LIST = 'transactionList';
+    public const MODEL_ROW = 'row';
+    public const MODEL_ROW_LIST = 'rowList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
@@ -182,6 +203,20 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
     public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
     public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
+
+    // Database Columns
+    public const MODEL_COLUMN = 'column';
+    public const MODEL_COLUMN_LIST = 'columnList';
+    public const MODEL_COLUMN_STRING = 'columnString';
+    public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_FLOAT = 'columnFloat';
+    public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
+    public const MODEL_COLUMN_EMAIL = 'columnEmail';
+    public const MODEL_COLUMN_ENUM = 'columnEnum';
+    public const MODEL_COLUMN_IP = 'columnIp';
+    public const MODEL_COLUMN_URL = 'columnUrl';
+    public const MODEL_COLUMN_DATETIME = 'columnDatetime';
+    public const MODEL_COLUMN_RELATIONSHIP = 'columnRelationship';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -371,6 +406,36 @@ class Response extends SwooleResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
+            ->setModel(new BaseList('Rows List', self::MODEL_ROW_LIST, 'rows', self::MODEL_ROW))
+            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
+            ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
+            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
+            ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
+            ->setModel(new BaseList('Column Indexes List', self::MODEL_COLUMN_INDEX_LIST, 'indexes', self::MODEL_COLUMN_INDEX))
+            ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
+            ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
+            ->setModel(new BaseList('Identities List', self::MODEL_IDENTITY_LIST, 'identities', self::MODEL_IDENTITY))
+            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
+            ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
+            ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
+            ->setModel(new BaseList('Resource Tokens List', self::MODEL_RESOURCE_TOKEN_LIST, 'tokens', self::MODEL_RESOURCE_TOKEN))
+            ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
+            ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
+            ->setModel(new BaseList('Sites List', self::MODEL_SITE_LIST, 'sites', self::MODEL_SITE))
+            ->setModel(new BaseList('Site Templates List', self::MODEL_TEMPLATE_SITE_LIST, 'templates', self::MODEL_TEMPLATE_SITE))
+            ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
+            ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
+            ->setModel(new BaseList('Framework Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST, 'frameworkProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK))
+            ->setModel(new BaseList('Runtime Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST, 'runtimeProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_RUNTIME))
+            ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
+            ->setModel(new BaseList('Frameworks List', self::MODEL_FRAMEWORK_LIST, 'frameworks', self::MODEL_FRAMEWORK))
+            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
+            ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
+            ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
+            ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
             ->setModel(new BaseList('Auth Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
             ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
@@ -423,8 +488,44 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             // Entities
-            ->setModel(new Account())
-            ->setModel(new AlgoArgon2())
+            ->setModel(new Database())
+            // Collection API Models
+            ->setModel(new Collection())
+            ->setModel(new Attribute())
+            ->setModel(new AttributeList())
+            ->setModel(new AttributeString())
+            ->setModel(new AttributeInteger())
+            ->setModel(new AttributeFloat())
+            ->setModel(new AttributeBoolean())
+            ->setModel(new AttributeEmail())
+            ->setModel(new AttributeEnum())
+            ->setModel(new AttributeIP())
+            ->setModel(new AttributeURL())
+            ->setModel(new AttributeDatetime())
+            ->setModel(new AttributeRelationship())
+            // Table API Models
+            ->setModel(new Table())
+            ->setModel(new Column())
+            ->setModel(new ColumnList())
+            ->setModel(new ColumnString())
+            ->setModel(new ColumnInteger())
+            ->setModel(new ColumnFloat())
+            ->setModel(new ColumnBoolean())
+            ->setModel(new ColumnEmail())
+            ->setModel(new ColumnEnum())
+            ->setModel(new ColumnIP())
+            ->setModel(new ColumnURL())
+            ->setModel(new ColumnDatetime())
+            ->setModel(new ColumnRelationship())
+            ->setModel(new Index())
+            ->setModel(new ColumnIndex())
+            ->setModel(new Row())
+            ->setModel(new ModelDocument())
+            ->setModel(new Log())
+            ->setModel(new User())
+            ->setModel(new AlgoMd5())
+            ->setModel(new AlgoSha())
+            ->setModel(new AlgoPhpass())
             ->setModel(new AlgoBcrypt())
             ->setModel(new AlgoMd5())
             ->setModel(new AlgoPhpass())
@@ -498,7 +599,50 @@ class Response extends SwooleResponse
             ->setModel(new ProviderRepository())
             ->setModel(new ProviderRepositoryFramework())
             ->setModel(new ProviderRepositoryRuntime())
-            ->setModel(new ResourceToken())
+            ->setModel(new DetectionFramework())
+            ->setModel(new DetectionRuntime())
+            ->setModel(new VcsContent())
+            ->setModel(new Branch())
+            ->setModel(new Runtime())
+            ->setModel(new Framework())
+            ->setModel(new FrameworkAdapter())
+            ->setModel(new Deployment())
+            ->setModel(new Execution())
+            ->setModel(new Project())
+            ->setModel(new Webhook())
+            ->setModel(new Key())
+            ->setModel(new DevKey())
+            ->setModel(new MockNumber())
+            ->setModel(new AuthProvider())
+            ->setModel(new Platform())
+            ->setModel(new Variable())
+            ->setModel(new Country())
+            ->setModel(new Continent())
+            ->setModel(new Language())
+            ->setModel(new Currency())
+            ->setModel(new Phone())
+            ->setModel(new HealthAntivirus())
+            ->setModel(new HealthQueue())
+            ->setModel(new HealthStatus())
+            ->setModel(new HealthCertificate())
+            ->setModel(new HealthTime())
+            ->setModel(new HealthVersion())
+            ->setModel(new Metric())
+            ->setModel(new MetricBreakdown())
+            ->setModel(new UsageDatabases())
+            ->setModel(new UsageDatabase())
+            ->setModel(new UsageTable())
+            ->setModel(new UsageCollection())
+            ->setModel(new UsageUsers())
+            ->setModel(new UsageStorage())
+            ->setModel(new UsageBuckets())
+            ->setModel(new UsageFunctions())
+            ->setModel(new UsageFunction())
+            ->setModel(new UsageSites())
+            ->setModel(new UsageSite())
+            ->setModel(new UsageProject())
+            ->setModel(new Headers())
+            ->setModel(new Specification())
             ->setModel(new Rule())
             ->setModel(new Runtime())
             ->setModel(new Session())
@@ -555,7 +699,7 @@ class Response extends SwooleResponse
      *
      * @return self
      */
-    public function setModel(Model $instance)
+    public function setModel(Model $instance): Response
     {
         $this->models[$instance->getType()] = $instance;
 
@@ -833,7 +977,7 @@ class Response extends SwooleResponse
     /**
      * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param $filter the response filter to set
+     * @param $filter - the response filter to set
      *
      * @return void
      */

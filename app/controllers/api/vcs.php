@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -53,7 +54,6 @@ use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -116,8 +116,10 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
-            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+            $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
             $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -378,7 +380,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
                 $owner = $github->getOwnerName($providerInstallationId);
 
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
+                $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
@@ -424,8 +426,8 @@ App::get('/v1/vcs/github/authorize')
         type: MethodType::WEBAUTH,
         hide: true,
     ))
-    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
-    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
+    ->param('success', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a successful installation attempt.', true, ['platforms'])
+    ->param('failure', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a failed installation attempt.', true, ['platforms'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -437,6 +439,8 @@ App::get('/v1/vcs/github/authorize')
         ]);
 
         $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
         if (empty($appName)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
@@ -444,7 +448,7 @@ App::get('/v1/vcs/github/authorize')
 
         $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
             'state' => $state,
-            'redirect_uri' => $request->getProtocol() . '://' . $request->getHostname() . "/v1/vcs/github/callback"
+            'redirect_uri' => $protocol . '://' . $hostname . "/v1/vcs/github/callback"
         ]);
 
         $response
@@ -494,10 +498,12 @@ App::get('/v1/vcs/github/callback')
         }
 
         $region = $project->getAttribute('region', 'default');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
         $defaultState = [
-            'success' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$region-$projectId/settings/git-installations",
+            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
         ];
 
         $state = \array_merge($defaultState, $state ?? []);
@@ -1131,6 +1137,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
+        $repository['defaultBranch'] =  $repository['default_branch'] ?? '';
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
@@ -1228,7 +1235,8 @@ App::post('/v1/vcs/github/events')
                 $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
                 $providerCommitHash = $parsedPayload["commitHash"] ?? '';
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
-                $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
+                $providerCommitAuthorName = $parsedPayload["headCommitAuthorName"] ?? '';
+                $providerCommitAuthorEmail = $parsedPayload["headCommitAuthorEmail"] ?? '';
                 $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
                 $providerCommitMessage = $parsedPayload["headCommitMessage"] ?? '';
                 $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
@@ -1241,9 +1249,9 @@ App::post('/v1/vcs/github/events')
                     Query::limit(100),
                 ]));
 
-                // create new deployment only on push and not when branch is created or deleted
-                if (!$providerBranchCreated && !$providerBranchDeleted) {
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
+                // create new deployment only on push (not committed by us) and not when branch is created or deleted
+                if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchCreated && !$providerBranchDeleted) {
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {

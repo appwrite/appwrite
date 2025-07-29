@@ -14,6 +14,9 @@ class SitesConsoleClientTest extends Scope
     use SideConsole;
     use SitesBase;
 
+    /**
+     * @group screenshots
+    */
     public function testSiteScreenshot(): void
     {
         $siteId = $this->setupSite([
@@ -89,10 +92,49 @@ class SitesConsoleClientTest extends Scope
 
         $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
 
+        $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
+        $screenshotId = $deployment['body']['screenshotDark'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console");
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        // Verify previews
+        $screenshotId = $deployment['body']['screenshotLight'];
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console", array_merge($this->getHeaders(), [
+            'x-appwrite-mode' => 'default' // NOT ADMIN!
+        ]));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertNotEmpty(200, $file['body']);
+        $this->assertGreaterThan(1, $file['headers']['content-length']);
+        $this->assertEquals('image/png', $file['headers']['content-type']);
+
+        $screenshotHash = \md5($file['body']);
+        $this->assertNotEmpty($screenshotHash);
+
+        $screenshotId = $deployment['body']['screenshotDark'];
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console", array_merge($this->getHeaders(), [
+            'x-appwrite-mode' => 'default' // NOT ADMIN!
+        ]));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertNotEmpty(200, $file['body']);
+        $this->assertGreaterThan(1, $file['headers']['content-length']);
+        $this->assertEquals('image/png', $file['headers']['content-type']);
+
+        $screenshotDarkHash = \md5($file['body']);
+        $this->assertNotEmpty($screenshotDarkHash);
+
+        $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
+
+        $screenshotId = $deployment['body']['screenshotLight'];
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        $screenshotId = $deployment['body']['screenshotDark'];
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
         $this->cleanupSite($siteId);

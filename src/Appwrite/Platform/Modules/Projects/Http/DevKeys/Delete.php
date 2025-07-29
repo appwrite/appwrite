@@ -49,7 +49,7 @@ class Delete extends Action
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)

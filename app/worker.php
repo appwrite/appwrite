@@ -18,9 +18,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
 use Executor\Executor;
-use Swoole\Process;
 use Swoole\Runtime;
-use Swoole\Timer;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -249,9 +247,33 @@ Server::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 
+Server::setResource('publisherDatabases', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherMigrations', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
 Server::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
+
+Server::setResource('consumerDatabases', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+
+Server::setResource('consumerMigrations', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+
+Server::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
@@ -484,15 +506,8 @@ $worker
     });
 
 $worker->workerStart()
-    ->action(function () use ($worker, $workerName) {
-        Console::info("Worker $workerName started");
-
-        Process::signal(SIGTERM, function () use ($worker, $workerName) {
-            Console::info("Stopping worker $workerName.");
-
-            $worker->stop();
-            Timer::clearAll();
-        });
+    ->action(function () use ($workerName) {
+        Console::info("Worker $workerName  started");
     });
 
 $worker->start();

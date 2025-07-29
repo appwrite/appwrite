@@ -1,0 +1,2 @@
+appwrite health getQueueMessaging \
+
