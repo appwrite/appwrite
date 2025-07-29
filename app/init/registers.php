@@ -103,16 +103,7 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
-        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => System::getEnv('_APP_DB_PORT', '3306'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
-        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
-    ]);
-
-    $fallbackForMongoDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mongodb',
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
         'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
         'port' => System::getEnv('_APP_DB_PORT', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
@@ -133,19 +124,19 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql', 'mongodb'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => $fallbackForMongoDB,
+            'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mongodb', 'mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql','mongodb'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql', 'mongodb'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -213,6 +204,7 @@ $register->set('pools', function () {
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getPath();
+
             if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
@@ -238,9 +230,9 @@ $register->set('pools', function () {
                         ]);
                     });
                 },
-                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
                     try {
-                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
                         $mongo->connect();
                         return $mongo;
                     } catch (\Throwable $e) {
@@ -311,13 +303,27 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+    $dsn = '';
 
-    return new PDO(
-        "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
-        $dbUser,
-        $dbPass,
-        SQL::getPDOAttributes()
-    );
+    switch ($dbAdapter) {
+        case 'mongodb':
+
+            try {
+                $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
+                $mongo->connect();
+                return $mongo;
+            } catch (\Throwable $e) {
+                Console::error("MongoDB connection failed: " . $e->getMessage());
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+            }
+
+        case 'mysql':
+        case 'mariadb':
+        default:
+            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4";
+            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+    }
 });
 
 $register->set('smtp', function () {
