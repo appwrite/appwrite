@@ -2240,7 +2240,6 @@ App::post('/v1/account/tokens/email')
 
             $user->removeAttribute('$sequence');
             $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
-
             try {
                 $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
