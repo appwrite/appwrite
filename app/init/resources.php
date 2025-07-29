@@ -236,7 +236,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     $user = new Document([]);
 
-    if (!empty(Auth::$unique)){
+    if (!empty(Auth::$unique)) {
         if ($mode === APP_MODE_ADMIN) {
             $user = $dbForPlatform->getDocument('users', Auth::$unique);
         } else {
@@ -852,7 +852,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
 
-            if (empty($teamId)){
+            if (empty($teamId)) {
                 return new Document([]);
             }
 
@@ -861,7 +861,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         }
     }
 
-    if (empty($teamInternalId)){
+    if (empty($teamInternalId)) {
         return new Document([]);
     }
 
