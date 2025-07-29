@@ -234,16 +234,18 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if ($mode === APP_MODE_ADMIN) {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
-    } else {
-        if ($project->isEmpty()) {
-            $user = new Document([]);
+    $user = new Document([]);
+
+    if (!empty(Auth::$unique)){
+        if ($mode === APP_MODE_ADMIN) {
+            $user = $dbForPlatform->getDocument('users', Auth::$unique);
         } else {
-            if ($project->getId() === 'console') {
-                $user = $dbForPlatform->getDocument('users', Auth::$unique);
-            } else {
-                $user = $dbForProject->getDocument('users', Auth::$unique);
+            if (!$project->isEmpty()) {
+                if ($project->getId() === 'console') {
+                    $user = $dbForPlatform->getDocument('users', Auth::$unique);
+                } else {
+                    $user = $dbForProject->getDocument('users', Auth::$unique);
+                }
             }
         }
     }
@@ -849,9 +851,18 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
+
+            if (empty($teamId)){
+                return new Document([]);
+            }
+
             $team = Authorization::skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
         }
+    }
+
+    if (empty($teamInternalId)){
+        return new Document([]);
     }
 
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
