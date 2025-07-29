@@ -3,7 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\System\System;
-use Utopia\Validator;
+use Utopia\Validator\Domain as ValidatorDomain;
 
 /**
  * AppwriteDomain
@@ -14,7 +14,7 @@ use Utopia\Validator;
  *
  * @package Appwrite\Network\Validator
  */
-class AppwriteDomain extends Validator
+class AppwriteDomain extends ValidatorDomain
 {
     protected string $suffix;
 
@@ -46,8 +46,18 @@ class AppwriteDomain extends Validator
      */
     public function isValid($value): bool
     {
-        // Basic validation
-        if (!is_string($value) || empty($value) || preg_match('/\s/', $value)) {
+        // Basic validation - check type and spaces first
+        if (!is_string($value) || empty($value)) {
+            return false;
+        }
+
+        // Check for spaces (before and after trimming)
+        if (preg_match('/\s/', $value)) {
+            return false;
+        }
+
+        // First check if it's a valid domain using parent validator
+        if (!parent::isValid($value)) {
             return false;
         }
 
@@ -87,29 +97,5 @@ class AppwriteDomain extends Validator
         }
 
         return true;
-    }
-
-    /**
-     * Is array
-     *
-     * Function will return false as this validator validates strings.
-     *
-     * @return bool
-     */
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return self::TYPE_STRING;
     }
 }

@@ -20,9 +20,7 @@ use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
-use Utopia\Validator\AllOf;
 use Utopia\Validator\AnyOf;
-use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -65,7 +63,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
-            ->param('domain', null, new AllOf([new ValidatorDomain(), new AppwriteDomain()]), 'Domain name.')
+            ->param('domain', null, new AppwriteDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
             ->param('resourceId', '', new UID(), 'ID of parent resource.')

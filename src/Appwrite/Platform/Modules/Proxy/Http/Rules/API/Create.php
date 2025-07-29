@@ -19,9 +19,7 @@ use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
-use Utopia\Validator\AllOf;
 use Utopia\Validator\AnyOf;
-use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\IP;
 
 class Create extends Action
@@ -62,7 +60,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
-            ->param('domain', null, new AllOf([new ValidatorDomain(), new AppwriteDomain()]), 'Domain name.')
+            ->param('domain', null, new AppwriteDomain(), 'Domain name.')
             ->inject('response')
             ->inject('project')
             ->inject('queueForCertificates')

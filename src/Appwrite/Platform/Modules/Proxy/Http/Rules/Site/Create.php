@@ -21,7 +21,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
-use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\IP;
 use Utopia\Validator\Text;
 
@@ -63,7 +62,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
-            ->param('domain', null, new AllOf([new ValidatorDomain(), new AppwriteDomain()]), 'Domain name.')
+            ->param('domain', null, new AppwriteDomain(), 'Domain name.')
             ->param('siteId', '', new UID(), 'ID of site to be executed.')
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
