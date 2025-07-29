@@ -4133,6 +4133,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         ));
                         $relation->removeAttribute('$collectionId');
                         $relation->removeAttribute('$databaseId');
+                        $relation->removeAttribute('$sequence');
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
