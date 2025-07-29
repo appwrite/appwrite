@@ -122,12 +122,11 @@ class Maintenance extends Action
             Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
 
             foreach ($certificates as $certificate) {
-                $rule = $dbForPlatform->find('rules', [
+                $rule = $dbForPlatform->findOne('rules', [
                     Query::equal('domain', [$certificate->getAttribute('domain')]),
-                    Query::limit(1),
                 ]);
 
-                if (!$rule[0] || $rule[0]->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
+                if ($rule->isEmpty() || $rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
                     continue;
                 }
 
