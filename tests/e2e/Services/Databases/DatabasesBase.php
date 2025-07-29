@@ -1657,6 +1657,7 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
         $this->assertTrue(array_key_exists('$sequence', $document1['body']));
+        $this->assertIsInt($document1['body']['$sequence']);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body']['$collectionId']);
