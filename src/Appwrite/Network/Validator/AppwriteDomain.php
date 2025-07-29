@@ -32,7 +32,7 @@ class AppwriteDomain extends Validator
      */
     public function getDescription(): string
     {
-        return 'Value must be a valid one-level subdomain of ' . $this->suffix . ' (e.g., myapp.' . $this->suffix . ')';
+        return 'Value must be a valid Appwrite subdomain (one-level subdomain ending in .' . $this->suffix . ').';
     }
 
     /**
@@ -46,56 +46,43 @@ class AppwriteDomain extends Validator
      */
     public function isValid($value): bool
     {
-        // Must be a string
-        if (!is_string($value)) {
+        // Basic validation
+        if (!is_string($value) || empty($value) || preg_match('/\s/', $value)) {
             return false;
         }
 
-        // Must not be empty
-        if (empty($value)) {
-            return false;
-        }
-
-        // Must not contain spaces or other invalid characters
-        if (preg_match('/\s/', $value)) {
-            return false;
-        }
-
-        // Convert to lowercase for consistent validation
         $domain = strtolower(trim($value));
 
-        // Must end with the configured suffix
+        // Check if domain ends with the correct suffix
         if (!str_ends_with($domain, '.' . $this->suffix)) {
             return false;
         }
 
-        // Remove the suffix to get the subdomain part
+        // Extract the subdomain part
         $subdomainPart = substr($domain, 0, -strlen('.' . $this->suffix));
 
-        // Must not be empty after removing suffix
-        if (empty($subdomainPart)) {
+        // Check for empty subdomain or leading/trailing dots
+        if (empty($subdomainPart) || str_starts_with($subdomainPart, '.') || str_ends_with($subdomainPart, '.')) {
             return false;
         }
 
-        // Must not start or end with a dot
-        if (str_starts_with($subdomainPart, '.') || str_ends_with($subdomainPart, '.')) {
-            return false;
-        }
-
-        // Must not contain any dots (only one-level subdomains allowed)
+        // Check for multiple levels (sub-subdomains)
         if (strpos($subdomainPart, '.') !== false) {
             return false;
         }
 
-        // Validate the subdomain format using basic domain rules
-        // Must contain only alphanumeric characters and hyphens
-        // Must not start or end with hyphen
+        // Check for invalid characters (only lowercase letters, numbers, and hyphens)
         if (!preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/', $subdomainPart)) {
             return false;
         }
 
-        // Must not be longer than 63 characters (DNS limitation)
+        // Check length limit (63 characters max for subdomain)
         if (strlen($subdomainPart) > 63) {
+            return false;
+        }
+
+        // Check for forbidden prefixes
+        if (str_starts_with($subdomainPart, 'commit-') || str_starts_with($subdomainPart, 'branch-')) {
             return false;
         }
 

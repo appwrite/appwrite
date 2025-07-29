@@ -66,6 +66,33 @@ class AppwriteDomainTest extends TestCase
         $this->assertEquals(false, $this->validator->isValid('app%test.' . $envSuffix));
         $this->assertEquals(false, $this->validator->isValid('app_test.' . $envSuffix));
 
+        // Invalid formatting
+        $this->assertEquals(false, $this->validator->isValid('.api.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('api.' . $envSuffix . '.'));
+        $this->assertEquals(false, $this->validator->isValid('api..' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid($envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('.' . $envSuffix . '.'));
+        $this->assertEquals(false, $this->validator->isValid('..' . $envSuffix));
+
+        // Forbidden prefixes
+        $this->assertEquals(false, $this->validator->isValid('commit-api.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('commit-test.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('commit-123.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('branch-api.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('branch-test.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('branch-123.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('COMMIT-api.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('BRANCH-test.' . $envSuffix));
+
+        // Valid domains that should not be confused with forbidden prefixes
+        $this->assertEquals(true, $this->validator->isValid('commitment.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('branching.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('my-commit.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('my-branch.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('pre-commit.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('post-branch.' . $envSuffix));
+
         // Edge cases with dots
         $this->assertEquals(false, $this->validator->isValid('.api.' . $envSuffix));
         $this->assertEquals(false, $this->validator->isValid('api..' . $envSuffix));
