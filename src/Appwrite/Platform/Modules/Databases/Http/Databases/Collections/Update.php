@@ -85,7 +85,7 @@ class Update extends Action
             throw new Exception($this->getNotFoundException());
         }
 
-        $permissions ??= $collection->getPermissions() ?? [];
+        $permissions ??= $collection->getPermissions();
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
