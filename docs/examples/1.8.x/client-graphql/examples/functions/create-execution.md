@@ -6,7 +6,7 @@ mutation {
         path: "<PATH>",
         method: "GET",
         headers: "{}",
-        scheduledAt: ""
+        scheduledAt: "<SCHEDULED_AT>"
     ) {
         _id
         _createdAt
