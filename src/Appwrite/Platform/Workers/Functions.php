@@ -164,7 +164,8 @@ class Functions extends Action
                         method: 'POST',
                         headers: [
                             'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
-                            'content-type' => 'application/json'
+                            'content-type' => 'application/json',
+                            'x-appwrite-scheduled-at' => $headers['x-appwrite-scheduled-at'] ?? '',
                         ],
                         data: null,
                         user: $user,
@@ -405,6 +406,13 @@ class Functions extends Action
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $scheduledAt = $headers['x-appwrite-scheduled-at'] ?? '';
+        if (!empty($scheduledAt)) {
+            $executedAt = new \DateTime();
+            $headers['x-appwrite-executed-at'] = $executedAt->format('Y-m-d\TH:i:s.v\Z');
+            $delay = $executedAt->getTimestamp() - (new \DateTime($scheduledAt))->getTimestamp();
+            $headers['x-appwrite-execution-delay'] = (string)floor(max(0, $delay));
+        }
 
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
@@ -447,8 +455,12 @@ class Functions extends Action
         }
 
         if ($execution->getAttribute('status') !== 'processing') {
+            $headersFromExecution = $execution->getAttribute('requestHeaders', []);
             $execution->setAttribute('status', 'processing');
-
+            $execution->setAttribute('requestHeaders', \array_merge($headersFromExecution, [
+                ['name' => 'x-appwrite-executed-at', 'value' => $headers['x-appwrite-executed-at']],
+                ['name' => 'x-appwrite-execution-delay', 'value' => $headers['x-appwrite-execution-delay'],
+                ]]));
             $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
 

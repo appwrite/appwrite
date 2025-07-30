@@ -7,6 +7,24 @@ module.exports = async(context) => {
     } else {
       context.log('jwt-is-invalid');
     }
+
+    if (context.req.headers["x-appwrite-execution-delay"]) {
+      context.log("execution-delay-is-valid");
+    } else {
+      context.log("execution-delay-is-invalid");
+    }
+
+    if (context.req.headers["x-appwrite-scheduled-at"]) {
+      context.log("scheduled-at-is-valid");
+    } else {
+      context.log("scheduled-at-is-invalid");
+    }
+
+    if (context.req.headers["x-appwrite-executed-at"]) {
+      context.log("executed-at-is-valid");
+    } else {
+      context.log("executed-at-is-invalid");
+    }
     
     if(context.req.path === '/custom-response') {
       const code = +(context.req.query['code'] || '200');
