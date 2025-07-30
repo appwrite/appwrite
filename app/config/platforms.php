@@ -25,6 +25,7 @@ return [
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/web/CHANGELOG.md'),
                 'demos' => [
                     [
                         'icon' => 'react.svg',
@@ -73,6 +74,7 @@ return [
                 'gitRepoName' => 'sdk-for-flutter',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/flutter/CHANGELOG.md'),
             ],
             [
                 'key' => 'apple',
@@ -91,6 +93,7 @@ return [
                 'gitRepoName' => 'sdk-for-apple',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/apple/CHANGELOG.md'),
             ],
             [
                 'key' => 'objective-c',
@@ -108,6 +111,7 @@ return [
                 'gitRepoName' => 'sdk-for-objective-c',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/objective-c/CHANGELOG.md'),
             ],
             [
                 'key' => 'android',
@@ -130,6 +134,7 @@ return [
                     'Kotlin' => 'kotlin',
                     'Java' => 'java',
                 ],
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/android/CHANGELOG.md'),
             ],
             [
                 'key' => 'react-native',
@@ -148,6 +153,7 @@ return [
                 'gitRepoName' => 'sdk-for-react-native',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/react-native/CHANGELOG.md'),
             ],
             [
                 'key' => 'graphql',
@@ -167,6 +173,7 @@ return [
                 'gitUserName' => '',
                 'gitBranch' => '',
                 'isSDK' => false,
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/graphql/CHANGELOG.md'),
             ],
             [
                 'key' => 'rest',
@@ -186,6 +193,7 @@ return [
                 'gitUserName' => '',
                 'gitBranch' => '',
                 'isSDK' => false,
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/rest/CHANGELOG.md'),
             ],
         ],
     ],
@@ -199,8 +207,8 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '1.9.0',
-                'url' => 'https://github.com/appwrite/sdk-for-console',
+                'version' => '',
+                'url' => '',
                 'package' => '',
                 'enabled' => true,
                 'beta' => false,
@@ -209,10 +217,11 @@ return [
                 'family' => APP_PLATFORM_CONSOLE,
                 'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/console-web'),
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-console.git',
+                'gitUrl' => '',
                 'gitBranch' => 'dev',
-                'gitRepoName' => 'sdk-for-console',
-                'gitUserName' => 'appwrite',
+                'gitRepoName' => '',
+                'gitUserName' => '',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/console/CHANGELOG.md'),
             ],
             [
                 'key' => 'cli',
@@ -232,6 +241,7 @@ return [
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
                 'repoBranch' => 'master',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/cli/CHANGELOG.md'),
                 'exclude' => [
                     'services' => [
                         ['name' => 'assistant'],
@@ -265,6 +275,7 @@ return [
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/nodejs/CHANGELOG.md'),
             ],
             [
                 'key' => 'deno',
@@ -283,6 +294,7 @@ return [
                 'gitRepoName' => 'sdk-for-deno',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/deno/CHANGELOG.md'),
             ],
             [
                 'key' => 'php',
@@ -301,6 +313,7 @@ return [
                 'gitRepoName' => 'sdk-for-php',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/php/CHANGELOG.md'),
             ],
             [
                 'key' => 'python',
@@ -319,6 +332,7 @@ return [
                 'gitRepoName' => 'sdk-for-python',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/python/CHANGELOG.md'),
             ],
             [
                 'key' => 'ruby',
@@ -337,6 +351,7 @@ return [
                 'gitRepoName' => 'sdk-for-ruby',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/ruby/CHANGELOG.md'),
             ],
             [
                 'key' => 'go',
@@ -355,6 +370,7 @@ return [
                 'gitRepoName' => 'sdk-for-go',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/go/CHANGELOG.md'),
             ],
             [
                 'key' => 'dotnet',
@@ -373,6 +389,7 @@ return [
                 'gitRepoName' => 'sdk-for-dotnet',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/dotnet/CHANGELOG.md'),
             ],
             [
                 'key' => 'dart',
@@ -391,6 +408,7 @@ return [
                 'gitRepoName' => 'sdk-for-dart',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/dart/CHANGELOG.md'),
             ],
             [
                 'key' => 'kotlin',
@@ -413,6 +431,7 @@ return [
                     'Kotlin' => 'kotlin',
                     'Java' => 'java',
                 ],
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/kotlin/CHANGELOG.md'),
             ],
             [
                 'key' => 'swift',
@@ -431,6 +450,7 @@ return [
                 'gitRepoName' => 'sdk-for-swift',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/swift/CHANGELOG.md'),
             ],
             [
                 'key' => 'graphql',
@@ -450,6 +470,7 @@ return [
                 'gitUserName' => '',
                 'gitBranch' => '',
                 'isSDK' => false,
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/graphql/CHANGELOG.md'),
             ],
             [
                 'key' => 'rest',
@@ -469,6 +490,7 @@ return [
                 'gitUserName' => '',
                 'gitBranch' => '',
                 'isSDK' => false,
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/rest/CHANGELOG.md'),
             ],
         ],
     ],

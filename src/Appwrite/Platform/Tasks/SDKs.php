@@ -98,7 +98,7 @@ class SDKs extends Action
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
                 $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
-                $changelog = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
+                $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
                 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';
