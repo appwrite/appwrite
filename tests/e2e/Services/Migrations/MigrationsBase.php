@@ -901,7 +901,7 @@ trait MigrationsBase
     /**
      * Import documents from a CSV file.
      */
-    public function testCreateCsvMigration(): array
+    public function testCreateCsvMigration(): void
     {
         // Make a database
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
