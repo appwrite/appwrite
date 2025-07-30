@@ -903,7 +903,7 @@ trait MigrationsBase
      */
     public function testCreateCsvMigration(): array
     {
-        // make a database
+        // Make a database
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1112,7 +1112,7 @@ trait MigrationsBase
             );
         }, 60000, 500);
 
-        // all data exists, pass/
+        // all data exists, pass.
         $migration = $this->performCsvMigration(
             [
                 'endpoint' => 'http://localhost/v1',
@@ -1122,11 +1122,22 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEmpty($migration['body']['statusCounters']);
-        $this->assertEquals('CSV', $migration['body']['source']);
-        $this->assertEquals('pending', $migration['body']['status']);
-        $this->assertEquals('Appwrite', $migration['body']['destination']);
-        $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+        $this->assertEventually(function () use ($migration, $databaseId, $collectionId) {
+            $migrationId = $migration['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $migration['body']['statusCounters']);
+            $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
+        }, 60_000, 500);
 
         return [
             'databaseId' => $databaseId,
