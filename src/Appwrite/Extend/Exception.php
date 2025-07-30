@@ -263,6 +263,16 @@ class Exception extends \Exception
     public const COLUMN_INDEX_INVALID              = 'column_index_invalid';
     public const COLUMN_INDEX_DEPENDENCY           = 'column_index_dependency';
 
+    /** Transactions */
+    public const TRANSACTION_NOT_FOUND             = 'transaction_not_found';
+    public const TRANSACTION_ALREADY_EXISTS        = 'transaction_already_exists';
+    public const TRANSACTION_INVALID               = 'transaction_invalid';
+    public const TRANSACTION_EXPIRED               = 'transaction_expired';
+    public const TRANSACTION_CONFLICT              = 'transaction_conflict';
+    public const TRANSACTION_LIMIT_EXCEEDED        = 'transaction_limit_exceeded';
+    public const TRANSACTION_NOT_READY             = 'transaction_not_ready';
+
+
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
     public const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';
