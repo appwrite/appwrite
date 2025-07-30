@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "edbe5912c45e1f467f398541a75a77de",
+    "content-hash": "2a397a40480933a873d9d8bdca81c78d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3993,16 +3993,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.11.2",
+            "version": "dev-feat-csv-allow-internals",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "00f2b8e9927883f611e4e1ff179fa79e6bb2a12a"
+                "reference": "b4a33e84feec22f44e0181d32a7af10a199a82bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/00f2b8e9927883f611e4e1ff179fa79e6bb2a12a",
-                "reference": "00f2b8e9927883f611e4e1ff179fa79e6bb2a12a",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b4a33e84feec22f44e0181d32a7af10a199a82bf",
+                "reference": "b4a33e84feec22f44e0181d32a7af10a199a82bf",
                 "shasum": ""
             },
             "require": {
@@ -4043,9 +4043,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.11.2"
+                "source": "https://github.com/utopia-php/migration/tree/feat-csv-allow-internals"
             },
-            "time": "2025-07-29T04:27:20+00:00"
+            "time": "2025-07-30T04:29:20+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -8237,9 +8237,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-csv-allow-internals",
+            "alias": "0.11.2",
+            "alias_normalized": "0.11.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

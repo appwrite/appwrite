@@ -992,6 +992,7 @@ trait MigrationsBase
             'missing-row' => $bucketOneId,
             'missing-column' => $bucketOneId,
             'irrelevant-column' => $bucketOneId,
+            'documents-internals' => $bucketOneId,
         ];
 
         $fileIds = [];
@@ -1000,7 +1001,8 @@ trait MigrationsBase
             $csvFileName = match ($label) {
                 'missing-row',
                 'missing-column',
-                'irrelevant-column' => "{$label}.csv",
+                'irrelevant-column',
+                'documents-internals' => "{$label}.csv",
                 default => 'documents.csv',
             };
 
@@ -1137,6 +1139,33 @@ trait MigrationsBase
             $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
             $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $migration['body']['statusCounters']);
             $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
+        }, 60_000, 500);
+
+        // all data exists and includes internals, pass.
+        $migration = $this->performCsvMigration(
+            [
+                'endpoint' => 'http://localhost/v1',
+                'fileId' => $fileIds['documents-internals'],
+                'bucketId' => $bucketIds['documents-internals'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($migration, $databaseId, $collectionId) {
+            $migrationId = $migration['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $migration['body']['statusCounters']);
+            $this->assertEquals(25, $migration['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
         }, 60_000, 500);
 
         return [
