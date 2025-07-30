@@ -205,6 +205,25 @@ return [
         'beta' => false,
         'sdks' => [
             [
+                'key' => 'web',
+                'name' => 'Console',
+                'version' => '',
+                'url' => '',
+                'package' => '',
+                'enabled' => true,
+                'beta' => false,
+                'dev' => false,
+                'hidden' => true,
+                'family' => APP_PLATFORM_CONSOLE,
+                'prism' => 'javascript',
+                'source' => \realpath(__DIR__ . '/../sdks/console-web'),
+                'gitUrl' => '',
+                'gitBranch' => 'dev',
+                'gitRepoName' => '',
+                'gitUserName' => '',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/console/CHANGELOG.md'),
+            ],
+            [
                 'key' => 'cli',
                 'name' => 'Command Line',
                 'version' => '8.3.0',
@@ -222,6 +241,7 @@ return [
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
                 'repoBranch' => 'master',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/cli/CHANGELOG.md'),
                 'exclude' => [
                     'services' => [
                         ['name' => 'assistant'],
