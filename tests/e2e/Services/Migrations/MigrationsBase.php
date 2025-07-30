@@ -1139,7 +1139,7 @@ trait MigrationsBase
             $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
             $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $migration['body']['statusCounters']);
             $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
-        }, 60_000, 500);
+        }, 10_000, 500);
 
         // all data exists and includes internals, pass.
         $migration = $this->performCsvMigration(
@@ -1166,7 +1166,7 @@ trait MigrationsBase
             $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
             $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $migration['body']['statusCounters']);
             $this->assertEquals(25, $migration['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
-        }, 60_000, 500);
+        }, 10_000, 500);
 
         return [
             'databaseId' => $databaseId,
