@@ -67,7 +67,14 @@ class AppwriteDomain extends ValidatorDomain
             return false;
         }
 
-        // 9. Appwrite-managed domains: only single-level subdomains, no forbidden prefixes
+        // 9. Global forbidden prefixes check (commit-, branch-)
+        $firstLabel = $parts[0];
+        $firstLabelLower = strtolower($firstLabel);
+        if (str_starts_with($firstLabelLower, 'commit-') || str_starts_with($firstLabelLower, 'branch-')) {
+            return false;
+        }
+
+        // 10. Appwrite-managed domains: only single-level subdomains, no forbidden prefixes
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', 'functions.localhost');
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
         $appwriteDomain = defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network';
@@ -102,12 +109,12 @@ class AppwriteDomain extends ValidatorDomain
             }
         }
 
-        // 10. RFC domain validation (parent)
+        // 11. RFC domain validation (parent)
         if (!parent::isValid($value)) {
             return false;
         }
 
-        // 11. All other domains: already validated above
+        // 12. All other domains: already validated above
         return true;
     }
 
