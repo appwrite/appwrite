@@ -5,97 +5,119 @@ namespace Appwrite\Network\Validator;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
 
-/**
- * AppwriteDomain
- *
- * Validate that a domain is a valid one-level subdomain of the configured
- * Appwrite sites domain (e.g., myapp.appwrite.network is valid, but
- * dev.test.appwrite.network is not).
- *
- * @package Appwrite\Network\Validator
- */
 class AppwriteDomain extends ValidatorDomain
 {
-    protected string $suffix;
-
-    public function __construct()
-    {
-        $this->suffix = System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
-    }
-
-    /**
-     * Get Description
-     *
-     * Returns validator description
-     *
-     * @return string
-     */
     public function getDescription(): string
     {
-        return 'Value must be a valid Appwrite subdomain (one-level subdomain ending in .' . $this->suffix . ').';
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
+        return "Value must be a valid domain name. For Appwrite-managed domains (e.g., {$sitesDomain}, functions.localhost, appwrite.network), only one-level subdomain is allowed.";
     }
 
-    /**
-     * Is valid
-     *
-     * Validation will pass when $value is a valid one-level subdomain
-     * of the configured Appwrite sites domain.
-     *
-     * @param  mixed $value
-     * @return bool
-     */
     public function isValid($value): bool
     {
-        // Basic validation - check type and spaces first
-        if (!is_string($value) || empty($value)) {
+        // 1. Must be a non-empty string
+        if (!is_string($value) || $value === '') {
             return false;
         }
 
-        // Check for spaces (before and after trimming)
-        if (preg_match('/\s/', $value)) {
+        // 2. No leading or trailing spaces
+        if ($value !== trim($value)) {
             return false;
         }
 
-        // First check if it's a valid domain using parent validator
+        $domain = strtolower($value);
+
+        // 3. No spaces
+        if (preg_match('/\\s/', $domain)) {
+            return false;
+        }
+
+        // 4. No underscores
+        if (strpos($domain, '_') !== false) {
+            return false;
+        }
+
+        // 5. Only a-z, 0-9, hyphen, dot
+        if (!preg_match('/^[a-z0-9.-]+$/', $domain)) {
+            return false;
+        }
+
+        // 6. No leading/trailing/consecutive dots
+        if (str_starts_with($domain, '.') || str_ends_with($domain, '.') || strpos($domain, '..') !== false) {
+            return false;
+        }
+
+        // 7. Must have at least one dot, and non-empty subdomain before first dot
+        $parts = explode('.', $domain);
+        if (count($parts) < 2 || empty($parts[0])) {
+            return false;
+        }
+
+        // 8. No empty labels, no leading/trailing hyphens, each label ≤ 63 chars, TLD ≥ 2 chars
+        foreach ($parts as $i => $label) {
+            if ($label === '' || strlen($label) > 63) {
+                return false;
+            }
+            if (!preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/', $label)) {
+                return false;
+            }
+        }
+        $tld = end($parts);
+        if (strlen($tld) < 2) {
+            return false;
+        }
+
+        // 9. Appwrite-managed domains: only single-level subdomains, no forbidden prefixes
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', 'functions.localhost');
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
+        $appwriteDomain = defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network';
+
+        foreach ([$functionsDomain, $sitesDomain, $appwriteDomain] as $managedDomain) {
+            if (!empty($managedDomain)) {
+                // Check if domain is exactly the managed domain (should be rejected)
+                if ($domain === $managedDomain) {
+                    return false;
+                }
+
+                // Check if domain ends with the managed domain (subdomain case)
+                if (str_ends_with($domain, '.' . $managedDomain)) {
+                    $subdomain = substr($domain, 0, -strlen('.' . $managedDomain));
+                    // Must be non-empty, no dot (single-level), valid chars, ≤ 63 chars, no leading/trailing hyphens, no forbidden prefixes
+                    if (
+                        $subdomain === '' ||
+                        strpos($subdomain, '.') !== false ||
+                        strlen($subdomain) > 63 ||
+                        !preg_match('/^[a-z0-9-]+$/', $subdomain) ||
+                        str_starts_with($subdomain, '-') ||
+                        str_ends_with($subdomain, '-')
+                    ) {
+                        return false;
+                    }
+                    $subdomainLower = strtolower($subdomain);
+                    if (str_starts_with($subdomainLower, 'commit-') || str_starts_with($subdomainLower, 'branch-')) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+        }
+
+        // 10. RFC domain validation (parent)
         if (!parent::isValid($value)) {
             return false;
         }
 
-        $domain = strtolower(trim($value));
-
-        // Check if domain ends with the correct suffix
-        if (!str_ends_with($domain, '.' . $this->suffix)) {
-            return false;
-        }
-
-        // Extract the subdomain part
-        $subdomainPart = substr($domain, 0, -strlen('.' . $this->suffix));
-
-        // Check for empty subdomain or leading/trailing dots
-        if (empty($subdomainPart) || str_starts_with($subdomainPart, '.') || str_ends_with($subdomainPart, '.')) {
-            return false;
-        }
-
-        // Check for multiple levels (sub-subdomains)
-        if (strpos($subdomainPart, '.') !== false) {
-            return false;
-        }
-
-        // Check for invalid characters (only lowercase letters, numbers, and hyphens)
-        if (!preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/', $subdomainPart)) {
-            return false;
-        }
-
-        // Check length limit (63 characters max for subdomain)
-        if (strlen($subdomainPart) > 63) {
-            return false;
-        }
-
-        // Check for forbidden prefixes
-        if (str_starts_with($subdomainPart, 'commit-') || str_starts_with($subdomainPart, 'branch-')) {
-            return false;
-        }
-
+        // 11. All other domains: already validated above
         return true;
+    }
+
+    public function getType(): string
+    {
+        return 'string';
+    }
+
+    public function isArray(): bool
+    {
+        return false;
     }
 }

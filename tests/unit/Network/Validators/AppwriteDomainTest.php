@@ -23,9 +23,10 @@ class AppwriteDomainTest extends TestCase
     {
         // Get the actual configured suffix from environment (in Docker it's sites.localhost)
         // But test both the environment value and the default value
-        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
+        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
+        $functionsDomain = \Utopia\System\System::getEnv('_APP_DOMAIN_FUNCTIONS', 'functions.localhost');
 
-        // Valid one-level subdomains with environment suffix
+        // Valid domains for sites.localhost and functions.localhost (single-level subdomains only)
         $this->assertEquals(true, $this->validator->isValid('api.' . $envSuffix));
         $this->assertEquals(true, $this->validator->isValid('test.' . $envSuffix));
         $this->assertEquals(true, $this->validator->isValid('myapp.' . $envSuffix));
@@ -37,23 +38,43 @@ class AppwriteDomainTest extends TestCase
         $this->assertEquals(true, $this->validator->isValid('a.' . $envSuffix));
         $this->assertEquals(true, $this->validator->isValid('x1.' . $envSuffix));
 
+        // Valid domains for functions domain (single-level subdomains only)
+        $this->assertEquals(true, $this->validator->isValid('api.' . $functionsDomain));
+        $this->assertEquals(true, $this->validator->isValid('test.' . $functionsDomain));
+        $this->assertEquals(true, $this->validator->isValid('myapp.' . $functionsDomain));
+
         // Case insensitive validation
         $this->assertEquals(true, $this->validator->isValid('API.' . strtoupper($envSuffix)));
         $this->assertEquals(true, $this->validator->isValid('Test.' . ucfirst($envSuffix)));
         $this->assertEquals(true, $this->validator->isValid('MyApp.' . $envSuffix));
 
-        // Invalid sub-subdomains (multiple levels)
+        // Invalid sub-subdomains for sites.localhost and functions.localhost (multiple levels not allowed)
         $this->assertEquals(false, $this->validator->isValid('api.dev.' . $envSuffix));
         $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $envSuffix));
         $this->assertEquals(false, $this->validator->isValid('app.staging.test.' . $envSuffix));
         $this->assertEquals(false, $this->validator->isValid('sub.domain.example.' . $envSuffix));
 
-        // Non-appwrite.network domains
-        $this->assertEquals(false, $this->validator->isValid('example.com'));
-        $this->assertEquals(false, $this->validator->isValid('api.example.com'));
-        $this->assertEquals(false, $this->validator->isValid('test.google.com'));
-        $this->assertEquals(false, $this->validator->isValid('app.github.io'));
-        $this->assertEquals(false, $this->validator->isValid('myapp.herokuapp.com'));
+        // Invalid sub-subdomains for functions domain (multiple levels not allowed)
+        $this->assertEquals(false, $this->validator->isValid('api.dev.' . $functionsDomain));
+        $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $functionsDomain));
+
+        // Valid appwrite.network domains (one-level subdomains) - using environment variable
+        $appwriteDomain = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
+        $this->assertEquals(true, $this->validator->isValid('api.' . $appwriteDomain));
+        $this->assertEquals(true, $this->validator->isValid('test.' . $appwriteDomain));
+        $this->assertEquals(true, $this->validator->isValid('myapp.' . $appwriteDomain));
+
+        // Invalid sub-subdomains for appwrite.network
+        $this->assertEquals(false, $this->validator->isValid('api.dev.' . $appwriteDomain));
+        $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $appwriteDomain));
+
+        // Other domains should be valid (no multilevel restrictions)
+        $this->assertEquals(true, $this->validator->isValid('example.com'));
+        $this->assertEquals(true, $this->validator->isValid('api.example.com'));
+        $this->assertEquals(true, $this->validator->isValid('test.google.com'));
+        $this->assertEquals(true, $this->validator->isValid('app.github.io'));
+        $this->assertEquals(true, $this->validator->isValid('myapp.herokuapp.com'));
+        $this->assertEquals(true, $this->validator->isValid('sub.domain.example.com'));
 
         // Domains with spaces and invalid characters
         $this->assertEquals(false, $this->validator->isValid('my app.' . $envSuffix));
@@ -134,12 +155,6 @@ class AppwriteDomainTest extends TestCase
         // Single character subdomain should be valid
         $this->assertEquals(true, $this->validator->isValid('a.' . $envSuffix));
 
-        // Wrong suffix variations (use hardcoded examples for non-matching domains)
-        $this->assertEquals(false, $this->validator->isValid('api.appwrite.com'));
-        $this->assertEquals(false, $this->validator->isValid('api.appwrite.org'));
-        $this->assertEquals(false, $this->validator->isValid('api.notappwrite.network'));
-        $this->assertEquals(false, $this->validator->isValid('api.' . $envSuffix . '.com'));
-
         // Numbers in subdomain
         $this->assertEquals(true, $this->validator->isValid('123.' . $envSuffix));
         $this->assertEquals(true, $this->validator->isValid('api123.' . $envSuffix));
@@ -166,7 +181,7 @@ class AppwriteDomainTest extends TestCase
         $this->assertIsString($description);
 
         // Get the environment suffix to check it's in the description
-        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', APP_DOMAIN_SITES_SUFFIX);
+        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
         $this->assertStringContainsString($envSuffix, $description);
         $this->assertStringContainsString('one-level subdomain', $description);
     }
