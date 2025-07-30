@@ -37,23 +37,33 @@ class AppwriteDomain extends ValidatorDomain
             return false;
         }
 
-        // 5. Only a-z, 0-9, hyphen, dot
+        // 5. Handle URLs with protocols (let Domain class handle extraction)
+        if (preg_match('/^[a-z]+:\/\//', $domain)) {
+            // Extract hostname from URL for validation
+            $parsed = parse_url($domain);
+            if ($parsed === false || !isset($parsed['host'])) {
+                return false;
+            }
+            $domain = $parsed['host'];
+        }
+
+        // 6. Only a-z, 0-9, hyphen, dot
         if (!preg_match('/^[a-z0-9.-]+$/', $domain)) {
             return false;
         }
 
-        // 6. No leading/trailing/consecutive dots
+        // 7. No leading/trailing/consecutive dots
         if (str_starts_with($domain, '.') || str_ends_with($domain, '.') || strpos($domain, '..') !== false) {
             return false;
         }
 
-        // 7. Must have at least one dot, and non-empty subdomain before first dot
+        // 8. Must have at least one dot, and non-empty subdomain before first dot
         $parts = explode('.', $domain);
         if (count($parts) < 2 || empty($parts[0])) {
             return false;
         }
 
-        // 8. No empty labels, no leading/trailing hyphens, each label ≤ 63 chars, TLD ≥ 2 chars
+        // 9. No empty labels, no leading/trailing hyphens, each label ≤ 63 chars, TLD ≥ 2 chars
         foreach ($parts as $i => $label) {
             if ($label === '' || strlen($label) > 63) {
                 return false;
@@ -67,14 +77,14 @@ class AppwriteDomain extends ValidatorDomain
             return false;
         }
 
-        // 9. Global forbidden prefixes check (commit-, branch-)
+        // 10. Global forbidden prefixes check (commit-, branch-)
         $firstLabel = $parts[0];
         $firstLabelLower = strtolower($firstLabel);
         if (str_starts_with($firstLabelLower, 'commit-') || str_starts_with($firstLabelLower, 'branch-')) {
             return false;
         }
 
-        // 10. Appwrite-managed domains: only single-level subdomains, no forbidden prefixes
+        // 11. Appwrite-managed domains: only single-level subdomains, no forbidden prefixes
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', 'functions.localhost');
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
         $appwriteDomain = defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network';
@@ -109,12 +119,12 @@ class AppwriteDomain extends ValidatorDomain
             }
         }
 
-        // 11. RFC domain validation (parent)
+        // 12. RFC domain validation (parent)
         if (!parent::isValid($value)) {
             return false;
         }
 
-        // 12. All other domains: already validated above
+        // 13. All other domains: already validated above
         return true;
     }
 
