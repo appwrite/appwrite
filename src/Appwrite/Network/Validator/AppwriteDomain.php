@@ -37,10 +37,17 @@ class AppwriteDomain extends ValidatorDomain
             return false;
         }
 
-        // 5. Handle URLs with protocols (let Domain class handle extraction)
+        // 5. Handle URLs with protocols or paths (let Domain class handle extraction)
         if (preg_match('/^[a-z]+:\/\//', $domain)) {
-            // Extract hostname from URL for validation
+            // Extract hostname from URL with protocol for validation
             $parsed = parse_url($domain);
+            if ($parsed === false || !isset($parsed['host'])) {
+                return false;
+            }
+            $domain = $parsed['host'];
+        } elseif (strpos($domain, '/') !== false) {
+            // Extract hostname from URL with path but no protocol
+            $parsed = parse_url('http://' . $domain);
             if ($parsed === false || !isset($parsed['host'])) {
                 return false;
             }
@@ -88,6 +95,11 @@ class AppwriteDomain extends ValidatorDomain
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', 'functions.localhost');
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
         $appwriteDomain = defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network';
+
+        // Check for specific localhost domains that should be rejected
+        if ($domain === 'localhost' || $domain === 'api.localhost') {
+            return false;
+        }
 
         foreach ([$functionsDomain, $sitesDomain, $appwriteDomain] as $managedDomain) {
             if (!empty($managedDomain)) {
