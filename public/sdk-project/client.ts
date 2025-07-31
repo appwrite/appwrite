@@ -379,27 +379,32 @@ class Client {
                 url.searchParams.append(key, value);
             }
         } else {
-            switch (headers['content-type']) {
-                case 'application/json':
-                    options.body = JSON.stringify(params);
-                    break;
+            // Don't send body for DELETE requests with empty payload (RFC7231 compliance)
+            if (method === 'DELETE' && Object.keys(params).length === 0) {
+                // No body needed for DELETE requests with empty payload
+            } else {
+                switch (headers['content-type']) {
+                    case 'application/json':
+                        options.body = JSON.stringify(params);
+                        break;
 
-                case 'multipart/form-data':
-                    let formData = new FormData();
+                    case 'multipart/form-data':
+                        let formData = new FormData();
 
-                    for (const key in params) {
-                        if (Array.isArray(params[key])) {
-                            params[key].forEach((value: any) => {
-                                formData.append(key + '[]', value);
-                            })
-                        } else {
-                            formData.append(key, params[key]);
+                        for (const key in params) {
+                            if (Array.isArray(params[key])) {
+                                params[key].forEach((value: any) => {
+                                    formData.append(key + '[]', value);
+                                })
+                            } else {
+                                formData.append(key, params[key]);
+                            }
                         }
-                    }
 
-                    options.body = formData;
-                    delete headers['content-type'];
-                    break;
+                        options.body = formData;
+                        delete headers['content-type'];
+                        break;
+                }
             }
         }
 
