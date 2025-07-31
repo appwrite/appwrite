@@ -282,6 +282,7 @@ class Certificates extends Action
      * Internal domain validation functionality to prevent unnecessary attempts. We check:
      * - Domain needs to be public and valid (prevents NFT domains that are not supported)
      * - Domain must have proper DNS record
+     * - Domain must have proper CAA record (if configured)
      *
      * @param Domain $domain Domain which we validate
      * @param bool $isMainDomain In case of master domain, we look for different DNS configurations
@@ -314,6 +315,12 @@ class Certificates extends Action
                 $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
             }
 
+            // Validate CAA records if configured
+            $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
+            if (!empty($caaTarget)) {
+                $validators[] = new DNS($caaTarget, DNS::RECORD_CAA);
+            }
+
             // Validate if domain target is properly configured
             if (empty($validators)) {
                 throw new Exception('At least one of domain targets environment variable must be configured.');
@@ -336,6 +343,41 @@ class Certificates extends Action
                 $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
                 throw new Exception('Failed to verify domain DNS records.');
+            }
+
+            // Additional CAA validation to ensure it matches expected value
+            if (!empty($caaTarget)) {
+                var_dump("in certificates");
+                try {
+                    $caaRecords = \dns_get_record($domain->get(), DNS_CAA);
+                    var_dump($caaRecords);
+
+                    $foundValidCAA = false;
+
+                    foreach ($caaRecords as $record) {
+                        if (isset($record['value'])) {
+                            $caaValue = $record['value'];
+
+                            if ($caaValue === $caaTarget) {
+                                $foundValidCAA = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!$foundValidCAA) {
+                        if (empty($caaRecords)) {
+                            throw new Exception('CAA records are required but not found for domain. Expected: ' . $caaTarget);
+                        } else {
+                            throw new Exception('CAA record does not match expected value. Expected: ' . $caaTarget . ', Found: ' . implode(', ', array_map(function ($record) { return $record['value'] ?? 'unknown'; }, $caaRecords)));
+                        }
+                    }
+
+                    $log->addExtra('caaValidation', 'CAA records validated successfully');
+                } catch (\Throwable $th) {
+                    $log->addExtra('caaValidationError', $th->getMessage());
+                    throw new Exception('CAA validation failed: ' . $th->getMessage());
+                }
             }
         } else {
             // Main domain validation

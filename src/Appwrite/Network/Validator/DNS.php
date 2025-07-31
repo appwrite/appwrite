@@ -9,6 +9,7 @@ class DNS extends Validator
     public const RECORD_A = 'a';
     public const RECORD_AAAA = 'aaaa';
     public const RECORD_CNAME = 'cname';
+    public const RECORD_CAA = 'caa';
 
     /**
      * @var mixed
@@ -51,6 +52,7 @@ class DNS extends Validator
             self::RECORD_A => DNS_A,
             self::RECORD_AAAA => DNS_AAAA,
             self::RECORD_CNAME => DNS_CNAME,
+            self::RECORD_CAA => DNS_CAA,
             default => throw new \Exception('Record type not supported.')
         };
 
@@ -58,6 +60,7 @@ class DNS extends Validator
             self::RECORD_A => 'ip',
             self::RECORD_AAAA => 'ipv6',
             self::RECORD_CNAME => 'target',
+            self::RECORD_CAA => 'value',
             default => throw new \Exception('Record type not supported.')
         };
 
@@ -77,8 +80,18 @@ class DNS extends Validator
         }
 
         foreach ($records as $record) {
-            if (isset($record[$dnsKey]) && $record[$dnsKey] === $this->target) {
-                return true;
+            if ($this->type === self::RECORD_CAA) {
+                // For CAA records, reconstruct the format from parsed components
+                if (isset($record['value'])) {
+                    if ($record['value'] === $this->target) {
+                        return true;
+                    }
+                }
+            } else {
+                // For other record types, use the standard approach
+                if (isset($record[$dnsKey]) && $record[$dnsKey] === $this->target) {
+                    return true;
+                }
             }
         }
 

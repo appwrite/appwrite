@@ -47,4 +47,18 @@ class DNSTest extends TestCase
         $this->assertEquals($validator->isValid('aaaa-unit-test.appwrite.org'), true);
         $this->assertEquals($validator->isValid('test1.appwrite.org'), false);
     }
+
+    public function testCAA(): void
+    {
+        $validator = new DNS('0 issue "digicert.com"', DNS::RECORD_CAA);
+
+        // $this->assertEquals($validator->isValid(''), false);
+        // $this->assertEquals($validator->isValid(null), false);
+        // $this->assertEquals($validator->isValid(false), false);
+        $this->assertEquals($validator->isValid('github.com'), true);
+        $this->assertEquals($validator->isValid('test1.appwrite.org'), false);
+
+        $validator2 = new DNS('0 issue "letsencrypt.org"', DNS::RECORD_CAA);
+        $this->assertEquals($validator2->isValid('github.com'), false);
+    }
 }

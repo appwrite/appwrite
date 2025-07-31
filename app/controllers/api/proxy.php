@@ -257,6 +257,12 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
         }
 
+        // Validate CAA records if configured
+        $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
+        if (!empty($caaTarget)) {
+            $validators[] = new DNS($caaTarget, DNS::RECORD_CAA);
+        }
+
         if (empty($validators)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
         }
@@ -284,6 +290,40 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
+        }
+
+        if (!empty($caaTarget)) {
+            try {
+                $caaRecords = \dns_get_record($domain->get(), DNS_CAA);
+                var_dump("in proxy.php");
+                var_dump($caaRecords);
+
+                $foundValidCAA = false;
+
+                foreach ($caaRecords as $record) {
+                    if (isset($record['value'])) {
+                        $caaValue = $record['value'];
+
+                        if ($caaValue === $caaTarget) {
+                            $foundValidCAA = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$foundValidCAA) {
+                    if (empty($caaRecords)) {
+                        throw new Exception('CAA records are required but not found for domain. Expected: ' . $caaTarget);
+                    } else {
+                        throw new Exception('CAA record does not match expected value. Expected: ' . $caaTarget . ', Found: ' . implode(', ', array_map(function ($record) { return $record['value'] ?? 'unknown'; }, $caaRecords)));
+                    }
+                }
+
+                $log->addExtra('caaValidation', 'CAA records validated successfully');
+            } catch (\Throwable $th) {
+                $log->addExtra('caaValidationError', $th->getMessage());
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'CAA validation failed: ' . $th->getMessage());
+            }
         }
 
         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
