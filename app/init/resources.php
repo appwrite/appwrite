@@ -1009,3 +1009,19 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
+
+App::setResource('cacheHitsCounter', function (Telemetry $telemetry) {
+    return $telemetry->createCounter(
+        'cache_hits_total',
+        'hits',
+        'Total number of cache hits'
+    );
+}, ['telemetry']);
+
+App::setResource('cacheMissesCounter', function (Telemetry $telemetry) {
+    return $telemetry->createCounter(
+        'cache_misses_total',
+        'misses',
+        'Total number of cache misses'
+    );
+}, ['telemetry']);
