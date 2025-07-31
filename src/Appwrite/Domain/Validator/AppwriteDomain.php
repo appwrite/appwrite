@@ -107,11 +107,6 @@ class AppwriteDomain extends ValidatorDomain
                     ) {
                         return false;
                     }
-
-                    $subdomainLower = strtolower($subdomain);
-                    if (str_starts_with($subdomainLower, 'commit-') || str_starts_with($subdomainLower, 'branch-')) {
-                        return false;
-                    }
                     return true;
                 }
             }
