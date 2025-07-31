@@ -89,7 +89,7 @@ services:
       - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
       - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
-    # we need to wait for the mongodb to be ready to avoid errors (what are the implications on mariadb? and also on the other services?)
+    # we need to wait for the mongodb to be ready to avoid errors (what are the implications since we can't use template substitution here?)
       mongodb:
         condition: service_healthy
       redis:
