@@ -5243,4 +5243,936 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
+
+    public function testDateTimeDocument(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'DateTime Test Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'create_modify_dates',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create string attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        // Create datetime attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'datetime',
+            'required' => false,
+            'format' => 'datetime',
+        ]);
+
+        sleep(1);
+
+        $date = '2000-01-01T10:00:00.000+00:00';
+
+        // Test - default behaviour of external datetime attribute not changed
+        $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc1',
+            'data' => [
+                'datetime' => ''
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc['headers']['status-code']);
+        $this->assertNotEmpty($doc['body']['datetime']);
+        $this->assertNotEmpty($doc['body']['$createdAt']);
+        $this->assertNotEmpty($doc['body']['$updatedAt']);
+
+        $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $doc['headers']['status-code']);
+        $this->assertNotEmpty($doc['body']['datetime']);
+        $this->assertNotEmpty($doc['body']['$createdAt']);
+        $this->assertNotEmpty($doc['body']['$updatedAt']);
+
+        // Test - modifying $createdAt and $updatedAt
+        $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc2',
+            'data' => [
+                '$createdAt' => $date
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc['headers']['status-code']);
+        $this->assertEquals($doc['body']['$createdAt'], $date);
+        $this->assertNotEmpty($doc['body']['$updatedAt']);
+        $this->assertNotEquals($doc['body']['$updatedAt'], $date);
+
+        $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $doc['headers']['status-code']);
+        $this->assertEquals($doc['body']['$createdAt'], $date);
+        $this->assertNotEmpty($doc['body']['$updatedAt']);
+        $this->assertNotEquals($doc['body']['$updatedAt'], $date);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testSingleDocumentDateOperations(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Single Date Operations Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'normal_date_operations',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create string attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        sleep(1);
+
+        $createDate = '2000-01-01T10:00:00.000+00:00';
+        $updateDate = '2000-02-01T15:30:00.000+00:00';
+        $date1 = '2000-01-01T10:00:00.000+00:00';
+        $date2 = '2000-02-01T15:30:00.000+00:00';
+        $date3 = '2000-03-01T20:45:00.000+00:00';
+
+        // Test 1: Create with custom createdAt, then update with custom updatedAt
+        $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc1',
+            'data' => [
+                'string' => 'initial',
+                '$createdAt' => $createDate
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc['headers']['status-code']);
+        $this->assertEquals($createDate, $doc['body']['$createdAt']);
+        $this->assertNotEquals($createDate, $doc['body']['$updatedAt']);
+
+        // Update with custom updatedAt
+        $updatedDoc = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'updated',
+                '$updatedAt' => $updateDate
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedDoc['headers']['status-code']);
+        $this->assertEquals($createDate, $updatedDoc['body']['$createdAt']);
+        $this->assertEquals($updateDate, $updatedDoc['body']['$updatedAt']);
+
+        // Test 2: Create with both custom dates
+        $doc2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc2',
+            'data' => [
+                'string' => 'both_dates',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc2['headers']['status-code']);
+        $this->assertEquals($createDate, $doc2['body']['$createdAt']);
+        $this->assertEquals($updateDate, $doc2['body']['$updatedAt']);
+
+        // Test 3: Create without dates, then update with custom dates
+        $doc3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc3',
+            'data' => [
+                'string' => 'no_dates'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc3['headers']['status-code']);
+
+        $updatedDoc3 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc3', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'updated_no_dates',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedDoc3['headers']['status-code']);
+        $this->assertEquals($createDate, $updatedDoc3['body']['$createdAt']);
+        $this->assertEquals($updateDate, $updatedDoc3['body']['$updatedAt']);
+
+        // Test 4: Update only createdAt
+        $doc4 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc4',
+            'data' => [
+                'string' => 'initial'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc4['headers']['status-code']);
+        $originalCreatedAt4 = $doc4['body']['$createdAt'];
+        $originalUpdatedAt4 = $doc4['body']['$updatedAt'];
+
+        $updatedDoc4 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc4', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'updated',
+                '$updatedAt' => null,
+                '$createdAt' => null
+            ],
+        ]);
+
+        $this->assertEquals(200, $updatedDoc4['headers']['status-code']);
+        $this->assertEquals($originalCreatedAt4, $updatedDoc4['body']['$createdAt']);
+        $this->assertNotEquals($originalUpdatedAt4, $updatedDoc4['body']['$updatedAt']);
+
+        // Test 5: Update only updatedAt
+        $finalDoc4 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc4', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'final',
+                '$updatedAt' => $updateDate,
+                '$createdAt' => $createDate
+            ]
+        ]);
+
+        $this->assertEquals(200, $finalDoc4['headers']['status-code']);
+        $this->assertEquals($createDate, $finalDoc4['body']['$createdAt']);
+        $this->assertEquals($updateDate, $finalDoc4['body']['$updatedAt']);
+
+        // Test 6: Create with updatedAt, update with createdAt
+        $doc5 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc5',
+            'data' => [
+                'string' => 'doc5',
+                '$updatedAt' => $date2
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc5['headers']['status-code']);
+        $this->assertNotEquals($date2, $doc5['body']['$createdAt']);
+        $this->assertEquals($date2, $doc5['body']['$updatedAt']);
+
+        $updatedDoc5 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc5', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'doc5_updated',
+                '$createdAt' => $date1
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedDoc5['headers']['status-code']);
+        $this->assertEquals($date1, $updatedDoc5['body']['$createdAt']);
+        $this->assertNotEquals($date2, $updatedDoc5['body']['$updatedAt']);
+
+        // Test 7: Create with both dates, update with different dates
+        $doc6 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc6',
+            'data' => [
+                'string' => 'doc6',
+                '$createdAt' => $date1,
+                '$updatedAt' => $date2
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc6['headers']['status-code']);
+        $this->assertEquals($date1, $doc6['body']['$createdAt']);
+        $this->assertEquals($date2, $doc6['body']['$updatedAt']);
+
+        $updatedDoc6 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/doc6', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'doc6_updated',
+                '$createdAt' => $date3,
+                '$updatedAt' => $date3
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedDoc6['headers']['status-code']);
+        $this->assertEquals($date3, $updatedDoc6['body']['$createdAt']);
+        $this->assertEquals($date3, $updatedDoc6['body']['$updatedAt']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testBulkDocumentDateOperations(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Bulk Date Operations Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'bulk_date_operations',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create string attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        sleep(1);
+
+        $createDate = '2000-01-01T10:00:00.000+00:00';
+        $updateDate = '2000-02-01T15:30:00.000+00:00';
+
+        // Test 1: Bulk create with different date configurations
+        $documents = [
+            [
+                '$id' => 'doc1',
+                'string' => 'doc1',
+                '$createdAt' => $createDate,
+                '$permissions' => [                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),]
+            ],
+            [
+                '$id' => 'doc2',
+                'string' => 'doc2',
+                '$updatedAt' => $updateDate,
+                '$permissions' => [                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),]
+            ],
+            [
+                '$id' => 'doc3',
+                'string' => 'doc3',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate,
+                '$permissions' => [                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),]
+            ],
+            [
+                '$id' => 'doc4',
+                'string' => 'doc4',
+                '$permissions' => [                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),]
+            ],
+            [
+                '$id' => 'doc5',
+                'string' => 'doc5',
+                '$createdAt' => null,
+                '$permissions' => [                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),]
+            ],
+            [
+                '$id' => 'doc6',
+                'string' => 'doc6',
+                '$updatedAt' => null,
+                '$permissions' => [                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),]
+            ]
+        ];
+
+        // Create all documents in one bulk operation
+        $bulkCreateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documents' => $documents
+        ]);
+
+        $this->assertEquals(201, $bulkCreateResponse['headers']['status-code']);
+        $this->assertCount(count($documents), $bulkCreateResponse['body']['documents']);
+
+        // Verify initial state
+        foreach (['doc1', 'doc3'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($createDate, $doc['body']['$createdAt'], "createdAt mismatch for $id");
+        }
+
+        foreach (['doc2', 'doc3'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($updateDate, $doc['body']['$updatedAt'], "updatedAt mismatch for $id");
+        }
+
+        foreach (['doc4', 'doc5', 'doc6'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertNotEmpty($doc['body']['$createdAt'], "createdAt missing for $id");
+            $this->assertNotEmpty($doc['body']['$updatedAt'], "updatedAt missing for $id");
+        }
+
+        // Test 2: Bulk update with custom dates
+        $updateData = [
+            'data' => [
+                'string' => 'updated',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate,
+                '$permissions' => [                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),]
+            ],
+        ];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateData);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(6, $response['body']['documents']);
+
+        // Verify updated state
+        foreach (['doc1', 'doc3'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($createDate, $doc['body']['$createdAt'], "createdAt mismatch for $id");
+            $this->assertEquals($updateDate, $doc['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('updated', $doc['body']['string'], "string mismatch for $id");
+        }
+
+        foreach (['doc2', 'doc4', 'doc5', 'doc6'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($updateDate, $doc['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('updated', $doc['body']['string'], "string mismatch for $id");
+        }
+
+        $newDate = '2000-03-01T20:45:00.000+00:00';
+        $updateDataEnabled = [
+            'data' => [
+                'string' => 'enabled_update',
+                '$createdAt' => $newDate,
+                '$updatedAt' => $newDate
+            ],
+        ];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateDataEnabled);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(6, $response['body']['documents']);
+
+        // Verify final state
+        foreach (['doc1', 'doc2', 'doc3', 'doc4', 'doc5', 'doc6'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($newDate, $doc['body']['$createdAt'], "createdAt mismatch for $id");
+            $this->assertEquals($newDate, $doc['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('enabled_update', $doc['body']['string'], "string mismatch for $id");
+        }
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testUpsertDateOperations(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Upsert Date Operations Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'upsert_date_operations',
+            'documentSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create string attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        sleep(1);
+
+        $createDate = '2000-01-01T10:00:00.000+00:00';
+        $updateDate = '2000-02-01T15:30:00.000+00:00';
+        $date1 = '2000-01-01T10:00:00.000+00:00';
+        $date2 = '2000-02-01T15:30:00.000+00:00';
+        $date3 = '2000-03-01T20:45:00.000+00:00';
+
+        // Test 1: Upsert new document with custom createdAt
+        $upsertDoc1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'upsert1',
+            'data' => [
+                'string' => 'upsert1_initial',
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::write(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+                '$createdAt' => $createDate
+            ],
+        ]);
+
+        $this->assertEquals(201, $upsertDoc1['headers']['status-code']);
+        $this->assertEquals($createDate, $upsertDoc1['body']['$createdAt']);
+        $this->assertNotEquals($createDate, $upsertDoc1['body']['$updatedAt']);
+
+        // Test 2: Upsert existing document with custom updatedAt
+        $updatedUpsertDoc1 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/upsert1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'upsert1_updated',
+                '$updatedAt' => $updateDate
+            ],
+        ]);
+
+        $this->assertEquals(200, $updatedUpsertDoc1['headers']['status-code']);
+        $this->assertEquals($createDate, $updatedUpsertDoc1['body']['$createdAt']);
+        $this->assertEquals($updateDate, $updatedUpsertDoc1['body']['$updatedAt']);
+
+        // Test 3: Upsert new document with both custom dates
+        $upsertDoc2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'upsert2',
+            'data' => [
+                'string' => 'upsert2_both_dates',
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::write(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ],
+        ]);
+
+        $this->assertEquals(201, $upsertDoc2['headers']['status-code']);
+        $this->assertEquals($createDate, $upsertDoc2['body']['$createdAt']);
+        $this->assertEquals($updateDate, $upsertDoc2['body']['$updatedAt']);
+
+        // Test 4: Upsert existing document with different dates
+        $updatedUpsertDoc2 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/upsert2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'upsert2_updated',
+                '$createdAt' => $date3,
+                '$updatedAt' => $date3,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::write(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedUpsertDoc2['headers']['status-code']);
+        $this->assertEquals($date3, $updatedUpsertDoc2['body']['$createdAt']);
+        $this->assertEquals($date3, $updatedUpsertDoc2['body']['$updatedAt']);
+
+        // Test 5: Bulk upsert operations with custom dates
+        $upsertDocuments = [
+            [
+                '$id' => 'bulk_upsert1',
+                'string' => 'bulk_upsert1_initial',
+                '$createdAt' => $createDate
+            ],
+            [
+                '$id' => 'bulk_upsert2',
+                'string' => 'bulk_upsert2_initial',
+                '$updatedAt' => $updateDate
+            ],
+            [
+                '$id' => 'bulk_upsert3',
+                'string' => 'bulk_upsert3_initial',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ],
+            [
+                '$id' => 'bulk_upsert4',
+                'string' => 'bulk_upsert4_initial'
+            ]
+        ];
+
+        // Create documents using bulk upsert
+        $response = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documents' => $upsertDocuments
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(4, $response['body']['documents']);
+
+        // Test 7: Verify initial bulk upsert state
+        foreach (['bulk_upsert1', 'bulk_upsert3'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($createDate, $doc['body']['$createdAt'], "createdAt mismatch for $id");
+        }
+
+        foreach (['bulk_upsert2', 'bulk_upsert3'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($updateDate, $doc['body']['$updatedAt'], "updatedAt mismatch for $id");
+        }
+
+        foreach (['bulk_upsert4'] as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertNotEmpty($doc['body']['$createdAt'], "createdAt missing for $id");
+            $this->assertNotEmpty($doc['body']['$updatedAt'], "updatedAt missing for $id");
+        }
+
+        // Test 8: Bulk upsert update with custom dates
+        $newDate = '2000-04-01T12:00:00.000+00:00';
+        $updateUpsertData = [
+            'data' => [
+                'string' => 'bulk_upsert_updated',
+                '$createdAt' => $newDate,
+                '$updatedAt' => $newDate
+            ],
+            'queries' => [Query::equal('$id', ['bulk_upsert1','bulk_upsert2','bulk_upsert3','bulk_upsert4'])->toString()]
+        ];
+
+        $upsertIds = ['bulk_upsert1', 'bulk_upsert2', 'bulk_upsert3', 'bulk_upsert4'];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateUpsertData);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(4, $response['body']['documents']);
+
+        // Verify updated state
+        foreach ($upsertIds as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertEquals($newDate, $doc['body']['$createdAt'], "createdAt mismatch for $id");
+            $this->assertEquals($newDate, $doc['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('bulk_upsert_updated', $doc['body']['string'], "string mismatch for $id");
+        }
+
+        // Test 9: checking by passing null to each
+        $updateUpsertDataNull = [
+            'data' => [
+                'string' => 'bulk_upsert_null_test',
+                '$createdAt' => null,
+                '$updatedAt' => null
+            ],
+            'queries' => [Query::equal('$id', ['bulk_upsert1','bulk_upsert2','bulk_upsert3','bulk_upsert4'])->toString()]
+        ];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateUpsertDataNull);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(4, $response['body']['documents']);
+
+        // Verify null handling
+        foreach ($upsertIds as $id) {
+            $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $doc['headers']['status-code']);
+            $this->assertNotEmpty($doc['body']['$createdAt'], "createdAt missing for $id");
+            $this->assertNotEmpty($doc['body']['$updatedAt'], "updatedAt missing for $id");
+        }
+
+
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
 }

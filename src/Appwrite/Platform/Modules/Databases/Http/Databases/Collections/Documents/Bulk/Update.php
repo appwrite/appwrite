@@ -125,16 +125,18 @@ class Update extends Action
         $documents = [];
 
         try {
-            $modified = $dbForProject->updateDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                new Document($data),
-                $queries,
-                onNext: function (Document $document) use ($plan, &$documents) {
-                    if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                        $documents[] = $document;
-                    }
-                },
-            );
+            $modified = $dbForProject->withPreserveDates(function () use ($plan, &$documents, $dbForProject, $database, $collection, $data, $queries) {
+                return $dbForProject->updateDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    new Document($data),
+                    $queries,
+                    onNext: function (Document $document) use ($plan, &$documents) {
+                        if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                            $documents[] = $document;
+                        }
+                    },
+                );
+            });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (RelationshipException $e) {

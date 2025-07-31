@@ -332,7 +332,7 @@ class Create extends Action
             }
         };
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -350,6 +350,20 @@ class Create extends Action
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
+
+            // Allowing to add createdAt and updatedAt timestamps if server side(api key)
+            $createdAt = $document['$createdAt'] ?? null;
+            $updatedAt = $document['$updatedAt'] ?? null;
+            if (!$isAPIKey) {
+                if ($createdAt !== null) {
+                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" is not allowed');
+                }
+
+                if ($updatedAt !== null) {
+                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" is not allowed');
+                }
+            }
+
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
@@ -358,9 +372,11 @@ class Create extends Action
         }, $documents);
 
         try {
-            $dbForProject->createDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $documents
+            $dbForProject->withPreserveDates(
+                fn () => $dbForProject->createDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $documents,
+                )
             );
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());

@@ -109,6 +109,18 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        // Allowing to add createdAt and updatedAt timestamps if server side(api key)
+        $createdAt = $data['$createdAt'] ?? null;
+        $updatedAt = $data['$updatedAt'] ?? null;
+        if (!$isAPIKey) {
+            if ($createdAt !== null) {
+                throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" is not allowed');
+            }
+
+            if ($updatedAt !== null) {
+                throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" is not allowed');
+            }
+        }
         // Read permission should not be required for update
         /** @var Document $document */
         $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
@@ -233,11 +245,11 @@ class Update extends Action
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForProject->updateDocument(
+                fn () => $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $document->getId(),
                     $newDocument
-                )
+                ))
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

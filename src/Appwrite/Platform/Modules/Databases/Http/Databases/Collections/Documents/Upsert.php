@@ -153,6 +153,18 @@ class Upsert extends Action
                 }
             }
         }
+        // Allowing to add createdAt and updatedAt timestamps if server side(api key)
+        $createdAt = $data['$createdAt'] ?? null;
+        $updatedAt = $data['$updatedAt'] ?? null;
+        if (!$isAPIKey) {
+            if ($createdAt !== null) {
+                throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" is not allowed');
+            }
+
+            if ($updatedAt !== null) {
+                throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" is not allowed');
+            }
+        }
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
@@ -236,13 +248,15 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForProject->createOrUpdateDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                [$newDocument],
-                onNext: function (Document $document) use (&$upserted) {
-                    $upserted[] = $document;
-                },
-            );
+            $dbForProject->withPreserveDates(function () use (&$upserted, $dbForProject, $database, $collection, $newDocument) {
+                return $dbForProject->createOrUpdateDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    [$newDocument],
+                    onNext: function (Document $document) use (&$upserted) {
+                        $upserted[] = $document;
+                    },
+                );
+            });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
