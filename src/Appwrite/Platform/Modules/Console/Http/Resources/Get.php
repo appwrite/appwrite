@@ -14,7 +14,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Domain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -68,10 +67,9 @@ class Get extends Action
         Database $dbForPlatform
     ) {
         if ($type === 'rules') {
-            $domainValidator = new Domain($value);
             $appwriteDomainValidator = new AppwriteDomain();
 
-            if (!$domainValidator->isValid($value) && !$appwriteDomainValidator->isValid($value)) {
+            if (!$appwriteDomainValidator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Value must be a valid domain name or a valid Appwrite subdomain.');
             }
 
