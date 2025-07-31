@@ -267,7 +267,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -301,7 +301,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -331,7 +331,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
     environment:
@@ -362,7 +362,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -429,7 +429,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -465,7 +465,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -533,7 +533,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -574,7 +574,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - openruntimes-executor
     environment:
       - _APP_ENV
@@ -710,7 +710,7 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -789,7 +789,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -821,7 +821,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -853,7 +853,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -884,7 +884,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -913,7 +913,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -941,7 +941,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -1066,7 +1066,7 @@ services:
     command: "mysqld --innodb-flush-method=fsync"
 
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0.10
     container_name: appwrite-mongodb
     <<: *x-logging
     networks:

@@ -124,19 +124,19 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql', 'mongodb'],
+            'schemes' => ['mongodb','mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql','mongodb'],
+            'schemes' => ['mongodb','mariadb', 'mysql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql', 'mongodb'],
+            'schemes' => ['mongodb','mariadb', 'mysql'],
         ],
         'publisher' => [
             'type' => 'publisher',
