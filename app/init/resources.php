@@ -239,13 +239,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     if (!empty(Auth::$unique)) {
         if ($mode === APP_MODE_ADMIN) {
             $user = $dbForPlatform->getDocument('users', Auth::$unique);
-        } else {
-            if (!$project->isEmpty()) {
-                if ($project->getId() === 'console') {
-                    $user = $dbForPlatform->getDocument('users', Auth::$unique);
-                } else {
-                    $user = $dbForProject->getDocument('users', Auth::$unique);
-                }
+        } elseif (!$project->isEmpty()) {
+            if ($project->getId() === 'console') {
+                $user = $dbForPlatform->getDocument('users', Auth::$unique);
+            } else {
+                $user = $dbForProject->getDocument('users', Auth::$unique);
             }
         }
     }
