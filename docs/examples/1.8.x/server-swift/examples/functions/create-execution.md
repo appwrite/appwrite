@@ -15,6 +15,6 @@ let execution = try await functions.createExecution(
     path: "<PATH>", // optional
     method: .gET, // optional
     headers: [:], // optional
-    scheduledAt: "" // optional
+    scheduledAt: "<SCHEDULED_AT>" // optional
 )
 
