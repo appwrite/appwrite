@@ -422,9 +422,9 @@ App::init()
     ->inject('apiKey')
     ->inject('plan')
     ->inject('devKey')
-    ->inject('cacheHitsGauge')
-    ->inject('cacheMissesGauge')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Gauge $cacheHitsCounter, Gauge $cacheMissesCounter) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('storageCacheHitsGauge')
+    ->inject('storageCacheMissesGauge')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Gauge $storageCacheHitsCounter, Gauge $storageCacheMissesCounter) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -622,14 +622,14 @@ App::init()
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
-                $cacheHitsCounter->record(1, [
+                $storageCacheHitsCounter->record(1, [
                     'resourceType' => $type,
                 ]);
                 if (!$isImageTransformation || !$isDisabled) {
                     $response->send($data);
                 }
             } else {
-                $cacheMissesCounter->record(1);
+                $storageCacheMissesCounter->record(1);
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')

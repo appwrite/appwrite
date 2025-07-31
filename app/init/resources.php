@@ -1010,10 +1010,10 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
 
-App::setResource('cacheHitsGauge', function (Telemetry $telemetry) {
-    return $telemetry->createGauge('cache.hits.total');
+App::setResource('storageCacheHitsGauge', function (Telemetry $telemetry) {
+    return $telemetry->createGauge('storage.cache.hits');
 }, ['telemetry']);
 
-App::setResource('cacheMissesGauge', function (Telemetry $telemetry) {
-    return $telemetry->createGauge('cache.misses.total');
+App::setResource('storageCacheMissesGauge', function (Telemetry $telemetry) {
+    return $telemetry->createGauge('storage.cache.misses');
 }, ['telemetry']);
