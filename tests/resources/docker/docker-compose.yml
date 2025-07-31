@@ -31,8 +31,8 @@ services:
     build:
       context: .
       args:
-        - TESTING=true
-        - VERSION=dev
+        TESTING: "true"
+        VERSION: "dev"
     restart: unless-stopped
     ports:
       - "9501:80"
