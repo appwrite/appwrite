@@ -1011,9 +1011,9 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
 
 App::setResource('storageCacheHitsGauge', function (Telemetry $telemetry) {
-    return $telemetry->createGauge('storage.cache.hits');
+    return $telemetry->createGauge('storage.cache.hits.total');
 }, ['telemetry']);
 
 App::setResource('storageCacheMissesGauge', function (Telemetry $telemetry) {
-    return $telemetry->createGauge('storage.cache.misses');
+    return $telemetry->createGauge('storage.cache.misses.total');
 }, ['telemetry']);
