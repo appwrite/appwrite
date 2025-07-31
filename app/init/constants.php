@@ -4,7 +4,6 @@ use Appwrite\Platform\Modules\Compute\Specification;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
-const APP_DOMAIN_SITES_SUFFIX = 'appwrite.network'; // Default suffix for Appwrite sites domains
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_EMAIL_LOGO_URL = 'https://cloud.appwrite.io/images/mails/logo.png';

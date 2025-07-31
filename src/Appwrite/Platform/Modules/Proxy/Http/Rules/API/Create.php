@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
 
+use Appwrite\Domain\Validator\AppwriteDomain;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\AppwriteDomain;
 use Appwrite\Network\Validator\DNS;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;

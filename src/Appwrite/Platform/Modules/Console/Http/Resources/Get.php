@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
+use Appwrite\Domain\Validator\AppwriteDomain;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\AppwriteDomain;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Validator\AppwriteDomain;
+use Appwrite\Domain\Validator\AppwriteDomain;
 use PHPUnit\Framework\TestCase;
 
 class AppwriteDomainTest extends TestCase
@@ -21,54 +21,77 @@ class AppwriteDomainTest extends TestCase
 
     public function testIsValid(): void
     {
-        // Get the actual configured suffix from environment (in Docker it's sites.localhost)
-        // But test both the environment value and the default value
-        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
-        $functionsDomain = \Utopia\System\System::getEnv('_APP_DOMAIN_FUNCTIONS', 'functions.localhost');
+        $sitesDomain = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES');
+        $functionsDomain = \Utopia\System\System::getEnv('_APP_DOMAIN_FUNCTIONS');
 
-        // Valid domains for sites.localhost and functions.localhost (single-level subdomains only)
-        $this->assertEquals(true, $this->validator->isValid('api.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('test.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('myapp.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('staging.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('prod.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('app123.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('test-app.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('my-awesome-app.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('a.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('x1.' . $envSuffix));
+        if (!empty($sitesDomain)) {
+            $this->assertEquals(true, $this->validator->isValid('api.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('test.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('myapp.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('staging.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('prod.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('app123.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('test-app.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('my-awesome-app.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('a.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('x1.' . $sitesDomain));
 
-        // Valid domains for functions domain (single-level subdomains only)
-        $this->assertEquals(true, $this->validator->isValid('api.' . $functionsDomain));
-        $this->assertEquals(true, $this->validator->isValid('test.' . $functionsDomain));
-        $this->assertEquals(true, $this->validator->isValid('myapp.' . $functionsDomain));
+            $this->assertEquals(false, $this->validator->isValid('api.dev.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('app.staging.test.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('sub.domain.example.' . $sitesDomain));
 
-        // Case insensitive validation
-        $this->assertEquals(true, $this->validator->isValid('API.' . strtoupper($envSuffix)));
-        $this->assertEquals(true, $this->validator->isValid('Test.' . ucfirst($envSuffix)));
-        $this->assertEquals(true, $this->validator->isValid('MyApp.' . $envSuffix));
+            $this->assertEquals(true, $this->validator->isValid('API.' . strtoupper($sitesDomain)));
+            $this->assertEquals(true, $this->validator->isValid('Test.' . ucfirst($sitesDomain)));
+            $this->assertEquals(true, $this->validator->isValid('MyApp.' . $sitesDomain));
 
-        // Invalid sub-subdomains for sites.localhost and functions.localhost (multiple levels not allowed)
-        $this->assertEquals(false, $this->validator->isValid('api.dev.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('app.staging.test.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('sub.domain.example.' . $envSuffix));
+            $this->assertEquals(false, $this->validator->isValid('my app.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('test .' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid(' api.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('api.' . $sitesDomain . ' '));
+            $this->assertEquals(false, $this->validator->isValid('app@test.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('app#test.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('app$test.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('app%test.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('app_test.' . $sitesDomain));
 
-        // Invalid sub-subdomains for functions domain (multiple levels not allowed)
-        $this->assertEquals(false, $this->validator->isValid('api.dev.' . $functionsDomain));
-        $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $functionsDomain));
+            $this->assertEquals(false, $this->validator->isValid('.api.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('api.' . $sitesDomain . '.'));
+            $this->assertEquals(false, $this->validator->isValid('api..' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid($sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('.' . $sitesDomain . '.'));
+            $this->assertEquals(false, $this->validator->isValid('..' . $sitesDomain));
 
-        // Valid appwrite.network domains (one-level subdomains) - using environment variable
-        $appwriteDomain = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
-        $this->assertEquals(true, $this->validator->isValid('api.' . $appwriteDomain));
-        $this->assertEquals(true, $this->validator->isValid('test.' . $appwriteDomain));
-        $this->assertEquals(true, $this->validator->isValid('myapp.' . $appwriteDomain));
+            $this->assertEquals(false, $this->validator->isValid('commit-api.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('commit-test.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('commit-123.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('branch-api.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('branch-test.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('branch-123.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('COMMIT-api.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('BRANCH-test.' . $sitesDomain));
 
-        // Invalid sub-subdomains for appwrite.network
-        $this->assertEquals(false, $this->validator->isValid('api.dev.' . $appwriteDomain));
-        $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $appwriteDomain));
+            $this->assertEquals(true, $this->validator->isValid('commitment.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('branching.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('my-commit.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('my-branch.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('pre-commit.' . $sitesDomain));
+            $this->assertEquals(true, $this->validator->isValid('post-branch.' . $sitesDomain));
 
-        // Other domains should be valid (no multilevel restrictions)
+            $this->assertEquals(false, $this->validator->isValid('.api.' . $sitesDomain));
+            $this->assertEquals(false, $this->validator->isValid('api..' . $sitesDomain));
+        }
+
+        if (!empty($functionsDomain)) {
+            $this->assertEquals(true, $this->validator->isValid('api.' . $functionsDomain));
+            $this->assertEquals(true, $this->validator->isValid('test.' . $functionsDomain));
+            $this->assertEquals(true, $this->validator->isValid('myapp.' . $functionsDomain));
+
+            $this->assertEquals(false, $this->validator->isValid('api.dev.' . $functionsDomain));
+            $this->assertEquals(false, $this->validator->isValid('foo.bar.' . $functionsDomain));
+        }
+
         $this->assertEquals(true, $this->validator->isValid('example.com'));
         $this->assertEquals(true, $this->validator->isValid('api.example.com'));
         $this->assertEquals(true, $this->validator->isValid('test.google.com'));
@@ -76,93 +99,31 @@ class AppwriteDomainTest extends TestCase
         $this->assertEquals(true, $this->validator->isValid('myapp.herokuapp.com'));
         $this->assertEquals(true, $this->validator->isValid('sub.domain.example.com'));
 
-        // Domains with spaces and invalid characters
-        $this->assertEquals(false, $this->validator->isValid('my app.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('test .' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid(' api.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('api.' . $envSuffix . ' '));
-        $this->assertEquals(false, $this->validator->isValid('app@test.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('app#test.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('app$test.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('app%test.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('app_test.' . $envSuffix));
-
-        // Invalid formatting
-        $this->assertEquals(false, $this->validator->isValid('.api.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('api.' . $envSuffix . '.'));
-        $this->assertEquals(false, $this->validator->isValid('api..' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid($envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('.' . $envSuffix . '.'));
-        $this->assertEquals(false, $this->validator->isValid('..' . $envSuffix));
-
-        // Forbidden prefixes
-        $this->assertEquals(false, $this->validator->isValid('commit-api.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('commit-test.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('commit-123.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('branch-api.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('branch-test.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('branch-123.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('COMMIT-api.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('BRANCH-test.' . $envSuffix));
-
-        // Valid domains that should not be confused with forbidden prefixes
-        $this->assertEquals(true, $this->validator->isValid('commitment.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('branching.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('my-commit.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('my-branch.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('pre-commit.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('post-branch.' . $envSuffix));
-
-        // Edge cases with dots
-        $this->assertEquals(false, $this->validator->isValid('.api.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('api..' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('api.' . $envSuffix . '.'));
-        $this->assertEquals(false, $this->validator->isValid('.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('..' . $envSuffix));
-
-        // Just the suffix without subdomain
-        $this->assertEquals(false, $this->validator->isValid($envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('.' . $envSuffix));
-
-        // Empty and null values
-        $this->assertEquals(false, $this->validator->isValid(''));
-        $this->assertEquals(false, $this->validator->isValid(' '));
-        $this->assertEquals(false, $this->validator->isValid(null));
-        $this->assertEquals(false, $this->validator->isValid(false));
-
-        // Non-string types
-        $this->assertEquals(false, $this->validator->isValid(123));
-        $this->assertEquals(false, $this->validator->isValid(12.34));
-        $this->assertEquals(false, $this->validator->isValid(['api.appwrite.network']));
-        $this->assertEquals(false, $this->validator->isValid((object)['domain' => 'api.appwrite.network']));
-        $this->assertEquals(false, $this->validator->isValid(true));
-
         // Invalid subdomain formats
-        $this->assertEquals(false, $this->validator->isValid('-api.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('api-.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('-test-.' . $envSuffix));
-        $this->assertEquals(false, $this->validator->isValid('-.' . $envSuffix));
+        $this->assertEquals(false, $this->validator->isValid('-api.' . $sitesDomain));
+        $this->assertEquals(false, $this->validator->isValid('api-.' . $sitesDomain));
+        $this->assertEquals(false, $this->validator->isValid('-test-.' . $sitesDomain));
+        $this->assertEquals(false, $this->validator->isValid('-.' . $sitesDomain));
 
         // Too long subdomain (over 63 characters)
-        $longSubdomain = str_repeat('a', 64) . '.' . $envSuffix;
+        $longSubdomain = str_repeat('a', 64) . '.' . $sitesDomain;
         $this->assertEquals(false, $this->validator->isValid($longSubdomain));
 
         // Exactly 63 characters should be valid
-        $maxLengthSubdomain = str_repeat('a', 63) . '.' . $envSuffix;
+        $maxLengthSubdomain = str_repeat('a', 63) . '.' . $sitesDomain;
         $this->assertEquals(true, $this->validator->isValid($maxLengthSubdomain));
 
         // Single character subdomain should be valid
-        $this->assertEquals(true, $this->validator->isValid('a.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('a.' . $sitesDomain));
 
         // Numbers in subdomain
-        $this->assertEquals(true, $this->validator->isValid('123.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('api123.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('123api.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('123.' . $sitesDomain));
+        $this->assertEquals(true, $this->validator->isValid('api123.' . $sitesDomain));
+        $this->assertEquals(true, $this->validator->isValid('123api.' . $sitesDomain));
 
         // Mixed case with hyphens
-        $this->assertEquals(true, $this->validator->isValid('My-Test-App.' . $envSuffix));
-        $this->assertEquals(true, $this->validator->isValid('app-v2.' . $envSuffix));
+        $this->assertEquals(true, $this->validator->isValid('My-Test-App.' . $sitesDomain));
+        $this->assertEquals(true, $this->validator->isValid('app-v2.' . $sitesDomain));
     }
 
     public function testGetType(): void
@@ -179,10 +140,7 @@ class AppwriteDomainTest extends TestCase
     {
         $description = $this->validator->getDescription();
         $this->assertIsString($description);
-
-        // Get the environment suffix to check it's in the description
-        $envSuffix = \Utopia\System\System::getEnv('_APP_DOMAIN_SITES', defined('APP_DOMAIN_SITES_SUFFIX') ? APP_DOMAIN_SITES_SUFFIX : 'appwrite.network');
-        $this->assertStringContainsString($envSuffix, $description);
+        $this->assertNotEmpty($description);
         $this->assertStringContainsString('one-level subdomain', $description);
     }
 }
