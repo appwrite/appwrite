@@ -854,6 +854,12 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         }
     }
 
+    //@Jake, if teamInternalId is empty, return an empty document to avoid errors
+
+    if(empty($teamInternalId)){
+        return new Document([]);
+    }
+
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
         return $dbForPlatform->findOne('teams', [
             Query::equal('$sequence', [$teamInternalId]),

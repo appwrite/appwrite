@@ -87,9 +87,13 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
       - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
-      - mariadb
-      - redis
+    # we need to wait for the mongodb to be ready to avoid errors (what are the implications on mariadb? and also on the other services?)
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_started
       # - clamav
     entrypoint:
       - php
@@ -1069,6 +1073,7 @@ services:
       - appwrite
     volumes:
       - appwrite-mongodb:/data/db
+      # we need to run the mongo-init.js file to create the user and the database
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     ports:
       - "27017:27017"
@@ -1076,8 +1081,14 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
-      #- MONGO_INITDB_USERNAME=${_APP_DB_USER}
-      #- MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "root", "--password", "${_APP_DB_ROOT_PASS}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   appwrite-mongo-express:
     image: mongo-express

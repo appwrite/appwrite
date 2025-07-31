@@ -562,7 +562,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 if ($latestDocument !== null) {
                     $queries[] =  Query::cursorAfter($latestDocument);
                 }
-                if ($lastSyncUpdate != null) {
+                if ($lastSyncUpdate !== null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
                 $results = [];
