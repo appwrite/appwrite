@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69f5a2e965cd9c1233044629699d3d28",
+    "content-hash": "f152305ec0b90245773867cde288582d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3493,16 +3493,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-cast-sequence",
+            "version": "0.73.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "749cb0606a88ad4282b182feaa7e380627126b86"
+                "reference": "68545dfd5d1ac41ca2f4f5a59719b890fcd8f480"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/749cb0606a88ad4282b182feaa7e380627126b86",
-                "reference": "749cb0606a88ad4282b182feaa7e380627126b86",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/68545dfd5d1ac41ca2f4f5a59719b890fcd8f480",
+                "reference": "68545dfd5d1ac41ca2f4f5a59719b890fcd8f480",
                 "shasum": ""
             },
             "require": {
@@ -3543,9 +3543,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/cast-sequence"
+                "source": "https://github.com/utopia-php/database/tree/0.73.2"
             },
-            "time": "2025-07-29T05:33:45+00:00"
+            "time": "2025-07-29T03:23:04+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8237,18 +8237,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-cast-sequence",
-            "alias": "0.73.2",
-            "alias_normalized": "0.73.2.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
