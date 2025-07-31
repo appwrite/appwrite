@@ -1010,18 +1010,10 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
 
-App::setResource('cacheHitsCounter', function (Telemetry $telemetry) {
-    return $telemetry->createCounter(
-        'cache_hits_total',
-        'hits',
-        'Total number of cache hits'
-    );
+App::setResource('cacheHitsGauge', function (Telemetry $telemetry) {
+    return $telemetry->createGauge('cache.hits.total');
 }, ['telemetry']);
 
-App::setResource('cacheMissesCounter', function (Telemetry $telemetry) {
-    return $telemetry->createCounter(
-        'cache_misses_total',
-        'misses',
-        'Total number of cache misses'
-    );
+App::setResource('cacheMissesGauge', function (Telemetry $telemetry) {
+    return $telemetry->createGauge('cache.misses.total');
 }, ['telemetry']);
