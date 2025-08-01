@@ -120,6 +120,11 @@
     </head>
 
     <body>
+        <div style="display: none; overflow: hidden; max-height: 0; max-width: 0; opacity: 0; line-height: 1px;">
+            {{preview}}
+            <div>{{previewWhitespace}}</div>
+        </div>
+
         <div class="main">
             <table>
                 <tr>

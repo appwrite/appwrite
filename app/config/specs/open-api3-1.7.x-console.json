@@ -8026,10 +8026,7 @@
                         {
                             "name": "createDocument",
                             "auth": {
-                                "Admin": [],
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -8055,8 +8052,7 @@
                         {
                             "name": "createDocuments",
                             "auth": {
-                                "Admin": [],
-                                "Key": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",

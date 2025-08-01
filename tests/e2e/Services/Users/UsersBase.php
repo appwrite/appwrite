@@ -1117,7 +1117,7 @@ trait UsersBase
         ]);
 
         $this->assertEquals(401, $session['headers']['status-code']);
-
+        $this->updateProjectinvalidateSessionsProperty(true);
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1129,6 +1129,15 @@ trait UsersBase
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertNotEmpty($user['body']['password']);
 
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($sessions['headers']['status-code'], 200);
+        $this->assertIsArray($sessions['body']);
+        $this->assertEmpty($sessions['body']['sessions']);
+
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1138,7 +1147,7 @@ trait UsersBase
         ]);
 
         $this->assertEquals($session['headers']['status-code'], 201);
-
+        $this->updateProjectinvalidateSessionsProperty(false);
         return $data;
     }
 

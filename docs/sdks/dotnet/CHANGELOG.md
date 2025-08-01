@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.14.1
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `encrypt` support to `StringAttribute` model
+* Add `sequence` support to `Document` model
+
 ## 0.14.0
 
 * Refactor from Newtonsoft.Json to System.Text.Json for serialization/deserialization
