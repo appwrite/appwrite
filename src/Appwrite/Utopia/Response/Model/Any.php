@@ -33,11 +33,11 @@ class Any extends Model
     }
 
     /**
-     * Get "any" examples
+     * Get sample data
      *
      * @return array
      */
-    public function getAnyExamples(): array
+    public function getSampleData(): array
     {
         return [];
     }

@@ -96,7 +96,7 @@ class Document extends Any
         return $document;
     }
 
-    public function getAnyExamples(): array
+    public function getSampleData(): array
     {
         return [
             'username' => 'john.doe',

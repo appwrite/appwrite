@@ -718,8 +718,8 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if ($model->isAny() && !empty($model->getAnyExamples())) {
-                $examples = array_merge($examples, $model->getAnyExamples());
+            if ($model->isAny() && !empty($model->getSampleData())) {
+                $examples = array_merge($examples, $model->getSampleData());
             }
 
             $output['components']['schemas'][$model->getType()]['example'] = $examples;

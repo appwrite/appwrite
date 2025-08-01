@@ -28698,7 +28698,11 @@
             "description": "Preferences",
             "type": "object",
             "additionalProperties": true,
-            "example": []
+            "example": {
+                "language": "en",
+                "timezone": "UTC",
+                "darkTheme": true
+            }
         },
         "session": {
             "description": "Session",

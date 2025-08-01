@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "15.0.0",
+            "version": "15.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf"
+                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
-                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/c438b3885071ac7c0329199dce5e6f6a24dd215b",
+                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b",
                 "shasum": ""
             },
             "require": {
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/15.0.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/15.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2025-05-18T09:47:10+00:00"
+            "time": "2025-08-01T04:50:51+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -5280,16 +5280,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.13.3",
+            "version": "1.13.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36"
+                "reference": "07d290f0c47959fd5eed98c95ee5602db07e0b6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/faed855a7b5f4d4637717c2b3863e277116beb36",
-                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/07d290f0c47959fd5eed98c95ee5602db07e0b6a",
+                "reference": "07d290f0c47959fd5eed98c95ee5602db07e0b6a",
                 "shasum": ""
             },
             "require": {
@@ -5328,7 +5328,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.3"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.4"
             },
             "funding": [
                 {
@@ -5336,7 +5336,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-05T12:25:42+00:00"
+            "time": "2025-08-01T08:46:24+00:00"
         },
         {
             "name": "nikic/php-parser",
