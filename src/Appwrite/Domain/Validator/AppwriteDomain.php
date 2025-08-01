@@ -19,6 +19,10 @@ class AppwriteDomain extends Domain
             return false;
         }
 
+        if (preg_match('/^https?:\/\//', $value)) {
+            return false;
+        }
+
         if (str_starts_with($value, '.') || str_ends_with($value, '.') || str_contains($value, '..')) {
             return false;
         }
