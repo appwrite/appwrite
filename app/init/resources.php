@@ -1009,7 +1009,3 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
-
-App::setResource('storageCacheOperationsCounter', function (Telemetry $telemetry) {
-    return $telemetry->createCounter('storage.cache.operations.total');
-}, ['telemetry']);
