@@ -354,11 +354,11 @@ class Create extends Action
             // Allowing to add createdAt and updatedAt timestamps if server side(api key
             if (!$isAPIKey && !$isPrivilegedUser) {
                 if (isset($document['$createdAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" is not allowed');
+                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
                 }
 
                 if (isset($document['$updatedAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" is not allowed');
+                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
                 }
             }
 
