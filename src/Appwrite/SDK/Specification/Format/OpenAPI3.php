@@ -603,6 +603,7 @@ class OpenAPI3 extends Format
 
             $required = $model->getRequired();
             $rules = $model->getRules();
+            $examples = [];
 
             $output['components']['schemas'][$model->getType()] = [
                 'description' => $model->getName(),
@@ -692,6 +693,7 @@ class OpenAPI3 extends Format
                         ],
                         'x-example' => $rule['example'] ?? null,
                     ];
+                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
@@ -702,6 +704,7 @@ class OpenAPI3 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
+                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
@@ -714,6 +717,12 @@ class OpenAPI3 extends Format
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
+
+            if ($model->isAny() && !empty($model->getAnyExamples())) {
+                $examples = array_merge($examples, $model->getAnyExamples());
+            }
+
+            $output['components']['schemas'][$model->getType()]['example'] = $examples;
         }
 
         \ksort($output['paths']);

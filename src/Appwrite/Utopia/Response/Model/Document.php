@@ -95,4 +95,15 @@ class Document extends Any
 
         return $document;
     }
+
+    public function getAnyExamples(): array
+    {
+        return [
+            'username' => 'john.doe',
+            'email' => 'john.doe@example.com',
+            'fullName' => 'John Doe',
+            'age' => 30,
+            'isAdmin' => false,
+        ];
+    }
 }

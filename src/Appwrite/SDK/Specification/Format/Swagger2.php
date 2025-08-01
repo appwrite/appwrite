@@ -610,6 +610,7 @@ class Swagger2 extends Format
 
             $required = $model->getRequired();
             $rules = $model->getRules();
+            $examples = [];
 
             $output['definitions'][$model->getType()] = [
                 'description' => $model->getName(),
@@ -696,6 +697,7 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
+                    $examples[$name] = $rule['example'] ?? null;
                     continue;
                 }
 
@@ -708,6 +710,7 @@ class Swagger2 extends Format
                         ],
                         'x-example' => $rule['example'] ?? null,
                     ];
+                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['format'] = $format;
@@ -718,6 +721,7 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
+                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['format'] = $format;
@@ -730,6 +734,12 @@ class Swagger2 extends Format
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
                 }
             }
+
+            if ($model->isAny() && !empty($model->getAnyExamples())) {
+                $examples = array_merge($examples, $model->getAnyExamples());
+            }
+
+            $output['definitions'][$model->getType()]['example'] = $examples;
         }
 
         \ksort($output['paths']);

@@ -31,4 +31,14 @@ class Any extends Model
     {
         return Response::MODEL_ANY;
     }
+
+    /**
+     * Get "any" examples
+     *
+     * @return array
+     */
+    public function getAnyExamples(): array
+    {
+        return [];
+    }
 }
