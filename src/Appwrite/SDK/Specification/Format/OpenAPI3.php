@@ -627,6 +627,8 @@ class OpenAPI3 extends Format
                 $format = null;
                 $items = null;
 
+                $examples[$name] = $rule['example'] ?? null;
+
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
@@ -693,7 +695,6 @@ class OpenAPI3 extends Format
                         ],
                         'x-example' => $rule['example'] ?? null,
                     ];
-                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
@@ -704,7 +705,6 @@ class OpenAPI3 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
-                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;

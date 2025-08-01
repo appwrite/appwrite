@@ -634,6 +634,8 @@ class Swagger2 extends Format
                 $format = null;
                 $items = null;
 
+                $examples[$name] = $rule['example'] ?? null;
+
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
@@ -697,7 +699,6 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
-                    $examples[$name] = $rule['example'] ?? null;
                     continue;
                 }
 
@@ -710,7 +711,6 @@ class Swagger2 extends Format
                         ],
                         'x-example' => $rule['example'] ?? null,
                     ];
-                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['format'] = $format;
@@ -721,7 +721,6 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
-                    $examples[$name] = $rule['example'] ?? null;
 
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['format'] = $format;
