@@ -6159,8 +6159,6 @@ class DatabasesCustomServerTest extends Scope
             $this->assertNotEmpty($doc['body']['$updatedAt'], "updatedAt missing for $id");
         }
 
-
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -6174,5 +6172,4 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
-
 }

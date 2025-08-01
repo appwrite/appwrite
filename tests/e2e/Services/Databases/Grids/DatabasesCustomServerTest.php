@@ -5189,4 +5189,947 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
+
+    public function testDateTimeRow(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'DateTime Test Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'create_modify_dates',
+            'rowSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create string column
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        // Create datetime column
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'datetime',
+            'required' => false,
+            'format' => 'datetime',
+        ]);
+
+        sleep(1);
+
+        $date = '2000-01-01T10:00:00.000+00:00';
+
+        // Test - default behaviour of external datetime column not changed
+        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row1',
+            'data' => [
+                'datetime' => ''
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $this->assertNotEmpty($row['body']['datetime']);
+        $this->assertNotEmpty($row['body']['$createdAt']);
+        $this->assertNotEmpty($row['body']['$updatedAt']);
+
+        $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        $this->assertNotEmpty($row['body']['datetime']);
+        $this->assertNotEmpty($row['body']['$createdAt']);
+        $this->assertNotEmpty($row['body']['$updatedAt']);
+
+        // Test - modifying $createdAt and $updatedAt
+        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row2',
+            'data' => [
+                '$createdAt' => $date
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $this->assertEquals($row['body']['$createdAt'], $date);
+        $this->assertNotEmpty($row['body']['$updatedAt']);
+        $this->assertNotEquals($row['body']['$updatedAt'], $date);
+
+        $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        $this->assertEquals($row['body']['$createdAt'], $date);
+        $this->assertNotEmpty($row['body']['$updatedAt']);
+        $this->assertNotEquals($row['body']['$updatedAt'], $date);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $tableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testSingleRowDateOperations(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Single Date Operations Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'normal_date_operations',
+            'rowSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create string column
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        sleep(1);
+
+        $createDate = '2000-01-01T10:00:00.000+00:00';
+        $updateDate = '2000-02-01T15:30:00.000+00:00';
+        $date1 = '2000-01-01T10:00:00.000+00:00';
+        $date2 = '2000-02-01T15:30:00.000+00:00';
+        $date3 = '2000-03-01T20:45:00.000+00:00';
+
+        // Test 1: Create with custom createdAt, then update with custom updatedAt
+        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row1',
+            'data' => [
+                'string' => 'initial',
+                '$createdAt' => $createDate
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $this->assertEquals($createDate, $row['body']['$createdAt']);
+        $this->assertNotEquals($createDate, $row['body']['$updatedAt']);
+
+        // Update with custom updatedAt
+        $updatedRow = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'updated',
+                '$updatedAt' => $updateDate
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedRow['headers']['status-code']);
+        $this->assertEquals($createDate, $updatedRow['body']['$createdAt']);
+        $this->assertEquals($updateDate, $updatedRow['body']['$updatedAt']);
+
+        // Test 2: Create with both custom dates
+        $row2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row2',
+            'data' => [
+                'string' => 'both_dates',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row2['headers']['status-code']);
+        $this->assertEquals($createDate, $row2['body']['$createdAt']);
+        $this->assertEquals($updateDate, $row2['body']['$updatedAt']);
+
+        // Test 3: Create without dates, then update with custom dates
+        $row3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row3',
+            'data' => [
+                'string' => 'no_dates'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row3['headers']['status-code']);
+
+        $updatedRow3 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row3', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'updated_no_dates',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedRow3['headers']['status-code']);
+        $this->assertEquals($createDate, $updatedRow3['body']['$createdAt']);
+        $this->assertEquals($updateDate, $updatedRow3['body']['$updatedAt']);
+
+        // Test 4: Update only createdAt
+        $row4 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row4',
+            'data' => [
+                'string' => 'initial'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row4['headers']['status-code']);
+        $originalCreatedAt4 = $row4['body']['$createdAt'];
+        $originalUpdatedAt4 = $row4['body']['$updatedAt'];
+
+        $updatedRow4 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row4', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'updated',
+                '$updatedAt' => null,
+                '$createdAt' => null
+            ],
+        ]);
+
+        $this->assertEquals(200, $updatedRow4['headers']['status-code']);
+        $this->assertEquals($originalCreatedAt4, $updatedRow4['body']['$createdAt']);
+        $this->assertNotEquals($originalUpdatedAt4, $updatedRow4['body']['$updatedAt']);
+
+        // Test 5: Update only updatedAt
+        $finalRow4 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row4', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'final',
+                '$updatedAt' => $updateDate,
+                '$createdAt' => $createDate
+            ]
+        ]);
+
+        $this->assertEquals(200, $finalRow4['headers']['status-code']);
+        $this->assertEquals($createDate, $finalRow4['body']['$createdAt']);
+        $this->assertEquals($updateDate, $finalRow4['body']['$updatedAt']);
+
+        // Test 6: Create with updatedAt, update with createdAt
+        $row5 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row5',
+            'data' => [
+                'string' => 'row5',
+                '$updatedAt' => $date2
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row5['headers']['status-code']);
+        $this->assertNotEquals($date2, $row5['body']['$createdAt']);
+        $this->assertEquals($date2, $row5['body']['$updatedAt']);
+
+        $updatedRow5 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row5', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'row5_updated',
+                '$createdAt' => $date1
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedRow5['headers']['status-code']);
+        $this->assertEquals($date1, $updatedRow5['body']['$createdAt']);
+        $this->assertNotEquals($date2, $updatedRow5['body']['$updatedAt']);
+
+        // Test 7: Create with both dates, update with different dates
+        $row6 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'row6',
+            'data' => [
+                'string' => 'row6',
+                '$createdAt' => $date1,
+                '$updatedAt' => $date2
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::write(Role::any()),
+                Permission::update(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $row6['headers']['status-code']);
+        $this->assertEquals($date1, $row6['body']['$createdAt']);
+        $this->assertEquals($date2, $row6['body']['$updatedAt']);
+
+        $updatedRow6 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/row6', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'row6_updated',
+                '$createdAt' => $date3,
+                '$updatedAt' => $date3
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedRow6['headers']['status-code']);
+        $this->assertEquals($date3, $updatedRow6['body']['$createdAt']);
+        $this->assertEquals($date3, $updatedRow6['body']['$updatedAt']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $tableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testBulkRowDateOperations(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Bulk Date Operations Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'bulk_date_operations',
+            'rowSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create string column
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        sleep(1);
+
+        $createDate = '2000-01-01T10:00:00.000+00:00';
+        $updateDate = '2000-02-01T15:30:00.000+00:00';
+
+        // Test 1: Bulk create with different date configurations
+        $rows = [
+            [
+                '$id' => 'row1',
+                'string' => 'row1',
+                '$createdAt' => $createDate,
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ],
+            [
+                '$id' => 'row2',
+                'string' => 'row2',
+                '$updatedAt' => $updateDate,
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ],
+            [
+                '$id' => 'row3',
+                'string' => 'row3',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate,
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ],
+            [
+                '$id' => 'row4',
+                'string' => 'row4',
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ],
+            [
+                '$id' => 'row5',
+                'string' => 'row5',
+                '$createdAt' => null,
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ],
+            [
+                '$id' => 'row6',
+                'string' => 'row6',
+                '$updatedAt' => null,
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ]
+        ];
+
+        // Create all rows in one bulk operation
+        $bulkCreateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rows' => $rows
+        ]);
+
+        $this->assertEquals(201, $bulkCreateResponse['headers']['status-code']);
+        $this->assertCount(count($rows), $bulkCreateResponse['body']['rows']);
+
+        // Verify initial state
+        foreach (['row1', 'row3'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($createDate, $row['body']['$createdAt'], "createdAt mismatch for $id");
+        }
+
+        foreach (['row2', 'row3'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($updateDate, $row['body']['$updatedAt'], "updatedAt mismatch for $id");
+        }
+
+        foreach (['row4', 'row5', 'row6'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertNotEmpty($row['body']['$createdAt'], "createdAt missing for $id");
+            $this->assertNotEmpty($row['body']['$updatedAt'], "updatedAt missing for $id");
+        }
+
+        // Test 2: Bulk update with custom dates
+        $updateData = [
+            'data' => [
+                'string' => 'updated',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate,
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ],
+        ];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateData);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(6, $response['body']['rows']);
+
+        // Verify updated state
+        foreach (['row1', 'row3'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($createDate, $row['body']['$createdAt'], "createdAt mismatch for $id");
+            $this->assertEquals($updateDate, $row['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('updated', $row['body']['string'], "string mismatch for $id");
+        }
+
+        foreach (['row2', 'row4', 'row5', 'row6'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($updateDate, $row['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('updated', $row['body']['string'], "string mismatch for $id");
+        }
+
+        $newDate = '2000-03-01T20:45:00.000+00:00';
+        $updateDataEnabled = [
+            'data' => [
+                'string' => 'enabled_update',
+                '$createdAt' => $newDate,
+                '$updatedAt' => $newDate
+            ],
+        ];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateDataEnabled);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(6, $response['body']['rows']);
+
+        // Verify final state
+        foreach (['row1', 'row2', 'row3', 'row4', 'row5', 'row6'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($newDate, $row['body']['$createdAt'], "createdAt mismatch for $id");
+            $this->assertEquals($newDate, $row['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('enabled_update', $row['body']['string'], "string mismatch for $id");
+        }
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $tableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testUpsertRowDateOperations(): void
+    {
+        $databaseId = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Upsert Date Operations Database',
+        ]);
+
+        $this->assertEquals(201, $databaseId['headers']['status-code']);
+        $databaseId = $databaseId['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'upsert_date_operations',
+            'rowSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create string column
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'string',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        sleep(1);
+
+        $createDate = '2000-01-01T10:00:00.000+00:00';
+        $updateDate = '2000-02-01T15:30:00.000+00:00';
+        $date1 = '2000-01-01T10:00:00.000+00:00';
+        $date2 = '2000-02-01T15:30:00.000+00:00';
+        $date3 = '2000-03-01T20:45:00.000+00:00';
+
+        // Test 1: Upsert new row with custom createdAt
+        $upsertRow1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'upsert1',
+            'data' => [
+                'string' => 'upsert1_initial',
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::write(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+                '$createdAt' => $createDate
+            ],
+        ]);
+
+        $this->assertEquals(201, $upsertRow1['headers']['status-code']);
+        $this->assertEquals($createDate, $upsertRow1['body']['$createdAt']);
+        $this->assertNotEquals($createDate, $upsertRow1['body']['$updatedAt']);
+
+        // Test 2: Upsert existing row with custom updatedAt
+        $updatedUpsertRow1 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/upsert1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'upsert1_updated',
+                '$updatedAt' => $updateDate
+            ],
+        ]);
+
+        $this->assertEquals(200, $updatedUpsertRow1['headers']['status-code']);
+        $this->assertEquals($createDate, $updatedUpsertRow1['body']['$createdAt']);
+        $this->assertEquals($updateDate, $updatedUpsertRow1['body']['$updatedAt']);
+
+        // Test 3: Upsert new row with both custom dates
+        $upsertRow2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => 'upsert2',
+            'data' => [
+                'string' => 'upsert2_both_dates',
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::write(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ],
+        ]);
+
+        $this->assertEquals(201, $upsertRow2['headers']['status-code']);
+        $this->assertEquals($createDate, $upsertRow2['body']['$createdAt']);
+        $this->assertEquals($updateDate, $upsertRow2['body']['$updatedAt']);
+
+        // Test 4: Upsert existing row with different dates
+        $updatedUpsertRow2 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/upsert2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'upsert2_updated',
+                '$createdAt' => $date3,
+                '$updatedAt' => $date3,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::write(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedUpsertRow2['headers']['status-code']);
+        $this->assertEquals($date3, $updatedUpsertRow2['body']['$createdAt']);
+        $this->assertEquals($date3, $updatedUpsertRow2['body']['$updatedAt']);
+
+        // Test 5: Bulk upsert operations with custom dates
+        $upsertRows = [
+            [
+                '$id' => 'bulk_upsert1',
+                'string' => 'bulk_upsert1_initial',
+                '$createdAt' => $createDate
+            ],
+            [
+                '$id' => 'bulk_upsert2',
+                'string' => 'bulk_upsert2_initial',
+                '$updatedAt' => $updateDate
+            ],
+            [
+                '$id' => 'bulk_upsert3',
+                'string' => 'bulk_upsert3_initial',
+                '$createdAt' => $createDate,
+                '$updatedAt' => $updateDate
+            ],
+            [
+                '$id' => 'bulk_upsert4',
+                'string' => 'bulk_upsert4_initial'
+            ]
+        ];
+
+        // Create rows using bulk upsert
+        $response = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rows' => $upsertRows
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(4, $response['body']['rows']);
+
+        // Test 7: Verify initial bulk upsert state
+        foreach (['bulk_upsert1', 'bulk_upsert3'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($createDate, $row['body']['$createdAt'], "createdAt mismatch for $id");
+        }
+
+        foreach (['bulk_upsert2', 'bulk_upsert3'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($updateDate, $row['body']['$updatedAt'], "updatedAt mismatch for $id");
+        }
+
+        foreach (['bulk_upsert4'] as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertNotEmpty($row['body']['$createdAt'], "createdAt missing for $id");
+            $this->assertNotEmpty($row['body']['$updatedAt'], "updatedAt missing for $id");
+        }
+
+        // Test 8: Bulk upsert update with custom dates
+        $newDate = '2000-04-01T12:00:00.000+00:00';
+        $updateUpsertData = [
+            'data' => [
+                'string' => 'bulk_upsert_updated',
+                '$createdAt' => $newDate,
+                '$updatedAt' => $newDate
+            ],
+            'queries' => [Query::equal('$id', ['bulk_upsert1','bulk_upsert2','bulk_upsert3','bulk_upsert4'])->toString()]
+        ];
+
+        $upsertIds = ['bulk_upsert1', 'bulk_upsert2', 'bulk_upsert3', 'bulk_upsert4'];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateUpsertData);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(4, $response['body']['rows']);
+
+        // Verify updated state
+        foreach ($upsertIds as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals($newDate, $row['body']['$createdAt'], "createdAt mismatch for $id");
+            $this->assertEquals($newDate, $row['body']['$updatedAt'], "updatedAt mismatch for $id");
+            $this->assertEquals('bulk_upsert_updated', $row['body']['string'], "string mismatch for $id");
+        }
+
+        // Test 9: checking by passing null to each
+        $updateUpsertDataNull = [
+            'data' => [
+                'string' => 'bulk_upsert_null_test',
+                '$createdAt' => null,
+                '$updatedAt' => null
+            ],
+            'queries' => [Query::equal('$id', ['bulk_upsert1','bulk_upsert2','bulk_upsert3','bulk_upsert4'])->toString()]
+        ];
+
+        // Use bulk update instead of individual updates
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), $updateUpsertDataNull);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(4, $response['body']['rows']);
+
+        // Verify null handling
+        foreach ($upsertIds as $id) {
+            $row = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertNotEmpty($row['body']['$createdAt'], "createdAt missing for $id");
+            $this->assertNotEmpty($row['body']['$updatedAt'], "updatedAt missing for $id");
+        }
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $tableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
 }
