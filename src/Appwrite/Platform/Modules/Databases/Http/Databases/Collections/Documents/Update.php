@@ -110,14 +110,12 @@ class Update extends Action
         }
 
         // Allowing to add createdAt and updatedAt timestamps if server side(api key)
-        $createdAt = $data['$createdAt'] ?? null;
-        $updatedAt = $data['$updatedAt'] ?? null;
-        if (!$isAPIKey) {
-            if ($createdAt !== null) {
+        if (!$isAPIKey && !$isPrivilegedUser) {
+            if (isset($data['$createdAt'])) {
                 throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" is not allowed');
             }
 
-            if ($updatedAt !== null) {
+            if (isset($data['$updatedAt'])) {
                 throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" is not allowed');
             }
         }

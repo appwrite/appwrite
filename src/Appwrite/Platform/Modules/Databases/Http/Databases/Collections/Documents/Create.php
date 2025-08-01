@@ -332,7 +332,7 @@ class Create extends Action
             }
         };
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -351,15 +351,13 @@ class Create extends Action
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
 
-            // Allowing to add createdAt and updatedAt timestamps if server side(api key)
-            $createdAt = $document['$createdAt'] ?? null;
-            $updatedAt = $document['$updatedAt'] ?? null;
-            if (!$isAPIKey) {
-                if ($createdAt !== null) {
+            // Allowing to add createdAt and updatedAt timestamps if server side(api key
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                if (isset($document['$createdAt'])) {
                     throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" is not allowed');
                 }
 
-                if ($updatedAt !== null) {
+                if (isset($document['$updatedAt'])) {
                     throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" is not allowed');
                 }
             }
