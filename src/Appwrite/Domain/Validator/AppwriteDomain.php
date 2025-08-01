@@ -14,8 +14,16 @@ class AppwriteDomain extends Domain
 
     public function isValid($value): bool
     {
+        if (empty($value)) {
+            return false;
+        }
+
         // Reject domains with leading/trailing whitespace
         if (!is_string($value) || $value !== trim($value)) {
+            return false;
+        }
+
+        if (\filter_var($value, FILTER_VALIDATE_DOMAIN) === false) {
             return false;
         }
 
@@ -27,15 +35,7 @@ class AppwriteDomain extends Domain
             return false;
         }
 
-        if (!parent::isValid($value)) {
-            return false;
-        }
-
         $domain = strtolower($value);
-
-        if ($domain === 'localhost' || $domain === 'api.localhost') {
-            return false;
-        }
 
         $parts = explode('.', $domain);
         $firstLabel = $parts[0];
