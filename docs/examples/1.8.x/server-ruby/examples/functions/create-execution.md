@@ -16,5 +16,5 @@ result = functions.create_execution(
     path: '<PATH>', # optional
     method: ExecutionMethod::GET, # optional
     headers: {}, # optional
-    scheduled_at: '' # optional
+    scheduled_at: '<SCHEDULED_AT>' # optional
 )

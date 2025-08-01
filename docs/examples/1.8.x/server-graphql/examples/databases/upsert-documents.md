@@ -1,7 +1,8 @@
 mutation {
     databasesUpsertDocuments(
         databaseId: "<DATABASE_ID>",
-        collectionId: "<COLLECTION_ID>"
+        collectionId: "<COLLECTION_ID>",
+        documents: []
     ) {
         total
         documents {
