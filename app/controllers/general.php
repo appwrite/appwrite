@@ -1380,7 +1380,7 @@ App::get('/robots.txt')
     ->inject('apiKey')
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
         if (($host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
@@ -1413,7 +1413,7 @@ App::get('/humans.txt')
     ->inject('apiKey')
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
         if (($host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
