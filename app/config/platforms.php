@@ -207,7 +207,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '',
+                'version' => '0.1.0',
                 'url' => '',
                 'package' => '',
                 'enabled' => true,

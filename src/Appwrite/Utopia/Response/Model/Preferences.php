@@ -25,4 +25,13 @@ class Preferences extends Any
     {
         return Response::MODEL_PREFERENCES;
     }
+
+    public function getSampleData(): array
+    {
+        return [
+            'language' => 'en',
+            'timezone' => 'UTC',
+            'darkTheme' => true,
+        ];
+    }
 }

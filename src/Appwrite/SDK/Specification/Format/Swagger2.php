@@ -610,6 +610,7 @@ class Swagger2 extends Format
 
             $required = $model->getRequired();
             $rules = $model->getRules();
+            $examples = [];
 
             $output['definitions'][$model->getType()] = [
                 'description' => $model->getName(),
@@ -632,6 +633,8 @@ class Swagger2 extends Format
                 $type = '';
                 $format = null;
                 $items = null;
+
+                $examples[$name] = $rule['example'] ?? null;
 
                 switch ($rule['type']) {
                     case 'string':
@@ -730,6 +733,12 @@ class Swagger2 extends Format
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
                 }
             }
+
+            if ($model->isAny() && !empty($model->getSampleData())) {
+                $examples = array_merge($examples, $model->getSampleData());
+            }
+
+            $output['definitions'][$model->getType()]['example'] = $examples;
         }
 
         \ksort($output['paths']);
