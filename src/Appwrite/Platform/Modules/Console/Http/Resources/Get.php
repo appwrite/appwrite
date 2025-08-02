@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
+use Appwrite\Domain\Validator\AppwriteDomain;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -13,7 +14,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Domain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -67,10 +67,10 @@ class Get extends Action
         Database $dbForPlatform
     ) {
         if ($type === 'rules') {
-            $validator = new Domain($value);
+            $appwriteDomainValidator = new AppwriteDomain();
 
-            if (!$validator->isValid($value)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+            if (!$appwriteDomainValidator->isValid($value)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Value must be a valid domain name or a valid Appwrite subdomain.');
             }
 
             $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
