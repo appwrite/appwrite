@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Network\Validators;
+namespace Tests\Unit\Domain\Validators;
 
 use Appwrite\Domain\Validator\AppwriteDomain;
 use PHPUnit\Framework\TestCase;

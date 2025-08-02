@@ -79,11 +79,8 @@ class Create extends Action
 
     public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
     {
-        // Domain is already validated by AppwriteDomain validator
-        $domainString = strtolower($domain);
-
-
         $deniedDomains = [
+            'localhost',
             APP_HOSTNAME_INTERNAL
         ];
 
@@ -109,8 +106,14 @@ class Create extends Action
             $deniedDomains[] = $denyListDomain;
         }
 
-        if (\in_array($domainString, $deniedDomains)) {
+        if (\in_array($domain, $deniedDomains)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
+        }
+
+        try {
+            $domain = new Domain($domain);
+        } catch (\Throwable) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
         $collection = match ($resourceType) {
@@ -123,10 +126,10 @@ class Create extends Action
         }
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domainString) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
 
         $status = 'created';
-        if (\str_ends_with($domainString, $functionsDomain) || \str_ends_with($domainString, $sitesDomain)) {
+        if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
             $status = 'verified';
         }
         if ($status === 'created') {
@@ -147,15 +150,15 @@ class Create extends Action
             }
 
             $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
-            if ($validator->isValid($domainString)) {
+            if ($validator->isValid($domain->get())) {
                 $status = 'verifying';
             }
         }
 
         $owner = '';
         if (
-            ($functionsDomain != '' && \str_ends_with($domainString, $functionsDomain)) ||
-            ($sitesDomain != '' && \str_ends_with($domainString, $sitesDomain))
+            ($functionsDomain != '' && \str_ends_with($domain->get(), $functionsDomain)) ||
+            ($sitesDomain != '' && \str_ends_with($domain->get(), $sitesDomain))
         ) {
             $owner = 'Appwrite';
         }
@@ -164,7 +167,7 @@ class Create extends Action
             '$id' => $ruleId,
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
-            'domain' => $domainString,
+            'domain' => $domain->get(),
             'status' => $status,
             'type' => 'redirect',
             'trigger' => 'manual',
@@ -174,7 +177,7 @@ class Create extends Action
             'deploymentResourceId' => $resource->getId(),
             'deploymentResourceInternalId' => $resource->getSequence(),
             'certificateId' => '',
-            'search' => implode(' ', [$ruleId, $domainString]),
+            'search' => implode(' ', [$ruleId, $domain->get()]),
             'owner' => $owner,
             'region' => $project->getAttribute('region')
         ]);
