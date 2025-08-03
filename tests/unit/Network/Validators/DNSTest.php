@@ -57,12 +57,6 @@ class DNSTest extends TestCase
         $this->assertEquals($validator->isValid(false), false);
 
         $result = $validator->isValid('google.com');
-        if ($result === false) {
-            $logs = $validator->getLogs();
-            if (isset($logs['error']) && strpos($logs['error'], 'Failed to receive data') !== false) {
-                $this->markTestSkipped('DNS resolution not available in test environment: ' . $logs['error']);
-            }
-        }
         $this->assertEquals($result, true);
 
         $this->assertEquals($validator->isValid('test1.appwrite.org'), false);
