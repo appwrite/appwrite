@@ -13,10 +13,9 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Mongo;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
-use Utopia\Mongo\Client as MongoClient;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -25,6 +24,7 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Mongo\Client as MongoClient;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
@@ -196,7 +196,7 @@ $register->set('pools', function () {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
-            
+
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
             $dsnPort = $dsn->getPort();
@@ -216,7 +216,7 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
-            
+
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -234,7 +234,7 @@ $register->set('pools', function () {
                     try {
                         $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
                         @$mongo->connect();
-                
+
                         return $mongo;
                     } catch (\Throwable $e) {
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
@@ -262,7 +262,7 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             'mongodb' => new Mongo($resource()),
                             default => null
-                         };
+                        };
 
                         $adapter->setDatabase($dsn->getPath());
                         return $adapter;
@@ -292,7 +292,7 @@ $register->set('pools', function () {
 
         Config::setParam('pools-' . $key, $config);
     }
-   
+
     return $group;
 });
 
@@ -312,7 +312,7 @@ $register->set('db', function () {
             try {
                 $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, true);
                 @$mongo->connect();
-            
+
                 return $mongo;
             } catch (\Throwable $e) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
