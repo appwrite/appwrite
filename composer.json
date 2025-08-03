@@ -55,6 +55,7 @@
         "utopia-php/database": "0.71.*",
         "utopia-php/detector": "0.1.*",
         "utopia-php/domains": "0.8.*",
+        "utopia-php/dns": "dev-feat-add-CAA-to-client as 0.2.99",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.4.*",

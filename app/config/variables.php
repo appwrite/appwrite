@@ -152,6 +152,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_TARGET_CAA',
+                'description' => 'A CAA record value that can be used to validate custom domains. Format: "0 issue \"certainly.com\""',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAINS_DNS',
+                'description' => 'DNS server to use for domain validation. Default: 8.8.8.8',
+                'introduction' => '',
+                'default' => '8.8.8.8',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
                 'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',

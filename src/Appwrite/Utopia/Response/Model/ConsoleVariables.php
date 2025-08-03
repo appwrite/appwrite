@@ -28,6 +28,18 @@ class ConsoleVariables extends Model
             'default' => '',
             'example' => '::1',
         ])
+        ->addRule('_APP_DOMAIN_TARGET_CAA', [
+            'type' => self::TYPE_STRING,
+            'description' => 'CAA target for your Appwrite custom domains.',
+            'default' => '',
+            'example' => '0 issue "certainly.com"',
+        ])
+        ->addRule('_APP_DOMAINS_DNS', [
+            'type' => self::TYPE_STRING,
+            'description' => 'DNS server to use for domain validation.',
+            'default' => '8.8.8.8',
+            'example' => '8.8.8.8',
+        ])
             ->addRule('_APP_STORAGE_LIMIT', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Maximum file size allowed for file upload in bytes.',

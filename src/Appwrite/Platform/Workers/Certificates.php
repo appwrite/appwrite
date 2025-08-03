@@ -314,6 +314,12 @@ class Certificates extends Action
                 $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
             }
 
+            // Add CAA validation if configured
+            $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
+            if (!empty($caaTarget)) {
+                $validators[] = new DNS($caaTarget, DNS::RECORD_CAA);
+            }
+
             // Validate if domain target is properly configured
             if (empty($validators)) {
                 throw new Exception('At least one of domain targets environment variable must be configured.');
