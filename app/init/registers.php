@@ -233,10 +233,10 @@ $register->set('pools', function () {
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
                     try {
                         $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
-                        $mongo->connect();
+                        @$mongo->connect();
+                
                         return $mongo;
                     } catch (\Throwable $e) {
-                        Console::error("MongoDB connection failed: " . $e->getMessage());
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
                     }
                 },
@@ -311,10 +311,10 @@ $register->set('db', function () {
 
             try {
                 $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, true);
-                $mongo->connect();
+                @$mongo->connect();
+            
                 return $mongo;
             } catch (\Throwable $e) {
-                Console::error("MongoDB connection failed: " . $e->getMessage());
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
             }
 

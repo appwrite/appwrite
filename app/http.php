@@ -569,7 +569,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 try {
                     $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
-                    Console::error($th->getMessage());
+                    Console::error('rules ' . $th->getMessage());
                 }
 
                 $sum = count($results);
