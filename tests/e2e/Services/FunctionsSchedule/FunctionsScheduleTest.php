@@ -136,7 +136,17 @@ class FunctionsScheduleTest extends Scope
             $this->assertStringContainsString('path-is-/custom-path', $execution['body']['logs']);
             $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
             $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
+            $this->assertStringContainsString('execution-delay-is-valid', $execution['body']['logs']);
+            $this->assertStringContainsString('scheduled-at-is-valid', $execution['body']['logs']);
+            $this->assertStringContainsString('executed-at-is-valid', $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
+
+            $requestHeaders = array_column($execution['body']['requestHeaders'], 'value', 'name');
+            $this->assertArrayHasKey('x-appwrite-scheduled-at', $requestHeaders);
+            $this->assertArrayHasKey('x-appwrite-executed-at', $requestHeaders);
+            $this->assertArrayHasKey('x-appwrite-execution-delay', $requestHeaders);
+            $this->assertIsNumeric($requestHeaders['x-appwrite-execution-delay']);
+            $this->assertGreaterThan($requestHeaders['x-appwrite-scheduled-at'], $requestHeaders['x-appwrite-executed-at']);
         }, 10000, 500);
 
         /* Test for FAILURE */
