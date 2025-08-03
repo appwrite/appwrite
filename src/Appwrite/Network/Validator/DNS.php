@@ -53,7 +53,7 @@ class DNS extends Validator
             return false;
         }
 
-        $dnsServer = System::getEnv('_APP_DOMAINS_DNS', '');
+        $dnsServer = System::getEnv('_APP_DOMAINS_DNS', '8.8.8.8');
         $dns = new Client($dnsServer);
 
         try {
