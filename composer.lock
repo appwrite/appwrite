@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f540db5a1e36b3345e4f56fc491da3a",
+    "content-hash": "c4ae112243a897e16552c507c5e94097",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "15.0.0",
+            "version": "15.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf"
+                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
-                "reference": "deb97b62e0abed8a4fd5c5d48e77365cf89867cf",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/c438b3885071ac7c0329199dce5e6f6a24dd215b",
+                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b",
                 "shasum": ""
             },
             "require": {
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/15.0.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/15.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2025-05-18T09:47:10+00:00"
+            "time": "2025-08-01T04:50:51+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-primary-attribute",
+            "version": "0.74.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b10964171b2a716d0c9a9f80c1b13b18ccef4ff2"
+                "reference": "065b4812799d57fd2c596f88aadd51644247c7e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b10964171b2a716d0c9a9f80c1b13b18ccef4ff2",
-                "reference": "b10964171b2a716d0c9a9f80c1b13b18ccef4ff2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/065b4812799d57fd2c596f88aadd51644247c7e3",
+                "reference": "065b4812799d57fd2c596f88aadd51644247c7e3",
                 "shasum": ""
             },
             "require": {
@@ -3547,9 +3547,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/primary-attribute"
+                "source": "https://github.com/utopia-php/database/tree/0.74.3"
             },
-            "time": "2025-07-31T14:14:16+00:00"
+            "time": "2025-07-31T15:00:30+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -3997,16 +3997,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.13.6",
+            "version": "0.13.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "610b4e7a6c0d538703e4b2d74605ce5377a36617"
+                "reference": "fc25d50c3a19e701e905c56a9465143cacb02717"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/610b4e7a6c0d538703e4b2d74605ce5377a36617",
-                "reference": "610b4e7a6c0d538703e4b2d74605ce5377a36617",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/fc25d50c3a19e701e905c56a9465143cacb02717",
+                "reference": "fc25d50c3a19e701e905c56a9465143cacb02717",
                 "shasum": ""
             },
             "require": {
@@ -4047,9 +4047,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.13.6"
+                "source": "https://github.com/utopia-php/migration/tree/0.13.7"
             },
-            "time": "2025-07-31T13:51:25+00:00"
+            "time": "2025-07-31T15:08:29+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -4814,16 +4814,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.41.26",
+            "version": "0.41.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "5a13191a5a4bdec8fe1b1180ff67f75c4ff6ac0b"
+                "reference": "083fd2e8163d6a4e59ee971ac6cb97277d831dd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5a13191a5a4bdec8fe1b1180ff67f75c4ff6ac0b",
-                "reference": "5a13191a5a4bdec8fe1b1180ff67f75c4ff6ac0b",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/083fd2e8163d6a4e59ee971ac6cb97277d831dd5",
+                "reference": "083fd2e8163d6a4e59ee971ac6cb97277d831dd5",
                 "shasum": ""
             },
             "require": {
@@ -4859,9 +4859,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.26"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.27"
             },
-            "time": "2025-07-30T06:53:12+00:00"
+            "time": "2025-07-31T10:20:46+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8261,18 +8261,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-primary-attribute",
-            "alias": "0.73.2",
-            "alias_normalized": "0.73.2.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
