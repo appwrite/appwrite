@@ -362,7 +362,8 @@ App::get('/v1/avatars/favicon')
         $client = new Client();
         try {
             $res = $client
-                ->setAllowRedirects(false)
+                ->setAllowRedirects(true)
+                ->setMaxRedirects(5)
                 ->setUserAgent(\sprintf(
                     APP_USERAGENT,
                     System::getEnv('_APP_VERSION', 'UNKNOWN'),
@@ -399,6 +400,11 @@ App::get('/v1/avatars/favicon')
                     $ext = \pathinfo(\parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
 
                     switch ($ext) {
+                        case 'svg':
+                            $space = PHP_INT_MAX;
+                            $outputHref = $absolute;
+                            $outputExt = $ext;
+                            break;
                         case 'ico':
                         case 'png':
                         case 'jpg':
@@ -437,7 +443,8 @@ App::get('/v1/avatars/favicon')
         $client = new Client();
         try {
             $res = $client
-                ->setAllowRedirects(false)
+                ->setAllowRedirects(true)
+                ->setMaxRedirects(5)
                 ->fetch($outputHref);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
@@ -450,13 +457,21 @@ App::get('/v1/avatars/favicon')
         $data = $res->getBody();
 
         if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
-            if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
+            if (empty($data) || str_starts_with($data, '<html') || str_starts_with($data, '<!doc')) {
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/x-icon')
                 ->file($data);
+        }
+
+        if ('svg' == $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
+            $response
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+                ->setContentType('image/svg+xml')
+                ->file($data);
+            return;
         }
 
         $image = new Image($data);
