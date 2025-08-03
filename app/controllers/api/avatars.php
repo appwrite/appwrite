@@ -10,6 +10,7 @@ use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -457,7 +458,7 @@ App::get('/v1/avatars/favicon')
 
         $data = $res->getBody();
 
-        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
+        if ('ico' === $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
             if (
                 empty($data) ||
                 stripos($data, '<html') === 0 ||
@@ -469,10 +470,11 @@ App::get('/v1/avatars/favicon')
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/x-icon')
                 ->file($data);
+            return;
         }
 
-        if ('svg' == $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
-            $sanitizer = new \Enshrined\SvgSanitize\Sanitizer();
+        if ('svg' === $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
+            $sanitizer = new SvgSanitizer();
             $cleanSvg = $sanitizer->sanitize($data);
             if ($cleanSvg === false) {
                 throw new \Exception('SVG sanitization failed');
