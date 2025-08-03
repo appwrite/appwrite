@@ -50,13 +50,13 @@ class DNSTest extends TestCase
 
     public function testCAA(): void
     {
-        $validator = new DNS('0 issue "pki.goog"', DNS::RECORD_CAA);
+        $validator = new DNS('0 issue "digicert.com"', DNS::RECORD_CAA);
 
         $this->assertEquals($validator->isValid(''), false);
         $this->assertEquals($validator->isValid(null), false);
         $this->assertEquals($validator->isValid(false), false);
 
-        $result = $validator->isValid('google.com');
+        $result = $validator->isValid('github.com');
         $this->assertEquals($result, true);
 
         $this->assertEquals($validator->isValid('test1.appwrite.org'), false);

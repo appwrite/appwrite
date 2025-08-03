@@ -257,6 +257,11 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
         }
 
+        $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
+        if (!empty($caaTarget)) {
+            $validators[] = new DNS($caaTarget, DNS::RECORD_CAA);
+        }
+
         if (empty($validators)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
         }

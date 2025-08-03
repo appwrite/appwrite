@@ -188,11 +188,8 @@ class Certificates extends Action
             $certName = ID::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
-            // Validate CAA records after certificate generation to ensure the CA was authorized
-            $this->validateCAARecords($domain->get(), $log);
-
             // Command succeeded, store all data into document
-            $certificate->setAttribute('logs', 'Certificate successfully generated and CAA validated.');
+            $certificate->setAttribute('logs', 'Certificate successfully generated.');
 
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $renewDate);
@@ -317,6 +314,12 @@ class Certificates extends Action
                 $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
             }
 
+            // Add CAA validation if configured
+            $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
+            if (!empty($caaTarget)) {
+                $validators[] = new DNS($caaTarget, DNS::RECORD_CAA);
+            }
+
             // Validate if domain target is properly configured
             if (empty($validators)) {
                 throw new Exception('At least one of domain targets environment variable must be configured.');
@@ -343,29 +346,6 @@ class Certificates extends Action
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
-        }
-    }
-
-    /**
-     * Validate CAA records to ensure the certificate authority (CA) was authorized by the domain owner.
-     *
-     * @param string $domain The domain to validate CAA records for.
-     * @param Log $log The logger instance.
-     * @return void
-     * @throws Exception
-     */
-    private function validateCAARecords(string $domain, Log $log): void
-    {
-        $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
-        if (empty($caaTarget)) {
-            return;
-        }
-
-        $validator = new DNS($caaTarget, DNS::RECORD_CAA);
-        if (!$validator->isValid($domain)) {
-            $log->addTag('caaDomain', $domain);
-            $log->addExtra('caaResponse', $validator->getLogs());
-            throw new Exception('Failed to verify CAA records for domain: ' . $domain);
         }
     }
 
