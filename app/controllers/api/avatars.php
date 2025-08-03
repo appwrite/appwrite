@@ -401,6 +401,7 @@ App::get('/v1/avatars/favicon')
 
                     switch ($ext) {
                         case 'svg':
+                            // SVG icons are prioritized by assigning the maximum possible value.
                             $space = PHP_INT_MAX;
                             $outputHref = $absolute;
                             $outputExt = $ext;
@@ -457,7 +458,11 @@ App::get('/v1/avatars/favicon')
         $data = $res->getBody();
 
         if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
-            if (empty($data) || str_starts_with($data, '<html') || str_starts_with($data, '<!doc')) {
+            if (
+                empty($data) ||
+                stripos($data, '<html') === 0 ||
+                stripos($data, '<!doc') === 0
+            ) {
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
@@ -467,6 +472,11 @@ App::get('/v1/avatars/favicon')
         }
 
         if ('svg' == $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
+            $sanitizer = new \Enshrined\SvgSanitize\Sanitizer();
+            $cleanSvg = $sanitizer->sanitize($data);
+            if ($cleanSvg === false) {
+                throw new \Exception('SVG sanitization failed');
+            }
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/svg+xml')
