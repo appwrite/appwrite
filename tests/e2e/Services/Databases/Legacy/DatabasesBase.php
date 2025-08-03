@@ -1639,6 +1639,7 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
         $this->assertTrue(array_key_exists('$sequence', $document1['body']));
+        $this->assertIsInt($document1['body']['$sequence']);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body']['$collectionId']);
@@ -2876,7 +2877,6 @@ trait DatabasesBase
                 'releaseYear' => 2017,
                 'birthDay' => '1976-06-12 14:12:55',
                 'actors' => [],
-                '$createdAt' => 5 // Should be ignored
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4206,17 +4206,18 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Again Updated Date Test',
-                '$createdAt' => '2022-08-01 13:09:23.040', // $createdAt is not updatable
-                '$updatedAt' => '2022-08-01 13:09:23.050' // system will update it not api
+                '$createdAt' => '2022-08-01 13:09:23.040',
+                '$updatedAt' => '2022-08-01 13:09:23.050'
             ]
         ]);
+        if ($this->getSide() === 'client') {
+            $this->assertEquals($document['headers']['status-code'], 400);
+        } else {
+            $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
+            $this->assertEquals($document['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));
+            $this->assertEquals($document['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
 
-        $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
-        $this->assertEquals($document['body']['$createdAt'], $createdAt);
-        $this->assertNotEquals($document['body']['$createdAt'], '2022-08-01 13:09:23.040');
-        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
-        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAtSecond);
-        $this->assertNotEquals($document['body']['$updatedAt'], '2022-08-01 13:09:23.050');
+        }
 
         return $data;
     }

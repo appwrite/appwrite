@@ -55,7 +55,7 @@ class Get extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'tables.getUsage',
+                    replaceWith: 'grids.getTableUsage',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

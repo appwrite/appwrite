@@ -58,7 +58,7 @@ class Update extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'tables.update',
+                    replaceWith: 'grids.updateTable',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -85,7 +85,7 @@ class Update extends Action
             throw new Exception($this->getNotFoundException());
         }
 
-        $permissions ??= $collection->getPermissions() ?? [];
+        $permissions ??= $collection->getPermissions();
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
