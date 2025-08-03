@@ -480,7 +480,7 @@ App::get('/v1/avatars/favicon')
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/svg+xml')
-                ->file($data);
+                ->file($cleanSvg);
             return;
         }
 
