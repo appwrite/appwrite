@@ -475,9 +475,8 @@ App::get('/v1/avatars/favicon')
 
         if ('svg' === $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
             $sanitizer = new SvgSanitizer();
-            $cleanSvg = $sanitizer
-                ->minify()
-                ->sanitize($data);
+            $sanitizer->minify(true);
+            $cleanSvg = $sanitizer->sanitize($data);
             if ($cleanSvg === false) {
                 throw new \Exception('SVG sanitization failed');
             }
