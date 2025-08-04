@@ -375,15 +375,11 @@ App::get('/v1/avatars/favicon')
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        if ($res->getStatusCode() !== 200) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-        }
-
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
         @$doc->loadHTML($res->getBody());
 
-        $links = $doc->getElementsByTagName('link');
+        $links = $doc->getElementsByTagName('link') ?? [];
         $outputHref = '';
         $outputExt = '';
         $space = 0;
