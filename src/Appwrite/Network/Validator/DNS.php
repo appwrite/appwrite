@@ -8,10 +8,10 @@ use Utopia\Validator;
 
 class DNS extends Validator
 {
-    public const RECORD_A = 'a';
-    public const RECORD_AAAA = 'aaaa';
-    public const RECORD_CNAME = 'cname';
-    public const RECORD_CAA = 'caa'; // You can provide domain only (as $target) for CAA validation
+    public const RECORD_A = 'A';
+    public const RECORD_AAAA = 'AAAA';
+    public const RECORD_CNAME = 'CNAME';
+    public const RECORD_CAA = 'CAA'; // You can provide domain only (as $target) for CAA validation
 
     /**
      * @var mixed
@@ -57,7 +57,7 @@ class DNS extends Validator
         $dns = new Client($dnsServer);
 
         try {
-            $query = $dns->query($value, strtoupper($this->type));
+            $query = $dns->query($value, $this->type);
             $this->logs = $query;
         } catch (\Exception $e) {
             $this->logs = ['error' => $e->getMessage()];
@@ -65,10 +65,21 @@ class DNS extends Validator
         }
 
         if (empty($query)) {
+            // No CAA records means anyone can issue certificate
+            if ($this->type === self::RECORD_CAA) {
+                return true;
+            }
+
             return false;
         }
 
+        $caaCount = 0;
+
         foreach ($query as $record) {
+            if ($record->getTypeName() === self::RECORD_CAA) {
+                $caaCount++;
+            }
+
             // CAA validation only needs to ensure domain
             if ($this->type === self::RECORD_CAA) {
                 // Extract domain; comments showcase extraction steps in most complex scenario
@@ -85,6 +96,11 @@ class DNS extends Validator
             if ($record->getRdata() === $this->target) {
                 return true;
             }
+        }
+
+        if ($this->type === self::RECORD_CAA && $caaCount === 0) {
+            // No CAA records, means anyone can issue certificate
+            return true;
         }
 
         return false;

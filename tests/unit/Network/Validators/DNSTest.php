@@ -52,10 +52,7 @@ class DNSTest extends TestCase
     {
         $validator = new DNS('digicert.com', DNS::RECORD_CAA);
         $this->assertEquals($validator->isValid('github.com'), true);
-        $this->assertEquals($validator->isValid(''), false);
-        $this->assertEquals($validator->isValid(null), false);
-        $this->assertEquals($validator->isValid(false), false);
-        $this->assertEquals($validator->isValid('test1.appwrite.org'), false);
+        $this->assertEquals($validator->isValid('test1.appwrite.org'), true);
 
         $validator = new DNS('0 issue "digicert.com"', DNS::RECORD_CAA);
         $this->assertEquals($validator->isValid('github.com'), true);
@@ -67,6 +64,14 @@ class DNSTest extends TestCase
         $this->assertEquals($validator->isValid('github.com'), false);
 
         $validator = new DNS('letsencrypt.org', DNS::RECORD_CAA);
-        $this->assertEquals($validator->isValid('test2.appwrite.org'), false);
+        $this->assertEquals($validator->isValid('github.com'), false);
+
+        // Valid becasue no CAA record configured
+        $validator = new DNS('anything.com', DNS::RECORD_CAA);
+        $this->assertEquals($validator->isValid('cloud.appwrite.io'), true);
+
+        // Valid becasue no CAA record configured
+        $validator = new DNS('something.org', DNS::RECORD_CAA);
+        $this->assertEquals($validator->isValid('cloud.appwrite.io'), true);
     }
 }
