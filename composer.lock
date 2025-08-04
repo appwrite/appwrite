@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d36ad770ee5e4ea6e3bb0206c2c584ff",
+    "content-hash": "65958cc5b58b8f32a044bb8cc33cbeef",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3598,16 +3598,16 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "dev-feat-add-CAA-to-client",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "a7d45e4c5dfc7020c0467de9587ccd7e15488206"
+                "reference": "8fd4161bc3a8021a670c1101b40f6b09a97f1a54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/a7d45e4c5dfc7020c0467de9587ccd7e15488206",
-                "reference": "a7d45e4c5dfc7020c0467de9587ccd7e15488206",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/8fd4161bc3a8021a670c1101b40f6b09a97f1a54",
+                "reference": "8fd4161bc3a8021a670c1101b40f6b09a97f1a54",
                 "shasum": ""
             },
             "require": {
@@ -3648,9 +3648,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/feat-add-CAA-to-client"
+                "source": "https://github.com/utopia-php/dns/tree/0.3.0"
             },
-            "time": "2025-08-03T18:46:13+00:00"
+            "time": "2025-08-04T11:05:53+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8317,18 +8317,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/dns",
-            "version": "dev-feat-add-CAA-to-client",
-            "alias": "0.2.99",
-            "alias_normalized": "0.2.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/dns": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8352,5 +8343,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

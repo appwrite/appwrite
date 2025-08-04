@@ -256,10 +256,8 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
             $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
         }
-
-        $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
-        if (!empty($caaTarget)) {
-            $validators[] = new DNS($caaTarget, DNS::RECORD_CAA);
+        if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
+            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
         }
 
         if (empty($validators)) {

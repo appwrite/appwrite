@@ -71,8 +71,8 @@ App::get('/v1/console/variables')
             '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),
             '_APP_DOMAIN_TARGET_AAAA' => System::getEnv('_APP_DOMAIN_TARGET_AAAA'),
             '_APP_DOMAIN_TARGET_A' => System::getEnv('_APP_DOMAIN_TARGET_A'),
-            '_APP_DOMAIN_TARGET_CAA' => System::getEnv('_APP_DOMAIN_TARGET_CAA'),
-            '_APP_DOMAINS_DNS' => System::getEnv('_APP_DOMAINS_DNS'),
+            // Combine CAA domain with most common flags and tag (no parameters)
+            '_APP_DOMAIN_TARGET_CAA' => '0 issue "' + System::getEnv('_APP_DOMAIN_TARGET_CAA') + '"',
             '_APP_STORAGE_LIMIT' => +System::getEnv('_APP_STORAGE_LIMIT'),
             '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),

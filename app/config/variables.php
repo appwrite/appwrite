@@ -153,7 +153,7 @@ return [
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET_CAA',
-                'description' => 'A CAA record value that can be used to validate custom domains. Format: "0 issue \"certainly.com\""',
+                'description' => 'A CAA record domain that can be used to validate custom domains. Value should be domain\'s hostname.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -161,7 +161,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_DOMAINS_DNS',
+                'name' => '_APP_DNS',
                 'description' => 'DNS server to use for domain validation. Default: 8.8.8.8',
                 'introduction' => '',
                 'default' => '8.8.8.8',

@@ -11,7 +11,7 @@ class DNS extends Validator
     public const RECORD_A = 'a';
     public const RECORD_AAAA = 'aaaa';
     public const RECORD_CNAME = 'cname';
-    public const RECORD_CAA = 'caa';
+    public const RECORD_CAA = 'caa'; // Only provide domain as $target for CAA validation
 
     /**
      * @var mixed
@@ -53,7 +53,7 @@ class DNS extends Validator
             return false;
         }
 
-        $dnsServer = System::getEnv('_APP_DOMAINS_DNS', '8.8.8.8');
+        $dnsServer = System::getEnv('_APP_DNS', '8.8.8.8');
         $dns = new Client($dnsServer);
 
         try {
@@ -69,6 +69,20 @@ class DNS extends Validator
         }
 
         foreach ($query as $record) {
+            // CAA validation only needs to ensure domain
+            if ($this->type === self::RECORD_CAA) {
+                // Original: 255 issuewild "certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600"
+                // Extracted: certainly.com
+                $rdata = $record->getRdata();
+                $rdata = \explode(' ', $rdata, 3)[2] ?? '';
+                $rdata = \trim('"');
+                $rdata = \explode(';', $rdata, 2)[0] ?? '';
+
+                if ($rdata === $this->target) {
+                    return true;
+                }
+            }
+
             if ($record->getRdata() === $this->target) {
                 return true;
             }
