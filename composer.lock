@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f540db5a1e36b3345e4f56fc491da3a",
+    "content-hash": "f770275cec58c4afcf7765a293aa3c20",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-primary-attribute",
+            "version": "dev-fix-encode-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ab1d5c826e8909f8f7406f0e36b345af86b29c44"
+                "reference": "8735c8fce78d64bb64f134dc2207ea684c9848a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ab1d5c826e8909f8f7406f0e36b345af86b29c44",
-                "reference": "ab1d5c826e8909f8f7406f0e36b345af86b29c44",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/8735c8fce78d64bb64f134dc2207ea684c9848a0",
+                "reference": "8735c8fce78d64bb64f134dc2207ea684c9848a0",
                 "shasum": ""
             },
             "require": {
@@ -3547,9 +3547,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/primary-attribute"
+                "source": "https://github.com/utopia-php/database/tree/fix-encode-permissions"
             },
-            "time": "2025-08-03T06:07:59+00:00"
+            "time": "2025-08-03T15:04:19+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8264,7 +8264,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-primary-attribute",
+            "version": "dev-fix-encode-permissions",
             "alias": "0.73.2",
             "alias_normalized": "0.73.2.0"
         }
