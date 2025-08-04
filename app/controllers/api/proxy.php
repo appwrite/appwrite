@@ -256,9 +256,6 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
             $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
         }
-        if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
-            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
-        }
 
         if (empty($validators)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
@@ -287,6 +284,19 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
+        }
+
+        // Ensure CAA won't block certificate issuance
+        if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
+            $validationStart = \microtime(true);
+            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+            if (!$validator->isValid($domain->get())) {
+                $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
+                $log->addTag('dnsDomain', $domain->get());
+                $error = $validator->getDescription();
+                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'Domain verification failed because CAA records do not allow certainly.com to issue certificates.');
+            }
         }
 
         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));

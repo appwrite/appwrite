@@ -313,9 +313,6 @@ class Certificates extends Action
             if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
                 $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
             }
-            if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
-            }
 
             // Validate if domain target is properly configured
             if (empty($validators)) {
@@ -339,6 +336,19 @@ class Certificates extends Action
                 $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
                 throw new Exception('Failed to verify domain DNS records.');
+            }
+
+            // Ensure CAA won't block certificate issuance
+            if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
+                $validationStart = \microtime(true);
+                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+                if (!$validator->isValid($domain->get())) {
+                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
+                    $log->addTag('dnsDomain', $domain->get());
+                    $error = $validator->getDescription();
+                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+                    throw new Exception('Failed to verify domain DNS records. CAA records do not allow certificates from certainly.com to issue certificates.');
+                }
             }
         } else {
             // Main domain validation
