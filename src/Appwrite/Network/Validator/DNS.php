@@ -11,7 +11,7 @@ class DNS extends Validator
     public const RECORD_A = 'a';
     public const RECORD_AAAA = 'aaaa';
     public const RECORD_CNAME = 'cname';
-    public const RECORD_CAA = 'caa'; // Only provide domain as $target for CAA validation
+    public const RECORD_CAA = 'caa'; // You can provide domain only (as $target) for CAA validation
 
     /**
      * @var mixed
@@ -75,7 +75,7 @@ class DNS extends Validator
                 // Extracted: certainly.com
                 $rdata = $record->getRdata();
                 $rdata = \explode(' ', $rdata, 3)[2] ?? '';
-                $rdata = \trim('"');
+                $rdata = \trim($rdata, '"');
                 $rdata = \explode(';', $rdata, 2)[0] ?? '';
 
                 if ($rdata === $this->target) {
