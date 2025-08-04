@@ -10,6 +10,7 @@ use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -362,7 +363,8 @@ App::get('/v1/avatars/favicon')
         $client = new Client();
         try {
             $res = $client
-                ->setAllowRedirects(false)
+                ->setAllowRedirects(true)
+                ->setMaxRedirects(5)
                 ->setUserAgent(\sprintf(
                     APP_USERAGENT,
                     System::getEnv('_APP_VERSION', 'UNKNOWN'),
@@ -399,6 +401,12 @@ App::get('/v1/avatars/favicon')
                     $ext = \pathinfo(\parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
 
                     switch ($ext) {
+                        case 'svg':
+                            // SVG icons are prioritized by assigning the maximum possible value.
+                            $space = PHP_INT_MAX;
+                            $outputHref = $absolute;
+                            $outputExt = $ext;
+                            break;
                         case 'ico':
                         case 'png':
                         case 'jpg':
@@ -437,7 +445,8 @@ App::get('/v1/avatars/favicon')
         $client = new Client();
         try {
             $res = $client
-                ->setAllowRedirects(false)
+                ->setAllowRedirects(true)
+                ->setMaxRedirects(5)
                 ->fetch($outputHref);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
@@ -449,14 +458,33 @@ App::get('/v1/avatars/favicon')
 
         $data = $res->getBody();
 
-        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
-            if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
+        if ('ico' === $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
+            if (
+                empty($data) ||
+                stripos($data, '<html') === 0 ||
+                stripos($data, '<!doc') === 0
+            ) {
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/x-icon')
                 ->file($data);
+            return;
+        }
+
+        if ('svg' === $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
+            $sanitizer = new SvgSanitizer();
+            $sanitizer->minify(true);
+            $cleanSvg = $sanitizer->sanitize($data);
+            if ($cleanSvg === false) {
+                throw new \Exception('SVG sanitization failed');
+            }
+            $response
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+                ->setContentType('image/svg+xml')
+                ->file($cleanSvg);
+            return;
         }
 
         $image = new Image($data);
