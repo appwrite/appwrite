@@ -73,13 +73,7 @@ class DNS extends Validator
             return false;
         }
 
-        $caaCount = 0;
-
         foreach ($query as $record) {
-            if ($record->getTypeName() === self::RECORD_CAA) {
-                $caaCount++;
-            }
-
             // CAA validation only needs to ensure domain
             if ($this->type === self::RECORD_CAA) {
                 // Extract domain; comments showcase extraction steps in most complex scenario
@@ -96,11 +90,6 @@ class DNS extends Validator
             if ($record->getRdata() === $this->target) {
                 return true;
             }
-        }
-
-        if ($this->type === self::RECORD_CAA && $caaCount === 0) {
-            // No CAA records, means anyone can issue certificate
-            return true;
         }
 
         return false;
