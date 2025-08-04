@@ -71,12 +71,11 @@ class DNS extends Validator
         foreach ($query as $record) {
             // CAA validation only needs to ensure domain
             if ($this->type === self::RECORD_CAA) {
-                // Original: 255 issuewild "certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600"
-                // Extracted: certainly.com
-                $rdata = $record->getRdata();
-                $rdata = \explode(' ', $rdata, 3)[2] ?? '';
-                $rdata = \trim($rdata, '"');
-                $rdata = \explode(';', $rdata, 2)[0] ?? '';
+                // Extract domain; comments showcase extraction steps in most complex scenario
+                $rdata = $record->getRdata(); // 255 issuewild "certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600"
+                $rdata = \explode(' ', $rdata, 3)[2] ?? ''; // "certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600"
+                $rdata = \trim($rdata, '"'); // certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600
+                $rdata = \explode(';', $rdata, 2)[0] ?? ''; // certainly.com
 
                 if ($rdata === $this->target) {
                     return true;
