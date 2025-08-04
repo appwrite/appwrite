@@ -101,6 +101,9 @@ class Create extends DocumentCreate
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
 }

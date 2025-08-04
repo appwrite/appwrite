@@ -122,10 +122,12 @@ class Create extends Action
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
-
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -417,6 +419,16 @@ class Create extends Action
                 $this->getSdkGroup() => $documents
             ]), $this->getBulkResponseModel());
 
+            $this->triggerQueuesForBulkDocuments(
+                'databases.[databaseId].collections.[collectionId].documents.[documentId].create',
+                $database,
+                $collection,
+                $documents,
+                $queueForEvents,
+                $queueForRealtime,
+                $queueForFunctions,
+                $queueForWebhooks
+            );
             return;
         }
 

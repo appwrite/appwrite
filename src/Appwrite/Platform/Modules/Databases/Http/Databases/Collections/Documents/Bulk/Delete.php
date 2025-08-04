@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
+use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -73,10 +74,14 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
             ->inject('plan')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
@@ -134,5 +139,16 @@ class Delete extends Action
             'total' => $modified,
             $this->getSdkGroup() => $documents,
         ]), $this->getResponseModel());
+
+        $this->triggerQueuesForBulkDocuments(
+            'databases.[databaseId].collections.[collectionId].documents.[documentId].delete',
+            $database,
+            $collection,
+            $documents,
+            $queueForEvents,
+            $queueForRealtime,
+            $queueForFunctions,
+            $queueForWebhooks
+        );
     }
 }

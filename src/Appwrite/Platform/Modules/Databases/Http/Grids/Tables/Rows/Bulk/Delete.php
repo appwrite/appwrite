@@ -60,6 +60,10 @@ class Delete extends DocumentsDelete
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
             ->inject('plan')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
 }
