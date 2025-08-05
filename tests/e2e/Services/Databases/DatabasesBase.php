@@ -5664,7 +5664,27 @@ trait DatabasesBase
         ]), ['min' => 7]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
-        // Test type error on non-numeric attribut
+        // Test min limit exceeded with custom value
+        $err = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/decrement', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'value' => 3,
+            'min' => 5,
+        ]);
+        $this->assertEquals(400, $err['headers']['status-code']);
+
+        // Test min limit 0
+        $err = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/decrement', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'value' => 10,
+            'min' => 0,
+        ]);
+        $this->assertEquals(400, $err['headers']['status-code']);
+
+        // Test type error on non-numeric attribute
         $typeErr = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
