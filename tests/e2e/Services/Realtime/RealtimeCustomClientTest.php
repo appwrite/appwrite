@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
+use Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -12,6 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 class RealtimeCustomClientTest extends Scope
 {
@@ -996,7 +998,12 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'data' => [
-                'name' => 'Marvel Hero'
+                'name' => 'Marvel Hero',
+                '$permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1313,7 +1320,7 @@ class RealtimeCustomClientTest extends Scope
                 ],
                 [
                     '$id' => ID::unique(),
-                    'name' => 'User2-1',
+                    'name' => 'User2',
                     '$permissions' => [
                         Permission::read(Role::user($user2Id)),
                     ],
@@ -1384,21 +1391,26 @@ class RealtimeCustomClientTest extends Scope
         }
 
 
-        // Perform bulk update
+        // Perform bulk update(making it only accessible by user1)
         $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$actorsId}/documents/", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'data' => [
-                'name' => 'Marvel Hero'
+                'name' => 'Marvel Hero',
+                '$permissions' => [
+                    Permission::read(Role::user($user1Id)),
+                    Permission::update(Role::user($user1Id)),
+                    Permission::delete(Role::user($user1Id)),
+                ]
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Receive and assert for client1 - should receive 3 individual document update events
-        for ($i = 0; $i < 3; $i++) {
+        // Receive and assert for client1
+        for ($i = 0; $i < 5; $i++) {
             $response1 = json_decode($client1->receive(), true);
             $this->assertArrayHasKey('type', $response1);
             $this->assertArrayHasKey('data', $response1);
@@ -1427,8 +1439,112 @@ class RealtimeCustomClientTest extends Scope
             $this->assertArrayHasKey('$permissions', $response1['data']['payload']);
         }
 
-        // Receive and assert for client2 - should receive 4 individual document update events
-        for ($i = 0; $i < 4; $i++) {
+        // client2 shouldn't receive any event and lead to timeout
+        try {
+            json_decode($client2->receive(), true);
+            $this->fail('Expected TimeoutException was not thrown.');
+        } catch (Exception $e) {
+            $this->assertInstanceOf(TimeoutException::class, $e);
+        }
+
+        // Perform bulk update(making it only accessible by user2)
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$actorsId}/documents/", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'name' => 'Marvel Hero',
+                '$permissions' => [
+                    Permission::read(Role::user($user2Id)),
+                    Permission::update(Role::user($user2Id)),
+                    Permission::delete(Role::user($user2Id)),
+                ]
+            ],
+        ]);
+
+        // Receive and assert for client2
+        for ($i = 0; $i < 5; $i++) {
+            $response2 = json_decode($client2->receive(), true);
+            $this->assertArrayHasKey('type', $response2);
+            $this->assertArrayHasKey('data', $response2);
+            $this->assertEquals('event', $response2['type']);
+            $this->assertNotEmpty($response2['data']);
+            $this->assertArrayHasKey('timestamp', $response2['data']);
+            $this->assertCount(6, $response2['data']['channels']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response2['data']['payload']['$id']}.update", $response2['data']['events']);
+            $this->assertContains("databases.*.collections.*.documents.*.update", $response2['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response2['data']['events']);
+            $this->assertContains("databases.*.collections.{$actorsId}.documents.*.update", $response2['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response2['data']['events']);
+            $this->assertContains("databases.*.collections.*.documents.*", $response2['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response2['data']['events']);
+            $this->assertContains("databases.*.collections.{$actorsId}.documents.*", $response2['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response2['data']['events']);
+            $this->assertContains("databases.*.collections.*", $response2['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*", $response2['data']['events']);
+            $this->assertContains("databases.*.collections.{$actorsId}", $response2['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response2['data']['events']);
+            $this->assertContains("databases.*", $response2['data']['events']);
+            $this->assertNotEmpty($response2['data']['payload']);
+            $this->assertIsArray($response2['data']['payload']);
+            $this->assertArrayHasKey('$id', $response2['data']['payload']);
+            $this->assertEquals('Marvel Hero', $response2['data']['payload']['name']);
+            $this->assertArrayHasKey('$permissions', $response2['data']['payload']);
+        }
+
+        // client1 shouldn't receive any event and lead to timeout
+        try {
+            json_decode($client1->receive(), true);
+            $this->fail('Expected TimeoutException was not thrown.');
+        } catch (Exception $e) {
+            $this->assertInstanceOf(TimeoutException::class, $e);
+        }
+
+        // Updating the permission for both the users
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$actorsId}/documents/", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'name' => 'Marvel Hero',
+                '$permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ]
+            ],
+        ]);
+        // both user1 and user2 should receive the event
+        for ($i = 0; $i < 5; $i++) {
+            $response1 = json_decode($client1->receive(), true);
+            $this->assertArrayHasKey('type', $response1);
+            $this->assertArrayHasKey('data', $response1);
+            $this->assertEquals('event', $response1['type']);
+            $this->assertNotEmpty($response1['data']);
+            $this->assertArrayHasKey('timestamp', $response1['data']);
+            $this->assertCount(6, $response1['data']['channels']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response1['data']['payload']['$id']}.update", $response1['data']['events']);
+            $this->assertContains("databases.*.collections.*.documents.*.update", $response1['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response1['data']['events']);
+            $this->assertContains("databases.*.collections.{$actorsId}.documents.*.update", $response1['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response1['data']['events']);
+            $this->assertContains("databases.*.collections.*.documents.*", $response1['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response1['data']['events']);
+            $this->assertContains("databases.*.collections.{$actorsId}.documents.*", $response1['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response1['data']['events']);
+            $this->assertContains("databases.*.collections.*", $response1['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*", $response1['data']['events']);
+            $this->assertContains("databases.*.collections.{$actorsId}", $response1['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response1['data']['events']);
+            $this->assertContains("databases.*", $response1['data']['events']);
+            $this->assertNotEmpty($response1['data']['payload']);
+            $this->assertIsArray($response1['data']['payload']);
+            $this->assertArrayHasKey('$id', $response1['data']['payload']);
+            $this->assertEquals('Marvel Hero', $response1['data']['payload']['name']);
+            $this->assertArrayHasKey('$permissions', $response1['data']['payload']);
+
             $response2 = json_decode($client2->receive(), true);
             $this->assertArrayHasKey('type', $response2);
             $this->assertArrayHasKey('data', $response2);
@@ -1466,8 +1582,8 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Receive and assert for client1 - should receive 3 individual document delete events
-        for ($i = 0; $i < 3; $i++) {
+        // Receive and assert for client1
+        for ($i = 0; $i < 5; $i++) {
             $response1 = json_decode($client1->receive(), true);
             $this->assertArrayHasKey('type', $response1);
             $this->assertArrayHasKey('data', $response1);
@@ -1497,8 +1613,8 @@ class RealtimeCustomClientTest extends Scope
             $this->assertIsArray($response1['data']['payload']['$permissions']);
         }
 
-        // Receive and assert for client2 - should receive 4 individual document delete events
-        for ($i = 0; $i < 4; $i++) {
+        // Receive and assert for client2
+        for ($i = 0; $i < 5; $i++) {
             $response2 = json_decode($client2->receive(), true);
             $this->assertArrayHasKey('type', $response2);
             $this->assertArrayHasKey('data', $response2);
