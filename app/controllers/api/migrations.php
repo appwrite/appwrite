@@ -307,6 +307,7 @@ App::post('/v1/migrations/nhost')
     });
 
 App::post('/v1/migrations/csv/imports')
+    ->alias('/v1/migrations/csv')
     ->groups(['api', 'migrations'])
     ->desc('Import documents from a CSV')
     ->label('scope', 'migrations.write')
@@ -332,10 +333,10 @@ App::post('/v1/migrations/csv/imports')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('deviceForFiles')
-    ->inject('deviceForImports')
+    ->inject('deviceForMigrations')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForImports, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForMigrations, Event $queueForEvents, Migration $queueForMigrations) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -361,7 +362,7 @@ App::post('/v1/migrations/csv/imports')
         $hasCompression = $compression !== Compression::NONE;
 
         $migrationId = ID::unique();
-        $newPath = $deviceForImports->getPath($migrationId . '_' . $fileId . '.csv');
+        $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.csv');
 
         if ($hasEncryption || $hasCompression) {
             $source = $deviceForFiles->read($path);
@@ -391,14 +392,14 @@ App::post('/v1/migrations/csv/imports')
             }
 
             // manual write after decryption and/or decompression
-            if (! $deviceForImports->write($newPath, $source, 'text/csv')) {
+            if (! $deviceForMigrations->write($newPath, $source, 'text/csv')) {
                 throw new \Exception("Unable to copy file");
             }
-        } elseif (! $deviceForFiles->transfer($path, $newPath, $deviceForImports)) {
+        } elseif (! $deviceForFiles->transfer($path, $newPath, $deviceForMigrations)) {
             throw new \Exception("Unable to copy file");
         }
 
-        $fileSize = $deviceForImports->getFileSize($newPath);
+        $fileSize = $deviceForMigrations->getFileSize($newPath);
         $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
@@ -452,12 +453,13 @@ App::post('/v1/migrations/csv/exports')
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID where the exported CSV will be stored.')
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.')
+    ->param('columns', [], new ArrayList(new Text(255)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $resourceId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (string $bucketId, string $resourceId, array $columns, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Migration $queueForMigrations) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -484,6 +486,7 @@ App::post('/v1/migrations/csv/exports')
             'errors' => [],
             'options' => [
                 'bucketId' => $bucketId,
+                'columns' => $columns,
             ],
         ]));
 

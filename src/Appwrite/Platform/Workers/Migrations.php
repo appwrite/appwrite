@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Realtime;
+use Appwrite\Migration\CSV as DestinationCSV;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -34,7 +35,7 @@ class Migrations extends Action
 
     protected Database $dbForPlatform;
 
-    protected Device $deviceForImports;
+    protected Device $deviceForMigrations;
 
     protected Document $project;
 
@@ -68,17 +69,17 @@ class Migrations extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForRealtime')
-            ->inject('deviceForImports')
+            ->inject('deviceForMigrations')
             ->callback($this->action(...));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForMigrations): void
     {
         $payload = $message->getPayload() ?? [];
-        $this->deviceForImports = $deviceForImports;
+        $this->deviceForMigrations = $deviceForMigrations;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -146,7 +147,7 @@ class Migrations extends Action
             CSV::getName() => new CSV(
                 $resourceId,
                 $migrationOptions['path'],
-                $this->deviceForImports,
+                $this->deviceForMigrations,
                 $this->dbForProject
             ),
             default => throw new \Exception('Invalid source type'),
@@ -173,11 +174,9 @@ class Migrations extends Action
                 Config::getParam('collections', [])['databases']['collections'],
             ),
             DestinationCSV::getName() => new DestinationCSV(
-                $this->project,
-                $this->dbForProject,
+                $this->deviceForMigrations,
                 $migration->getAttribute('resourceId'),
-                $migration->getAttribute('options', []),
-                $this->deviceForImports
+                $migration->getAttribute('options', [])['columns'] ?? [],
             ),
             default => throw new \Exception('Invalid destination type'),
         };
@@ -210,7 +209,6 @@ class Migrations extends Action
 
         // set the errors back without trace
         $clonedMigrationDocument->setAttribute('errors', $errorMessages);
-
 
         /** Trigger Realtime Events */
         $queueForRealtime

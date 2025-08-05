@@ -341,7 +341,7 @@ Server::setResource('deviceForSites', function (Document $project, Telemetry $te
     return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 
-Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
+Server::setResource('deviceForMigrations', function (Document $project, Telemetry $telemetry) {
     return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 

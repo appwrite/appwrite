@@ -514,7 +514,7 @@ App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
 App::setResource('deviceForSites', function ($project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
-App::setResource('deviceForImports', function ($project, Telemetry $telemetry) {
+App::setResource('deviceForMigrations', function ($project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
