@@ -293,8 +293,16 @@ abstract class Action extends UtopiaAction
      * @param Event $queueForWebhooks
      * @return void
      */
-    final protected function triggerQueuesForBulkDocuments(string $event, Document $database, Document $collection, array $documents, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks)
-    {
+    protected function triggerBulk(
+        string $event,
+        Document $database,
+        Document $collection,
+        array $documents,
+        Event $queueForEvents,
+        Event $queueForRealtime,
+        Event $queueForFunctions,
+        Event $queueForWebhooks
+    ): void {
         $queueForEvents
             ->setEvent($event)
             ->setParam('databaseId', $database->getId())

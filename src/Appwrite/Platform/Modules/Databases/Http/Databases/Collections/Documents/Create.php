@@ -419,7 +419,7 @@ class Create extends Action
                 $this->getSdkGroup() => $documents
             ]), $this->getBulkResponseModel());
 
-            $this->triggerQueuesForBulkDocuments(
+            $this->triggerBulk(
                 'databases.[databaseId].collections.[collectionId].documents.[documentId].create',
                 $database,
                 $collection,

@@ -77,15 +77,15 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
-            ->inject('plan')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
+    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -164,7 +164,7 @@ class Update extends Action
             $this->getSdkGroup() => $documents
         ]), $this->getResponseModel());
 
-        $this->triggerQueuesForBulkDocuments(
+        $this->triggerBulk(
             'databases.[databaseId].collections.[collectionId].documents.[documentId].update',
             $database,
             $collection,

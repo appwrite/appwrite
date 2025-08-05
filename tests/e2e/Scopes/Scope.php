@@ -182,9 +182,9 @@ abstract class Scope extends TestCase
     /**
      * @return array
      */
-    public function getUser(bool $override = false): array
+    public function getUser(bool $fresh = false): array
     {
-        if (!$override && isset(self::$user[$this->getProject()['$id']])) {
+        if (!$fresh && isset(self::$user[$this->getProject()['$id']])) {
             return self::$user[$this->getProject()['$id']];
         }
 
