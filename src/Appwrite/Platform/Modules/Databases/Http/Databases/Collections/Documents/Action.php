@@ -295,17 +295,19 @@ abstract class Action extends UtopiaAction
      */
     final protected function triggerQueuesForBulkDocuments(string $event, Document $database, Document $collection, array $documents, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks)
     {
+        $queueForEvents
+            ->setEvent($event)
+            ->setParam('databaseId', $database->getId())
+            ->setContext('database', $database)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setContext($this->getCollectionsEventsContext(), $collection);
+
         foreach ($documents as $document) {
             $queueForEvents
-                ->setEvent($event)
-                ->setParam('databaseId', $database->getId())
-                ->setContext('database', $database)
-                ->setParam('collectionId', $collection->getId())
-                ->setParam('tableId', $collection->getId())
                 ->setParam('documentId', $document->getId())
                 ->setParam('rowId', $document->getId())
-                ->setPayload($document->getArrayCopy())
-                ->setContext($this->getCollectionsEventsContext(), $collection);
+                ->setPayload($document->getArrayCopy());
 
             $queueForRealtime
                 ->from($queueForEvents)
