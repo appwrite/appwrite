@@ -286,19 +286,6 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
         }
 
-        // Ensure CAA won't block certificate issuance
-        if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
-            $validationStart = \microtime(true);
-            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
-            if (!$validator->isValid($domain->get())) {
-                $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
-                $log->addTag('dnsDomain', $domain->get());
-                $error = $validator->getDescription();
-                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'Domain verification failed because CAA records do not allow certainly.com to issue certificates.');
-            }
-        }
-
         $dbForPlatform->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
 
         // Issue a TLS certificate when domain is verified
