@@ -1211,7 +1211,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
 
-        $user2 = $this->getUser(override:true);
+        $user2 = $this->getUser(true);
         $user2Id = $user2['$id'];
         $session = $user2['session'] ?? '';
         $projectId = $this->getProject()['$id'];
