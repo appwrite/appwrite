@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -278,5 +279,60 @@ abstract class Action extends UtopiaAction
         }
 
         return true;
+    }
+
+    /**
+     * For triggering different queues for each document for a bulk documents
+     * @param string $event
+     * @param Document $database
+     * @param Document $collection
+     * @param Document[] $documents
+     * @param Event $queueForEvents
+     * @param Event $queueForRealtime
+     * @param Event $queueForFunctions
+     * @param Event $queueForWebhooks
+     * @return void
+     */
+    protected function triggerBulk(
+        string $event,
+        Document $database,
+        Document $collection,
+        array $documents,
+        Event $queueForEvents,
+        Event $queueForRealtime,
+        Event $queueForFunctions,
+        Event $queueForWebhooks
+    ): void {
+        $queueForEvents
+            ->setEvent($event)
+            ->setParam('databaseId', $database->getId())
+            ->setContext('database', $database)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        foreach ($documents as $document) {
+            $queueForEvents
+                ->setParam('documentId', $document->getId())
+                ->setParam('rowId', $document->getId())
+                ->setPayload($document->getArrayCopy());
+
+            $queueForRealtime
+                ->from($queueForEvents)
+                ->trigger();
+
+            $queueForFunctions
+                ->from($queueForEvents)
+                ->trigger();
+
+            $queueForWebhooks
+                ->from($queueForEvents)
+                ->trigger();
+        }
+
+        $queueForEvents->reset();
+        $queueForRealtime->reset();
+        $queueForFunctions->reset();
+        $queueForWebhooks->reset();
     }
 }
