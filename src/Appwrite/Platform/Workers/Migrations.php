@@ -172,6 +172,13 @@ class Migrations extends Action
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
+            DestinationCSV::getName() => new DestinationCSV(
+                $this->project,
+                $this->dbForProject,
+                $migration->getAttribute('resourceId'),
+                $migration->getAttribute('options', []),
+                $this->deviceForImports
+            ),
             default => throw new \Exception('Invalid destination type'),
         };
     }

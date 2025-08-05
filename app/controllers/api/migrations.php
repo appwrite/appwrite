@@ -306,7 +306,7 @@ App::post('/v1/migrations/nhost')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/csv')
+App::post('/v1/migrations/csv/imports')
     ->groups(['api', 'migrations'])
     ->desc('Import documents from a CSV')
     ->label('scope', 'migrations.write')
@@ -315,8 +315,8 @@ App::post('/v1/migrations/csv')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
-        name: 'createCsvMigration',
-        description: '/docs/references/migrations/migration-csv.md',
+        name: 'createCsvImportMigration',
+        description: '/docs/references/migrations/migration-csv-import.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -416,6 +416,74 @@ App::post('/v1/migrations/csv')
             'options' => [
                 'path' => $newPath,
                 'size' => $fileSize,
+            ],
+        ]));
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $queueForMigrations
+            ->setMigration($migration)
+            ->setProject($project)
+            ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/csv/exports')
+    ->groups(['api', 'migrations'])
+    ->desc('Export documents to CSV')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'createCsvExportMigration',
+        description: '/docs/references/migrations/migration-csv-export.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID where the exported CSV will be stored.')
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (string $bucketId, string $resourceId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Migration $queueForMigrations) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        if ($bucket->isEmpty() || (!$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $migrationId = ID::unique();
+        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => Appwrite::getName(),
+            'destination' => CSV::getName(),
+            'resources' => $resources,
+            'resourceId' => $resourceId,
+            'resourceType' => Resource::TYPE_DATABASE,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+            'options' => [
+                'bucketId' => $bucketId,
             ],
         ]));
 
