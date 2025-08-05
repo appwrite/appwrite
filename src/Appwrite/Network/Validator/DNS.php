@@ -65,9 +65,18 @@ class DNS extends Validator
         }
 
         if (empty($query)) {
-            // No CAA records means anyone can issue certificate
+            // CAA records inherit from parent (custom CAA behaviour)
             if ($this->type === self::RECORD_CAA) {
-                return true;
+                if (\substr_count($value, ".") === 1) {
+                    return true; // No CAA on apex domain means anyone can issue certificate
+                }
+
+                // Recursive validation by parent domain
+                $parts = \explode('.', $value);
+                \array_shift($parts);
+                $parentDomain = \implode('.', $parts);
+                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+                return $validator->isValid($parentDomain);
             }
 
             return false;
