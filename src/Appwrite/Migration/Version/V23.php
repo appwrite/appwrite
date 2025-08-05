@@ -55,7 +55,7 @@ class V23 extends Migration
             'array' => false,
             'filters' => [],
         ])]);
-        $this->dbForProject->updateDocuments('databases', new Document(['$id' => 'type','type' => 'sql']));
+        $this->dbForProject->updateDocuments('databases', new Document(['type' => 'sql']));
     }
 
 }
