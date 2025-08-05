@@ -284,7 +284,17 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/x-icon', $response['headers']['content-type']);
+        $this->assertEquals('image/svg+xml', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io/',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         /**
