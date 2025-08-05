@@ -32,7 +32,7 @@ trait DatabasesBase
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
-        $this->assertEquals('mysql', $database['body']['type']);
+        $this->assertEquals('sql', $database['body']['type']);
 
         // testing to create a database with type
         $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -44,11 +44,21 @@ trait DatabasesBase
             'name' => 'Test Database with type',
             'type' => 'mongodb'
         ]);
+        $this->assertEquals(400, $database2['headers']['status-code']);
 
+        $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database with type',
+            'type' => 'nosql'
+        ]);
         $this->assertNotEmpty($database2['body']['$id']);
         $this->assertEquals(201, $database2['headers']['status-code']);
         $this->assertEquals('Test Database with type', $database2['body']['name']);
-        $this->assertEquals('mongodb', $database2['body']['type']);
+        $this->assertEquals('nosql', $database2['body']['type']);
 
         // cleanup(for database2)
         $databaseId = $database2['body']['$id'];
