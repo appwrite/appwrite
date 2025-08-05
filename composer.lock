@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c4ae112243a897e16552c507c5e94097",
+    "content-hash": "46c2cbde34a776114f761e7978c077e0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3997,16 +3997,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.13.7",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "fc25d50c3a19e701e905c56a9465143cacb02717"
+                "reference": "f9a7e87413b82975dbd87b7850aec2543aeac7ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/fc25d50c3a19e701e905c56a9465143cacb02717",
-                "reference": "fc25d50c3a19e701e905c56a9465143cacb02717",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f9a7e87413b82975dbd87b7850aec2543aeac7ee",
+                "reference": "f9a7e87413b82975dbd87b7850aec2543aeac7ee",
                 "shasum": ""
             },
             "require": {
@@ -4047,9 +4047,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.13.7"
+                "source": "https://github.com/utopia-php/migration/tree/0.14.0"
             },
-            "time": "2025-07-31T15:08:29+00:00"
+            "time": "2025-08-05T12:33:09+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -4814,16 +4814,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.41.27",
+            "version": "0.41.28",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "083fd2e8163d6a4e59ee971ac6cb97277d831dd5"
+                "reference": "8eace11070264c62c8da3c69498fb8dc98fcfaf7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/083fd2e8163d6a4e59ee971ac6cb97277d831dd5",
-                "reference": "083fd2e8163d6a4e59ee971ac6cb97277d831dd5",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8eace11070264c62c8da3c69498fb8dc98fcfaf7",
+                "reference": "8eace11070264c62c8da3c69498fb8dc98fcfaf7",
                 "shasum": ""
             },
             "require": {
@@ -4859,9 +4859,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.27"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.28"
             },
-            "time": "2025-07-31T10:20:46+00:00"
+            "time": "2025-08-01T11:06:30+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5280,16 +5280,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.13.3",
+            "version": "1.13.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36"
+                "reference": "07d290f0c47959fd5eed98c95ee5602db07e0b6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/faed855a7b5f4d4637717c2b3863e277116beb36",
-                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/07d290f0c47959fd5eed98c95ee5602db07e0b6a",
+                "reference": "07d290f0c47959fd5eed98c95ee5602db07e0b6a",
                 "shasum": ""
             },
             "require": {
@@ -5328,7 +5328,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.3"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.4"
             },
             "funding": [
                 {
@@ -5336,7 +5336,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-05T12:25:42+00:00"
+            "time": "2025-08-01T08:46:24+00:00"
         },
         {
             "name": "nikic/php-parser",
