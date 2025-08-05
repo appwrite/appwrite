@@ -337,19 +337,6 @@ class Certificates extends Action
 
                 throw new Exception('Failed to verify domain DNS records.');
             }
-
-            // Ensure CAA won't block certificate issuance
-            if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
-                $validationStart = \microtime(true);
-                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
-                if (!$validator->isValid($domain->get())) {
-                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
-                    $log->addTag('dnsDomain', $domain->get());
-                    $error = $validator->getDescription();
-                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-                    throw new Exception('Failed to verify domain DNS records. CAA records do not allow certificates from certainly.com to issue certificates.');
-                }
-            }
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
