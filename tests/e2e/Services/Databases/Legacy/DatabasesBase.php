@@ -32,7 +32,7 @@ trait DatabasesBase
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
-        $this->assertEquals('sql', $database['body']['type']);
+        $this->assertEquals('grids', $database['body']['type']);
 
         // testing to create a database with type
         $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -53,12 +53,12 @@ trait DatabasesBase
         ], [
             'databaseId' => ID::unique(),
             'name' => 'Test Database with type',
-            'type' => 'nosql'
+            'type' => 'legacy'
         ]);
         $this->assertNotEmpty($database2['body']['$id']);
         $this->assertEquals(201, $database2['headers']['status-code']);
         $this->assertEquals('Test Database with type', $database2['body']['name']);
-        $this->assertEquals('nosql', $database2['body']['type']);
+        $this->assertEquals('legacy', $database2['body']['type']);
 
         // cleanup(for database2)
         $databaseId = $database2['body']['$id'];
