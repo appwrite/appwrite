@@ -2,7 +2,6 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\ID;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
@@ -46,15 +45,7 @@ class V23 extends Migration
 
         // since required + default can't be used together
         // so first creating the attribute then bulk updating the attribute
-        $this->dbForProject->createAttributes('databases', [new Document([
-            '$id' => ID::custom('type'),
-            'type' => Database::VAR_STRING,
-            'size' => 128,
-            'required' => true,
-            'signed' => true,
-            'array' => false,
-            'filters' => [],
-        ])]);
+        $this->createAttributeFromCollection($this->dbForProject, 'databases', 'type');
         $this->dbForProject->updateDocuments('databases', new Document(['type' => 'sql']));
     }
 
