@@ -17,5 +17,5 @@ $result = $functions->createExecution(
     path: '<PATH>', // optional
     method: ExecutionMethod::GET(), // optional
     headers: [], // optional
-    scheduledAt: '' // optional
+    scheduledAt: '<SCHEDULED_AT>' // optional
 );

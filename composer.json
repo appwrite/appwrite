@@ -87,7 +87,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.41.*",
+        "appwrite/sdk-generator": "0.*.*",
         "phpunit/phpunit": "9.*",
         "swoole/ide-helper": "5.1.2",
         "phpstan/phpstan": "1.8.*",

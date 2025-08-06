@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -29,20 +30,40 @@ class Get extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('sdk', new Method(
-                namespace: 'databases',
-                group: 'databases',
-                name: 'get',
-                description: '/docs/references/databases/get.md',
-                auth: [AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_DATABASE,
+            ->label('sdk', [
+                new Method(
+                    namespace: 'databases',
+                    group: 'databases',
+                    name: 'get',
+                    description: '/docs/references/databases/get.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_DATABASE,
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'grids.getDatabase',
                     )
-                ],
-                contentType: ContentType::JSON
-            ))
+                ),
+                new Method(
+                    namespace: 'grids',
+                    group: 'grids',
+                    name: 'getDatabase',
+                    description: '/docs/references/grids/get-database.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_DATABASE,
+                        )
+                    ],
+                    contentType: ContentType::JSON
+                ),
+            ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->inject('response')
             ->inject('dbForProject')

@@ -71,7 +71,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tables.upsertRow',
+                        replaceWith: 'grids.upsertRow',
                     ),
                 ),
             ])
@@ -151,6 +151,16 @@ class Upsert extends Action
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
+            }
+        }
+        // Allowing to add createdAt and updatedAt timestamps if server side(api key)
+        if (!$isAPIKey && !$isPrivilegedUser) {
+            if (isset($data['$createdAt'])) {
+                throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
+            }
+
+            if (isset($data['$updatedAt'])) {
+                throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
             }
         }
 
@@ -236,13 +246,15 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForProject->createOrUpdateDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                [$newDocument],
-                onNext: function (Document $document) use (&$upserted) {
-                    $upserted[] = $document;
-                },
-            );
+            $dbForProject->withPreserveDates(function () use (&$upserted, $dbForProject, $database, $collection, $newDocument) {
+                return $dbForProject->createOrUpdateDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    [$newDocument],
+                    onNext: function (Document $document) use (&$upserted) {
+                        $upserted[] = $document;
+                    },
+                );
+            });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {

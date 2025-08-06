@@ -64,7 +64,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tables.upsertRows',
+                        replaceWith: 'grids.upsertRows',
                     ),
                 )
             ])
@@ -106,15 +106,17 @@ class Upsert extends Action
         $upserted = [];
 
         try {
-            $modified = $dbForProject->createOrUpdateDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $documents,
-                onNext: function (Document $document) use ($plan, &$upserted) {
-                    if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                        $upserted[] = $document;
-                    }
-                },
-            );
+            $modified = $dbForProject->withPreserveDates(function () use ($dbForProject, $database, $collection, $documents, $plan, &$upserted) {
+                return $dbForProject->createOrUpdateDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $documents,
+                    onNext: function (Document $document) use ($plan, &$upserted) {
+                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                            $upserted[] = $document;
+                        }
+                    },
+                );
+            });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {

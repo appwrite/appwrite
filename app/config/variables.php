@@ -836,7 +836,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.config.json.',
                 'introduction' => '0.7.0',
                 'default' => '900',
                 'required' => false,
@@ -1079,7 +1079,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SITES_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.json.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.config.json.',
                 'introduction' => '1.7.0',
                 'default' => '900',
                 'required' => false,

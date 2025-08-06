@@ -55,7 +55,7 @@ class Update extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'tables.updateRelationshipColumn',
+                    replaceWith: 'grids.updateRelationshipColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

@@ -184,11 +184,9 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
-        // if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-        //     $database->setTenant((int)$project->getSequence());
-        // }
-
-        $database->setTenant(null);
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant((int)$project->getSequence());
+        }
 
         return $database;
     };

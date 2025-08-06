@@ -1,0 +1,1 @@
+List columns in the table.

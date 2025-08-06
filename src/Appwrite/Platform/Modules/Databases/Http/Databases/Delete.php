@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -34,20 +35,40 @@ class Delete extends Action
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
-            ->label('sdk', new Method(
-                namespace: 'databases',
-                group: 'databases',
-                name: 'delete',
-                description: '/docs/references/databases/delete.md',
-                auth: [AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: SwooleResponse::STATUS_CODE_NOCONTENT,
-                        model: UtopiaResponse::MODEL_NONE,
+            ->label('sdk', [
+                new Method(
+                    namespace: 'databases',
+                    group: 'databases',
+                    name: 'delete',
+                    description: '/docs/references/databases/delete.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_NOCONTENT,
+                            model: UtopiaResponse::MODEL_NONE,
+                        )
+                    ],
+                    contentType: ContentType::NONE,
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'grids.deleteDatabase',
                     )
-                ],
-                contentType: ContentType::NONE
-            ))
+                ),
+                new Method(
+                    namespace: 'grids',
+                    group: 'grids',
+                    name: 'deleteDatabase',
+                    description: '/docs/references/grids/delete-database.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_NOCONTENT,
+                            model: UtopiaResponse::MODEL_NONE,
+                        )
+                    ],
+                    contentType: ContentType::NONE
+                ),
+            ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->inject('response')
             ->inject('dbForProject')

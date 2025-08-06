@@ -4379,7 +4379,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.listRows"
+                        "replaceWith": "grids.listRows"
                     },
                     "auth": {
                         "Project": []
@@ -4468,15 +4468,14 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.createRow"
+                        "replaceWith": "grids.createRow"
                     },
                     "methods": [
                         {
                             "name": "createDocument",
+                            "namespace": "databases",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -4497,7 +4496,11 @@
                                     "model": "#\/components\/schemas\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.createRow"
+                            }
                         }
                     ],
                     "auth": {
@@ -4613,7 +4616,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.getRow"
+                        "replaceWith": "grids.getRow"
                     },
                     "auth": {
                         "Project": []
@@ -4712,25 +4715,39 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.upsertRow"
+                        "replaceWith": "grids.upsertRow"
                     },
                     "methods": [
                         {
                             "name": "upsertDocument",
+                            "namespace": "databases",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
                                     "model": "#\/components\/schemas\/document"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "grids.upsertRow"
+                            }
                         }
                     ],
                     "auth": {
@@ -4844,7 +4861,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.updateRow"
+                        "replaceWith": "grids.updateRow"
                     },
                     "auth": {
                         "Project": []
@@ -4947,7 +4964,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tables.deleteRow"
+                        "replaceWith": "grids.deleteRow"
                     },
                     "auth": {
                         "Project": []
@@ -4994,12 +5011,12 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/rows": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows": {
             "get": {
                 "summary": "List rows",
-                "operationId": "tablesListRows",
+                "operationId": "gridsListRows",
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
                 "responses": {
@@ -5021,8 +5038,8 @@
                     "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/list-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-rows.md",
+                    "demo": "grids\/list-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -5082,9 +5099,9 @@
             },
             "post": {
                 "summary": "Create row",
-                "operationId": "tablesCreateRow",
+                "operationId": "gridsCreateRow",
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
                 "responses": {
@@ -5106,8 +5123,8 @@
                     "weight": 404,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/create-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-row.md",
+                    "demo": "grids\/create-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -5121,10 +5138,9 @@
                     "methods": [
                         {
                             "name": "createRow",
+                            "namespace": "grids",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -5146,30 +5162,6 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
-                        },
-                        {
-                            "name": "createRows",
-                            "auth": {
-                                "Admin": [],
-                                "Key": []
-                            },
-                            "parameters": [
-                                "databaseId",
-                                "tableId",
-                                "rows"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "tableId",
-                                "rows"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/components\/schemas\/rowList"
-                                }
-                            ],
-                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
                         }
                     ],
                     "auth": {
@@ -5244,12 +5236,12 @@
                 }
             }
         },
-        "\/databases\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}": {
+        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}": {
             "get": {
                 "summary": "Get row",
-                "operationId": "tablesGetRow",
+                "operationId": "gridsGetRow",
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
                 "responses": {
@@ -5271,8 +5263,8 @@
                     "weight": 405,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/get-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-row.md",
+                    "demo": "grids\/get-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -5342,9 +5334,9 @@
             },
             "put": {
                 "summary": "Create or update a row",
-                "operationId": "tablesUpsertRow",
+                "operationId": "gridsUpsertRow",
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
                 "responses": {
@@ -5366,8 +5358,8 @@
                     "weight": 408,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/upsert-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-row.md",
+                    "demo": "grids\/upsert-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -5381,13 +5373,22 @@
                     "methods": [
                         {
                             "name": "upsertRow",
+                            "namespace": "grids",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
-                            "parameters": [],
-                            "required": [],
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId"
+                            ],
                             "responses": [
                                 {
                                     "code": 201,
@@ -5467,9 +5468,9 @@
             },
             "patch": {
                 "summary": "Update row",
-                "operationId": "tablesUpdateRow",
+                "operationId": "gridsUpdateRow",
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
                 "responses": {
@@ -5491,8 +5492,8 @@
                     "weight": 406,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/update-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-row.md",
+                    "demo": "grids\/update-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -5573,9 +5574,9 @@
             },
             "delete": {
                 "summary": "Delete row",
-                "operationId": "tablesDeleteRow",
+                "operationId": "gridsDeleteRow",
                 "tags": [
-                    "tables"
+                    "grids"
                 ],
                 "description": "Delete a row by its unique ID.",
                 "responses": {
@@ -5590,8 +5591,8 @@
                     "weight": 410,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables\/delete-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-row.md",
+                    "demo": "grids\/delete-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -5828,7 +5829,7 @@
                                     "scheduledAt": {
                                         "type": "string",
                                         "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
-                                        "x-example": null
+                                        "x-example": "<SCHEDULED_AT>"
                                     }
                                 }
                             }

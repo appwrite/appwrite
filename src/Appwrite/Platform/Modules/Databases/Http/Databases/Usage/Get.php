@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -34,20 +35,41 @@ class Get extends Action
             ->groups(['api', 'database', 'usage'])
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('sdk', new Method(
-                namespace: 'databases',
-                group: null,
-                name: self::getName(),
-                description: '/docs/references/databases/get-database-usage.md',
-                auth: [AuthType::ADMIN],
-                responses: [
-                    new SDKResponse(
-                        code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_USAGE_DATABASE,
+            ->label('sdk', [
+                new Method(
+                    namespace: 'databases',
+                    group: null,
+                    name: self::getName(),
+                    description: '/docs/references/databases/get-database-usage.md',
+                    auth: [AuthType::ADMIN],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_USAGE_DATABASE,
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                    deprecated: new Deprecated(
+                        since: '1.8.0',
+                        replaceWith: 'grids.' . self::getName(),
                     )
-                ],
-                contentType: ContentType::JSON,
-            ))
+                ),
+                new Method(
+                    namespace: 'grids',
+                    group: null,
+                    name: self::getName(),
+                    description: '/docs/references/grids/get-database-usage.md',
+                    auth: [AuthType::ADMIN],
+                    responses: [
+                        new SDKResponse(
+                            code: SwooleResponse::STATUS_CODE_OK,
+                            model: UtopiaResponse::MODEL_USAGE_DATABASE,
+                        )
+                    ],
+                    contentType: ContentType::JSON,
+                ),
+
+            ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
             ->inject('response')
