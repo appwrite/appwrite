@@ -446,9 +446,13 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
 
     return function (?Document $project = null) use ($pools, $cache, &$database) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
-            return $database;
+        // if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+        //     $database->setTenant((int)$project->getSequence());
+        //     return $database;
+        // }
+
+        if ($database !== null) {
+            $database->setTenant(null);
         }
 
         $adapter = new DatabasePool($pools->get('logs'));
@@ -461,9 +465,11 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
-        }
+        // if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+        //     $database->setTenant((int)$project->getSequence());
+        // }
+
+        $database->setTenant(null);
 
         return $database;
     };
@@ -854,9 +860,9 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         }
     }
 
-    //@Jake, if teamInternalId is empty, return an empty document to avoid errors
+    // if teamInternalId is empty, return an empty document
 
-    if(empty($teamInternalId)){
+    if (empty($teamInternalId)) {
         return new Document([]);
     }
 

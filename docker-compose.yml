@@ -424,6 +424,8 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
@@ -460,6 +462,8 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
@@ -569,6 +573,8 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
@@ -848,6 +854,8 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}

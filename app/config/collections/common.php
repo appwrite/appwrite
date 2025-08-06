@@ -2055,8 +2055,8 @@ return [
                 'filters' => ['topicSearch'],
             ],
         ],
-            // Mongodb do not allow two fulltext indexes on the same field in a single collection
-            // https://www.mongodb.com/docs/manual/core/indexes/index-types/index-text/text-index-restrictions/
+        // Mongodb do not allow two fulltext indexes on the same field in a single collection
+        // https://www.mongodb.com/docs/manual/core/indexes/index-types/index-text/text-index-restrictions/
         'indexes' => [
             // [
             //     '$id' => ID::custom('_key_name'),
