@@ -347,7 +347,7 @@ class Certificates extends Action
                     $log->addTag('dnsDomain', $domain->get());
                     $error = $validator->getDescription();
                     $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-                    throw new Exception('Failed to verify domain DNS records. CAA records do not allow certificates from certainly.com to issue certificates.');
+                    throw new Exception('Failed to verify domain DNS records. CAA records do not allow Appwrite\'s certificate issuer.');
                 }
             }
         } else {

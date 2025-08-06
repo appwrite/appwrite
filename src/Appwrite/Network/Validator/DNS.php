@@ -3,6 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\DNS\Client;
+use Utopia\Domains\Domain;
 use Utopia\System\System;
 use Utopia\Validator;
 
@@ -83,7 +84,8 @@ class DNS extends Validator
         if (empty($query)) {
             // CAA records inherit from parent (custom CAA behaviour)
             if ($this->type === self::RECORD_CAA) {
-                if (\substr_count($value, ".") === 1) {
+                $domain = new Domain($value);
+                if ($domain->get() === $domain->getApex()) {
                     return true; // No CAA on apex domain means anyone can issue certificate
                 }
 

@@ -295,7 +295,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
                 $log->addTag('dnsDomain', $domain->get());
                 $error = $validator->getDescription();
                 $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'Domain verification failed because CAA records do not allow certainly.com to issue certificates.');
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'Domain verification failed because CAA records do not allow Appwrite\'s certificate issuer.');
             }
         }
 
