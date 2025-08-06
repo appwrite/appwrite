@@ -17,7 +17,7 @@ class DNS extends Validator
      * @var mixed
      */
     protected mixed $logs;
-    
+
     /**
      * @var string
      */
@@ -28,10 +28,10 @@ class DNS extends Validator
      */
     public function __construct(protected string $target, protected string $type = self::RECORD_CNAME, string $dnsServer = '')
     {
-        if(empty($dnsServer)) {
+        if (empty($dnsServer)) {
             $dnsServer = System::getEnv('_APP_DNS', '8.8.8.8');
         }
-        
+
         $this->dnsServer = $dnsServer;
     }
 
