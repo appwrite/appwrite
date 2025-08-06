@@ -1,4 +1,4 @@
-> We just announced Atomic numeric operations for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-atomic-numeric-operations)
+> Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
