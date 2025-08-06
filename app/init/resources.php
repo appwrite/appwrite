@@ -273,8 +273,21 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtSessionId = $payload['sessionId'] ?? '';
         if (!empty($jwtSessionId)) {
-            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+            $session = $user->find('$id', $jwtSessionId, 'sessions');
+            if (empty($session)) { // Match JWT to active token
                 $user = new Document([]);
+            } else {
+                // Validate session is not expired - check expiration time like Auth::sessionVerify does
+                $sessionExpire = $session->getAttribute('expire');
+                if (
+                    empty($sessionExpire) ||
+                    DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($sessionExpire))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
+                ) {
+                    $user = new Document([]);
+                } else {
+                    // Set Auth::unique for consistency with regular session authentication
+                    Auth::$unique = $user->getId();
+                }
             }
         }
     }
