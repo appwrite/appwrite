@@ -46,7 +46,7 @@ class V23 extends Migration
         // since required + default can't be used together
         // so first creating the attribute then bulk updating the attribute
         $this->createAttributeFromCollection($this->dbForProject, 'databases', 'type');
-        $this->dbForProject->updateDocuments('databases', new Document(['type' => 'sql']));
+        $this->dbForProject->updateDocuments('databases', new Document(['type' => 'legacy']));
     }
 
 }
