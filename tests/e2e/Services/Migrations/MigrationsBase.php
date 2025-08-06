@@ -900,9 +900,9 @@ trait MigrationsBase
     /**
      * Import documents from a CSV file.
      */
-    public function testCreateCsvMigration(): array
+    public function testCreateCsvMigration(): void
     {
-        // make a database
+        // Make a database
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -991,6 +991,7 @@ trait MigrationsBase
             'missing-row' => $bucketOneId,
             'missing-column' => $bucketOneId,
             'irrelevant-column' => $bucketOneId,
+            'documents-internals' => $bucketOneId,
         ];
 
         $fileIds = [];
@@ -999,7 +1000,8 @@ trait MigrationsBase
             $csvFileName = match ($label) {
                 'missing-row',
                 'missing-column',
-                'irrelevant-column' => "{$label}.csv",
+                'irrelevant-column',
+                'documents-internals' => "{$label}.csv",
                 default => 'documents.csv',
             };
 
@@ -1123,7 +1125,7 @@ trait MigrationsBase
             );
         }, 60000, 500);
 
-        // all data exists, pass/
+        // all data exists, pass.
         $migration = $this->performCsvMigration(
             [
                 'endpoint' => 'http://localhost/v1',
@@ -1133,32 +1135,8 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEmpty($migration['body']['statusCounters']);
-        $this->assertEquals('CSV', $migration['body']['source']);
-        $this->assertEquals('pending', $migration['body']['status']);
-        $this->assertEquals('Appwrite', $migration['body']['destination']);
-        $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
-
-        return [
-            'databaseId' => $databaseId,
-            'tableId' => $tableId,
-            'migrationId' => $migration['body']['$id'],
-        ];
-    }
-
-    /**
-     * @depends testCreateCsvMigration
-     */
-    public function testImportSuccessful(array $response): void
-    {
-        $tableId = $response['tableId'];
-        $databaseId = $response['databaseId'];
-        $migrationId = $response['migrationId'];
-
-        $rowsCountInCSV = 100;
-
-        // get migration stats
-        $this->assertEventually(function () use ($migrationId, $databaseId, $tableId, $rowsCountInCSV) {
+        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
+            $migrationId = $migration['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1171,8 +1149,8 @@ trait MigrationsBase
             $this->assertEquals('Appwrite', $migration['body']['destination']);
             $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
             $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
-            $this->assertEquals($rowsCountInCSV, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
-        }, 1000, 500);
+            $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
 
         // get rows count
         $rows = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/grids/tables/'.$tableId.'/rows', array_merge([
@@ -1180,7 +1158,6 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                // there should be only 100!
                 Query::limit(150)->toString()
             ]
         ]);
@@ -1188,7 +1165,34 @@ trait MigrationsBase
         $this->assertEquals(200, $rows['headers']['status-code']);
         $this->assertIsArray($rows['body']['rows']);
         $this->assertIsNumeric($rows['body']['total']);
-        $this->assertEquals($rowsCountInCSV, $rows['body']['total']);
+        $this->assertEquals(100, $rows['body']['total']);
+
+        // all data exists and includes internals, pass.
+        $migration = $this->performCsvMigration(
+            [
+                'endpoint' => 'http://localhost/v1',
+                'fileId' => $fileIds['documents-internals'],
+                'bucketId' => $bucketIds['documents-internals'],
+                'resourceId' => $databaseId . ':' . $tableId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
+            $migrationId = $migration['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
+            $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
+            $this->assertEquals(25, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
     }
 
     private function performCsvMigration(array $body): array

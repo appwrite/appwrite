@@ -632,6 +632,7 @@ class OpenAPI3 extends Format
 
             $required = $model->getRequired();
             $rules = $model->getRules();
+            $examples = [];
 
             $output['components']['schemas'][$model->getType()] = [
                 'description' => $model->getName(),
@@ -654,6 +655,8 @@ class OpenAPI3 extends Format
                 $type = '';
                 $format = null;
                 $items = null;
+
+                $examples[$name] = $rule['example'] ?? null;
 
                 switch ($rule['type']) {
                     case 'string':
@@ -743,6 +746,12 @@ class OpenAPI3 extends Format
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
+
+            if ($model->isAny() && !empty($model->getSampleData())) {
+                $examples = array_merge($examples, $model->getSampleData());
+            }
+
+            $output['components']['schemas'][$model->getType()]['example'] = $examples;
         }
 
         \ksort($output['paths']);
