@@ -66,7 +66,14 @@ class DNS extends Validator
         $dns = new Client($this->dnsServer);
 
         try {
-            $query = $dns->query($value, $this->type);
+            $rawQuery = $dns->query($value, $this->type);
+
+            // Some DNS servers return all records, not only type that's asked for
+            // Likely occurs when no records of specific type are found
+            $query = array_filter($rawQuery, function ($record) {
+                return $record->getTypeName() === $this->type;
+            });
+
             $this->logs = $query;
         } catch (\Exception $e) {
             $this->logs = ['error' => $e->getMessage()];
