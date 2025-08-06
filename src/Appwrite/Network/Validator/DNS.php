@@ -17,12 +17,22 @@ class DNS extends Validator
      * @var mixed
      */
     protected mixed $logs;
+    
+    /**
+     * @var string
+     */
+    protected string $dnsServer;
 
     /**
      * @param string $target
      */
-    public function __construct(protected string $target, protected string $type = self::RECORD_CNAME)
+    public function __construct(protected string $target, protected string $type = self::RECORD_CNAME, string $dnsServer = '')
     {
+        if(empty($dnsServer)) {
+            $dnsServer = System::getEnv('_APP_DNS', '8.8.8.8');
+        }
+        
+        $this->dnsServer = $dnsServer;
     }
 
     /**
@@ -53,8 +63,7 @@ class DNS extends Validator
             return false;
         }
 
-        $dnsServer = System::getEnv('_APP_DNS', '8.8.8.8');
-        $dns = new Client($dnsServer);
+        $dns = new Client($this->dnsServer);
 
         try {
             $query = $dns->query($value, $this->type);
@@ -75,7 +84,7 @@ class DNS extends Validator
                 $parts = \explode('.', $value);
                 \array_shift($parts);
                 $parentDomain = \implode('.', $parts);
-                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+                $validator = new DNS($this->target, DNS::RECORD_CAA, $this->dnsServer);
                 return $validator->isValid($parentDomain);
             }
 
