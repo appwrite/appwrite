@@ -1163,7 +1163,7 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals(200, $rows['headers']['status-code']);
-        $this->assertIsArray($rows['body']['documents']);
+        $this->assertIsArray($rows['body']['rows']);
         $this->assertIsNumeric($rows['body']['total']);
         $this->assertEquals(100, $rows['body']['total']);
 
