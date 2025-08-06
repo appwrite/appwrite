@@ -1,10 +1,11 @@
 # Change Log
 
-## 0.14.1
+## 0.15.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
 * Add `encrypt` support to `StringAttribute` model
 * Add `sequence` support to `Document` model
+* Fix: pass enum value as string in API params
 
 ## 0.14.0
 
