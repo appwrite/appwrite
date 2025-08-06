@@ -285,6 +285,7 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -312,7 +313,7 @@ class Create extends Base
                     'region' => $project->getAttribute('region'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
-                    'resourceInternalId' => $execution->getSequence(),
+                    'resourceInternalId' => $execution->getSequence() ?? '', // resourceInternalId is required and may be empty
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
@@ -320,7 +321,7 @@ class Create extends Base
                     'active' => true,
                 ]));
 
-                $execution = $execution
+                $execution
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
