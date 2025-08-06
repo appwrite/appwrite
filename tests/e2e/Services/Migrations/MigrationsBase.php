@@ -1135,7 +1135,7 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEventually(function () use ($migration, $databaseId, $collectionId) {
+        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
             $migrationId = $migration['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
@@ -1162,10 +1162,10 @@ trait MigrationsBase
             ]
         ]);
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertIsArray($documents['body']['documents']);
-        $this->assertIsNumeric($documents['body']['total']);
-        $this->assertEquals(100, $documents['body']['total']);
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertIsArray($rows['body']['documents']);
+        $this->assertIsNumeric($rows['body']['total']);
+        $this->assertEquals(100, $rows['body']['total']);
 
         // all data exists and includes internals, pass.
         $migration = $this->performCsvMigration(
@@ -1173,11 +1173,11 @@ trait MigrationsBase
                 'endpoint' => 'http://localhost/v1',
                 'fileId' => $fileIds['documents-internals'],
                 'bucketId' => $bucketIds['documents-internals'],
-                'resourceId' => $databaseId . ':' . $collectionId,
+                'resourceId' => $databaseId . ':' . $tableId,
             ]
         );
 
-        $this->assertEventually(function () use ($migration, $databaseId, $collectionId) {
+        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
             $migrationId = $migration['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
