@@ -116,7 +116,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
-                'version' => '8.2.0',
+                'version' => '8.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
@@ -413,7 +413,7 @@ return [
             [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
-                'version' => '9.1.0',
+                'version' => '9.1.2',
                 'url' => 'https://github.com/appwrite/sdk-for-kotlin',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-kotlin',
                 'enabled' => true,
