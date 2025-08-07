@@ -1,5 +1,4 @@
-
-> We just announced Auto-increment support for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-auto-increment-support)
+> Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
