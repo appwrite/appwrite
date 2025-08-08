@@ -83,6 +83,9 @@ App::setResource('publisher', function (Group $pools) {
 App::setResource('publisherDatabases', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
+App::setResource('publisherFunctions', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
 App::setResource('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
@@ -93,6 +96,9 @@ App::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
 App::setResource('consumerDatabases', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+App::setResource('consumerFunctions', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);
 App::setResource('consumerMigrations', function (BrokerPool $consumer) {
