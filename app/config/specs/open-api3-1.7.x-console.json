@@ -37978,17 +37978,20 @@
                         "type": "integer",
                         "description": "Document automatically incrementing ID.",
                         "x-example": 1,
-                        "format": "int32"
+                        "format": "int32",
+                        "readonly": true
                     },
                     "$collectionId": {
                         "type": "string",
                         "description": "Collection ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readonly": true
                     },
                     "$databaseId": {
                         "type": "string",
                         "description": "Database ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readonly": true
                     },
                     "$createdAt": {
                         "type": "string",
@@ -44635,6 +44638,11 @@
                         "description": "AAAA target for your Appwrite custom domains.",
                         "x-example": "::1"
                     },
+                    "_APP_DOMAIN_TARGET_CAA": {
+                        "type": "string",
+                        "description": "CAA target for your Appwrite custom domains.",
+                        "x-example": "digicert.com"
+                    },
                     "_APP_STORAGE_LIMIT": {
                         "type": "integer",
                         "description": "Maximum file size allowed for file upload in bytes.",
@@ -44692,6 +44700,7 @@
                     "_APP_DOMAIN_TARGET_CNAME",
                     "_APP_DOMAIN_TARGET_A",
                     "_APP_DOMAIN_TARGET_AAAA",
+                    "_APP_DOMAIN_TARGET_CAA",
                     "_APP_STORAGE_LIMIT",
                     "_APP_COMPUTE_SIZE_LIMIT",
                     "_APP_USAGE_STATS",
@@ -44707,6 +44716,7 @@
                     "_APP_DOMAIN_TARGET_CNAME": "appwrite.io",
                     "_APP_DOMAIN_TARGET_A": "127.0.0.1",
                     "_APP_DOMAIN_TARGET_AAAA": "::1",
+                    "_APP_DOMAIN_TARGET_CAA": "digicert.com",
                     "_APP_STORAGE_LIMIT": "30000000",
                     "_APP_COMPUTE_SIZE_LIMIT": "30000000",
                     "_APP_USAGE_STATS": "enabled",

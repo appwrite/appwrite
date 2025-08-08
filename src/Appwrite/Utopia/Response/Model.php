@@ -132,7 +132,7 @@ abstract class Model
 
     /**
      * Get Readonly Fields
-     * 
+     *
      * Returns list of field names that are marked as readonly
      * and should not be allowed in create/update payloads
      *

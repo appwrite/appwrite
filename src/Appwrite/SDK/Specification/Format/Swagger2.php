@@ -692,7 +692,7 @@ class Swagger2 extends Format
                         break;
                 }
 
-                $readOnly = $rule['readonly'] ?? false;
+                $readonly = $rule['readonly'] ?? false;
                 if ($rule['type'] == 'json') {
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -701,7 +701,7 @@ class Swagger2 extends Format
                         'x-example' => $rule['example'] ?? null,
                     ];
 
-                    if ($readOnly) {
+                    if ($readonly) {
                         $output['definitions'][$model->getType()]['properties'][$name]['readonly'] = true;
                     }
                     continue;
@@ -720,7 +720,7 @@ class Swagger2 extends Format
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
-                    if ($readOnly) {
+                    if ($readonly) {
                         $output['definitions'][$model->getType()]['properties'][$name]['readonly'] = true;
                     }
                 } else {
@@ -733,7 +733,7 @@ class Swagger2 extends Format
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
-                    if ($readOnly) {
+                    if ($readonly) {
                         $output['definitions'][$model->getType()]['properties'][$name]['readonly'] = true;
                     }
                 }
