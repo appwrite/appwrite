@@ -2110,7 +2110,7 @@ return [
                 'value' => '',
                 'placeholder' => 'com.companyname.appname',
                 'required' => true,
-                'type' => 'password'
+                'type' => 'text'
             ],
             [
                 'name' => 'TEAM_ID',
@@ -2118,7 +2118,7 @@ return [
                 'value' => '',
                 'placeholder' => '6K3...5PH',
                 'required' => true,
-                'type' => 'password'
+                'type' => 'text'
             ],
             [
                 'name' => 'KEY_ID',
@@ -2126,11 +2126,11 @@ return [
                 'value' => '',
                 'placeholder' => '9G8...6YF',
                 'required' => true,
-                'type' => 'password'
+                'type' => 'text'
             ],
             [
                 'name' => 'KEY_CONTENTS_ENCODED',
-                'description' => 'Contents of Key required to communicated with Appwrite Developer services, encoded in Base64. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/revoke-edit-and-download-keys">Learn more</a>.',
+                'description' => 'Contents of Key required to communicated with Apple Developer services, encoded in Base64. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/revoke-edit-and-download-keys">Learn more</a>.',
                 'value' => '',
                 'placeholder' => '7x8aA...Ab7c',
                 'required' => true,
