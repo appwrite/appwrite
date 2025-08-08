@@ -148,8 +148,8 @@ class Mails extends Action
         $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
         $mail->AltBody = \strip_tags($mail->AltBody);
         $mail->AltBody = \trim($mail->AltBody);
-        
-        if(\str_contains($mail->Body, 'buttonText') || \str_contains($mail->AltBody, 'buttonText')) {
+
+        if (\str_contains($mail->Body, 'buttonText') || \str_contains($mail->AltBody, 'buttonText')) {
             Console::warning('Email might contain placeholder. Logs relevant to verify and isolate the issue:');
             var_dump($mail->Body);
             var_dump($mail->AltBody);
