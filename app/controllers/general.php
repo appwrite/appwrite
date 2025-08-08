@@ -370,6 +370,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $jwtKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-jwt'] = '';
+        // add headers for sync executions
+        $currentTime = new \DateTime();
+        $headers['x-appwrite-scheduled-at'] = $currentTime->format('Y-m-d\TH:i:s.v\Z');
+        $headers['x-appwrite-executed-at'] = $currentTime->format('Y-m-d\TH:i:s.v\Z');
+        $headers['x-appwrite-execution-delay'] = '0';
 
         $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
