@@ -8516,17 +8516,20 @@
                     "type": "integer",
                     "description": "Document automatically incrementing ID.",
                     "x-example": 1,
-                    "format": "int32"
+                    "format": "int32",
+                    "readonly": true
                 },
                 "$collectionId": {
                     "type": "string",
                     "description": "Collection ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readonly": true
                 },
                 "$databaseId": {
                     "type": "string",
                     "description": "Database ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readonly": true
                 },
                 "$createdAt": {
                     "type": "string",

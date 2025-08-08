@@ -91,7 +91,8 @@ abstract class Model
             'array' => false,
             'description' => '',
             'example' => '',
-            'sensitive' => false
+            'sensitive' => false,
+            'readonly' => false
         ], $options);
 
         return $this;
@@ -122,6 +123,27 @@ abstract class Model
 
         foreach ($this->rules as $key => $rule) {
             if ($rule['required'] ?? false) {
+                $list[] = $key;
+            }
+        }
+
+        return $list;
+    }
+
+    /**
+     * Get Readonly Fields
+     * 
+     * Returns list of field names that are marked as readonly
+     * and should not be allowed in create/update payloads
+     *
+     * @return array
+     */
+    public function getReadonlyFields(): array
+    {
+        $list = [];
+
+        foreach ($this->rules as $key => $rule) {
+            if ($rule['readonly'] ?? false) {
                 $list[] = $key;
             }
         }
