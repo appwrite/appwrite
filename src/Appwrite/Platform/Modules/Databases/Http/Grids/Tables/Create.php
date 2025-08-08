@@ -38,7 +38,7 @@ class Create extends CollectionCreate
             ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'table.create')
-            ->label('audits.resource', 'database/{request.databaseId}/table/{response.$id}')
+            ->label('audits.resource', 'database/{request.databaseId}/grid/table/{response.$id}')
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: null,

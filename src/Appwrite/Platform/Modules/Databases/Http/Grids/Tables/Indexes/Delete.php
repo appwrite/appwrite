@@ -39,7 +39,7 @@ class Delete extends IndexDelete
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
-            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('audits.resource', 'database/{request.databaseId}/grid/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),

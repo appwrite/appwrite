@@ -37,7 +37,7 @@ class Update extends DocumentUpdate
             ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'row.update')
-            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}/row/{response.$id}')
+            ->label('audits.resource', 'database/{request.databaseId}/grid/table/{request.tableId}/row/{response.$id}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
