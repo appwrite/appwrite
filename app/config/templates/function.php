@@ -2077,7 +2077,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'users.read', 'users.write']
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
     ],
     [
         'icon' => 'icon-apple',
