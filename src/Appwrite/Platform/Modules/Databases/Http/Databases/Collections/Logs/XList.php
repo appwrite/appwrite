@@ -103,15 +103,11 @@ class XList extends Action
         ]);
 
         $audit = new Audit($dbForProject);
-
         $context = $this->getContext();
-        $isTables = $context === TABLES;
-
-        if (!$isTables) {
-            $resource = "database/$databaseId/$context/$collectionId";
-        } else {
-            $resource = "database/$databaseId/grid/$context/$collectionId";
-        }
+        $resource = match ($context) {
+            TABLES => "database/$databaseId/grid/$context/$collectionId",
+            default => "database/$databaseId/$context/$collectionId",
+        };
 
         $logs = $audit->getLogsByResource($resource, $queries);
 
