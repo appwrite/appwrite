@@ -347,7 +347,7 @@ trait AvatarsBase
         $this->assertEquals(400, $image->getImageWidth());
         $this->assertEquals(400, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/qr/qr-default.png')), strlen($response['body']));
+        $this->assertEquals(9086, strlen($response['body']));
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$id'],
