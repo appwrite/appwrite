@@ -102,7 +102,7 @@ class Swagger2 extends Format
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
-                $sdk = $sdk[0];
+                $sdk = $sdk[0]; // Use first method as primary for path definition
             }
 
             $consumes = [];
@@ -179,20 +179,22 @@ class Swagger2 extends Format
 
             if (!empty($additionalMethods)) {
                 $temp['x-appwrite']['methods'] = [];
-                foreach ($additionalMethods as $method) {
-                    /** @var Method $method */
-                    $desc = $method->getDescriptionFilePath();
+                foreach ($additionalMethods as $methodItem) {
+                    /** @var Method $methodItem */
+                    $desc = $methodItem->getDescriptionFilePath();
 
                     $additionalMethod = [
-                        'name' => $method->getMethodName(),
-                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
+                        'name' => $methodItem->getMethodName(),
+                        'namespace' => $methodItem->getNamespace(),
+                        'deprecated' => $methodItem->isDeprecated(), // Individual deprecation status per method
+                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $methodItem->getAuth())),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
                     ];
 
-                    foreach ($method->getParameters() as $parameter) {
+                    foreach ($methodItem->getParameters() as $parameter) {
                         $additionalMethod['parameters'][] = $parameter->getName();
 
                         if (!$parameter->getOptional()) {
@@ -200,7 +202,7 @@ class Swagger2 extends Format
                         }
                     }
 
-                    foreach ($method->getResponses() as $response) {
+                    foreach ($methodItem->getResponses() as $response) {
                         /** @var Response $response */
                         if (\is_array($response->getModel())) {
                             $additionalMethod['responses'][] = [

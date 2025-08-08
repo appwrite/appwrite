@@ -352,21 +352,27 @@ App::init()
          */
         $method = $route->getLabel('sdk', false);
 
-        // Take the first method if there's more than one,
-        // namespace can not differ between methods on the same route
+        // Handle multiple methods properly instead of just taking the first one
+        $methods = [];
         if (\is_array($method)) {
-            $method = $method[0];
+            $methods = $method;
+            $method = $method[0]; // Keep first method for backward compatibility
+        } elseif (!empty($method)) {
+            $methods = [$method];
         }
 
-        if (!empty($method)) {
-            $namespace = $method->getNamespace();
+        if (!empty($methods)) {
+            // Check all methods for namespace validation
+            foreach ($methods as $sdkMethod) {
+                $namespace = $sdkMethod->getNamespace();
 
-            if (
-                array_key_exists($namespace, $project->getAttribute('services', []))
-                && !$project->getAttribute('services', [])[$namespace]
-                && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
-            ) {
-                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+                if (
+                    array_key_exists($namespace, $project->getAttribute('services', []))
+                    && !$project->getAttribute('services', [])[$namespace]
+                    && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+                ) {
+                    throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+                }
             }
         }
 

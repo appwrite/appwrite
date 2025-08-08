@@ -991,6 +991,27 @@ App::init()
             }
         }
 
+        /**
+         * Deprecation Warning
+         */
+        $route = $utopia->getRoute();
+        if ($route) {
+            $sdk = $route->getLabel('sdk', false);
+            $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
+            $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
+            $warnings = [];
+            foreach ($sdkItems as $sdkItem) {
+                if ($sdkItem->isDeprecated()) {
+                    $warnings[] = $deprecationWarning;
+                    break; // Only add the warning once, even if multiple methods are deprecated
+                }
+            }
+            
+            foreach ($warnings as $warning) {
+                $response->addHeader('X-Appwrite-Warning', $warning);
+            }
+        }
+
         /*
         * Security Headers
         *
