@@ -40,6 +40,12 @@ class Database extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Database type.',
+                'default' => 'grids',
+                'example' => 'grids',
+            ])
         ;
     }
 

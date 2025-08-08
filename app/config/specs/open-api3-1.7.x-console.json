@@ -8026,10 +8026,7 @@
                         {
                             "name": "createDocument",
                             "auth": {
-                                "Admin": [],
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -8055,8 +8052,7 @@
                         {
                             "name": "createDocuments",
                             "auth": {
-                                "Admin": [],
-                                "Key": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -11824,7 +11820,7 @@
                                     "scheduledAt": {
                                         "type": "string",
                                         "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
-                                        "x-example": null
+                                        "x-example": "<SCHEDULED_AT>"
                                     }
                                 }
                             }
@@ -35470,7 +35466,8 @@
             "any": {
                 "description": "Any",
                 "type": "object",
-                "additionalProperties": true
+                "additionalProperties": true,
+                "example": []
             },
             "error": {
                 "description": "Error",
@@ -35502,7 +35499,13 @@
                     "code",
                     "type",
                     "version"
-                ]
+                ],
+                "example": {
+                    "message": "Not found",
+                    "code": "404",
+                    "type": "not_found",
+                    "version": "1.0"
+                }
             },
             "documentList": {
                 "description": "Documents List",
@@ -35526,7 +35529,11 @@
                 "required": [
                     "total",
                     "documents"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "documents": ""
+                }
             },
             "collectionList": {
                 "description": "Collections List",
@@ -35550,7 +35557,11 @@
                 "required": [
                     "total",
                     "collections"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "collections": ""
+                }
             },
             "databaseList": {
                 "description": "Databases List",
@@ -35574,7 +35585,11 @@
                 "required": [
                     "total",
                     "databases"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "databases": ""
+                }
             },
             "indexList": {
                 "description": "Indexes List",
@@ -35598,7 +35613,11 @@
                 "required": [
                     "total",
                     "indexes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "indexes": ""
+                }
             },
             "userList": {
                 "description": "Users List",
@@ -35622,7 +35641,11 @@
                 "required": [
                     "total",
                     "users"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "users": ""
+                }
             },
             "sessionList": {
                 "description": "Sessions List",
@@ -35646,7 +35669,11 @@
                 "required": [
                     "total",
                     "sessions"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "sessions": ""
+                }
             },
             "identityList": {
                 "description": "Identities List",
@@ -35670,7 +35697,11 @@
                 "required": [
                     "total",
                     "identities"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "identities": ""
+                }
             },
             "logList": {
                 "description": "Logs List",
@@ -35694,7 +35725,11 @@
                 "required": [
                     "total",
                     "logs"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "logs": ""
+                }
             },
             "fileList": {
                 "description": "Files List",
@@ -35718,7 +35753,11 @@
                 "required": [
                     "total",
                     "files"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "files": ""
+                }
             },
             "bucketList": {
                 "description": "Buckets List",
@@ -35742,7 +35781,11 @@
                 "required": [
                     "total",
                     "buckets"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "buckets": ""
+                }
             },
             "resourceTokenList": {
                 "description": "Resource Tokens List",
@@ -35766,7 +35809,11 @@
                 "required": [
                     "total",
                     "tokens"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "tokens": ""
+                }
             },
             "teamList": {
                 "description": "Teams List",
@@ -35790,7 +35837,11 @@
                 "required": [
                     "total",
                     "teams"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "teams": ""
+                }
             },
             "membershipList": {
                 "description": "Memberships List",
@@ -35814,7 +35865,11 @@
                 "required": [
                     "total",
                     "memberships"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "memberships": ""
+                }
             },
             "siteList": {
                 "description": "Sites List",
@@ -35838,7 +35893,11 @@
                 "required": [
                     "total",
                     "sites"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "sites": ""
+                }
             },
             "templateSiteList": {
                 "description": "Site Templates List",
@@ -35862,7 +35921,11 @@
                 "required": [
                     "total",
                     "templates"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "templates": ""
+                }
             },
             "functionList": {
                 "description": "Functions List",
@@ -35886,7 +35949,11 @@
                 "required": [
                     "total",
                     "functions"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "functions": ""
+                }
             },
             "templateFunctionList": {
                 "description": "Function Templates List",
@@ -35910,7 +35977,11 @@
                 "required": [
                     "total",
                     "templates"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "templates": ""
+                }
             },
             "installationList": {
                 "description": "Installations List",
@@ -35934,7 +36005,11 @@
                 "required": [
                     "total",
                     "installations"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "installations": ""
+                }
             },
             "providerRepositoryFrameworkList": {
                 "description": "Framework Provider Repositories List",
@@ -35958,7 +36033,11 @@
                 "required": [
                     "total",
                     "frameworkProviderRepositories"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "frameworkProviderRepositories": ""
+                }
             },
             "providerRepositoryRuntimeList": {
                 "description": "Runtime Provider Repositories List",
@@ -35982,7 +36061,11 @@
                 "required": [
                     "total",
                     "runtimeProviderRepositories"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "runtimeProviderRepositories": ""
+                }
             },
             "branchList": {
                 "description": "Branches List",
@@ -36006,7 +36089,11 @@
                 "required": [
                     "total",
                     "branches"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "branches": ""
+                }
             },
             "frameworkList": {
                 "description": "Frameworks List",
@@ -36030,7 +36117,11 @@
                 "required": [
                     "total",
                     "frameworks"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "frameworks": ""
+                }
             },
             "runtimeList": {
                 "description": "Runtimes List",
@@ -36054,7 +36145,11 @@
                 "required": [
                     "total",
                     "runtimes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "runtimes": ""
+                }
             },
             "deploymentList": {
                 "description": "Deployments List",
@@ -36078,7 +36173,11 @@
                 "required": [
                     "total",
                     "deployments"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "deployments": ""
+                }
             },
             "executionList": {
                 "description": "Executions List",
@@ -36102,7 +36201,11 @@
                 "required": [
                     "total",
                     "executions"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "executions": ""
+                }
             },
             "projectList": {
                 "description": "Projects List",
@@ -36126,7 +36229,11 @@
                 "required": [
                     "total",
                     "projects"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "projects": ""
+                }
             },
             "webhookList": {
                 "description": "Webhooks List",
@@ -36150,7 +36257,11 @@
                 "required": [
                     "total",
                     "webhooks"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "webhooks": ""
+                }
             },
             "keyList": {
                 "description": "API Keys List",
@@ -36174,7 +36285,11 @@
                 "required": [
                     "total",
                     "keys"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "keys": ""
+                }
             },
             "devKeyList": {
                 "description": "Dev Keys List",
@@ -36198,7 +36313,11 @@
                 "required": [
                     "total",
                     "devKeys"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "devKeys": ""
+                }
             },
             "platformList": {
                 "description": "Platforms List",
@@ -36222,7 +36341,11 @@
                 "required": [
                     "total",
                     "platforms"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "platforms": ""
+                }
             },
             "countryList": {
                 "description": "Countries List",
@@ -36246,7 +36369,11 @@
                 "required": [
                     "total",
                     "countries"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "countries": ""
+                }
             },
             "continentList": {
                 "description": "Continents List",
@@ -36270,7 +36397,11 @@
                 "required": [
                     "total",
                     "continents"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "continents": ""
+                }
             },
             "languageList": {
                 "description": "Languages List",
@@ -36294,7 +36425,11 @@
                 "required": [
                     "total",
                     "languages"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "languages": ""
+                }
             },
             "currencyList": {
                 "description": "Currencies List",
@@ -36318,7 +36453,11 @@
                 "required": [
                     "total",
                     "currencies"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "currencies": ""
+                }
             },
             "phoneList": {
                 "description": "Phones List",
@@ -36342,7 +36481,11 @@
                 "required": [
                     "total",
                     "phones"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "phones": ""
+                }
             },
             "variableList": {
                 "description": "Variables List",
@@ -36366,7 +36509,11 @@
                 "required": [
                     "total",
                     "variables"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "variables": ""
+                }
             },
             "proxyRuleList": {
                 "description": "Rule List",
@@ -36390,7 +36537,11 @@
                 "required": [
                     "total",
                     "rules"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "rules": ""
+                }
             },
             "localeCodeList": {
                 "description": "Locale codes list",
@@ -36414,7 +36565,11 @@
                 "required": [
                     "total",
                     "localeCodes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "localeCodes": ""
+                }
             },
             "providerList": {
                 "description": "Provider list",
@@ -36438,7 +36593,11 @@
                 "required": [
                     "total",
                     "providers"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "providers": ""
+                }
             },
             "messageList": {
                 "description": "Message list",
@@ -36462,7 +36621,11 @@
                 "required": [
                     "total",
                     "messages"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "messages": ""
+                }
             },
             "topicList": {
                 "description": "Topic list",
@@ -36486,7 +36649,11 @@
                 "required": [
                     "total",
                     "topics"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "topics": ""
+                }
             },
             "subscriberList": {
                 "description": "Subscriber list",
@@ -36510,7 +36677,11 @@
                 "required": [
                     "total",
                     "subscribers"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "subscribers": ""
+                }
             },
             "targetList": {
                 "description": "Target list",
@@ -36534,7 +36705,11 @@
                 "required": [
                     "total",
                     "targets"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "targets": ""
+                }
             },
             "migrationList": {
                 "description": "Migrations List",
@@ -36558,7 +36733,11 @@
                 "required": [
                     "total",
                     "migrations"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "migrations": ""
+                }
             },
             "specificationList": {
                 "description": "Specifications List",
@@ -36582,7 +36761,11 @@
                 "required": [
                     "total",
                     "specifications"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "specifications": ""
+                }
             },
             "vcsContentList": {
                 "description": "VCS Content List",
@@ -36606,7 +36789,11 @@
                 "required": [
                     "total",
                     "contents"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "contents": ""
+                }
             },
             "database": {
                 "description": "Database",
@@ -36644,7 +36831,14 @@
                     "$createdAt",
                     "$updatedAt",
                     "enabled"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "name": "My Database",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "enabled": false
+                }
             },
             "collection": {
                 "description": "Collection",
@@ -36754,7 +36948,21 @@
                     "documentSecurity",
                     "attributes",
                     "indexes"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "databaseId": "5e5ea5c16897e",
+                    "name": "My Collection",
+                    "enabled": false,
+                    "documentSecurity": true,
+                    "attributes": {},
+                    "indexes": {}
+                }
             },
             "attributeList": {
                 "description": "Attributes List",
@@ -36809,7 +37017,11 @@
                 "required": [
                     "total",
                     "attributes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "attributes": ""
+                }
             },
             "attributeString": {
                 "description": "AttributeString",
@@ -36884,7 +37096,20 @@
                     "$createdAt",
                     "$updatedAt",
                     "size"
-                ]
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "size": 128,
+                    "default": "default",
+                    "encrypt": false
+                }
             },
             "attributeInteger": {
                 "description": "AttributeInteger",
@@ -36961,7 +37186,20 @@
                     "required",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "count",
+                    "type": "integer",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "min": 1,
+                    "max": 10,
+                    "default": 10
+                }
             },
             "attributeFloat": {
                 "description": "AttributeFloat",
@@ -37038,7 +37276,20 @@
                     "required",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "percentageCompleted",
+                    "type": "double",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "min": 1.5,
+                    "max": 10.5,
+                    "default": 2.5
+                }
             },
             "attributeBoolean": {
                 "description": "AttributeBoolean",
@@ -37100,7 +37351,18 @@
                     "required",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "isEnabled",
+                    "type": "boolean",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": false
+                }
             },
             "attributeEmail": {
                 "description": "AttributeEmail",
@@ -37168,7 +37430,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "userEmail",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "email",
+                    "default": "default@example.com"
+                }
             },
             "attributeEnum": {
                 "description": "AttributeEnum",
@@ -37245,7 +37519,20 @@
                     "$updatedAt",
                     "elements",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "status",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "elements": "element",
+                    "format": "enum",
+                    "default": "element"
+                }
             },
             "attributeIp": {
                 "description": "AttributeIP",
@@ -37313,7 +37600,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "ipAddress",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "ip",
+                    "default": "192.0.2.0"
+                }
             },
             "attributeUrl": {
                 "description": "AttributeURL",
@@ -37381,7 +37680,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "githubUrl",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "url",
+                    "default": "http:\/\/example.com"
+                }
             },
             "attributeDatetime": {
                 "description": "AttributeDatetime",
@@ -37449,7 +37760,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "birthDay",
+                    "type": "datetime",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "datetime",
+                    "default": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "attributeRelationship": {
                 "description": "AttributeRelationship",
@@ -37541,7 +37864,23 @@
                     "twoWayKey",
                     "onDelete",
                     "side"
-                ]
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "relatedCollection": "collection",
+                    "relationType": "oneToOne|oneToMany|manyToOne|manyToMany",
+                    "twoWay": false,
+                    "twoWayKey": "string",
+                    "onDelete": "restrict|cascade|setNull",
+                    "side": "parent|child"
+                }
             },
             "index": {
                 "description": "Index",
@@ -37613,7 +37952,18 @@
                     "lengths",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "index1",
+                    "type": "primary",
+                    "status": "available",
+                    "error": "string",
+                    "attributes": [],
+                    "lengths": [],
+                    "orders": [],
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "document": {
                 "description": "Document",
@@ -37670,7 +38020,23 @@
                     "$createdAt",
                     "$updatedAt",
                     "$permissions"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$sequence": 1,
+                    "$collectionId": "5e5ea5c15117e",
+                    "$databaseId": "5e5ea5c15117e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "username": "john.doe",
+                    "email": "john.doe@example.com",
+                    "fullName": "John Doe",
+                    "age": 30,
+                    "isAdmin": false
+                }
             },
             "log": {
                 "description": "Log",
@@ -37804,7 +38170,30 @@
                     "deviceModel",
                     "countryCode",
                     "countryName"
-                ]
+                ],
+                "example": {
+                    "event": "account.sessions.create",
+                    "userId": "610fc2f985ee0",
+                    "userEmail": "john@appwrite.io",
+                    "userName": "John Doe",
+                    "mode": "admin",
+                    "ip": "127.0.0.1",
+                    "time": "2020-10-15T06:38:00.000+00:00",
+                    "osCode": "Mac",
+                    "osName": "Mac",
+                    "osVersion": "Mac",
+                    "clientType": "browser",
+                    "clientCode": "CM",
+                    "clientName": "Chrome Mobile iOS",
+                    "clientVersion": "84.0",
+                    "clientEngine": "WebKit",
+                    "clientEngineVersion": "605.1.15",
+                    "deviceName": "smartphone",
+                    "deviceBrand": "Google",
+                    "deviceModel": "Nexus 5",
+                    "countryCode": "US",
+                    "countryName": "United States"
+                }
             },
             "user": {
                 "description": "User",
@@ -37965,7 +38354,33 @@
                     "prefs",
                     "targets",
                     "accessedAt"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "John Doe",
+                    "password": "$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L\/4LdgrVRXxE",
+                    "hash": "argon2",
+                    "hashOptions": {},
+                    "registration": "2020-10-15T06:38:00.000+00:00",
+                    "status": true,
+                    "labels": [
+                        "vip"
+                    ],
+                    "passwordUpdate": "2020-10-15T06:38:00.000+00:00",
+                    "email": "john@appwrite.io",
+                    "phone": "+4930901820",
+                    "emailVerification": true,
+                    "phoneVerification": true,
+                    "mfa": true,
+                    "prefs": {
+                        "theme": "pink",
+                        "timezone": "UTC"
+                    },
+                    "targets": [],
+                    "accessedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "algoMd5": {
                 "description": "AlgoMD5",
@@ -37979,7 +38394,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "md5"
+                }
             },
             "algoSha": {
                 "description": "AlgoSHA",
@@ -37993,7 +38411,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "sha"
+                }
             },
             "algoPhpass": {
                 "description": "AlgoPHPass",
@@ -38007,7 +38428,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "phpass"
+                }
             },
             "algoBcrypt": {
                 "description": "AlgoBcrypt",
@@ -38021,7 +38445,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "bcrypt"
+                }
             },
             "algoScrypt": {
                 "description": "AlgoScrypt",
@@ -38063,7 +38490,14 @@
                     "costMemory",
                     "costParallel",
                     "length"
-                ]
+                ],
+                "example": {
+                    "type": "scrypt",
+                    "costCpu": 8,
+                    "costMemory": 14,
+                    "costParallel": 1,
+                    "length": 64
+                }
             },
             "algoScryptModified": {
                 "description": "AlgoScryptModified",
@@ -38095,7 +38529,13 @@
                     "salt",
                     "saltSeparator",
                     "signerKey"
-                ]
+                ],
+                "example": {
+                    "type": "scryptMod",
+                    "salt": "UxLMreBr6tYyjQ==",
+                    "saltSeparator": "Bw==",
+                    "signerKey": "XyEKE9RcTDeLEsL\/RjwPDBv\/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=="
+                }
             },
             "algoArgon2": {
                 "description": "AlgoArgon2",
@@ -38130,12 +38570,23 @@
                     "memoryCost",
                     "timeCost",
                     "threads"
-                ]
+                ],
+                "example": {
+                    "type": "argon2",
+                    "memoryCost": 65536,
+                    "timeCost": 4,
+                    "threads": 3
+                }
             },
             "preferences": {
                 "description": "Preferences",
                 "type": "object",
-                "additionalProperties": true
+                "additionalProperties": true,
+                "example": {
+                    "language": "en",
+                    "timezone": "UTC",
+                    "darkTheme": true
+                }
             },
             "session": {
                 "description": "Session",
@@ -38322,7 +38773,40 @@
                     "factors",
                     "secret",
                     "mfaUpdatedAt"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5bb8c16897e",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "provider": "email",
+                    "providerUid": "user@example.com",
+                    "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                    "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                    "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                    "ip": "127.0.0.1",
+                    "osCode": "Mac",
+                    "osName": "Mac",
+                    "osVersion": "Mac",
+                    "clientType": "browser",
+                    "clientCode": "CM",
+                    "clientName": "Chrome Mobile iOS",
+                    "clientVersion": "84.0",
+                    "clientEngine": "WebKit",
+                    "clientEngineVersion": "605.1.15",
+                    "deviceName": "smartphone",
+                    "deviceBrand": "Google",
+                    "deviceModel": "Nexus 5",
+                    "countryCode": "US",
+                    "countryName": "United States",
+                    "current": true,
+                    "factors": [
+                        "email"
+                    ],
+                    "secret": "5e5bb8c16897e",
+                    "mfaUpdatedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "identity": {
                 "description": "Identity",
@@ -38390,7 +38874,19 @@
                     "providerAccessToken",
                     "providerAccessTokenExpiry",
                     "providerRefreshToken"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5bb8c16897e",
+                    "provider": "email",
+                    "providerUid": "5e5bb8c16897e",
+                    "providerEmail": "user@example.com",
+                    "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                    "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                    "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+                }
             },
             "token": {
                 "description": "Token",
@@ -38434,7 +38930,15 @@
                     "secret",
                     "expire",
                     "phrase"
-                ]
+                ],
+                "example": {
+                    "$id": "bb8ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5ea5c168bb8",
+                    "secret": "",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "phrase": "Golden Fox"
+                }
             },
             "jwt": {
                 "description": "JWT",
@@ -38448,7 +38952,10 @@
                 },
                 "required": [
                     "jwt"
-                ]
+                ],
+                "example": {
+                    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                }
             },
             "locale": {
                 "description": "Locale",
@@ -38498,7 +39005,16 @@
                     "continent",
                     "eu",
                     "currency"
-                ]
+                ],
+                "example": {
+                    "ip": "127.0.0.1",
+                    "countryCode": "US",
+                    "country": "United States",
+                    "continentCode": "NA",
+                    "continent": "North America",
+                    "eu": false,
+                    "currency": "USD"
+                }
             },
             "localeCode": {
                 "description": "LocaleCode",
@@ -38518,7 +39034,11 @@
                 "required": [
                     "code",
                     "name"
-                ]
+                ],
+                "example": {
+                    "code": "en-us",
+                    "name": "US"
+                }
             },
             "file": {
                 "description": "File",
@@ -38600,7 +39120,22 @@
                     "sizeOriginal",
                     "chunksTotal",
                     "chunksUploaded"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "bucketId": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "name": "Pink.png",
+                    "signature": "5d529fd02b544198ae075bd57c1762bb",
+                    "mimeType": "image\/png",
+                    "sizeOriginal": 17890,
+                    "chunksTotal": 17890,
+                    "chunksUploaded": 17890
+                }
             },
             "bucket": {
                 "description": "Bucket",
@@ -38692,7 +39227,26 @@
                     "compression",
                     "encryption",
                     "antivirus"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "fileSecurity": true,
+                    "name": "Documents",
+                    "enabled": false,
+                    "maximumFileSize": 100,
+                    "allowedFileExtensions": [
+                        "jpg",
+                        "png"
+                    ],
+                    "compression": "gzip",
+                    "encryption": false,
+                    "antivirus": false
+                }
             },
             "resourceToken": {
                 "description": "ResourceToken",
@@ -38742,7 +39296,16 @@
                     "expire",
                     "secret",
                     "accessedAt"
-                ]
+                ],
+                "example": {
+                    "$id": "bb8ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "resourceId": "5e5ea5c168bb8:5e5ea5c168bb8",
+                    "resourceType": "files",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "secret": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                    "accessedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "team": {
                 "description": "Team",
@@ -38793,7 +39356,18 @@
                     "name",
                     "total",
                     "prefs"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "VIP",
+                    "total": 7,
+                    "prefs": {
+                        "theme": "pink",
+                        "timezone": "UTC"
+                    }
+                }
             },
             "membership": {
                 "description": "Membership",
@@ -38884,7 +39458,24 @@
                     "confirm",
                     "mfa",
                     "roles"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5ea5c16897e",
+                    "userName": "John Doe",
+                    "userEmail": "john@appwrite.io",
+                    "teamId": "5e5ea5c16897e",
+                    "teamName": "VIP",
+                    "invited": "2020-10-15T06:38:00.000+00:00",
+                    "joined": "2020-10-15T06:38:00.000+00:00",
+                    "confirm": false,
+                    "mfa": false,
+                    "roles": [
+                        "owner"
+                    ]
+                }
             },
             "site": {
                 "description": "Site",
@@ -39070,7 +39661,38 @@
                     "buildRuntime",
                     "adapter",
                     "fallbackFile"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "My Site",
+                    "enabled": false,
+                    "live": false,
+                    "logging": false,
+                    "framework": "react",
+                    "deploymentId": "5e5ea5c16897e",
+                    "deploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "deploymentScreenshotLight": "5e5ea5c16897e",
+                    "deploymentScreenshotDark": "5e5ea5c16897e",
+                    "latestDeploymentId": "5e5ea5c16897e",
+                    "latestDeploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "latestDeploymentStatus": "ready",
+                    "vars": [],
+                    "timeout": 300,
+                    "installCommand": "npm install",
+                    "buildCommand": "npm run build",
+                    "outputDirectory": "build",
+                    "installationId": "6m40at4ejk5h2u9s1hboo",
+                    "providerRepositoryId": "appwrite",
+                    "providerBranch": "main",
+                    "providerRootDirectory": "sites\/helloWorld",
+                    "providerSilentMode": false,
+                    "specification": "s-1vcpu-512mb",
+                    "buildRuntime": "node-22",
+                    "adapter": "static",
+                    "fallbackFile": "index.html"
+                }
             },
             "templateSite": {
                 "description": "Template Site",
@@ -39165,7 +39787,22 @@
                     "providerOwner",
                     "providerVersion",
                     "variables"
-                ]
+                ],
+                "example": {
+                    "key": "starter",
+                    "name": "Starter site",
+                    "tagline": "Minimal web app integrating with Appwrite.",
+                    "demoUrl": "https:\/\/nextjs-starter.appwrite.network\/",
+                    "screenshotDark": "https:\/\/cloud.appwrite.io\/images\/sites\/templates\/template-for-blog-dark.png",
+                    "screenshotLight": "https:\/\/cloud.appwrite.io\/images\/sites\/templates\/template-for-blog-light.png",
+                    "useCases": "Starter",
+                    "frameworks": [],
+                    "vcsProvider": "github",
+                    "providerRepositoryId": "templates",
+                    "providerOwner": "appwrite",
+                    "providerVersion": "main",
+                    "variables": []
+                }
             },
             "templateFramework": {
                 "description": "Template Framework",
@@ -39227,7 +39864,18 @@
                     "buildRuntime",
                     "adapter",
                     "fallbackFile"
-                ]
+                ],
+                "example": {
+                    "key": "sveltekit",
+                    "name": "SvelteKit",
+                    "installCommand": "npm install",
+                    "buildCommand": "npm run build",
+                    "outputDirectory": ".\/build",
+                    "providerRootDirectory": ".\/svelte-kit\/starter",
+                    "buildRuntime": "node-22",
+                    "adapter": "ssr",
+                    "fallbackFile": "index.html"
+                }
             },
             "function": {
                 "description": "Function",
@@ -39416,7 +40064,37 @@
                     "providerRootDirectory",
                     "providerSilentMode",
                     "specification"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "execute": "users",
+                    "name": "My Function",
+                    "enabled": false,
+                    "live": false,
+                    "logging": false,
+                    "runtime": "python-3.8",
+                    "deploymentId": "5e5ea5c16897e",
+                    "deploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "latestDeploymentId": "5e5ea5c16897e",
+                    "latestDeploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "latestDeploymentStatus": "ready",
+                    "scopes": "users.read",
+                    "vars": [],
+                    "events": "account.create",
+                    "schedule": "5 4 * * *",
+                    "timeout": 300,
+                    "entrypoint": "index.js",
+                    "commands": "npm install",
+                    "version": "v2",
+                    "installationId": "6m40at4ejk5h2u9s1hboo",
+                    "providerRepositoryId": "appwrite",
+                    "providerBranch": "main",
+                    "providerRootDirectory": "functions\/helloWorld",
+                    "providerSilentMode": false,
+                    "specification": "s-1vcpu-512mb"
+                }
             },
             "templateFunction": {
                 "description": "Template Function",
@@ -39545,7 +40223,26 @@
                     "providerVersion",
                     "variables",
                     "scopes"
-                ]
+                ],
+                "example": {
+                    "icon": "icon-lightning-bolt",
+                    "id": "starter",
+                    "name": "Starter function",
+                    "tagline": "A simple function to get started.",
+                    "permissions": "any",
+                    "events": "account.create",
+                    "cron": "0 0 * * *",
+                    "timeout": 300,
+                    "useCases": "Starter",
+                    "runtimes": [],
+                    "instructions": "For documentation and instructions check out <link>.",
+                    "vcsProvider": "github",
+                    "providerRepositoryId": "templates",
+                    "providerOwner": "appwrite",
+                    "providerVersion": "main",
+                    "variables": [],
+                    "scopes": "users.read"
+                }
             },
             "templateRuntime": {
                 "description": "Template Runtime",
@@ -39577,7 +40274,13 @@
                     "commands",
                     "entrypoint",
                     "providerRootDirectory"
-                ]
+                ],
+                "example": {
+                    "name": "node-19.0",
+                    "commands": "npm install",
+                    "entrypoint": "index.js",
+                    "providerRootDirectory": "node\/starter"
+                }
             },
             "templateVariable": {
                 "description": "Template Variable",
@@ -39627,7 +40330,16 @@
                     "placeholder",
                     "required",
                     "type"
-                ]
+                ],
+                "example": {
+                    "name": "APPWRITE_DATABASE_ID",
+                    "description": "The ID of the Appwrite database that contains the collection to sync.",
+                    "value": "512",
+                    "secret": false,
+                    "placeholder": "64a55...7b912",
+                    "required": false,
+                    "type": "password"
+                }
             },
             "installation": {
                 "description": "Installation",
@@ -39671,7 +40383,15 @@
                     "provider",
                     "organization",
                     "providerInstallationId"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "provider": "github",
+                    "organization": "appwrite",
+                    "providerInstallationId": "5322"
+                }
             },
             "providerRepository": {
                 "description": "ProviderRepository",
@@ -39702,6 +40422,11 @@
                         "description": "Is VCS (Version Control System) repository private?",
                         "x-example": true
                     },
+                    "defaultBranch": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) repository's default branch name.",
+                        "x-example": "main"
+                    },
                     "pushedAt": {
                         "type": "string",
                         "description": "Last commit date in ISO 8601 format.",
@@ -39714,8 +40439,18 @@
                     "organization",
                     "provider",
                     "private",
+                    "defaultBranch",
                     "pushedAt"
-                ]
+                ],
+                "example": {
+                    "id": "5e5ea5c16897e",
+                    "name": "appwrite",
+                    "organization": "appwrite",
+                    "provider": "github",
+                    "private": true,
+                    "defaultBranch": "main",
+                    "pushedAt": "datetime"
+                }
             },
             "providerRepositoryFramework": {
                 "description": "ProviderRepositoryFramework",
@@ -39746,6 +40481,11 @@
                         "description": "Is VCS (Version Control System) repository private?",
                         "x-example": true
                     },
+                    "defaultBranch": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) repository's default branch name.",
+                        "x-example": "main"
+                    },
                     "pushedAt": {
                         "type": "string",
                         "description": "Last commit date in ISO 8601 format.",
@@ -39763,9 +40503,20 @@
                     "organization",
                     "provider",
                     "private",
+                    "defaultBranch",
                     "pushedAt",
                     "framework"
-                ]
+                ],
+                "example": {
+                    "id": "5e5ea5c16897e",
+                    "name": "appwrite",
+                    "organization": "appwrite",
+                    "provider": "github",
+                    "private": true,
+                    "defaultBranch": "main",
+                    "pushedAt": "datetime",
+                    "framework": "nextjs"
+                }
             },
             "providerRepositoryRuntime": {
                 "description": "ProviderRepositoryRuntime",
@@ -39796,6 +40547,11 @@
                         "description": "Is VCS (Version Control System) repository private?",
                         "x-example": true
                     },
+                    "defaultBranch": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) repository's default branch name.",
+                        "x-example": "main"
+                    },
                     "pushedAt": {
                         "type": "string",
                         "description": "Last commit date in ISO 8601 format.",
@@ -39813,9 +40569,20 @@
                     "organization",
                     "provider",
                     "private",
+                    "defaultBranch",
                     "pushedAt",
                     "runtime"
-                ]
+                ],
+                "example": {
+                    "id": "5e5ea5c16897e",
+                    "name": "appwrite",
+                    "organization": "appwrite",
+                    "provider": "github",
+                    "private": true,
+                    "defaultBranch": "main",
+                    "pushedAt": "datetime",
+                    "runtime": "node-22"
+                }
             },
             "detectionFramework": {
                 "description": "DetectionFramework",
@@ -39847,7 +40614,13 @@
                     "installCommand",
                     "buildCommand",
                     "outputDirectory"
-                ]
+                ],
+                "example": {
+                    "framework": "nuxt",
+                    "installCommand": "npm install",
+                    "buildCommand": "npm run build",
+                    "outputDirectory": "dist"
+                }
             },
             "detectionRuntime": {
                 "description": "DetectionRuntime",
@@ -39873,7 +40646,12 @@
                     "runtime",
                     "entrypoint",
                     "commands"
-                ]
+                ],
+                "example": {
+                    "runtime": "node",
+                    "entrypoint": "index.js",
+                    "commands": "npm install && npm run build"
+                }
             },
             "vcsContent": {
                 "description": "VcsContents",
@@ -39900,7 +40678,12 @@
                 },
                 "required": [
                     "name"
-                ]
+                ],
+                "example": {
+                    "size": 1523,
+                    "isDirectory": true,
+                    "name": "Main.java"
+                }
             },
             "branch": {
                 "description": "Branch",
@@ -39914,7 +40697,10 @@
                 },
                 "required": [
                     "name"
-                ]
+                ],
+                "example": {
+                    "name": "main"
+                }
             },
             "runtime": {
                 "description": "Runtime",
@@ -39973,7 +40759,17 @@
                     "image",
                     "logo",
                     "supports"
-                ]
+                ],
+                "example": {
+                    "$id": "python-3.8",
+                    "key": "python",
+                    "name": "Python",
+                    "version": "3.8",
+                    "base": "python:3.8-alpine",
+                    "image": "appwrite\\\/runtime-for-python:3.8",
+                    "logo": "python.png",
+                    "supports": "amd64"
+                }
             },
             "framework": {
                 "description": "Framework",
@@ -40028,7 +40824,25 @@
                     "buildRuntime",
                     "runtimes",
                     "adapters"
-                ]
+                ],
+                "example": {
+                    "key": "sveltekit",
+                    "name": "SvelteKit",
+                    "buildRuntime": "node-22",
+                    "runtimes": [
+                        "static-1",
+                        "node-22"
+                    ],
+                    "adapters": [
+                        {
+                            "key": "static",
+                            "buildRuntime": "node-22",
+                            "buildCommand": "npm run build",
+                            "installCommand": "npm install",
+                            "outputDirectory": ".\/dist"
+                        }
+                    ]
+                }
             },
             "frameworkAdapter": {
                 "description": "Framework Adapter",
@@ -40066,7 +40880,14 @@
                     "buildCommand",
                     "outputDirectory",
                     "fallbackFile"
-                ]
+                ],
+                "example": {
+                    "key": "static",
+                    "installCommand": "npm install",
+                    "buildCommand": "npm run build",
+                    "outputDirectory": ".\/dist",
+                    "fallbackFile": "index.html"
+                }
             },
             "deployment": {
                 "description": "Deployment",
@@ -40240,7 +41061,36 @@
                     "providerCommitMessage",
                     "providerCommitUrl",
                     "providerBranchUrl"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "type": "vcs",
+                    "resourceId": "5e5ea6g16897e",
+                    "resourceType": "functions",
+                    "entrypoint": "index.js",
+                    "sourceSize": 128,
+                    "buildSize": 128,
+                    "totalSize": 128,
+                    "buildId": "5e5ea5c16897e",
+                    "activate": true,
+                    "screenshotLight": "5e5ea5c16897e",
+                    "screenshotDark": "5e5ea5c16897e",
+                    "status": "ready",
+                    "buildLogs": "Compiling source files...",
+                    "buildDuration": 128,
+                    "providerRepositoryName": "database",
+                    "providerRepositoryOwner": "utopia",
+                    "providerRepositoryUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function",
+                    "providerBranch": "0.7.x",
+                    "providerCommitHash": "7c3f25d",
+                    "providerCommitAuthorUrl": "https:\/\/github.com\/vermakhushboo",
+                    "providerCommitAuthor": "Khushboo Verma",
+                    "providerCommitMessage": "Update index.js",
+                    "providerCommitUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb",
+                    "providerBranchUrl": "https:\/\/github.com\/vermakhushboo\/appwrite\/tree\/0.7.x"
+                }
             },
             "execution": {
                 "description": "Execution",
@@ -40371,7 +41221,36 @@
                     "logs",
                     "errors",
                     "duration"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "any"
+                    ],
+                    "functionId": "5e5ea6g16897e",
+                    "trigger": "http",
+                    "status": "processing",
+                    "requestMethod": "GET",
+                    "requestPath": "\/articles?id=5",
+                    "requestHeaders": [
+                        {
+                            "Content-Type": "application\/json"
+                        }
+                    ],
+                    "responseStatusCode": 200,
+                    "responseBody": "",
+                    "responseHeaders": [
+                        {
+                            "Content-Type": "application\/json"
+                        }
+                    ],
+                    "logs": "",
+                    "errors": "",
+                    "duration": 0.4,
+                    "scheduledAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "project": {
                 "description": "Project",
@@ -40767,7 +41646,73 @@
                     "serviceStatusForFunctions",
                     "serviceStatusForGraphql",
                     "serviceStatusForMessaging"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "New Project",
+                    "description": "This is a new project.",
+                    "teamId": "1592981250",
+                    "logo": "5f5c451b403cb",
+                    "url": "5f5c451b403cb",
+                    "legalName": "Company LTD.",
+                    "legalCountry": "US",
+                    "legalState": "New York",
+                    "legalCity": "New York City.",
+                    "legalAddress": "620 Eighth Avenue, New York, NY 10018",
+                    "legalTaxId": "131102020",
+                    "authDuration": 60,
+                    "authLimit": 100,
+                    "authSessionsLimit": 10,
+                    "authPasswordHistory": 5,
+                    "authPasswordDictionary": true,
+                    "authPersonalDataCheck": true,
+                    "authMockNumbers": [
+                        {}
+                    ],
+                    "authSessionAlerts": true,
+                    "authMembershipsUserName": true,
+                    "authMembershipsUserEmail": true,
+                    "authMembershipsMfa": true,
+                    "oAuthProviders": [
+                        {}
+                    ],
+                    "platforms": {},
+                    "webhooks": {},
+                    "keys": {},
+                    "devKeys": {},
+                    "smtpEnabled": false,
+                    "smtpSenderName": "John Appwrite",
+                    "smtpSenderEmail": "john@appwrite.io",
+                    "smtpReplyTo": "support@appwrite.io",
+                    "smtpHost": "mail.appwrite.io",
+                    "smtpPort": 25,
+                    "smtpUsername": "emailuser",
+                    "smtpPassword": "securepassword",
+                    "smtpSecure": "tls",
+                    "pingCount": 1,
+                    "pingedAt": "2020-10-15T06:38:00.000+00:00",
+                    "authEmailPassword": true,
+                    "authUsersAuthMagicURL": true,
+                    "authEmailOtp": true,
+                    "authAnonymous": true,
+                    "authInvites": true,
+                    "authJWT": true,
+                    "authPhone": true,
+                    "serviceStatusForAccount": true,
+                    "serviceStatusForAvatars": true,
+                    "serviceStatusForDatabases": true,
+                    "serviceStatusForLocale": true,
+                    "serviceStatusForHealth": true,
+                    "serviceStatusForStorage": true,
+                    "serviceStatusForTeams": true,
+                    "serviceStatusForUsers": true,
+                    "serviceStatusForSites": true,
+                    "serviceStatusForFunctions": true,
+                    "serviceStatusForGraphql": true,
+                    "serviceStatusForMessaging": true
+                }
             },
             "webhook": {
                 "description": "Webhook",
@@ -40857,7 +41802,22 @@
                     "enabled",
                     "logs",
                     "attempts"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "My Webhook",
+                    "url": "https:\/\/example.com\/webhook",
+                    "events": "database.collections.update",
+                    "security": true,
+                    "httpUser": "username",
+                    "httpPass": "password",
+                    "signatureKey": "ad3d581ca230e2b7059c545e5a",
+                    "enabled": true,
+                    "logs": "Failed to connect to remote server.",
+                    "attempts": 10
+                }
             },
             "key": {
                 "description": "Key",
@@ -40925,7 +41885,18 @@
                     "secret",
                     "accessedAt",
                     "sdks"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "My API Key",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "scopes": "users.read",
+                    "secret": "919c2d18fb5d4...a2ae413da83346ad2",
+                    "accessedAt": "2020-10-15T06:38:00.000+00:00",
+                    "sdks": "appwrite:flutter"
+                }
             },
             "devKey": {
                 "description": "DevKey",
@@ -40984,7 +41955,17 @@
                     "secret",
                     "accessedAt",
                     "sdks"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "Dev API Key",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "secret": "919c2d18fb5d4...a2ae413da83346ad2",
+                    "accessedAt": "2020-10-15T06:38:00.000+00:00",
+                    "sdks": "appwrite:flutter"
+                }
             },
             "mockNumber": {
                 "description": "Mock Number",
@@ -41004,7 +41985,11 @@
                 "required": [
                     "phone",
                     "otp"
-                ]
+                ],
+                "example": {
+                    "phone": "+1612842323",
+                    "otp": "123456"
+                }
             },
             "authProvider": {
                 "description": "AuthProvider",
@@ -41042,7 +42027,14 @@
                     "appId",
                     "secret",
                     "enabled"
-                ]
+                ],
+                "example": {
+                    "key": "github",
+                    "name": "GitHub",
+                    "appId": "259125845563242502",
+                    "secret": "Bpw_g9c2TGXxfgLshDbSaL8tsCcqgczQ",
+                    "enabled": ""
+                }
             },
             "platform": {
                 "description": "Platform",
@@ -41110,7 +42102,19 @@
                     "hostname",
                     "httpUser",
                     "httpPass"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "My Web App",
+                    "type": "web",
+                    "key": "com.company.appname",
+                    "store": "",
+                    "hostname": true,
+                    "httpUser": "username",
+                    "httpPass": "password"
+                }
             },
             "variable": {
                 "description": "Variable",
@@ -41166,7 +42170,17 @@
                     "secret",
                     "resourceType",
                     "resourceId"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "key": "API_KEY",
+                    "value": "myPa$$word1",
+                    "secret": false,
+                    "resourceType": "function",
+                    "resourceId": "myAwesomeFunction"
+                }
             },
             "country": {
                 "description": "Country",
@@ -41186,7 +42200,11 @@
                 "required": [
                     "name",
                     "code"
-                ]
+                ],
+                "example": {
+                    "name": "United States",
+                    "code": "US"
+                }
             },
             "continent": {
                 "description": "Continent",
@@ -41206,7 +42224,11 @@
                 "required": [
                     "name",
                     "code"
-                ]
+                ],
+                "example": {
+                    "name": "Europe",
+                    "code": "EU"
+                }
             },
             "language": {
                 "description": "Language",
@@ -41232,7 +42254,12 @@
                     "name",
                     "code",
                     "nativeName"
-                ]
+                ],
+                "example": {
+                    "name": "Italian",
+                    "code": "it",
+                    "nativeName": "Italiano"
+                }
             },
             "currency": {
                 "description": "Currency",
@@ -41284,7 +42311,16 @@
                     "rounding",
                     "code",
                     "namePlural"
-                ]
+                ],
+                "example": {
+                    "symbol": "$",
+                    "name": "US dollar",
+                    "symbolNative": "$",
+                    "decimalDigits": 2,
+                    "rounding": 0,
+                    "code": "USD",
+                    "namePlural": "US dollars"
+                }
             },
             "phone": {
                 "description": "Phone",
@@ -41310,7 +42346,12 @@
                     "code",
                     "countryCode",
                     "countryName"
-                ]
+                ],
+                "example": {
+                    "code": "+1",
+                    "countryCode": "US",
+                    "countryName": "United States"
+                }
             },
             "healthAntivirus": {
                 "description": "Health Antivirus",
@@ -41330,7 +42371,11 @@
                 "required": [
                     "version",
                     "status"
-                ]
+                ],
+                "example": {
+                    "version": "1.0.0",
+                    "status": "online"
+                }
             },
             "healthQueue": {
                 "description": "Health Queue",
@@ -41345,7 +42390,10 @@
                 },
                 "required": [
                     "size"
-                ]
+                ],
+                "example": {
+                    "size": 8
+                }
             },
             "healthStatus": {
                 "description": "Health Status",
@@ -41372,7 +42420,12 @@
                     "name",
                     "ping",
                     "status"
-                ]
+                ],
+                "example": {
+                    "name": "database",
+                    "ping": 128,
+                    "status": "pass"
+                }
             },
             "healthCertificate": {
                 "description": "Health Certificate",
@@ -41416,7 +42469,15 @@
                     "validFrom",
                     "validTo",
                     "signatureTypeSN"
-                ]
+                ],
+                "example": {
+                    "name": "\/CN=www.google.com",
+                    "subjectSN": "",
+                    "issuerOrganisation": "",
+                    "validFrom": "1704200998",
+                    "validTo": "1711458597",
+                    "signatureTypeSN": "RSA-SHA256"
+                }
             },
             "healthTime": {
                 "description": "Health Time",
@@ -41445,7 +42506,12 @@
                     "remoteTime",
                     "localTime",
                     "diff"
-                ]
+                ],
+                "example": {
+                    "remoteTime": 1639490751,
+                    "localTime": 1639490844,
+                    "diff": 93
+                }
             },
             "metric": {
                 "description": "Metric",
@@ -41466,7 +42532,11 @@
                 "required": [
                     "value",
                     "date"
-                ]
+                ],
+                "example": {
+                    "value": 1,
+                    "date": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "metricBreakdown": {
                 "description": "Metric Breakdown",
@@ -41500,7 +42570,13 @@
                 "required": [
                     "name",
                     "value"
-                ]
+                ],
+                "example": {
+                    "resourceId": "5e5ea5c16897e",
+                    "name": "Documents",
+                    "value": 1,
+                    "estimate": 1
+                }
             },
             "usageDatabases": {
                 "description": "UsageDatabases",
@@ -41610,7 +42686,22 @@
                     "storage",
                     "databasesReads",
                     "databasesWrites"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "databasesTotal": 0,
+                    "collectionsTotal": 0,
+                    "documentsTotal": 0,
+                    "storageTotal": 0,
+                    "databasesReadsTotal": 0,
+                    "databasesWritesTotal": 0,
+                    "databases": [],
+                    "collections": [],
+                    "documents": [],
+                    "storage": [],
+                    "databasesReads": [],
+                    "databasesWrites": []
+                }
             },
             "usageDatabase": {
                 "description": "UsageDatabase",
@@ -41704,7 +42795,20 @@
                     "storage",
                     "databaseReads",
                     "databaseWrites"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "collectionsTotal": 0,
+                    "documentsTotal": 0,
+                    "storageTotal": 0,
+                    "databaseReadsTotal": 0,
+                    "databaseWritesTotal": 0,
+                    "collections": [],
+                    "documents": [],
+                    "storage": [],
+                    "databaseReads": [],
+                    "databaseWrites": []
+                }
             },
             "usageCollection": {
                 "description": "UsageCollection",
@@ -41734,7 +42838,12 @@
                     "range",
                     "documentsTotal",
                     "documents"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "documentsTotal": 0,
+                    "documents": []
+                }
             },
             "usageUsers": {
                 "description": "UsageUsers",
@@ -41780,7 +42889,14 @@
                     "sessionsTotal",
                     "users",
                     "sessions"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "usersTotal": 0,
+                    "sessionsTotal": 0,
+                    "users": [],
+                    "sessions": []
+                }
             },
             "usageStorage": {
                 "description": "StorageUsage",
@@ -41842,7 +42958,16 @@
                     "buckets",
                     "files",
                     "storage"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "bucketsTotal": 0,
+                    "filesTotal": 0,
+                    "filesStorageTotal": 0,
+                    "buckets": [],
+                    "files": [],
+                    "storage": []
+                }
             },
             "usageBuckets": {
                 "description": "UsageBuckets",
@@ -41904,7 +43029,16 @@
                     "storage",
                     "imageTransformations",
                     "imageTransformationsTotal"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "filesTotal": 0,
+                    "filesStorageTotal": 0,
+                    "files": [],
+                    "storage": [],
+                    "imageTransformations": [],
+                    "imageTransformationsTotal": 0
+                }
             },
             "usageFunctions": {
                 "description": "UsageFunctions",
@@ -42110,7 +43244,34 @@
                     "executionsMbSeconds",
                     "buildsSuccess",
                     "buildsFailed"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "functionsTotal": 0,
+                    "deploymentsTotal": 0,
+                    "deploymentsStorageTotal": 0,
+                    "buildsTotal": 0,
+                    "buildsStorageTotal": 0,
+                    "buildsTimeTotal": 0,
+                    "buildsMbSecondsTotal": 0,
+                    "executionsTotal": 0,
+                    "executionsTimeTotal": 0,
+                    "executionsMbSecondsTotal": 0,
+                    "functions": 0,
+                    "deployments": [],
+                    "deploymentsStorage": [],
+                    "buildsSuccessTotal": 0,
+                    "buildsFailedTotal": 0,
+                    "builds": [],
+                    "buildsStorage": [],
+                    "buildsTime": [],
+                    "buildsMbSeconds": [],
+                    "executions": [],
+                    "executionsTime": [],
+                    "executionsMbSeconds": [],
+                    "buildsSuccess": [],
+                    "buildsFailed": []
+                }
             },
             "usageFunction": {
                 "description": "UsageFunction",
@@ -42307,7 +43468,33 @@
                     "executionsMbSeconds",
                     "buildsSuccess",
                     "buildsFailed"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "deploymentsTotal": 0,
+                    "deploymentsStorageTotal": 0,
+                    "buildsTotal": 0,
+                    "buildsSuccessTotal": 0,
+                    "buildsFailedTotal": 0,
+                    "buildsStorageTotal": 0,
+                    "buildsTimeTotal": 0,
+                    "buildsTimeAverage": 0,
+                    "buildsMbSecondsTotal": 0,
+                    "executionsTotal": 0,
+                    "executionsTimeTotal": 0,
+                    "executionsMbSecondsTotal": 0,
+                    "deployments": [],
+                    "deploymentsStorage": [],
+                    "builds": [],
+                    "buildsStorage": [],
+                    "buildsTime": [],
+                    "buildsMbSeconds": [],
+                    "executions": [],
+                    "executionsTime": [],
+                    "executionsMbSeconds": [],
+                    "buildsSuccess": [],
+                    "buildsFailed": []
+                }
             },
             "usageSites": {
                 "description": "UsageSites",
@@ -42561,7 +43748,40 @@
                     "inbound",
                     "outboundTotal",
                     "outbound"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "deploymentsTotal": 0,
+                    "deploymentsStorageTotal": 0,
+                    "buildsTotal": 0,
+                    "buildsStorageTotal": 0,
+                    "buildsTimeTotal": 0,
+                    "buildsMbSecondsTotal": 0,
+                    "executionsTotal": 0,
+                    "executionsTimeTotal": 0,
+                    "executionsMbSecondsTotal": 0,
+                    "deployments": [],
+                    "deploymentsStorage": [],
+                    "buildsSuccessTotal": 0,
+                    "buildsFailedTotal": 0,
+                    "builds": [],
+                    "buildsStorage": [],
+                    "buildsTime": [],
+                    "buildsMbSeconds": [],
+                    "executions": [],
+                    "executionsTime": [],
+                    "executionsMbSeconds": [],
+                    "buildsSuccess": [],
+                    "buildsFailed": [],
+                    "sitesTotal": 0,
+                    "sites": [],
+                    "requestsTotal": 0,
+                    "requests": [],
+                    "inboundTotal": 0,
+                    "inbound": [],
+                    "outboundTotal": 0,
+                    "outbound": []
+                }
             },
             "usageSite": {
                 "description": "UsageSite",
@@ -42806,7 +44026,39 @@
                     "inbound",
                     "outboundTotal",
                     "outbound"
-                ]
+                ],
+                "example": {
+                    "range": "30d",
+                    "deploymentsTotal": 0,
+                    "deploymentsStorageTotal": 0,
+                    "buildsTotal": 0,
+                    "buildsSuccessTotal": 0,
+                    "buildsFailedTotal": 0,
+                    "buildsStorageTotal": 0,
+                    "buildsTimeTotal": 0,
+                    "buildsTimeAverage": 0,
+                    "buildsMbSecondsTotal": 0,
+                    "executionsTotal": 0,
+                    "executionsTimeTotal": 0,
+                    "executionsMbSecondsTotal": 0,
+                    "deployments": [],
+                    "deploymentsStorage": [],
+                    "builds": [],
+                    "buildsStorage": [],
+                    "buildsTime": [],
+                    "buildsMbSeconds": [],
+                    "executions": [],
+                    "executionsTime": [],
+                    "executionsMbSeconds": [],
+                    "buildsSuccess": [],
+                    "buildsFailed": [],
+                    "requestsTotal": 0,
+                    "requests": [],
+                    "inboundTotal": 0,
+                    "inbound": [],
+                    "outboundTotal": 0,
+                    "outbound": []
+                }
             },
             "usageProject": {
                 "description": "UsageProject",
@@ -43059,7 +44311,40 @@
                     "databasesWrites",
                     "imageTransformations",
                     "imageTransformationsTotal"
-                ]
+                ],
+                "example": {
+                    "executionsTotal": 0,
+                    "documentsTotal": 0,
+                    "databasesTotal": 0,
+                    "databasesStorageTotal": 0,
+                    "usersTotal": 0,
+                    "filesStorageTotal": 0,
+                    "functionsStorageTotal": 0,
+                    "buildsStorageTotal": 0,
+                    "deploymentsStorageTotal": 0,
+                    "bucketsTotal": 0,
+                    "executionsMbSecondsTotal": 0,
+                    "buildsMbSecondsTotal": 0,
+                    "databasesReadsTotal": 0,
+                    "databasesWritesTotal": 0,
+                    "requests": [],
+                    "network": [],
+                    "users": [],
+                    "executions": [],
+                    "executionsBreakdown": [],
+                    "bucketsBreakdown": [],
+                    "databasesStorageBreakdown": [],
+                    "executionsMbSecondsBreakdown": [],
+                    "buildsMbSecondsBreakdown": [],
+                    "functionsStorageBreakdown": [],
+                    "authPhoneTotal": 0,
+                    "authPhoneEstimate": 0,
+                    "authPhoneCountryBreakdown": [],
+                    "databasesReads": [],
+                    "databasesWrites": [],
+                    "imageTransformations": [],
+                    "imageTransformationsTotal": 0
+                }
             },
             "headers": {
                 "description": "Headers",
@@ -43079,7 +44364,11 @@
                 "required": [
                     "name",
                     "value"
-                ]
+                ],
+                "example": {
+                    "name": "Content-Type",
+                    "value": "application\/json"
+                }
             },
             "specification": {
                 "description": "Specification",
@@ -43113,7 +44402,13 @@
                     "cpus",
                     "enabled",
                     "slug"
-                ]
+                ],
+                "example": {
+                    "memory": 512,
+                    "cpus": 1,
+                    "enabled": true,
+                    "slug": "s-1vcpu-512mb"
+                }
             },
             "proxyRule": {
                 "description": "Rule",
@@ -43212,7 +44507,24 @@
                     "status",
                     "logs",
                     "renewAt"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "domain": "appwrite.company.com",
+                    "type": "deployment",
+                    "trigger": "manual",
+                    "redirectUrl": "https:\/\/appwrite.io\/docs",
+                    "redirectStatusCode": 301,
+                    "deploymentId": "n3u9feiwmf",
+                    "deploymentResourceType": "function",
+                    "deploymentResourceId": "n3u9feiwmf",
+                    "deploymentVcsProviderBranch": "function",
+                    "status": "verified",
+                    "logs": "HTTP challegne failed.",
+                    "renewAt": "datetime"
+                }
             },
             "smsTemplate": {
                 "description": "SmsTemplate",
@@ -43238,7 +44550,12 @@
                     "type",
                     "locale",
                     "message"
-                ]
+                ],
+                "example": {
+                    "type": "verification",
+                    "locale": "en_us",
+                    "message": "Click on the link to verify your account."
+                }
             },
             "emailTemplate": {
                 "description": "EmailTemplate",
@@ -43288,7 +44605,16 @@
                     "senderEmail",
                     "replyTo",
                     "subject"
-                ]
+                ],
+                "example": {
+                    "type": "verification",
+                    "locale": "en_us",
+                    "message": "Click on the link to verify your account.",
+                    "senderName": "My User",
+                    "senderEmail": "mail@appwrite.io",
+                    "replyTo": "emails@appwrite.io",
+                    "subject": "Please verify your email address"
+                }
             },
             "consoleVariables": {
                 "description": "Console Variables",
@@ -43376,7 +44702,22 @@
                     "_APP_DOMAIN_FUNCTIONS",
                     "_APP_OPTIONS_FORCE_HTTPS",
                     "_APP_DOMAINS_NAMESERVERS"
-                ]
+                ],
+                "example": {
+                    "_APP_DOMAIN_TARGET_CNAME": "appwrite.io",
+                    "_APP_DOMAIN_TARGET_A": "127.0.0.1",
+                    "_APP_DOMAIN_TARGET_AAAA": "::1",
+                    "_APP_STORAGE_LIMIT": "30000000",
+                    "_APP_COMPUTE_SIZE_LIMIT": "30000000",
+                    "_APP_USAGE_STATS": "enabled",
+                    "_APP_VCS_ENABLED": true,
+                    "_APP_DOMAIN_ENABLED": true,
+                    "_APP_ASSISTANT_ENABLED": true,
+                    "_APP_DOMAIN_SITES": "sites.localhost",
+                    "_APP_DOMAIN_FUNCTIONS": "functions.localhost",
+                    "_APP_OPTIONS_FORCE_HTTPS": "enabled",
+                    "_APP_DOMAINS_NAMESERVERS": "ns1.example.com,ns2.example.com"
+                }
             },
             "mfaChallenge": {
                 "description": "MFA Challenge",
@@ -43408,7 +44749,13 @@
                     "$createdAt",
                     "userId",
                     "expire"
-                ]
+                ],
+                "example": {
+                    "$id": "bb8ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5ea5c168bb8",
+                    "expire": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "mfaRecoveryCodes": {
                 "description": "MFA Recovery Codes",
@@ -43428,7 +44775,13 @@
                 },
                 "required": [
                     "recoveryCodes"
-                ]
+                ],
+                "example": {
+                    "recoveryCodes": [
+                        "a3kf0-s0cl2",
+                        "s0co1-as98s"
+                    ]
+                }
             },
             "mfaType": {
                 "description": "MFAType",
@@ -43448,7 +44801,11 @@
                 "required": [
                     "secret",
                     "uri"
-                ]
+                ],
+                "example": {
+                    "secret": true,
+                    "uri": true
+                }
             },
             "mfaFactors": {
                 "description": "MFAFactors",
@@ -43480,7 +44837,13 @@
                     "phone",
                     "email",
                     "recoveryCode"
-                ]
+                ],
+                "example": {
+                    "totp": true,
+                    "phone": true,
+                    "email": true,
+                    "recoveryCode": true
+                }
             },
             "provider": {
                 "description": "Provider",
@@ -43546,7 +44909,22 @@
                     "enabled",
                     "type",
                     "credentials"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "Mailgun",
+                    "provider": "mailgun",
+                    "enabled": true,
+                    "type": "sms",
+                    "credentials": {
+                        "key": "123456789"
+                    },
+                    "options": {
+                        "from": "sender-email@mydomain"
+                    }
+                }
             },
             "message": {
                 "description": "Message",
@@ -43656,7 +45034,33 @@
                     "deliveredTotal",
                     "data",
                     "status"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "providerType": "email",
+                    "topics": [
+                        "5e5ea5c16897e"
+                    ],
+                    "users": [
+                        "5e5ea5c16897e"
+                    ],
+                    "targets": [
+                        "5e5ea5c16897e"
+                    ],
+                    "scheduledAt": "2020-10-15T06:38:00.000+00:00",
+                    "deliveredAt": "2020-10-15T06:38:00.000+00:00",
+                    "deliveryErrors": [
+                        "Failed to send message to target 5e5ea5c16897e: Credentials not valid."
+                    ],
+                    "deliveredTotal": 1,
+                    "data": {
+                        "subject": "Welcome to Appwrite",
+                        "content": "Hi there, welcome to Appwrite family."
+                    },
+                    "status": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                }
             },
             "topic": {
                 "description": "Topic",
@@ -43718,7 +45122,17 @@
                     "smsTotal",
                     "pushTotal",
                     "subscribe"
-                ]
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "events",
+                    "emailTotal": 100,
+                    "smsTotal": 100,
+                    "pushTotal": 100,
+                    "subscribe": "users"
+                }
             },
             "subscriber": {
                 "description": "Subscriber",
@@ -43792,7 +45206,27 @@
                     "userName",
                     "topicId",
                     "providerType"
-                ]
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "targetId": "259125845563242502",
+                    "target": {
+                        "$id": "259125845563242502",
+                        "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                        "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                        "providerType": "email",
+                        "providerId": "259125845563242502",
+                        "name": "ageon-app-email",
+                        "identifier": "random-mail@email.org",
+                        "userId": "5e5ea5c16897e"
+                    },
+                    "userId": "5e5ea5c16897e",
+                    "userName": "Aegon Targaryen",
+                    "topicId": "259125845563242502",
+                    "providerType": "email"
+                }
             },
             "target": {
                 "description": "Target",
@@ -43854,7 +45288,18 @@
                     "providerType",
                     "identifier",
                     "expired"
-                ]
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "Apple iPhone 12",
+                    "userId": "259125845563242502",
+                    "providerId": "259125845563242502",
+                    "providerType": "email",
+                    "identifier": "token",
+                    "expired": false
+                }
             },
             "migration": {
                 "description": "Migration",
@@ -43942,7 +45387,23 @@
                     "statusCounters",
                     "resourceData",
                     "errors"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "status": "pending",
+                    "stage": "init",
+                    "source": "Appwrite",
+                    "destination": "Appwrite",
+                    "resources": [
+                        "user"
+                    ],
+                    "resourceId": "databaseId:collectionId",
+                    "statusCounters": "{\"Database\": {\"PENDING\": 0, \"SUCCESS\": 1, \"ERROR\": 0, \"SKIP\": 0, \"PROCESSING\": 0, \"WARNING\": 0}}",
+                    "resourceData": "[{\"resource\":\"Database\",\"id\":\"public\",\"status\":\"SUCCESS\",\"message\":\"\"}]",
+                    "errors": []
+                }
             },
             "migrationReport": {
                 "description": "Migration Report",
@@ -44012,7 +45473,18 @@
                     "function",
                     "size",
                     "version"
-                ]
+                ],
+                "example": {
+                    "user": 20,
+                    "team": 20,
+                    "database": 20,
+                    "document": 20,
+                    "file": 20,
+                    "bucket": 20,
+                    "function": 20,
+                    "size": 30000,
+                    "version": "1.4.0"
+                }
             }
         },
         "securitySchemes": {

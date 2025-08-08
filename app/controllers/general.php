@@ -22,11 +22,13 @@ use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
+use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
+use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -850,6 +852,10 @@ App::init()
             if (version_compare($requestFormat, '1.7.0', '<')) {
                 $request->addFilter(new RequestV19());
             }
+            if (version_compare($requestFormat, '1.8.0', '<')) {
+                $dbForProject = $getProjectDB($project);
+                $request->addFilter(new RequestV20($dbForProject, $request->getParams()));
+            }
         }
 
         $domain = $request->getHostname();
@@ -969,6 +975,8 @@ App::init()
                 )
         );
 
+        $warnings = [];
+
         /*
         * Response format
         */
@@ -986,8 +994,11 @@ App::init()
             if (version_compare($responseFormat, '1.7.0', '<')) {
                 $response->addFilter(new ResponseV19());
             }
+            if (version_compare($responseFormat, '1.8.0', '<')) {
+                $response->addFilter(new ResponseV20());
+            }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
-                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+                $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";
             }
         }
 
@@ -1043,6 +1054,22 @@ App::init()
 
         if (!$devKey->isEmpty()) {
             $response->addHeader('Access-Control-Allow-Origin', '*');
+        }
+
+        /**
+         * Deprecation Warning
+         */
+        $sdk = $route->getLabel('sdk', false);
+        $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
+        $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
+        foreach ($sdkItems as $sdkItem) {
+            if ($sdkItem->isDeprecated()) {
+                $warnings[] = $deprecationWarning;
+            }
+        }
+
+        if (!empty($warnings)) {
+            $response->addHeader('X-Appwrite-Warning', implode(';', $warnings));
         }
 
         /*
@@ -1281,7 +1308,7 @@ App::error()
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
-                /** @var Appwrite\SDK\Method $sdk */
+                /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
             }
 
@@ -1401,9 +1428,10 @@ App::get('/robots.txt')
     ->inject('apiKey')
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
+        $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if (($host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
+        if (($host === $consoleDomain || $host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -1434,9 +1462,10 @@ App::get('/humans.txt')
     ->inject('apiKey')
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
+        $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if (($host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
+        if (($host === $consoleDomain || $host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {

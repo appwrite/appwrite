@@ -79,6 +79,7 @@ class Document extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
+        $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
 
         foreach ($document->getAttributes() as $attribute) {
             if (\is_array($attribute)) {
@@ -93,5 +94,16 @@ class Document extends Any
         }
 
         return $document;
+    }
+
+    public function getSampleData(): array
+    {
+        return [
+            'username' => 'john.doe',
+            'email' => 'john.doe@example.com',
+            'fullName' => 'John Doe',
+            'age' => 30,
+            'isAdmin' => false,
+        ];
     }
 }

@@ -31,6 +31,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -427,7 +428,8 @@ App::init()
     ->inject('apiKey')
     ->inject('plan')
     ->inject('devKey')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('telemetry')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -560,6 +562,7 @@ App::init()
             ));
 
         $useCache = $route->getLabel('cache', false);
+        $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
@@ -625,10 +628,12 @@ App::init()
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+                $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (!$isImageTransformation || !$isDisabled) {
                     $response->send($data);
                 }
             } else {
+                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
@@ -806,8 +811,8 @@ App::shutdown()
             Console::info("Triggering database event: \n" .  \json_encode([
                 'projectId' => $project->getId(),
                 'databaseId' => $queueForDatabase->getDatabase()?->getId(),
-                'collectionId' => $queueForDatabase->getCollection()?->getId(),
-                'documentId' => $queueForDatabase->getDocument()?->getId(),
+                'tableId' => $queueForDatabase->getTable()?->getId() ?? $queueForDatabase->getCollection()?->getId(),
+                'rowId' => $queueForDatabase->getRow()?->getId() ?? $queueForDatabase->getDocument()?->getId(),
             ]));
             $queueForDatabase->trigger();
         }
