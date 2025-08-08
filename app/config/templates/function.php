@@ -2091,14 +2091,9 @@ return [
         'timeout' => 15,
         'useCases' => ['auth'],
         'runtimes' => [
-            ...getRuntimes(
-                $templateRuntimes['DART'],
-                'dart pub get',
-                'lib/main.dart',
-                'dart/sign_in_with_apple'
-            ),
+            ...getRuntimes($templateRuntimes['DART'], 'dart pub get', 'lib/main.dart', 'dart/sign_in_with_apple')
         ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/dart/sign_in_with_apple">file</a>.',
+        'instructions' => 'For documentation and instructions, check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/dart/sign_in_with_apple">file</a>.',
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
