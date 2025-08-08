@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ced183858d8fde850249c5c34f6f1b73",
+    "content-hash": "72786a5d87326f396250f18d725dea23",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3545,16 +3545,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.75.2",
+            "version": "0.77.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "669f38dc1686fbbbafbdadc266e0c3c112d8a70c"
+                "reference": "a8ab3a7b25a5a1edf7e7afc83eda9f7aec5ba57d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/669f38dc1686fbbbafbdadc266e0c3c112d8a70c",
-                "reference": "669f38dc1686fbbbafbdadc266e0c3c112d8a70c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a8ab3a7b25a5a1edf7e7afc83eda9f7aec5ba57d",
+                "reference": "a8ab3a7b25a5a1edf7e7afc83eda9f7aec5ba57d",
                 "shasum": ""
             },
             "require": {
@@ -3595,9 +3595,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.75.2"
+                "source": "https://github.com/utopia-php/database/tree/0.77.0"
             },
-            "time": "2025-08-05T08:33:18+00:00"
+            "time": "2025-08-07T09:30:32+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -3643,6 +3643,62 @@
                 "source": "https://github.com/utopia-php/detector/tree/0.1.5"
             },
             "time": "2025-05-19T11:01:28+00:00"
+        },
+        {
+            "name": "utopia-php/dns",
+            "version": "0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/dns.git",
+                "reference": "8fd4161bc3a8021a670c1101b40f6b09a97f1a54"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/8fd4161bc3a8021a670c1101b40f6b09a97f1a54",
+                "reference": "8fd4161bc3a8021a670c1101b40f6b09a97f1a54",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "utopia-php/cli": "0.15.*",
+                "utopia-php/telemetry": "^0.1.1"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.3",
+                "rregeer/phpunit-coverage-check": "^0.3.1",
+                "swoole/ide-helper": "4.6.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\DNS\\": "src/DNS"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "Lite & fast micro PHP DNS server abstraction that is **easy to use**.",
+            "keywords": [
+                "dns",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/dns/issues",
+                "source": "https://github.com/utopia-php/dns/tree/0.3.0"
+            },
+            "time": "2025-08-04T11:05:53+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4045,16 +4101,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.14.2",
+            "version": "0.14.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "025b9953aca5c34dbb4afacacf9ef0e3159e42be"
+                "reference": "c47855518c95f80fde71fec5f6598623eb2fc884"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/025b9953aca5c34dbb4afacacf9ef0e3159e42be",
-                "reference": "025b9953aca5c34dbb4afacacf9ef0e3159e42be",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c47855518c95f80fde71fec5f6598623eb2fc884",
+                "reference": "c47855518c95f80fde71fec5f6598623eb2fc884",
                 "shasum": ""
             },
             "require": {
@@ -4095,9 +4151,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.14.2"
+                "source": "https://github.com/utopia-php/migration/tree/0.14.3"
             },
-            "time": "2025-08-07T04:52:14+00:00"
+            "time": "2025-08-08T13:10:17+00:00"
         },
         {
             "name": "utopia-php/orchestration",
