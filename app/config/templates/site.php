@@ -473,7 +473,7 @@ return [
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
-                'buildCommand' => 'bash build.sh',
+                'buildCommand' => 'bash prepare-env.sh && flutter build web',
             ]),
         ],
         'vcsProvider' => 'github',
