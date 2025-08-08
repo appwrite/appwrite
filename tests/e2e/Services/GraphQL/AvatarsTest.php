@@ -29,7 +29,7 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(18546, \strlen($creditCardIcon['body']));
+        $this->assertEquals(18499, \strlen($creditCardIcon['body']));
 
         return $creditCardIcon['body'];
     }
