@@ -562,14 +562,14 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 if ($latestDocument !== null) {
                     $queries[] =  Query::cursorAfter($latestDocument);
                 }
-                if ($lastSyncUpdate != null) {
+                if ($lastSyncUpdate !== null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
                 $results = [];
                 try {
                     $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
-                    Console::error($th->getMessage());
+                    Console::error('rules ' . $th->getMessage());
                 }
 
                 $sum = count($results);
