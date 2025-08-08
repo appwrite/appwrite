@@ -103,7 +103,8 @@ class XList extends Action
         ]);
 
         $audit = new Audit($dbForProject);
-        $resource = 'database/' . $databaseId . '/' . $this->getContext() . '/' . $collectionId;
+        $prefix = $this->getContext() === TABLES ? 'grid/' : '';
+        $resource = "database/$databaseId/$prefix{$this->getContext()}/$collectionId";
         $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];

@@ -106,12 +106,19 @@ class XList extends Action
         ]);
 
         $audit = new Audit($dbForProject);
+        $isRows = $this->getContext() === ROWS;
 
         // returns what we want, ignore the naming!
         $type = $this->getCollectionsEventsContext();
-        $item = $this->getContext() === ROWS ? 'row' : 'document';
+        $item = $isRows ? 'row' : 'document';
 
-        $resource = "database/$databaseId/$type/{$collectionId}/$item/{$document->getId()}";
+        if (!$isRows) {
+            $resource = "database/$databaseId/$type/$collectionId/$item/{$document->getId()}";
+        } else {
+            // grid
+            $resource = "database/$databaseId/grid/$type/$collectionId/$item/{$document->getId()}";
+        }
+
         $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
