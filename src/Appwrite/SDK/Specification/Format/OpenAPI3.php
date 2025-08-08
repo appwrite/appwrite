@@ -686,7 +686,7 @@ class OpenAPI3 extends Format
                         break;
                 }
 
-                $readonly = $rule['readonly'] ?? false;
+                $readOnly = $rule['readOnly'] ?? false;
                 if ($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
@@ -700,8 +700,8 @@ class OpenAPI3 extends Format
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
-                    if ($readonly) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readonly'] = true;
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
                 } else {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
@@ -713,8 +713,8 @@ class OpenAPI3 extends Format
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
-                    if ($readonly) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readonly'] = true;
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
                 }
                 if ($items) {

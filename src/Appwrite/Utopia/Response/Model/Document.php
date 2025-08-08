@@ -41,21 +41,21 @@ class Document extends Any
                 'description' => 'Document automatically incrementing ID.',
                 'default' => 0,
                 'example' => 1,
-                'readonly' => true,
+                'readOnly' => true,
             ])
             ->addRule('$collectionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
-                'readonly' => true,
+                'readOnly' => true,
             ])
             ->addRule('$databaseId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Database ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
-                'readonly' => true,
+                'readOnly' => true,
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,

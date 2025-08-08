@@ -92,7 +92,7 @@ abstract class Model
             'description' => '',
             'example' => '',
             'sensitive' => false,
-            'readonly' => false
+            'readOnly' => false
         ], $options);
 
         return $this;
@@ -133,7 +133,7 @@ abstract class Model
     /**
      * Get Readonly Fields
      *
-     * Returns list of field names that are marked as readonly
+     * Returns list of field names that are marked as readOnly
      * and should not be allowed in create/update payloads
      *
      * @return array
@@ -143,7 +143,7 @@ abstract class Model
         $list = [];
 
         foreach ($this->rules as $key => $rule) {
-            if ($rule['readonly'] ?? false) {
+            if ($rule['readOnly'] ?? false) {
                 $list[] = $key;
             }
         }

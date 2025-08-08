@@ -38140,19 +38140,19 @@
                     "description": "Document automatically incrementing ID.",
                     "x-example": 1,
                     "format": "int32",
-                    "readonly": true
+                    "readOnly": true
                 },
                 "$collectionId": {
                     "type": "string",
                     "description": "Collection ID.",
                     "x-example": "5e5ea5c15117e",
-                    "readonly": true
+                    "readOnly": true
                 },
                 "$databaseId": {
                     "type": "string",
                     "description": "Database ID.",
                     "x-example": "5e5ea5c15117e",
-                    "readonly": true
+                    "readOnly": true
                 },
                 "$createdAt": {
                     "type": "string",
