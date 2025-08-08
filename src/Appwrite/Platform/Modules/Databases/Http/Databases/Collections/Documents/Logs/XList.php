@@ -106,8 +106,12 @@ class XList extends Action
         ]);
 
         $audit = new Audit($dbForProject);
-        // getContext() => `document` or `row`.
-        $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/' .$this->getContext(). '/' . $document->getId();
+
+        // returns what we want, ignore the naming!
+        $type = $this->getCollectionsEventsContext();
+        $item = $this->getContext() === ROWS ? 'row' : 'document';
+
+        $resource = "database/$databaseId/$type/{$collectionId}/$item/{$document->getId()}";
         $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
