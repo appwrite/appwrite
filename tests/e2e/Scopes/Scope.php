@@ -13,21 +13,6 @@ abstract class Scope extends TestCase
     use Retryable;
     use Async;
 
-    protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
-    {
-        $expected = new \Imagick($expectedImagePath);
-        $actual = new \Imagick();
-        $actual->readImageBlob($actualImageBlob);
-
-        foreach ([$expected, $actual] as $image) {
-            $image->setImageFormat('PNG');
-            $image->stripImage();
-            $image->setOption('png:exclude-chunks', 'date,time,iCCP,sRGB,gAMA,cHRM');
-        }
-
-        $this->assertSame($expected->getImageSignature(), $actual->getImageSignature());
-    }
-
     public const REQUEST_TYPE_WEBHOOK = 'webhook';
     public const REQUEST_TYPE_SMS = 'sms';
 
@@ -110,6 +95,21 @@ abstract class Scope extends TestCase
         }, $timeoutMs, $waitMs);
 
         return $request;
+    }
+
+    protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
+    {
+        $expected = new \Imagick($expectedImagePath);
+        $actual = new \Imagick();
+        $actual->readImageBlob($actualImageBlob);
+
+        foreach ([$expected, $actual] as $image) {
+            $image->setImageFormat('PNG');
+            $image->stripImage();
+            $image->setOption('png:exclude-chunks', 'date,time,iCCP,sRGB,gAMA,cHRM');
+        }
+
+        $this->assertSame($expected->getImageSignature(), $actual->getImageSignature());
     }
 
     /**
