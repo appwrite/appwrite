@@ -114,6 +114,7 @@ abstract class Format
 
     protected function getEnumName(string $service, string $method, string $param): ?string
     {
+        /* `$service` is `$namespace` */
         switch ($service) {
             case 'proxy':
                 switch ($method) {
@@ -174,7 +175,8 @@ abstract class Format
                 break;
             case 'databases':
                 switch ($method) {
-                    case 'getUsage':
+                    /*case 'getUsage':*/
+                    case 'listUsage':
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
                         switch ($param) {
@@ -191,6 +193,39 @@ abstract class Format
                         }
                         break;
                     case 'updateRelationshipAttribute':
+                        switch ($param) {
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'IndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
+            case 'grids':
+                switch ($method) {
+                    case 'getDatabaseUsage':
+                    case 'listDatabaseUsage':
+                    case 'getTableUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'GridUsageRange';
+                        }
+                        break;
+                    case 'createRelationshipColumn':
+                        switch ($param) {
+                            case 'type':
+                                return 'RelationshipType';
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'updateRelationshipColumn':
                         switch ($param) {
                             case 'onDelete':
                                 return 'RelationMutate';
@@ -415,6 +450,7 @@ abstract class Format
         }
         return null;
     }
+
     public function getEnumKeys(string $service, string $method, string $param): array
     {
         $values = [];
@@ -443,9 +479,19 @@ abstract class Format
                 break;
             case 'databases':
                 switch ($method) {
-                    case 'getUsage':
+                    /*case 'getUsage':*/
+                    case 'listUsage':
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
+                        // Range Enum Keys
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
+            case 'grids':
+                switch ($method) {
+                    case 'getDatabaseUsage':
+                    case 'listDatabaseUsage':
+                    case 'getTableUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
@@ -462,15 +508,8 @@ abstract class Format
                         break;
                 }
                 break;
-            case 'functions':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
             case 'sites':
+            case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':

@@ -97,10 +97,10 @@ App::setResource('consumerDatabases', function (BrokerPool $consumer) {
 }, ['consumer']);
 App::setResource('consumerMigrations', function (BrokerPool $consumer) {
     return $consumer;
-}, ['publisher']);
+}, ['consumer']);
 App::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
     return $consumer;
-}, ['publisher']);
+}, ['consumer']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -234,12 +234,12 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if ($mode === APP_MODE_ADMIN) {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
-    } else {
-        if ($project->isEmpty()) {
-            $user = new Document([]);
-        } else {
+    $user = new Document([]);
+
+    if (!empty(Auth::$unique)) {
+        if ($mode === APP_MODE_ADMIN) {
+            $user = $dbForPlatform->getDocument('users', Auth::$unique);
+        } elseif (!$project->isEmpty()) {
             if ($project->getId() === 'console') {
                 $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
@@ -700,6 +700,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         },
     ];
 
+    // NOTE: `params` and `urls` are not used internally in the `Schema::build` function below!
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
             return [ 'queries' => $args['queries']];
@@ -848,9 +849,18 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
+
+            if (empty($teamId)) {
+                return new Document([]);
+            }
+
             $team = Authorization::skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
         }
+    }
+
+    if (empty($teamInternalId)) {
+        return new Document([]);
     }
 
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {

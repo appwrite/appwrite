@@ -12,8 +12,8 @@
     ],
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint",
+        "lint": "vendor/bin/pint --test --config pint.json",
+        "format": "vendor/bin/pint --config pint.json",
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon"
     },
@@ -52,7 +52,7 @@
         "utopia-php/cache": "0.13.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.71.*",
+        "utopia-php/database": "0.77.*",
         "utopia-php/detector": "0.1.*",
         "utopia-php/domains": "0.8.*",
         "utopia-php/dns": "0.3.*",
@@ -63,7 +63,7 @@
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.18.*",
-        "utopia-php/migration": "0.11.*",
+        "utopia-php/migration": "0.14.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.7.*",
         "utopia-php/pools": "0.8.*",
@@ -88,7 +88,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.41.*",
+        "appwrite/sdk-generator": "0.*.*",
         "phpunit/phpunit": "9.*",
         "swoole/ide-helper": "5.1.2",
         "phpstan/phpstan": "1.8.*",

@@ -51,12 +51,12 @@ class Migrate extends Action
         Authorization::disable();
 
         if (!\array_key_exists($version, Migration::$versions)) {
-            Console::error("Version {$version} not found.");
+            Console::error("No migration found for version $version.");
             Console::exit(1);
             return;
         }
 
-        Console::success('Starting Data Migration to version ' . $version);
+        Console::success('Starting data migration to version ' . $version);
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
 

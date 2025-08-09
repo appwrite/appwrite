@@ -89,6 +89,7 @@ abstract class Migration
         '1.7.2' => 'V22',
         '1.7.3' => 'V22',
         '1.7.4' => 'V22',
+        '1.8.0' => 'V23'
     ];
 
     /**
@@ -120,6 +121,7 @@ abstract class Migration
      * @param Document $project
      * @param Database $dbForProject
      * @param Database $dbForPlatform
+     * @param callable|null $getProjectDB
      * @return self
      */
     public function setProject(
