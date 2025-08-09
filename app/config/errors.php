@@ -69,9 +69,14 @@ return [
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
         'code' => 400,
     ],
-    Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
-        'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
-        'description' => 'Query limit exceeded for the current attribute. Usage of more than 100 query values on a single attribute is prohibited.',
+    Exception::GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED => [
+        'name' => Exception::GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED,
+        'description' => 'Query limit exceeded for the current attribute.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED => [
+        'name' => Exception::GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED,
+        'description' => 'Query limit exceeded for the current column.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_INVALID => [
@@ -668,7 +673,7 @@ return [
     ],
     Exception::DATABASE_QUERY_ORDER_NULL => [
         'name' => Exception::DATABASE_QUERY_ORDER_NULL,
-        'description' => 'The order attribute had a null value. Cursor pagination requires all documents order attribute values are non-null.',
+        'description' => 'The order attribute/column had a null value. Cursor pagination requires all documents/rows order attribute/column values are non-null.',
         'code' => 400,
     ],
 
@@ -686,6 +691,23 @@ return [
     Exception::COLLECTION_LIMIT_EXCEEDED => [
         'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
         'description' => 'The maximum number of collections has been reached.',
+        'code' => 400,
+    ],
+
+    /** Tables */
+    Exception::TABLE_NOT_FOUND => [
+        'name' => Exception::TABLE_NOT_FOUND,
+        'description' => 'Table with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TABLE_ALREADY_EXISTS => [
+        'name' => Exception::TABLE_ALREADY_EXISTS,
+        'description' => 'A table with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::TABLE_LIMIT_EXCEEDED => [
+        'name' => Exception::TABLE_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of tables has been reached.',
         'code' => 400,
     ],
 
@@ -723,6 +745,43 @@ return [
     Exception::DOCUMENT_DELETE_RESTRICTED => [
         'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
         'description' => 'Document cannot be deleted because it is referenced by another document.',
+        'code' => 403,
+    ],
+
+    /** Rows */
+    Exception::ROW_NOT_FOUND => [
+        'name' => Exception::ROW_NOT_FOUND,
+        'description' => 'Row with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::ROW_INVALID_STRUCTURE => [
+        'name' => Exception::ROW_INVALID_STRUCTURE,
+        'description' => 'The row structure is invalid. Please ensure the columns match the table definition.',
+        'code' => 400,
+    ],
+    Exception::ROW_MISSING_DATA => [
+        'name' => Exception::ROW_MISSING_DATA,
+        'description' => 'The row data is missing. Try again with row data populated',
+        'code' => 400,
+    ],
+    Exception::ROW_MISSING_PAYLOAD => [
+        'name' => Exception::ROW_MISSING_PAYLOAD,
+        'description' => 'The row data and permissions are missing. You must provide either row data or permissions to be updated.',
+        'code' => 400,
+    ],
+    Exception::ROW_ALREADY_EXISTS => [
+        'name' => Exception::ROW_ALREADY_EXISTS,
+        'description' => 'Row with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::ROW_UPDATE_CONFLICT => [
+        'name' => Exception::ROW_UPDATE_CONFLICT,
+        'description' => 'Remote row is newer than local.',
+        'code' => 409,
+    ],
+    Exception::ROW_DELETE_RESTRICTED => [
+        'name' => Exception::ROW_DELETE_RESTRICTED,
+        'description' => 'Row cannot be deleted because it is referenced by another row.',
         'code' => 403,
     ],
 
@@ -772,13 +831,67 @@ return [
         'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => 'Existing data is too large for new size, truncate your existing data then try again.',
+        'code' => 400,
+    ],
+
+    /** Exists for both Attributes & Columns */
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
         'description' => 'The relationship value is invalid.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_INVALID_RESIZE => [
-        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+
+    /** Columns */
+    Exception::COLUMN_NOT_FOUND => [
+        'name' => Exception::COLUMN_NOT_FOUND,
+        'description' => 'Column with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::COLUMN_UNKNOWN => [
+        'name' => Exception::COLUMN_UNKNOWN,
+        'description' => 'The column required for the index could not be found. Please confirm all your columns are in the available state.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_NOT_AVAILABLE => [
+        'name' => Exception::COLUMN_NOT_AVAILABLE,
+        'description' => 'The requested column is not yet available. Please try again later.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_FORMAT_UNSUPPORTED => [
+        'name' => Exception::COLUMN_FORMAT_UNSUPPORTED,
+        'description' => 'The requested column format is not supported.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_DEFAULT_UNSUPPORTED => [
+        'name' => Exception::COLUMN_DEFAULT_UNSUPPORTED,
+        'description' => 'Default values cannot be set for array or required columns.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_ALREADY_EXISTS => [
+        'name' => Exception::COLUMN_ALREADY_EXISTS,
+        'description' => 'Column with the requested key already exists. Column keys must be unique, try again with a different key.',
+        'code' => 409,
+    ],
+    Exception::COLUMN_LIMIT_EXCEEDED => [
+        'name' => Exception::COLUMN_LIMIT_EXCEEDED,
+        'description' => 'The maximum number or size of columns for this table has been reached.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_VALUE_INVALID => [
+        'name' => Exception::COLUMN_VALUE_INVALID,
+        'description' => 'The column value is invalid. Please check the type, range and value of the column.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_TYPE_INVALID => [
+        'name' => Exception::COLUMN_TYPE_INVALID,
+        'description' => 'The column type is invalid.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_INVALID_RESIZE => [
+        'name' => Exception::COLUMN_INVALID_RESIZE,
         'description' => "Existing data is too large for new size, truncate your existing data then try again.",
         'code' => 400,
     ],
@@ -807,6 +920,33 @@ return [
     Exception::INDEX_DEPENDENCY => [
         'name' => Exception::INDEX_DEPENDENCY,
         'description' => 'Attribute cannot be renamed or deleted. Please remove the associated index first.',
+        'code' => 409,
+    ],
+
+    /** Column Indexes, same as Indexes but with different type */
+    Exception::COLUMN_INDEX_NOT_FOUND => [
+        'name' => Exception::COLUMN_INDEX_NOT_FOUND,
+        'description' => 'Index with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::COLUMN_INDEX_LIMIT_EXCEEDED => [
+        'name' => Exception::COLUMN_INDEX_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of indexes has been reached.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_INDEX_ALREADY_EXISTS => [
+        'name' => Exception::COLUMN_INDEX_ALREADY_EXISTS,
+        'description' => 'Index with the requested key already exists. Try again with a different key.',
+        'code' => 409,
+    ],
+    Exception::COLUMN_INDEX_INVALID => [
+        'name' => Exception::COLUMN_INDEX_INVALID,
+        'description' => 'Index invalid.',
+        'code' => 400,
+    ],
+    Exception::COLUMN_INDEX_DEPENDENCY => [
+        'name' => Exception::COLUMN_INDEX_DEPENDENCY,
+        'description' => 'Column cannot be renamed or deleted. Please remove the associated index first.',
         'code' => 409,
     ],
 

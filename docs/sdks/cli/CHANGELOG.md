@@ -1,5 +1,17 @@
 # Change Log
 
+## 8.3.0
+
+* **Feat:** Add support for `appwrite.config.json` file
+  * All new projects will be initialized with this configuration file
+  * Resolves bundler conflicts (e.g., Vite) that incorrectly interpret `.json` files as library imports
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Type generation fixes:
+  * Fix relationships using the relatedCollection's id instead of name
+  * Update auto generated comment to show relative path instead of absolute path
+
+> **Note:** The existing `appwrite.json` file remains fully supported for backward compatibility
+
 ## 8.2.2
 
 * Fix object comparison logic when pushing settings

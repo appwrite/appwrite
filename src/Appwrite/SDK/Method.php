@@ -23,7 +23,7 @@ class Method
      * @param array<SDKResponse> $responses
      * @param ContentType $contentType
      * @param MethodType|null $type
-     * @param bool $deprecated
+     * @param bool|Deprecated $deprecated
      * @param array|bool $hide
      * @param bool $packaging
      * @param ContentType $requestType
@@ -39,7 +39,7 @@ class Method
         protected array $responses,
         protected ContentType $contentType = ContentType::JSON,
         protected ?MethodType $type = null,
-        protected bool $deprecated = false,
+        protected bool|Deprecated $deprecated = false,
         protected array|bool $hide = false,
         protected bool $packaging = false,
         protected ContentType $requestType = ContentType::JSON,
@@ -177,6 +177,11 @@ class Method
 
     public function isDeprecated(): bool
     {
+        return $this->deprecated !== false;
+    }
+
+    public function getDeprecated(): bool|Deprecated
+    {
         return $this->deprecated;
     }
 
@@ -258,13 +263,13 @@ class Method
         return $this;
     }
 
-    public function setDeprecated(bool $deprecated): self
+    public function setDeprecated(bool|Deprecated $deprecated): self
     {
         $this->deprecated = $deprecated;
         return $this;
     }
 
-    public function setHide(bool|array $hide): self
+    public function setHide(bool|Deprecated $hide): self
     {
         $this->hide = $hide;
         return $this;

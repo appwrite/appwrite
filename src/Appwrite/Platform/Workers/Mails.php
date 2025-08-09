@@ -14,6 +14,11 @@ use Utopia\System\System;
 
 class Mails extends Action
 {
+    protected int $previewMaxLen = 150;
+
+    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+
+
     public static function getName(): string
     {
         return 'mails';
@@ -74,6 +79,7 @@ class Mails extends Action
         $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
         $body = $payload['body'];
+        $preview = $payload['preview'] ?? '';
 
         $variables['subject'] = $subject;
         $variables['year'] = date("Y");
@@ -92,6 +98,27 @@ class Mails extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+
+        $previewWhitespace = '';
+
+        if (!empty($preview)) {
+            $previewTemplate = Template::fromString($preview);
+            foreach ($variables as $key => $value) {
+                $previewTemplate->setParam('{{' . $key . '}}', $value);
+            }
+            // render() will return the subject in <p> tags, so use strip_tags() to remove them
+            $preview = \strip_tags($previewTemplate->render());
+
+            $previewLen = strlen($preview);
+            if ($previewLen < $this->previewMaxLen) {
+                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+            }
+        }
+
+
+        $bodyTemplate->setParam('{{preview}}', $preview);
+        $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
+
         $body = $bodyTemplate->render();
 
         $subjectTemplate = Template::fromString($subject);

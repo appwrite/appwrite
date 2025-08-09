@@ -95,6 +95,56 @@ return [
         '$model' => Response::MODEL_DATABASE,
         '$resource' => true,
         '$description' => 'This event triggers on any database event.',
+        'tables' => [
+            '$model' => Response::MODEL_TABLE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any table event.',
+            'rows' => [
+                '$model' => Response::MODEL_ROW,
+                '$resource' => true,
+                '$description' => 'This event triggers on any rows event.',
+                'create' => [
+                    '$description' => 'This event triggers when a row is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a row is deleted.'
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when a row is updated.'
+                ],
+            ],
+            'indexes' => [
+                '$model' => Response::MODEL_COLUMN_INDEX,
+                '$resource' => true,
+                '$description' => 'This event triggers on any indexes event.',
+                'create' => [
+                    '$description' => 'This event triggers when an index is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when an index is deleted.'
+                ]
+            ],
+            'columns' => [
+                '$model' => Response::MODEL_COLUMN,
+                '$resource' => true,
+                '$description' => 'This event triggers on any columns event.',
+                'create' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when an column is deleted.'
+                ]
+            ],
+            'create' => [
+                '$description' => 'This event triggers when a table is created.'
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a table is deleted.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a table is updated.',
+            ]
+        ],
         'collections' => [
             '$model' => Response::MODEL_COLLECTION,
             '$resource' => true,

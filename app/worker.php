@@ -247,17 +247,33 @@ Server::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 
-Server::setResource('publisherRedis', function () {
-    // Stub
-});
+Server::setResource('publisherDatabases', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherMigrations', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
 
 Server::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
 
-Server::setResource('consumerRedis', function () {
-    // Stub
-});
+Server::setResource('consumerDatabases', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+
+Server::setResource('consumerMigrations', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+
+Server::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
