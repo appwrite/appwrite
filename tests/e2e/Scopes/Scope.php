@@ -4,7 +4,6 @@ namespace Tests\E2E\Scopes;
 
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
-use Appwrite\Tests\ImageAssertions;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
@@ -16,7 +15,17 @@ abstract class Scope extends TestCase
 
     protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
     {
-        ImageAssertions::assertSamePixels($expectedImagePath, $actualImageBlob);
+        $expected = new \Imagick($expectedImagePath);
+        $actual = new \Imagick();
+        $actual->readImageBlob($actualImageBlob);
+
+        foreach ([$expected, $actual] as $image) {
+            $image->setImageFormat('PNG');
+            $image->stripImage();
+            $image->setOption('png:exclude-chunks', 'date,time,iCCP,sRGB,gAMA,cHRM');
+        }
+
+        $this->assertSame($expected->getImageSignature(), $actual->getImageSignature());
     }
 
     public const REQUEST_TYPE_WEBHOOK = 'webhook';
