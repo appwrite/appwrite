@@ -1054,10 +1054,10 @@ trait MigrationsBase
             $errorData = json_decode($errorJson, true);
 
             $this->assertThat(
-                $errorData['message'],
-                $this->stringContains("CSV header mismatch. Missing column: 'age'")
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains("CSV header validation failed: Missing required column: 'age'")
             );
-        }, 60000, 500);
+        }, 60_000, 500);
 
         // missing row data, fail in worker.
         $missingColumn = $this->performCsvMigration(
@@ -1087,12 +1087,12 @@ trait MigrationsBase
             $errorData = json_decode($errorJson, true);
 
             $this->assertThat(
-                $errorData['message'],
+                implode("\n", $migration['body']['errors']),
                 $this->stringContains('CSV row does not match the number of header columns')
             );
-        }, 60000, 500);
+        }, 60_000, 500);
 
-        // irrelevant column - email, fail in worker.
+        // irrelevant column - email, success.
         $irrelevantColumn = $this->performCsvMigration(
             [
                 'fileId' => $fileIds['irrelevant-column'],
@@ -1110,20 +1110,13 @@ trait MigrationsBase
 
             $this->assertEquals(200, $migration['headers']['status-code']);
             $this->assertEquals('finished', $migration['body']['stage']);
-            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('completed', $migration['body']['status']);
             $this->assertEquals('CSV', $migration['body']['source']);
             $this->assertEquals('Appwrite', $migration['body']['destination']);
             $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
-            $this->assertEmpty($migration['body']['statusCounters']);
-
-            $errorJson = $migration['body']['errors'][0];
-            $errorData = json_decode($errorJson, true);
-
-            $this->assertThat(
-                $errorData['message'],
-                $this->stringContains("CSV header mismatch. Unexpected column: 'email'")
-            );
-        }, 60000, 500);
+            $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
+            $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
 
         // all data exists, pass.
         $migration = $this->performCsvMigration(
@@ -1165,7 +1158,7 @@ trait MigrationsBase
         $this->assertEquals(200, $rows['headers']['status-code']);
         $this->assertIsArray($rows['body']['rows']);
         $this->assertIsNumeric($rows['body']['total']);
-        $this->assertEquals(100, $rows['body']['total']);
+        $this->assertEquals(200, $rows['body']['total']);
 
         // all data exists and includes internals, pass.
         $migration = $this->performCsvMigration(
