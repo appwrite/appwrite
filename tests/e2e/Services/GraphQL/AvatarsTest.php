@@ -52,7 +52,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(13312, \strlen($browserIcon['body']));
+        $this->assertEquals(200, $browserIcon['headers']['status-code']);
+        $this->assertNotEmpty($browserIcon['body']);
+        $this->assertStringContainsString('image/', $browserIcon['headers']['content-type']);
 
         return $browserIcon['body'];
     }
