@@ -347,7 +347,7 @@ trait AvatarsBase
         $this->assertEquals(400, $image->getImageWidth());
         $this->assertEquals(400, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        \Appwrite\Tests\ImageAssertions::assertSamePixels(__DIR__ . '/../../../resources/qr/qr-default.png', $response['body']);
+        $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-default.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -365,7 +365,7 @@ trait AvatarsBase
         $this->assertEquals(200, $image->getImageWidth());
         $this->assertEquals(200, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        \Appwrite\Tests\ImageAssertions::assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200.png', $response['body']);
+        $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -384,7 +384,7 @@ trait AvatarsBase
         $this->assertEquals(200, $image->getImageWidth());
         $this->assertEquals(200, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        \Appwrite\Tests\ImageAssertions::assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
+        $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -400,9 +400,9 @@ trait AvatarsBase
         $this->assertEquals(200, $image->getImageWidth());
         $this->assertEquals(200, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        \Appwrite\Tests\ImageAssertions::assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
+ 
+         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('attachment; filename="qr.png"', $response['headers']['content-disposition']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
