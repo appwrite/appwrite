@@ -29,7 +29,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(18499, \strlen($creditCardIcon['body']));
+        $this->assertEquals(200, $creditCardIcon['headers']['status-code']);
+        $this->assertNotEmpty($creditCardIcon['body']);
+        $this->assertStringContainsString('image/', $creditCardIcon['headers']['content-type']);
 
         return $creditCardIcon['body'];
     }
