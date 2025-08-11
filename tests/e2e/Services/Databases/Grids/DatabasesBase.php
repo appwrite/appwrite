@@ -5566,11 +5566,21 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'description',
-            'size' => 256,
+            'size' => 2048,
             'required' => true,
         ]);
 
         $this->assertEquals(202, $description['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $books['body']['$id'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'fts_description',
+            'type' => Database::INDEX_FULLTEXT,
+            'attributes' => ['description'],
+        ]);
 
         // Wait for worker
         sleep(2);
