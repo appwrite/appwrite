@@ -473,9 +473,10 @@ App::init()
 
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
+            
             $limit = $timeLimit->limit();
             $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
-
+         
             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
                 $closestLimit = $remaining;
                 $response

@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\System\System;
 
 class DatabasesCustomClientTest extends Scope
 {
@@ -226,8 +227,12 @@ class DatabasesCustomClientTest extends Scope
         return [];
     }
 
-    public function testUpdateTwoWayRelationship(): void
-    {
+     public function testUpdateTwoWayRelationship(): void
+     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -315,10 +320,15 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals($relation['body']['twoWayKey'], $table1RelationAttribute['twoWayKey']);
         $this->assertEquals($relation['body']['relatedTable'], $table1RelationAttribute['relatedTable']);
         $this->assertEquals('restrict', $table1RelationAttribute['onDelete']);
-    }
+     }
 
     public function testRelationshipSameTwoWayKey(): void
     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -477,6 +487,11 @@ class DatabasesCustomClientTest extends Scope
 
     public function testUpdateWithoutRelationPermission(): void
     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $userId = $this->getUser()['$id'];
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -893,6 +908,7 @@ class DatabasesCustomClientTest extends Scope
 
     public function testModifyCreatedAtUpdatedAtSingleRow(): void
     {
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

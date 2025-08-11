@@ -3,6 +3,7 @@
 namespace Tests\E2E\General;
 
 use Appwrite\Platform\Modules\Compute\Specification;
+use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
 use Tests\E2E\Client;

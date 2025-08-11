@@ -1069,7 +1069,8 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$sequence');
-        Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+    
+        $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -1257,6 +1258,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
             'token' => false,
         ], $scopes);
 
+        //var_dump('Url: /v1/account/sessions/oauth2/:provider redirecting to -> '. $oauth2->getLoginURL());
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
@@ -1290,6 +1293,9 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $params = $request->getParams();
         $params['project'] = $projectId;
         unset($params['projectId']);
+
+        var_dump('Url  : /v1/account/sessions/oauth2/callback/'.$provider. '/ '.$projectId.  'redirect to '. $callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+        . \http_build_query($params));
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -1409,6 +1415,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure'])) {
             $failure = URLParser::parse($state['failure']);
         }
+
         $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null) use ($failure, $response) {
             $exception = new Exception($type, $message, $code);
             if (!empty($failure)) {
@@ -1450,17 +1457,23 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $refreshToken = '';
         $accessTokenExpiry = 0;
 
+        var_dump('Url: /v1/account/sessions/oauth2/' .$provider. '/redirect: Before attempting to get the tokens');
+
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
+
         } catch (OAuth2Exception $ex) {
+    
             $failureRedirect(
                 $ex->getType(),
                 'Failed to obtain access token. The ' . $providerName . ' OAuth2 provider returned an error: ' . $ex->getMessage(),
                 $ex->getCode(),
             );
         }
+
+        var_dump('Url: /v1/account/sessions/oauth2/' .$provider. '/redirect: After getting the tokens');
 
         $oauth2ID = $oauth2->getUserID($accessToken);
         if (empty($oauth2ID)) {

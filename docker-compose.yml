@@ -86,8 +86,10 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
       # - clamav
     entrypoint:
@@ -127,6 +129,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -263,7 +266,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -275,6 +278,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -296,7 +300,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -305,6 +309,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -325,7 +330,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
     environment:
@@ -333,6 +338,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -355,7 +361,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -373,6 +379,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -419,9 +426,11 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -430,6 +439,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -454,9 +464,11 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -468,6 +480,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -523,7 +536,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -545,6 +558,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -563,9 +577,11 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - openruntimes-executor
     environment:
       - _APP_ENV
@@ -577,6 +593,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -652,6 +669,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -699,7 +717,7 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -715,6 +733,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -752,6 +771,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -780,11 +800,12 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -811,11 +832,12 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -840,13 +862,16 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
+      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -872,7 +897,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -882,6 +907,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -900,7 +926,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -910,6 +936,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -927,7 +954,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -937,6 +964,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -1050,6 +1078,46 @@ services:
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
 
+  mongodb:
+    image: mongo:8.0.10
+    container_name: appwrite-mongodb
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db
+      # we need to run the mongo-init.js file to create the user and the database
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    # healthcheck:
+    #   test: ["CMD", "mongosh", "--username", "root", "--password", "${_APP_DB_ROOT_PASS}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+    #   interval: 1s
+    #   timeout: 5s
+    #   retries: 10
+    #   start_period: 30s
+
+  appwrite-mongo-express:
+    image: mongo-express
+    container_name: appwrite-mongo-express
+    networks:
+      - appwrite
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: appwrite-mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${_APP_DB_ROOT_PASS}
+      ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
+
+
   redis:
     image: redis:7.2.4-alpine
     <<: *x-logging
@@ -1148,6 +1216,7 @@ networks:
 
 volumes:
   appwrite-mariadb:
+  appwrite-mongodb:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:

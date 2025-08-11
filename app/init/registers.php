@@ -13,6 +13,7 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
@@ -23,6 +24,7 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Mongo\Client as MongoClient;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
@@ -101,13 +103,14 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
-        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => System::getEnv('_APP_DB_PORT', '3306'),
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
+
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
@@ -121,19 +124,19 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mongodb','mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mongodb','mariadb', 'mysql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mongodb','mariadb', 'mysql'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -213,6 +216,7 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
+
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -225,6 +229,16 @@ $register->set('pools', function () {
                             \PDO::ATTR_STRINGIFY_FETCHES => true
                         ]);
                     });
+                },
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
+                    try {
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
+                        @$mongo->connect();
+
+                        return $mongo;
+                    } catch (\Throwable $e) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+                    }
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
@@ -246,6 +260,7 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
+                            'mongodb' => new Mongo($resource()),
                             default => null
                         };
 
@@ -288,13 +303,27 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+    $dsn = '';
 
-    return new PDO(
-        "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
-        $dbUser,
-        $dbPass,
-        SQL::getPDOAttributes()
-    );
+    switch ($dbAdapter) {
+        case 'mongodb':
+
+            try {
+                $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, true);
+                @$mongo->connect();
+
+                return $mongo;
+            } catch (\Throwable $e) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+            }
+
+        case 'mysql':
+        case 'mariadb':
+        default:
+            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4";
+            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+    }
 });
 
 $register->set('smtp', function () {

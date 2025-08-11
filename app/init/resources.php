@@ -234,12 +234,12 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    $user = new Document([]);
-
-    if (!empty(Auth::$unique)) {
-        if ($mode === APP_MODE_ADMIN) {
-            $user = $dbForPlatform->getDocument('users', Auth::$unique);
-        } elseif (!$project->isEmpty()) {
+    if ($mode === APP_MODE_ADMIN) {
+        $user = $dbForPlatform->getDocument('users', Auth::$unique);
+    } else {
+        if ($project->isEmpty()) {
+            $user = new Document([]);
+        } else {
             if ($project->getId() === 'console') {
                 $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
@@ -858,6 +858,8 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
             return $team;
         }
     }
+
+    // if teamInternalId is empty, return an empty document
 
     if (empty($teamInternalId)) {
         return new Document([]);
