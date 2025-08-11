@@ -5638,7 +5638,7 @@ trait DatabasesBase
             [
                 'queries' => [
                     Query::select(['title', 'description'])->toString(),
-                    Query::notSearch('title', 'science')->toString(),
+                    Query::notSearch('description', 'space')->toString(),
                     Query::limit(999)->toString(),
                     Query::offset(0)->toString()
                 ],
