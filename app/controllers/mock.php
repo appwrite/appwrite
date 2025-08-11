@@ -31,7 +31,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
-
+    var_dump('Url: /v1/mock/tests/general/oauth2 redirecting to -> ' . $redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
@@ -49,6 +49,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
+        var_dump('Url: /v1/mock/tests/general/oauth2/token');
 
         if ($client_id != '1') {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid client ID');
@@ -63,7 +64,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
             'refresh_token' => 'tuvwxyz',
             'expires_in' => 14400
         ];
-
+        
         if ($grantType === 'authorization_code') {
             if ($code !== 'abcdef') {
                 throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');

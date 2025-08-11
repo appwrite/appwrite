@@ -740,6 +740,11 @@ App::patch('/v1/projects/:projectId/oauth2')
             $providers[$provider . 'Enabled'] = $enabled;
         }
 
+        var_dump([
+            'id' => $project->getId(),
+            'providers' => $providers
+    ]);
+
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
