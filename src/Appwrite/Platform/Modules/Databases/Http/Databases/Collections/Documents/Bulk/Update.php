@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
+use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -76,11 +77,15 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -125,16 +130,18 @@ class Update extends Action
         $documents = [];
 
         try {
-            $modified = $dbForProject->updateDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                new Document($data),
-                $queries,
-                onNext: function (Document $document) use ($plan, &$documents) {
-                    if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                        $documents[] = $document;
-                    }
-                },
-            );
+            $modified = $dbForProject->withPreserveDates(function () use ($plan, &$documents, $dbForProject, $database, $collection, $data, $queries) {
+                return $dbForProject->updateDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    new Document($data),
+                    $queries,
+                    onNext: function (Document $document) use ($plan, &$documents) {
+                        if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                            $documents[] = $document;
+                        }
+                    },
+                );
+            });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (RelationshipException $e) {
@@ -156,5 +163,16 @@ class Update extends Action
             'total' => $modified,
             $this->getSdkGroup() => $documents
         ]), $this->getResponseModel());
+
+        $this->triggerBulk(
+            'databases.[databaseId].collections.[collectionId].documents.[documentId].update',
+            $database,
+            $collection,
+            $documents,
+            $queueForEvents,
+            $queueForRealtime,
+            $queueForFunctions,
+            $queueForWebhooks
+        );
     }
 }

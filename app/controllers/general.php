@@ -1038,11 +1038,19 @@ App::init()
         /**
          * Deprecation Warning
          */
+        /** @var \Appwrite\SDK\Method $sdk */
         $sdk = $route->getLabel('sdk', false);
         $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
         $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
-        foreach ($sdkItems as $sdkItem) {
-            if ($sdkItem->isDeprecated()) {
+        if (!empty($sdkItems) && count($sdkItems) > 0) {
+            $allDeprecated = true;
+            foreach ($sdkItems as $sdkItem) {
+                if (!$sdkItem->isDeprecated()) {
+                    $allDeprecated = false;
+                    break;
+                }
+            }
+            if ($allDeprecated) {
                 $warnings[] = $deprecationWarning;
             }
         }
@@ -1407,9 +1415,10 @@ App::get('/robots.txt')
     ->inject('apiKey')
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
+        $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if (($host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
+        if (($host === $consoleDomain || $host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -1440,9 +1449,10 @@ App::get('/humans.txt')
     ->inject('apiKey')
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
+        $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if (($host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
+        if (($host === $consoleDomain || $host === $mainDomain || $host === 'localhost') && empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {

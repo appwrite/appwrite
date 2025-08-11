@@ -5461,7 +5461,7 @@
                                     "type": "string",
                                     "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "<SCHEDULED_AT>"
                                 }
                             }
                         }
@@ -8094,7 +8094,8 @@
         "any": {
             "description": "Any",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": []
         },
         "documentList": {
             "description": "Documents List",
@@ -8119,7 +8120,11 @@
             "required": [
                 "total",
                 "documents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "documents": ""
+            }
         },
         "sessionList": {
             "description": "Sessions List",
@@ -8144,7 +8149,11 @@
             "required": [
                 "total",
                 "sessions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "sessions": ""
+            }
         },
         "identityList": {
             "description": "Identities List",
@@ -8169,7 +8178,11 @@
             "required": [
                 "total",
                 "identities"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "identities": ""
+            }
         },
         "logList": {
             "description": "Logs List",
@@ -8194,7 +8207,11 @@
             "required": [
                 "total",
                 "logs"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "logs": ""
+            }
         },
         "fileList": {
             "description": "Files List",
@@ -8219,7 +8236,11 @@
             "required": [
                 "total",
                 "files"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "files": ""
+            }
         },
         "teamList": {
             "description": "Teams List",
@@ -8244,7 +8265,11 @@
             "required": [
                 "total",
                 "teams"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "teams": ""
+            }
         },
         "membershipList": {
             "description": "Memberships List",
@@ -8269,7 +8294,11 @@
             "required": [
                 "total",
                 "memberships"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "memberships": ""
+            }
         },
         "executionList": {
             "description": "Executions List",
@@ -8294,7 +8323,11 @@
             "required": [
                 "total",
                 "executions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "executions": ""
+            }
         },
         "countryList": {
             "description": "Countries List",
@@ -8319,7 +8352,11 @@
             "required": [
                 "total",
                 "countries"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "countries": ""
+            }
         },
         "continentList": {
             "description": "Continents List",
@@ -8344,7 +8381,11 @@
             "required": [
                 "total",
                 "continents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "continents": ""
+            }
         },
         "languageList": {
             "description": "Languages List",
@@ -8369,7 +8410,11 @@
             "required": [
                 "total",
                 "languages"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "languages": ""
+            }
         },
         "currencyList": {
             "description": "Currencies List",
@@ -8394,7 +8439,11 @@
             "required": [
                 "total",
                 "currencies"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "currencies": ""
+            }
         },
         "phoneList": {
             "description": "Phones List",
@@ -8419,7 +8468,11 @@
             "required": [
                 "total",
                 "phones"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "phones": ""
+            }
         },
         "localeCodeList": {
             "description": "Locale codes list",
@@ -8444,7 +8497,11 @@
             "required": [
                 "total",
                 "localeCodes"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "localeCodes": ""
+            }
         },
         "document": {
             "description": "Document",
@@ -8459,17 +8516,20 @@
                     "type": "integer",
                     "description": "Document automatically incrementing ID.",
                     "x-example": 1,
-                    "format": "int32"
+                    "format": "int32",
+                    "readOnly": true
                 },
                 "$collectionId": {
                     "type": "string",
                     "description": "Collection ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$databaseId": {
                     "type": "string",
                     "description": "Database ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$createdAt": {
                     "type": "string",
@@ -8501,7 +8561,23 @@
                 "$createdAt",
                 "$updatedAt",
                 "$permissions"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$sequence": 1,
+                "$collectionId": "5e5ea5c15117e",
+                "$databaseId": "5e5ea5c15117e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "username": "john.doe",
+                "email": "john.doe@example.com",
+                "fullName": "John Doe",
+                "age": 30,
+                "isAdmin": false
+            }
         },
         "log": {
             "description": "Log",
@@ -8635,7 +8711,30 @@
                 "deviceModel",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "event": "account.sessions.create",
+                "userId": "610fc2f985ee0",
+                "userEmail": "john@appwrite.io",
+                "userName": "John Doe",
+                "mode": "admin",
+                "ip": "127.0.0.1",
+                "time": "2020-10-15T06:38:00.000+00:00",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "user": {
             "description": "User",
@@ -8798,7 +8897,33 @@
                 "prefs",
                 "targets",
                 "accessedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "John Doe",
+                "password": "$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L\/4LdgrVRXxE",
+                "hash": "argon2",
+                "hashOptions": {},
+                "registration": "2020-10-15T06:38:00.000+00:00",
+                "status": true,
+                "labels": [
+                    "vip"
+                ],
+                "passwordUpdate": "2020-10-15T06:38:00.000+00:00",
+                "email": "john@appwrite.io",
+                "phone": "+4930901820",
+                "emailVerification": true,
+                "phoneVerification": true,
+                "mfa": true,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                },
+                "targets": [],
+                "accessedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "algoMd5": {
             "description": "AlgoMD5",
@@ -8812,7 +8937,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "md5"
+            }
         },
         "algoSha": {
             "description": "AlgoSHA",
@@ -8826,7 +8954,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "sha"
+            }
         },
         "algoPhpass": {
             "description": "AlgoPHPass",
@@ -8840,7 +8971,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "phpass"
+            }
         },
         "algoBcrypt": {
             "description": "AlgoBcrypt",
@@ -8854,7 +8988,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "bcrypt"
+            }
         },
         "algoScrypt": {
             "description": "AlgoScrypt",
@@ -8896,7 +9033,14 @@
                 "costMemory",
                 "costParallel",
                 "length"
-            ]
+            ],
+            "example": {
+                "type": "scrypt",
+                "costCpu": 8,
+                "costMemory": 14,
+                "costParallel": 1,
+                "length": 64
+            }
         },
         "algoScryptModified": {
             "description": "AlgoScryptModified",
@@ -8928,7 +9072,13 @@
                 "salt",
                 "saltSeparator",
                 "signerKey"
-            ]
+            ],
+            "example": {
+                "type": "scryptMod",
+                "salt": "UxLMreBr6tYyjQ==",
+                "saltSeparator": "Bw==",
+                "signerKey": "XyEKE9RcTDeLEsL\/RjwPDBv\/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=="
+            }
         },
         "algoArgon2": {
             "description": "AlgoArgon2",
@@ -8963,12 +9113,23 @@
                 "memoryCost",
                 "timeCost",
                 "threads"
-            ]
+            ],
+            "example": {
+                "type": "argon2",
+                "memoryCost": 65536,
+                "timeCost": 4,
+                "threads": 3
+            }
         },
         "preferences": {
             "description": "Preferences",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": {
+                "language": "en",
+                "timezone": "UTC",
+                "darkTheme": true
+            }
         },
         "session": {
             "description": "Session",
@@ -9155,7 +9316,40 @@
                 "factors",
                 "secret",
                 "mfaUpdatedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "provider": "email",
+                "providerUid": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "ip": "127.0.0.1",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States",
+                "current": true,
+                "factors": [
+                    "email"
+                ],
+                "secret": "5e5bb8c16897e",
+                "mfaUpdatedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "identity": {
             "description": "Identity",
@@ -9223,7 +9417,19 @@
                 "providerAccessToken",
                 "providerAccessTokenExpiry",
                 "providerRefreshToken"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "provider": "email",
+                "providerUid": "5e5bb8c16897e",
+                "providerEmail": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+            }
         },
         "token": {
             "description": "Token",
@@ -9267,7 +9473,15 @@
                 "secret",
                 "expire",
                 "phrase"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "secret": "",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "phrase": "Golden Fox"
+            }
         },
         "jwt": {
             "description": "JWT",
@@ -9281,7 +9495,10 @@
             },
             "required": [
                 "jwt"
-            ]
+            ],
+            "example": {
+                "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            }
         },
         "locale": {
             "description": "Locale",
@@ -9331,7 +9548,16 @@
                 "continent",
                 "eu",
                 "currency"
-            ]
+            ],
+            "example": {
+                "ip": "127.0.0.1",
+                "countryCode": "US",
+                "country": "United States",
+                "continentCode": "NA",
+                "continent": "North America",
+                "eu": false,
+                "currency": "USD"
+            }
         },
         "localeCode": {
             "description": "LocaleCode",
@@ -9351,7 +9577,11 @@
             "required": [
                 "code",
                 "name"
-            ]
+            ],
+            "example": {
+                "code": "en-us",
+                "name": "US"
+            }
         },
         "file": {
             "description": "File",
@@ -9433,7 +9663,22 @@
                 "sizeOriginal",
                 "chunksTotal",
                 "chunksUploaded"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "bucketId": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "name": "Pink.png",
+                "signature": "5d529fd02b544198ae075bd57c1762bb",
+                "mimeType": "image\/png",
+                "sizeOriginal": 17890,
+                "chunksTotal": 17890,
+                "chunksUploaded": 17890
+            }
         },
         "team": {
             "description": "Team",
@@ -9485,7 +9730,18 @@
                 "name",
                 "total",
                 "prefs"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "VIP",
+                "total": 7,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                }
+            }
         },
         "membership": {
             "description": "Membership",
@@ -9576,7 +9832,24 @@
                 "confirm",
                 "mfa",
                 "roles"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c16897e",
+                "userName": "John Doe",
+                "userEmail": "john@appwrite.io",
+                "teamId": "5e5ea5c16897e",
+                "teamName": "VIP",
+                "invited": "2020-10-15T06:38:00.000+00:00",
+                "joined": "2020-10-15T06:38:00.000+00:00",
+                "confirm": false,
+                "mfa": false,
+                "roles": [
+                    "owner"
+                ]
+            }
         },
         "execution": {
             "description": "Execution",
@@ -9709,7 +9982,36 @@
                 "logs",
                 "errors",
                 "duration"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "any"
+                ],
+                "functionId": "5e5ea6g16897e",
+                "trigger": "http",
+                "status": "processing",
+                "requestMethod": "GET",
+                "requestPath": "\/articles?id=5",
+                "requestHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "responseStatusCode": 200,
+                "responseBody": "",
+                "responseHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "logs": "",
+                "errors": "",
+                "duration": 0.4,
+                "scheduledAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "country": {
             "description": "Country",
@@ -9729,7 +10031,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "United States",
+                "code": "US"
+            }
         },
         "continent": {
             "description": "Continent",
@@ -9749,7 +10055,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "Europe",
+                "code": "EU"
+            }
         },
         "language": {
             "description": "Language",
@@ -9775,7 +10085,12 @@
                 "name",
                 "code",
                 "nativeName"
-            ]
+            ],
+            "example": {
+                "name": "Italian",
+                "code": "it",
+                "nativeName": "Italiano"
+            }
         },
         "currency": {
             "description": "Currency",
@@ -9827,7 +10142,16 @@
                 "rounding",
                 "code",
                 "namePlural"
-            ]
+            ],
+            "example": {
+                "symbol": "$",
+                "name": "US dollar",
+                "symbolNative": "$",
+                "decimalDigits": 2,
+                "rounding": 0,
+                "code": "USD",
+                "namePlural": "US dollars"
+            }
         },
         "phone": {
             "description": "Phone",
@@ -9853,7 +10177,12 @@
                 "code",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "code": "+1",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "headers": {
             "description": "Headers",
@@ -9873,7 +10202,11 @@
             "required": [
                 "name",
                 "value"
-            ]
+            ],
+            "example": {
+                "name": "Content-Type",
+                "value": "application\/json"
+            }
         },
         "mfaChallenge": {
             "description": "MFA Challenge",
@@ -9905,7 +10238,13 @@
                 "$createdAt",
                 "userId",
                 "expire"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "expire": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "mfaRecoveryCodes": {
             "description": "MFA Recovery Codes",
@@ -9925,7 +10264,13 @@
             },
             "required": [
                 "recoveryCodes"
-            ]
+            ],
+            "example": {
+                "recoveryCodes": [
+                    "a3kf0-s0cl2",
+                    "s0co1-as98s"
+                ]
+            }
         },
         "mfaType": {
             "description": "MFAType",
@@ -9945,7 +10290,11 @@
             "required": [
                 "secret",
                 "uri"
-            ]
+            ],
+            "example": {
+                "secret": true,
+                "uri": true
+            }
         },
         "mfaFactors": {
             "description": "MFAFactors",
@@ -9977,7 +10326,13 @@
                 "phone",
                 "email",
                 "recoveryCode"
-            ]
+            ],
+            "example": {
+                "totp": true,
+                "phone": true,
+                "email": true,
+                "recoveryCode": true
+            }
         },
         "subscriber": {
             "description": "Subscriber",
@@ -10052,7 +10407,27 @@
                 "userName",
                 "topicId",
                 "providerType"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "targetId": "259125845563242502",
+                "target": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "providerType": "email",
+                    "providerId": "259125845563242502",
+                    "name": "ageon-app-email",
+                    "identifier": "random-mail@email.org",
+                    "userId": "5e5ea5c16897e"
+                },
+                "userId": "5e5ea5c16897e",
+                "userName": "Aegon Targaryen",
+                "topicId": "259125845563242502",
+                "providerType": "email"
+            }
         },
         "target": {
             "description": "Target",
@@ -10114,7 +10489,18 @@
                 "providerType",
                 "identifier",
                 "expired"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "Apple iPhone 12",
+                "userId": "259125845563242502",
+                "providerId": "259125845563242502",
+                "providerType": "email",
+                "identifier": "token",
+                "expired": false
+            }
         }
     },
     "externalDocs": {

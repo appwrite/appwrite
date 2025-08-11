@@ -642,6 +642,7 @@ class Swagger2 extends Format
 
             $required = $model->getRequired();
             $rules = $model->getRules();
+            $examples = [];
 
             $output['definitions'][$model->getType()] = [
                 'description' => $model->getName(),
@@ -664,6 +665,8 @@ class Swagger2 extends Format
                 $type = '';
                 $format = null;
                 $items = null;
+
+                $examples[$name] = $rule['example'] ?? null;
 
                 switch ($rule['type']) {
                     case 'string':
@@ -721,6 +724,7 @@ class Swagger2 extends Format
                         break;
                 }
 
+                $readOnly = $rule['readOnly'] ?? false;
                 if ($rule['type'] == 'json') {
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -728,6 +732,10 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
+
+                    if ($readOnly) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                     continue;
                 }
 
@@ -744,6 +752,9 @@ class Swagger2 extends Format
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
+                    if ($readOnly) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                 } else {
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -754,6 +765,9 @@ class Swagger2 extends Format
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
+                    if ($readOnly) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                 }
                 if ($items) {
                     $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
@@ -762,6 +776,12 @@ class Swagger2 extends Format
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
                 }
             }
+
+            if ($model->isAny() && !empty($model->getSampleData())) {
+                $examples = array_merge($examples, $model->getSampleData());
+            }
+
+            $output['definitions'][$model->getType()]['example'] = $examples;
         }
 
         \ksort($output['paths']);

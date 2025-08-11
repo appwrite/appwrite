@@ -97,6 +97,21 @@ abstract class Scope extends TestCase
         return $request;
     }
 
+    protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
+    {
+        $expected = new \Imagick($expectedImagePath);
+        $actual = new \Imagick();
+        $actual->readImageBlob($actualImageBlob);
+
+        foreach ([$expected, $actual] as $image) {
+            $image->setImageFormat('PNG');
+            $image->stripImage();
+            $image->setOption('png:exclude-chunks', 'date,time,iCCP,sRGB,gAMA,cHRM');
+        }
+
+        $this->assertSame($expected->getImageSignature(), $actual->getImageSignature());
+    }
+
     /**
      * @deprecated Use assertLastRequest instead. Used only historically in webhook tests
      */
@@ -182,9 +197,9 @@ abstract class Scope extends TestCase
     /**
      * @return array
      */
-    public function getUser(): array
+    public function getUser(bool $fresh = false): array
     {
-        if (isset(self::$user[$this->getProject()['$id']])) {
+        if (!$fresh && isset(self::$user[$this->getProject()['$id']])) {
             return self::$user[$this->getProject()['$id']];
         }
 

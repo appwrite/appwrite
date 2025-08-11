@@ -44,7 +44,7 @@ class Create extends DocumentCreate
             ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'row.create')
-            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('audits.resource', 'database/{request.databaseId}/grid/table/{request.tableId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -101,6 +101,9 @@ class Create extends DocumentCreate
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
 }

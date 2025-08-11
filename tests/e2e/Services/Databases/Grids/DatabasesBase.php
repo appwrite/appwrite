@@ -32,6 +32,44 @@ trait DatabasesBase
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
+        $this->assertEquals('grids', $database['body']['type']);
+
+        // testing to create a database with type
+        $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database with type',
+            'type' => 'mongodb'
+        ]);
+        $this->assertEquals(400, $database2['headers']['status-code']);
+
+        $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database with type',
+            'type' => 'legacy'
+        ]);
+        $this->assertNotEmpty($database2['body']['$id']);
+        $this->assertEquals(201, $database2['headers']['status-code']);
+        $this->assertEquals('Test Database with type', $database2['body']['name']);
+        $this->assertEquals('legacy', $database2['body']['type']);
+
+        // cleanup(for database2)
+        $databaseId = $database2['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         return ['databaseId' => $database['body']['$id']];
     }
@@ -2850,7 +2888,6 @@ trait DatabasesBase
                 'releaseYear' => 2017,
                 'birthDay' => '1976-06-12 14:12:55',
                 'actors' => [],
-                '$createdAt' => 5 // Should be ignored
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -4215,17 +4252,19 @@ trait DatabasesBase
         $row = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/grids/tables/' . $data['moviesId'] . '/rows/' . $rowId, $headers, [
             'data' => [
                 'title' => 'Again Updated Date Test',
-                '$createdAt' => '2022-08-01 13:09:23.040', // $createdAt is not updatable
-                '$updatedAt' => '2022-08-01 13:09:23.050' // system will update it not api
+                '$createdAt' => '2022-08-01 13:09:23.040',
+                '$updatedAt' => '2022-08-01 13:09:23.050'
             ]
         ]);
 
-        $this->assertEquals($row['body']['title'], 'Again Updated Date Test');
-        $this->assertEquals($row['body']['$createdAt'], $createdAt);
-        $this->assertNotEquals($row['body']['$createdAt'], '2022-08-01 13:09:23.040');
-        $this->assertNotEquals($row['body']['$updatedAt'], $updatedAt);
-        $this->assertNotEquals($row['body']['$updatedAt'], $updatedAtSecond);
-        $this->assertNotEquals($row['body']['$updatedAt'], '2022-08-01 13:09:23.050');
+        if ($this->getSide() === 'client') {
+            $this->assertEquals($row['headers']['status-code'], 400);
+        } else {
+            $this->assertEquals($row['body']['title'], 'Again Updated Date Test');
+            $this->assertEquals($row['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));
+            $this->assertEquals($row['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
+
+        }
 
         return $data;
     }

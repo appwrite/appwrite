@@ -383,6 +383,8 @@ class Event
     {
         $this->params = [];
         $this->sensitive = [];
+        $this->event = '';
+        $this->payload = [];
 
         return $this;
     }

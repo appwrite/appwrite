@@ -122,10 +122,12 @@ class Create extends Action
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
-
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -332,7 +334,7 @@ class Create extends Action
             }
         };
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -350,6 +352,18 @@ class Create extends Action
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
+
+            // Allowing to add createdAt and updatedAt timestamps if server side(api key
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                if (isset($document['$createdAt'])) {
+                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
+                }
+
+                if (isset($document['$updatedAt'])) {
+                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
+                }
+            }
+
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
@@ -358,9 +372,11 @@ class Create extends Action
         }, $documents);
 
         try {
-            $dbForProject->createDocuments(
-                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                $documents
+            $dbForProject->withPreserveDates(
+                fn () => $dbForProject->createDocuments(
+                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $documents,
+                )
             );
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
@@ -403,6 +419,16 @@ class Create extends Action
                 $this->getSdkGroup() => $documents
             ]), $this->getBulkResponseModel());
 
+            $this->triggerBulk(
+                'databases.[databaseId].collections.[collectionId].documents.[documentId].create',
+                $database,
+                $collection,
+                $documents,
+                $queueForEvents,
+                $queueForRealtime,
+                $queueForFunctions,
+                $queueForWebhooks
+            );
             return;
         }
 
