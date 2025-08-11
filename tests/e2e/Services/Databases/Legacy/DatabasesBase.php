@@ -1382,8 +1382,7 @@ trait DatabasesBase
             'attributes' => ['actors'],
         ]);
 
-        // Indexes on array attributes are disabled due to MySQL bug
-        $this->assertEquals(400, $actorsArray['headers']['status-code']);
+        $this->assertEquals(202, $actorsArray['headers']['status-code']);
 
         $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1396,8 +1395,7 @@ trait DatabasesBase
             'orders' => ['DESC', 'DESC'],
         ]);
 
-        // Indexes on array attributes are disabled due to MySQL bug
-        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
 
         $unknown = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1423,8 +1421,7 @@ trait DatabasesBase
             'orders' => ['DESC'], // Check order is removed in API
         ]);
 
-        // Indexes on array attributes are disabled due to MySQL bug
-        $this->assertEquals(400, $index1['headers']['status-code']);
+        $this->assertEquals(202, $index1['headers']['status-code']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1436,8 +1433,7 @@ trait DatabasesBase
             'attributes' => ['integers'], // array attribute
         ]);
 
-        // Indexes on array attributes are disabled due to MySQL bug
-        $this->assertEquals(400, $index2['headers']['status-code']);
+        $this->assertEquals(202, $index2['headers']['status-code']);
 
         /**
          * Create Indexes by worker
