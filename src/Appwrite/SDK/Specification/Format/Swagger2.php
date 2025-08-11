@@ -724,6 +724,7 @@ class Swagger2 extends Format
                         break;
                 }
 
+                $readOnly = $rule['readOnly'] ?? false;
                 if ($rule['type'] == 'json') {
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -731,6 +732,10 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
+
+                    if ($readOnly) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                     continue;
                 }
 
@@ -747,6 +752,9 @@ class Swagger2 extends Format
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
+                    if ($readOnly) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                 } else {
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -756,6 +764,9 @@ class Swagger2 extends Format
 
                     if ($format) {
                         $output['definitions'][$model->getType()]['properties'][$name]['format'] = $format;
+                    }
+                    if ($readOnly) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
                 }
                 if ($items) {

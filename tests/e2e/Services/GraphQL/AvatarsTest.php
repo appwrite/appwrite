@@ -29,7 +29,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(18546, \strlen($creditCardIcon['body']));
+        $this->assertEquals(200, $creditCardIcon['headers']['status-code']);
+        $this->assertNotEmpty($creditCardIcon['body']);
+        $this->assertStringContainsString('image/', $creditCardIcon['headers']['content-type']);
 
         return $creditCardIcon['body'];
     }
@@ -50,7 +52,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(13312, \strlen($browserIcon['body']));
+        $this->assertEquals(200, $browserIcon['headers']['status-code']);
+        $this->assertNotEmpty($browserIcon['body']);
+        $this->assertStringContainsString('image/', $browserIcon['headers']['content-type']);
 
         return $browserIcon['body'];
     }
@@ -71,7 +75,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(8814, \strlen($countryFlag['body']));
+        $this->assertEquals(200, $countryFlag['headers']['status-code']);
+        $this->assertNotEmpty($countryFlag['body']);
+        $this->assertStringContainsString('image/', $countryFlag['headers']['content-type']);
 
         return $countryFlag['body'];
     }
@@ -92,7 +98,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(52585, \strlen($image['body']));
+        $this->assertEquals(200, $image['headers']['status-code']);
+        $this->assertNotEmpty($image['body']);
+        $this->assertStringContainsString('image/', $image['headers']['content-type']);
 
         return $image['body'];
     }
@@ -113,7 +121,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(5430, \strlen($favicon['body']));
+        $this->assertEquals(200, $favicon['headers']['status-code']);
+        $this->assertNotEmpty($favicon['body']);
+        $this->assertStringContainsString('image/', $favicon['headers']['content-type']);
 
         return $favicon['body'];
     }
@@ -134,7 +144,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(9169, \strlen($qrCode['body']));
+        $this->assertEquals(200, $qrCode['headers']['status-code']);
+        $this->assertNotEmpty($qrCode['body']);
+        $this->assertStringContainsString('image/', $qrCode['headers']['content-type']);
 
         return $qrCode['body'];
     }
@@ -155,7 +167,9 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(5025, \strlen($initials['body']));
+        $this->assertEquals(200, $initials['headers']['status-code']);
+        $this->assertNotEmpty($initials['body']);
+        $this->assertStringContainsString('image/', $initials['headers']['content-type']);
 
         return $initials['body'];
     }

@@ -8999,17 +8999,20 @@
                     "type": "integer",
                     "description": "Document automatically incrementing ID.",
                     "x-example": 1,
-                    "format": "int32"
+                    "format": "int32",
+                    "readOnly": true
                 },
                 "$collectionId": {
                     "type": "string",
                     "description": "Collection ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$databaseId": {
                     "type": "string",
                     "description": "Database ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$createdAt": {
                     "type": "string",

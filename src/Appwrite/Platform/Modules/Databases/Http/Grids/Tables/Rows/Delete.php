@@ -40,7 +40,7 @@ class Delete extends DocumentDelete
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].delete')
             ->label('audits.event', 'row.delete')
-            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}/row/{request.rowId}')
+            ->label('audits.resource', 'database/{request.databaseId}/grid/table/{request.tableId}/row/{request.rowId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
