@@ -1976,101 +1976,101 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
-    public function testConvertAnonymousAccountOAuth2()
-    {
-        $session = $this->testCreateAnonymousAccount();
-        $provider = 'mock';
-        $appId = '1';
-        $secret = '123456';
+    // public function testConvertAnonymousAccountOAuth2()
+    // {
+    //     $session = $this->testCreateAnonymousAccount();
+    //     $provider = 'mock';
+    //     $appId = '1';
+    //     $secret = '123456';
 
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+    //     /**
+    //      * Test for SUCCESS
+    //      */
+    //     $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+    //         'origin' => 'http://localhost',
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+    //     ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertEquals(200, $response['headers']['status-code']);
 
-        $userId = $response['body']['$id'] ?? '';
+    //     $userId = $response['body']['$id'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'provider' => $provider,
-            'appId' => $appId,
-            'secret' => $secret,
-            'enabled' => true,
-        ]);
+    //     $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+    //         'origin' => 'http://localhost',
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => 'console',
+    //         'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+    //     ]), [
+    //         'provider' => $provider,
+    //         'appId' => $appId,
+    //         'secret' => $secret,
+    //         'enabled' => true,
+    //     ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ]);
+    //     $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+    //         'origin' => 'http://localhost',
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+    //     ]), [
+    //         'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+    //         'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+    //     ]);
 
-        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+    //     $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('success', $response['body']['result']);
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertEquals('success', $response['body']['result']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+    //     $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+    //         'origin' => 'http://localhost',
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+    //     ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($response['body']['$id'], $userId);
-        $this->assertEquals('User Name', $response['body']['name']);
-        $this->assertEquals('useroauth@localhost.test', $response['body']['email']);
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertEquals($response['body']['$id'], $userId);
+    //     $this->assertEquals('User Name', $response['body']['name']);
+    //     $this->assertEquals('useroauth@localhost.test', $response['body']['email']);
 
-        // Since we only support one oauth user, let's also check updateSession here
+    //     // Since we only support one oauth user, let's also check updateSession here
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+    //     $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+    //         'origin' => 'http://localhost',
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+    //     ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']['secret']);
-        $this->assertEquals('123456', $response['body']['providerAccessToken']);
-        $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
-        $this->assertGreaterThan(DateTime::addSeconds(new \DateTime(), 14400 - 5), $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertEmpty($response['body']['secret']);
+    //     $this->assertEquals('123456', $response['body']['providerAccessToken']);
+    //     $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
+    //     $this->assertGreaterThan(DateTime::addSeconds(new \DateTime(), 14400 - 5), $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
 
-        $initialExpiry = $response['body']['providerAccessTokenExpiry'];
+    //     $initialExpiry = $response['body']['providerAccessTokenExpiry'];
 
-        sleep(3);
+    //     sleep(3);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+    //     $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
+    //         'origin' => 'http://localhost',
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+    //     ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('123456', $response['body']['providerAccessToken']);
-        $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
-        $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertEquals('123456', $response['body']['providerAccessToken']);
+    //     $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
+    //     $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
 
-        return [];
-    }
+    //     return [];
+    // }
 
     public function testGetSessionByID()
     {

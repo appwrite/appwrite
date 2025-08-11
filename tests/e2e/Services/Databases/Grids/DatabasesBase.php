@@ -429,6 +429,13 @@ trait DatabasesBase
                 Query::cursorAfter(new Document(['$id' => 'title']))->toString()
             ],
         ]);
+
+        var_dump([
+            '/databases/' . $databaseId . '/grids/tables/' . $data['moviesId'] . '/columns',
+            Query::equal('type', ['string'])->toString(),
+            Query::limit(2)->toString(),
+            Query::cursorAfter(new Document(['$id' => 'title']))->toString()
+        ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, \count($response['body']['columns']));
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $data['moviesId'] . '/columns', array_merge([

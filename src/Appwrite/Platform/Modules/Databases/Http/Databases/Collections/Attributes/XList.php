@@ -119,7 +119,8 @@ class XList extends Action
 
             $cursor->setValue($cursorDocument);
         }
-
+         var_dump($cursorDocument);
+         
         try {
             $attributes = $dbForProject->find('attributes', $queries);
             $total = $dbForProject->count('attributes', $queries, APP_LIMIT_COUNT);
@@ -128,7 +129,9 @@ class XList extends Action
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
-        } catch (QueryException) {
+        } catch (QueryException $x) {
+           
+            var_dump($x->getMessage());
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
 

@@ -32,7 +32,7 @@ class Base extends Queries
             $config['console'],
             $config['logs']
         );
-
+      
         $collection = $collections[$collection];
 
         $allowedAttributesLookup = [];
@@ -76,6 +76,8 @@ class Base extends Queries
             'array' => false,
         ]);
 
+
+        
         $validators = [
             new Limit(),
             new Offset(),
