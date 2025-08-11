@@ -427,7 +427,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
-
+     var_dump('In http/php');
     if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 

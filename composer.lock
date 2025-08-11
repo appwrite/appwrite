@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "262f5175f7cb01971f9a0ab18dbd8a02",
+    "content-hash": "342004735dc16f5a13ced84c15186ad4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1306,17 +1306,13 @@
         {
             "name": "open-telemetry/context",
             "version": "1.3.0",
-            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/context.git",
                 "reference": "4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc"
-                "reference": "4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc",
-                "reference": "4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc",
                 "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc",
                 "reference": "4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc",
                 "shasum": ""
@@ -1364,7 +1360,6 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-08-04T03:25:06+00:00"
             "time": "2025-08-04T03:25:06+00:00"
         },
         {
@@ -1497,17 +1492,13 @@
         {
             "name": "open-telemetry/sdk",
             "version": "1.7.0",
-            "version": "1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
                 "reference": "86287cf30fd6549444d7b8f7d8758d92e24086ac"
-                "reference": "86287cf30fd6549444d7b8f7d8758d92e24086ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/86287cf30fd6549444d7b8f7d8758d92e24086ac",
-                "reference": "86287cf30fd6549444d7b8f7d8758d92e24086ac",
                 "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/86287cf30fd6549444d7b8f7d8758d92e24086ac",
                 "reference": "86287cf30fd6549444d7b8f7d8758d92e24086ac",
                 "shasum": ""
@@ -1529,7 +1520,6 @@
                 "symfony/polyfill-mbstring": "^1.23",
                 "symfony/polyfill-php82": "^1.26",
                 "tbachert/spi": "^1.0.5"
-                "tbachert/spi": "^1.0.5"
             },
             "suggest": {
                 "ext-gmp": "To support unlimited number of synchronous metric readers",
@@ -1542,9 +1532,6 @@
                     "OpenTelemetry\\API\\Configuration\\ConfigEnv\\EnvComponentLoader": [
                         "OpenTelemetry\\API\\Instrumentation\\Configuration\\General\\ConfigEnv\\EnvComponentLoaderHttpConfig",
                         "OpenTelemetry\\API\\Instrumentation\\Configuration\\General\\ConfigEnv\\EnvComponentLoaderPeerConfig"
-                    ],
-                    "OpenTelemetry\\SDK\\Common\\Configuration\\Resolver\\ResolverInterface": [
-                        "OpenTelemetry\\SDK\\Common\\Configuration\\Resolver\\SdkConfigurationResolver"
                     ],
                     "OpenTelemetry\\SDK\\Common\\Configuration\\Resolver\\ResolverInterface": [
                         "OpenTelemetry\\SDK\\Common\\Configuration\\Resolver\\SdkConfigurationResolver"
@@ -1598,22 +1585,17 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2025-08-06T03:07:06+00:00"
-            "time": "2025-08-06T03:07:06+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
-            "version": "1.36.0",
             "version": "1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sem-conv.git",
                 "reference": "60dd18fd21d45e6f4234ecab89c14021b6e3de9a"
-                "reference": "60dd18fd21d45e6f4234ecab89c14021b6e3de9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/60dd18fd21d45e6f4234ecab89c14021b6e3de9a",
-                "reference": "60dd18fd21d45e6f4234ecab89c14021b6e3de9a",
                 "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/60dd18fd21d45e6f4234ecab89c14021b6e3de9a",
                 "reference": "60dd18fd21d45e6f4234ecab89c14021b6e3de9a",
                 "shasum": ""
@@ -1659,7 +1641,6 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-08-04T03:22:08+00:00"
             "time": "2025-08-04T03:22:08+00:00"
         },
         {
@@ -3721,12 +3702,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9d08a396d95812ba2cf520cd9596af62fe6f0d7c"
+                "reference": "715f74cae3f45c83820e4da244a0959ffaa93129"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9d08a396d95812ba2cf520cd9596af62fe6f0d7c",
-                "reference": "9d08a396d95812ba2cf520cd9596af62fe6f0d7c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/715f74cae3f45c83820e4da244a0959ffaa93129",
+                "reference": "715f74cae3f45c83820e4da244a0959ffaa93129",
                 "shasum": ""
             },
             "require": {
@@ -3735,7 +3716,7 @@
                 "php": ">=8.1",
                 "utopia-php/cache": "0.13.*",
                 "utopia-php/framework": "0.33.*",
-                "utopia-php/mongo": "0.5.3",
+                "utopia-php/mongo": "dev-feat-partial-filter-expression as 0.5.3",
                 "utopia-php/pools": "0.8.*"
             },
             "require-dev": {
@@ -3770,7 +3751,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-mongo-tmp"
             },
-            "time": "2025-08-07T09:06:16+00:00"
+            "time": "2025-08-11T08:43:59+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4326,20 +4307,20 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/0.14.3"
             },
-            "time": "2025-08-07T04:52:14+00:00"
+            "time": "2025-08-08T13:10:17+00:00"
         },
         {
             "name": "utopia-php/mongo",
-            "version": "0.5.3",
+            "version": "dev-feat-partial-filter-expression",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "4716522cbe8b56ee4109d7e6212e79156de129b0"
+                "reference": "b2c89d4c21b77cfa3cb1b740bd0245c971040e7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/4716522cbe8b56ee4109d7e6212e79156de129b0",
-                "reference": "4716522cbe8b56ee4109d7e6212e79156de129b0",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/b2c89d4c21b77cfa3cb1b740bd0245c971040e7f",
+                "reference": "b2c89d4c21b77cfa3cb1b740bd0245c971040e7f",
                 "shasum": ""
             },
             "require": {
@@ -4384,9 +4365,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/0.5.3"
+                "source": "https://github.com/utopia-php/mongo/tree/feat-partial-filter-expression"
             },
-            "time": "2025-08-07T08:36:59+00:00"
+            "time": "2025-08-10T12:40:53+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -6380,16 +6361,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.23",
+            "version": "9.6.24",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "43d2cb18d0675c38bd44982a5d1d88f6d53d8d95"
+                "reference": "ea49afa29aeea25ea7bf9de9fdd7cab163cc0701"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/43d2cb18d0675c38bd44982a5d1d88f6d53d8d95",
-                "reference": "43d2cb18d0675c38bd44982a5d1d88f6d53d8d95",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/ea49afa29aeea25ea7bf9de9fdd7cab163cc0701",
+                "reference": "ea49afa29aeea25ea7bf9de9fdd7cab163cc0701",
                 "shasum": ""
             },
             "require": {
@@ -6400,7 +6381,7 @@
                 "ext-mbstring": "*",
                 "ext-xml": "*",
                 "ext-xmlwriter": "*",
-                "myclabs/deep-copy": "^1.13.1",
+                "myclabs/deep-copy": "^1.13.4",
                 "phar-io/manifest": "^2.0.4",
                 "phar-io/version": "^3.2.1",
                 "php": ">=7.3",
@@ -6411,11 +6392,11 @@
                 "phpunit/php-timer": "^5.0.3",
                 "sebastian/cli-parser": "^1.0.2",
                 "sebastian/code-unit": "^1.0.8",
-                "sebastian/comparator": "^4.0.8",
+                "sebastian/comparator": "^4.0.9",
                 "sebastian/diff": "^4.0.6",
                 "sebastian/environment": "^5.1.5",
                 "sebastian/exporter": "^4.0.6",
-                "sebastian/global-state": "^5.0.7",
+                "sebastian/global-state": "^5.0.8",
                 "sebastian/object-enumerator": "^4.0.4",
                 "sebastian/resource-operations": "^3.0.4",
                 "sebastian/type": "^3.2.1",
@@ -6463,7 +6444,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.23"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.24"
             },
             "funding": [
                 {
@@ -6487,7 +6468,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-05-02T06:40:34+00:00"
+            "time": "2025-08-10T08:32:42+00:00"
         },
         {
             "name": "psr/cache",
@@ -6707,16 +6688,16 @@
         },
         {
             "name": "sebastian/comparator",
-            "version": "4.0.8",
+            "version": "4.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "fa0f136dd2334583309d32b62544682ee972b51a"
+                "reference": "67a2df3a62639eab2cc5906065e9805d4fd5dfc5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/fa0f136dd2334583309d32b62544682ee972b51a",
-                "reference": "fa0f136dd2334583309d32b62544682ee972b51a",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/67a2df3a62639eab2cc5906065e9805d4fd5dfc5",
+                "reference": "67a2df3a62639eab2cc5906065e9805d4fd5dfc5",
                 "shasum": ""
             },
             "require": {
@@ -6769,15 +6750,27 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/comparator/issues",
-                "source": "https://github.com/sebastianbergmann/comparator/tree/4.0.8"
+                "source": "https://github.com/sebastianbergmann/comparator/tree/4.0.9"
             },
             "funding": [
                 {
                     "url": "https://github.com/sebastianbergmann",
                     "type": "github"
+                },
+                {
+                    "url": "https://liberapay.com/sebastianbergmann",
+                    "type": "liberapay"
+                },
+                {
+                    "url": "https://thanks.dev/u/gh/sebastianbergmann",
+                    "type": "thanks_dev"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/sebastian/comparator",
+                    "type": "tidelift"
                 }
             ],
-            "time": "2022-09-14T12:41:17+00:00"
+            "time": "2025-08-10T06:51:50+00:00"
         },
         {
             "name": "sebastian/complexity",
@@ -7044,16 +7037,16 @@
         },
         {
             "name": "sebastian/global-state",
-            "version": "5.0.7",
+            "version": "5.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/global-state.git",
-                "reference": "bca7df1f32ee6fe93b4d4a9abbf69e13a4ada2c9"
+                "reference": "b6781316bdcd28260904e7cc18ec983d0d2ef4f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/bca7df1f32ee6fe93b4d4a9abbf69e13a4ada2c9",
-                "reference": "bca7df1f32ee6fe93b4d4a9abbf69e13a4ada2c9",
+                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/b6781316bdcd28260904e7cc18ec983d0d2ef4f6",
+                "reference": "b6781316bdcd28260904e7cc18ec983d0d2ef4f6",
                 "shasum": ""
             },
             "require": {
@@ -7096,15 +7089,27 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/global-state/issues",
-                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.7"
+                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.8"
             },
             "funding": [
                 {
                     "url": "https://github.com/sebastianbergmann",
                     "type": "github"
+                },
+                {
+                    "url": "https://liberapay.com/sebastianbergmann",
+                    "type": "liberapay"
+                },
+                {
+                    "url": "https://thanks.dev/u/gh/sebastianbergmann",
+                    "type": "thanks_dev"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/sebastian/global-state",
+                    "type": "tidelift"
                 }
             ],
-            "time": "2024-03-02T06:35:11+00:00"
+            "time": "2025-08-10T07:10:35+00:00"
         },
         {
             "name": "sebastian/lines-of-code",
@@ -7277,16 +7282,16 @@
         },
         {
             "name": "sebastian/recursion-context",
-            "version": "4.0.5",
+            "version": "4.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/recursion-context.git",
-                "reference": "e75bd0f07204fec2a0af9b0f3cfe97d05f92efc1"
+                "reference": "539c6691e0623af6dc6f9c20384c120f963465a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/recursion-context/zipball/e75bd0f07204fec2a0af9b0f3cfe97d05f92efc1",
-                "reference": "e75bd0f07204fec2a0af9b0f3cfe97d05f92efc1",
+                "url": "https://api.github.com/repos/sebastianbergmann/recursion-context/zipball/539c6691e0623af6dc6f9c20384c120f963465a0",
+                "reference": "539c6691e0623af6dc6f9c20384c120f963465a0",
                 "shasum": ""
             },
             "require": {
@@ -7328,15 +7333,27 @@
             "homepage": "https://github.com/sebastianbergmann/recursion-context",
             "support": {
                 "issues": "https://github.com/sebastianbergmann/recursion-context/issues",
-                "source": "https://github.com/sebastianbergmann/recursion-context/tree/4.0.5"
+                "source": "https://github.com/sebastianbergmann/recursion-context/tree/4.0.6"
             },
             "funding": [
                 {
                     "url": "https://github.com/sebastianbergmann",
                     "type": "github"
+                },
+                {
+                    "url": "https://liberapay.com/sebastianbergmann",
+                    "type": "liberapay"
+                },
+                {
+                    "url": "https://thanks.dev/u/gh/sebastianbergmann",
+                    "type": "thanks_dev"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/sebastian/recursion-context",
+                    "type": "tidelift"
                 }
             ],
-            "time": "2023-02-03T06:07:39+00:00"
+            "time": "2025-08-10T06:57:39+00:00"
         },
         {
             "name": "sebastian/resource-operations",
@@ -8602,15 +8619,15 @@
         {
             "package": "utopia-php/database",
             "version": "dev-feat-mongo-tmp",
-            "alias": "0.75.0",
-            "alias_normalized": "0.75.0.0"
+            "alias": "0.73.0",
+            "alias_normalized": "0.73.0.0"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/database": 20
     },
-    "prefer-stable": false,
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.3.0",
