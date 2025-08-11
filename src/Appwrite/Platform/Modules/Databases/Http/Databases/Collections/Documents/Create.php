@@ -117,6 +117,7 @@ class Create extends Action
             ->param('data', [], new JSON(), 'Document data as JSON object.', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -127,7 +128,7 @@ class Create extends Action
             ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -186,6 +187,57 @@ class Create extends Action
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
+        }
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Stage the operation(s) in transaction logs
+            $staged = [];
+            foreach ($documents as $document) {
+                $staged[] = new Document([
+                    '$id' => ID::unique(),
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $document['$id'] ?? $documentId ?? ID::unique(),
+                    'action' => 'create',
+                    'data' => $document,
+                ]);
+            }
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocuments('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    \count($staged)
+                );
+            });
+
+            // Return successful response without actually creating documents
+            if ($isBulk) {
+                $response->dynamic(new Document([
+                    $this->getSdkGroup() => [],
+                    'total' => \count($documents),
+                ]), $this->getBulkResponseModel());
+            } else {
+                $mockDocument = new Document([
+                    '$id' => $documents[0]['$id'] ?? $documentId,
+                    '$collectionId' => $collectionId,
+                    '$databaseId' => $databaseId,
+                    ...$documents[0]
+                ]);
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+                    ->dynamic($mockDocument, $this->getResponseModel());
+            }
+            return;
         }
 
         $hasRelationships = \array_filter(

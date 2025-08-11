@@ -60,6 +60,7 @@ class Increment extends IncrementDocumentAttribute
             ->param('column', '', new Key(), 'Column key.')
             ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true)
             ->param('max', null, new Numeric(), 'Maximum value for the column. If the current value is greater than this value, an error will be thrown.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

@@ -71,6 +71,7 @@ class Upsert extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
@@ -78,7 +79,7 @@ class Upsert extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $documents, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
@@ -97,6 +98,45 @@ class Upsert extends Action
 
         if ($hasRelationships) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSdkNamespace() .  ' with relationship attributes');
+        }
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Stage the operations in transaction logs
+            $staged = [];
+            foreach ($documents as $document) {
+                $staged[] = new Document([
+                    '$id' => ID::unique(),
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $document['$id'] ?? ID::unique(),
+                    'action' => 'upsert',
+                    'data' => $document,
+                ]);
+            }
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocuments('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    \count($staged)
+                );
+            });
+
+            // Return successful response without actually upserting documents
+            $response->dynamic(new Document([
+                $this->getSdkGroup() => [],
+                'total' => \count($documents),
+            ]), $this->getResponseModel());
+            return;
         }
 
         foreach ($documents as $key => $document) {
