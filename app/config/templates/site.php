@@ -479,7 +479,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-flutter',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [
             [
                 'name' => 'APPWRITE_PUBLIC_ENDPOINT',
