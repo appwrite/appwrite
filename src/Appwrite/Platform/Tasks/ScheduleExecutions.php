@@ -30,7 +30,7 @@ class ScheduleExecutions extends ScheduleBase
     {
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
-        $queueForFunctions = new Func($this->publisherFunctions);
+        $queueForFunctions = new Func($this->publisher);
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
