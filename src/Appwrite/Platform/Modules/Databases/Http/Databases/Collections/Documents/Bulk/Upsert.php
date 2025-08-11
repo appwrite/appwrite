@@ -100,6 +100,45 @@ class Upsert extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSdkNamespace() .  ' with relationship attributes');
         }
 
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Stage the operations in transaction logs
+            $staged = [];
+            foreach ($documents as $document) {
+                $staged[] = new Document([
+                    '$id' => ID::unique(),
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $document['$id'] ?? ID::unique(),
+                    'action' => 'upsert',
+                    'data' => $document,
+                ]);
+            }
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocuments('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    \count($staged)
+                );
+            });
+
+            // Return successful response without actually upserting documents
+            $response->dynamic(new Document([
+                $this->getSdkGroup() => [],
+                'total' => \count($documents),
+            ]), $this->getResponseModel());
+            return;
+        }
+
         foreach ($documents as $key => $document) {
             $documents[$key] = new Document($document);
         }

@@ -121,6 +121,45 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Stage the operation in transaction logs
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => null, // Bulk operation doesn't have specific document ID
+                'action' => 'bulkUpdate',
+                'data' => [
+                    'data' => $data,
+                    'queries' => $queries,
+                ],
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    1
+                );
+            });
+
+            // Return successful response without actually updating documents
+            $response->dynamic(new Document([
+                $this->getSdkGroup() => [],
+                'total' => 0, // Can't predict how many would be updated
+            ]), $this->getResponseModel());
+            return;
+        }
+
         if ($data['$permissions']) {
             $validator = new Permissions();
             if (!$validator->isValid($data['$permissions'])) {

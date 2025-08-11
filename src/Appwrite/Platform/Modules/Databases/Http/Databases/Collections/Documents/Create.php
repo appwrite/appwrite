@@ -189,6 +189,57 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Stage the operation(s) in transaction logs
+            $staged = [];
+            foreach ($documents as $document) {
+                $staged[] = new Document([
+                    '$id' => ID::unique(),
+                    'databaseInternalId' => $database->getSequence(),
+                    'collectionInternalId' => $collection->getSequence(),
+                    'transactionInternalId' => $transaction->getSequence(),
+                    'documentId' => $document['$id'] ?? $documentId ?? ID::unique(),
+                    'action' => 'create',
+                    'data' => $document,
+                ]);
+            }
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocuments('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    \count($staged)
+                );
+            });
+
+            // Return successful response without actually creating documents
+            if ($isBulk) {
+                $response->dynamic(new Document([
+                    $this->getSdkGroup() => [],
+                    'total' => \count($documents),
+                ]), $this->getBulkResponseModel());
+            } else {
+                $mockDocument = new Document([
+                    '$id' => $documents[0]['$id'] ?? $documentId,
+                    '$collectionId' => $collectionId,
+                    '$databaseId' => $databaseId,
+                    ...$documents[0]
+                ]);
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+                    ->dynamic($mockDocument, $this->getResponseModel());
+            }
+            return;
+        }
+
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
             fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP

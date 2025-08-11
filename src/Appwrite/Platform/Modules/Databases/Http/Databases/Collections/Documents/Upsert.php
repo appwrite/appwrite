@@ -111,6 +111,47 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Stage the operation in transaction logs
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'upsert',
+                'data' => $data,
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    1
+                );
+            });
+
+            // Return successful response without actually upserting document
+            $mockDocument = new Document([
+                '$id' => $documentId,
+                '$collectionId' => $collectionId,
+                '$databaseId' => $databaseId,
+                ...$data
+            ]);
+            $response
+                ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+                ->dynamic($mockDocument, $this->getResponseModel());
+            return;
+        }
+
         $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
