@@ -422,12 +422,13 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 });
 
 $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+    
     App::setResource('swooleRequest', fn () => $swooleRequest);
     App::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
-     var_dump('In http/php');
+
     if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 

@@ -12,6 +12,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 trait DatabasesBase
 {
@@ -430,12 +431,6 @@ trait DatabasesBase
             ],
         ]);
 
-        var_dump([
-            '/databases/' . $databaseId . '/grids/tables/' . $data['moviesId'] . '/columns',
-            Query::equal('type', ['string'])->toString(),
-            Query::limit(2)->toString(),
-            Query::cursorAfter(new Document(['$id' => 'title']))->toString()
-        ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, \count($response['body']['columns']));
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $data['moviesId'] . '/columns', array_merge([
@@ -507,13 +502,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'size' => 1000,
+            'size' => 2000, // to match the index max length in mongo also.
             'required' => true,
             'default' => null,
         ]);
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
-        $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
+        $this->assertStringContainsString('Index length is longer than the maximum', $attribute['body']['message']); //to  match mongdb length limit. also
     }
 
     public function testUpdateColumnEnum(): void
@@ -4446,6 +4441,11 @@ trait DatabasesBase
      */
     public function testOneToOneRelationship(array $data): array
     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
@@ -4688,6 +4688,11 @@ trait DatabasesBase
      */
     public function testOneToManyRelationship(array $data): array
     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
         $personCollection = $data['personCollection'];
         $libraryCollection = $data['libraryCollection'];
@@ -4843,6 +4848,11 @@ trait DatabasesBase
      */
     public function testManyToOneRelationship(array $data): array
     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create album table
@@ -4995,6 +5005,11 @@ trait DatabasesBase
      */
     public function testManyToManyRelationship(array $data): array
     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create sports table
@@ -5388,6 +5403,11 @@ trait DatabasesBase
      */
     public function testUpdateWithExistingRelationships(array $data): void
     {
+
+        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         $table1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([

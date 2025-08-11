@@ -64,7 +64,8 @@ class Mock extends OAuth2
                 'client_secret' => $this->appSecret,
                 'code' => $code
             ]));
-          
+
+            var_dump('Sending.......');
             $this->tokens = \json_decode($this->request(
                 'GET',
                 'http://localhost/' . $this->version . '/mock/tests/general/oauth2/token?' .
@@ -76,7 +77,7 @@ class Mock extends OAuth2
                     ])
             ), true);
         }
-        var_dump('@@@@@@@@@');
+
         return $this->tokens;
     }
 

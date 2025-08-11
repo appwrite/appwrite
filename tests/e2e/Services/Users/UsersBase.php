@@ -699,10 +699,10 @@ trait UsersBase
         ], $this->getHeaders()), [
             'search' => "man",
         ]);
-       
+
         //@Jake in mongodb fulltext search support only in complete words.
         $this->assertEquals($response['headers']['status-code'], 200);
-         $this->assertIsArray($response['body']);
+        $this->assertIsArray($response['body']);
         // $this->assertIsArray($response['body']['users']);
         // $this->assertIsInt($response['body']['total']);
         // $this->assertEquals(1, $response['body']['total']);

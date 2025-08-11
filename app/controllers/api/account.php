@@ -1069,6 +1069,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$sequence');
+    
         $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
@@ -1256,8 +1257,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
             'failure' => $failure,
             'token' => false,
         ], $scopes);
-      
-        var_dump('Url: /v1/account/sessions/oauth2/:provider redirecting to -> '. $oauth2->getLoginURL());
+
+        //var_dump('Url: /v1/account/sessions/oauth2/:provider redirecting to -> '. $oauth2->getLoginURL());
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -1293,7 +1294,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $params['project'] = $projectId;
         unset($params['projectId']);
 
-        var_dump('Url: /v1/account/sessions/oauth2/callback/'.  $provider . '/ ' .$projectId.  'redirect to '. $callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+        var_dump('Url  : /v1/account/sessions/oauth2/callback/'.$provider. '/ '.$projectId.  'redirect to '. $callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
         . \http_build_query($params));
 
         $response
@@ -1382,7 +1383,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-        
+
         if (!\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
@@ -1414,7 +1415,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure'])) {
             $failure = URLParser::parse($state['failure']);
         }
-     
+
         $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null) use ($failure, $response) {
             $exception = new Exception($type, $message, $code);
             if (!empty($failure)) {
@@ -1446,7 +1447,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (empty($code)) {
             $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Missing OAuth2 code. Please contact the Appwrite team for additional support.');
         }
-       
+
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
@@ -1462,8 +1463,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
- 
+
         } catch (OAuth2Exception $ex) {
+    
             $failureRedirect(
                 $ex->getType(),
                 'Failed to obtain access token. The ' . $providerName . ' OAuth2 provider returned an error: ' . $ex->getMessage(),
@@ -1472,7 +1474,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         var_dump('Url: /v1/account/sessions/oauth2/' .$provider. '/redirect: After getting the tokens');
-        
+
         $oauth2ID = $oauth2->getUserID($accessToken);
         if (empty($oauth2ID)) {
             $failureRedirect(Exception::USER_MISSING_ID);

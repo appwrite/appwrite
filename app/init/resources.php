@@ -861,7 +861,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
 
     // if teamInternalId is empty, return an empty document
 
-    if(empty($teamInternalId)){
+    if (empty($teamInternalId)) {
         return new Document([]);
     }
 
