@@ -76,7 +76,6 @@ class FunctionsCustomClientTest extends Scope
 
     public function testCreateHeadExecution()
     {
-
         /**
          * Test for SUCCESS
          */
