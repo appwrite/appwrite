@@ -11,7 +11,7 @@ use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
-use Appwrite\Utopia\Database\Validator\Query\Select;
+use Utopia\Database\Validator\Query\Select;
 
 class Base extends Queries
 {
