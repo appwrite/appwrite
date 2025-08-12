@@ -5568,6 +5568,8 @@ trait DatabasesBase
 
         $this->assertEquals(202, $description['headers']['status-code']);
 
+        \sleep(2);
+
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $books['body']['$id'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5575,11 +5577,8 @@ trait DatabasesBase
         ]), [
             'key' => 'fts_description',
             'type' => Database::INDEX_FULLTEXT,
-            'attributes' => ['description'],
+            'columns' => ['description'],
         ]);
-
-        // Wait for worker
-        sleep(2);
 
         $row1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $books['body']['$id'] . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -5627,7 +5626,7 @@ trait DatabasesBase
 
         $this->assertEquals(201, $row3['headers']['status-code']);
 
-        // Test notSearch query - should return books that don't have "science" in title or description
+        // Test notSearch query - should return books that don't have "space" in the description
         $rows = $this->client->call(
             Client::METHOD_GET,
             '/databases/' . $databaseId . '/grids/tables/' . $books['body']['$id'] . '/rows',
@@ -5637,10 +5636,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['title', 'description'])->toString(),
                     Query::notSearch('description', 'space')->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
@@ -5772,10 +5768,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['name', 'price'])->toString(),
                     Query::notBetween('price', 10, 50)->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
@@ -5908,10 +5901,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['name', 'department'])->toString(),
                     Query::notStartsWith('name', 'John')->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
@@ -6044,10 +6034,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['filename', 'type'])->toString(),
                     Query::notEndsWith('filename', '.pdf')->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
@@ -6189,10 +6176,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['title', 'content'])->toString(),
                     Query::createdBefore($secondPostCreatedAt)->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
@@ -6333,10 +6317,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['name', 'description'])->toString(),
                     Query::createdAfter($secondEventCreatedAt)->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
@@ -6508,10 +6489,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['title', 'status'])->toString(),
                     Query::updatedBefore($secondTaskUpdatedAt)->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
@@ -6684,10 +6662,7 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['orderNumber', 'status'])->toString(),
                     Query::updatedAfter($secondOrderUpdatedAt)->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
                 ],
             ]
         );
