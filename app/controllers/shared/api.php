@@ -487,10 +487,7 @@ App::init()
             }
 
             $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-            var_dump(
-                [
-                    'enabled' => $enabled,
-            ]);
+ 
             if (
                 $enabled                // Abuse is enabled
                 && !$isAppUser          // User is not API key
