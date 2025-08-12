@@ -112,7 +112,6 @@ class FunctionsCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'async' => true,
         ]);
-        fwrite(STDOUT, json_encode($execution, JSON_PRETTY_PRINT));
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEmpty($execution['body']);
 
