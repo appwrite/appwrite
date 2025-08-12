@@ -643,18 +643,32 @@ App::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
-        // Define attributes that have subQueryX filters
-        $subQueryAttributes = [
-            'authenticators' => 'subQueryAuthenticators',
-            'sessions' => 'subQuerySessions',
-            'tokens' => 'subQueryTokens',
-            'challenges' => 'subQueryChallenges',
-            'memberships' => 'subQueryMemberships',
-            'targets' => 'subQueryTargets'
-        ];
+        // Define attributes that have subQueryX filters by pulling from collection config
+        $config = Config::getParam('collections', []);
+        $collections = \array_merge(
+            $config['projects'],
+            $config['buckets'],
+            $config['databases'],
+            $config['console'],
+            $config['logs']
+        );
+        
+        $usersCollection = $collections['users'];
+        $subQueryAttributes = [];
+        
+        // Find attributes that have subQuery filters
+        foreach ($usersCollection['attributes'] as $attribute) {
+            $filters = $attribute['filters'] ?? [];
+            foreach ($filters as $filter) {
+                if (str_starts_with($filter, 'subQuery')) {
+                    $subQueryAttributes[$attribute['$id']] = $filter;
+                    break; // Only need the first subQuery filter per attribute
+                }
+            }
+        }
 
         // Process select queries and identify subQueryX attributes
-        $skipFilters = ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets'];
+        $skipFilters = array_values($subQueryAttributes); // Use all subQuery filters from config
         $additionalSkipFilters = [];
         
         // Process queries to handle select queries with subQueryX attributes
