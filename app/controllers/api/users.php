@@ -647,22 +647,19 @@ App::get('/v1/users')
         $usersCollection = Config::getParam('collections', [])['projects']['users'];
         $subQueryAttributes = [];
         
-        // Find attributes that have subQuery filters
         foreach ($usersCollection['attributes'] as $attribute) {
             $filters = $attribute['filters'] ?? [];
             foreach ($filters as $filter) {
                 if (str_starts_with($filter, 'subQuery')) {
                     $subQueryAttributes[$attribute['$id']] = $filter;
-                    break; // Only need the first subQuery filter per attribute
+                    break;
                 }
             }
         }
 
-        // Process select queries and identify subQueryX attributes
-        $skipFilters = array_values($subQueryAttributes); // Default: skip all subQuery filters
-        $requestedSubQueryAttributes = []; // Track which subQuery attributes are explicitly requested
+        $skipFilters = array_values(array_diff($subQueryAttributes, ['subQueryTargets']));
+        $requestedSubQueryAttributes = [];
         
-        // Process queries to handle select queries with subQueryX attributes
         $processedQueries = [];
         
         foreach ($queries as $query) {
@@ -672,28 +669,22 @@ App::get('/v1/users')
 
                 foreach ($selectedAttributes as $attribute) {
                     if (array_key_exists($attribute, $subQueryAttributes)) {
-                        // This subQuery attribute is being requested, so don't skip its filter
                         $requestedSubQueryAttributes[] = $subQueryAttributes[$attribute];
                     } else {
-                        // Keep this attribute in the select query
                         $filteredAttributes[] = $attribute;
                     }
                 }
 
-                // Only add the select query if there are valid attributes remaining
                 if (!empty($filteredAttributes)) {
                     $processedQueries[] = Query::select($filteredAttributes);
                 }
             } else {
-                // Keep non-select queries as they are
                 $processedQueries[] = $query;
             }
         }
 
-        // Update queries with processed queries
         $queries = $processedQueries;
 
-        // Remove from skipFilters any subQuery filters that were explicitly requested
         $skipFilters = array_diff($skipFilters, $requestedSubQueryAttributes);
 
         $users = [];
