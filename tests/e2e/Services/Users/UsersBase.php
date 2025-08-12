@@ -1915,10 +1915,9 @@ trait UsersBase
         $this->assertArrayHasKey('$id', $user);
         $this->assertArrayHasKey('name', $user);
         
-        // SubQuery attributes should not be directly present in select but data should be available
-        // The implementation removes subQuery attributes from select and handles them via skipFilters
-        $this->assertArrayNotHasKey('sessions', $user);
-        $this->assertArrayNotHasKey('tokens', $user);
+        // SubQuery attributes should be present when explicitly selected
+        $this->assertArrayHasKey('sessions', $user);
+        $this->assertArrayHasKey('tokens', $user);
         
         // Verify other attributes are not present
         $this->assertArrayNotHasKey('email', $user);
@@ -1944,8 +1943,8 @@ trait UsersBase
         $this->assertArrayHasKey('name', $user);
         $this->assertArrayHasKey('email', $user);
         
-        // SubQuery attributes (memberships) should not be in select result
-        $this->assertArrayNotHasKey('memberships', $user);
+        // SubQuery attributes should be present when explicitly selected
+        $this->assertArrayHasKey('memberships', $user);
         
         // targets should be available since subQueryTargets is not skipped by default
         $this->assertArrayHasKey('targets', $user);
@@ -1966,9 +1965,13 @@ trait UsersBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         
-        // When only subQuery attributes are selected, all attributes should be returned
-        // since no select query is passed to database
+        // When only subQuery attributes are selected, they should be available since their filters are not skipped
         $user = $response['body']['users'][0];
+        $this->assertArrayHasKey('sessions', $user);
+        $this->assertArrayHasKey('challenges', $user);
+        $this->assertArrayHasKey('authenticators', $user);
+        
+        // Other attributes should also be present since no select query is passed to database
         $this->assertArrayHasKey('$id', $user);
         $this->assertArrayHasKey('name', $user);
         $this->assertArrayHasKey('email', $user);
@@ -2175,7 +2178,7 @@ trait UsersBase
          * This test specifically validates the PR requirements
          */
         
-        // Test that sessions/tokens are handled correctly (removed from select, added to skipFilters)
+        // Test that sessions/tokens are handled correctly (available when selected)
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2189,11 +2192,11 @@ trait UsersBase
         $user = $response['body']['users'][0];
         $this->assertArrayHasKey('$id', $user);
         $this->assertArrayHasKey('name', $user);
-        // sessions should not be present as it's removed from select and handled via skipFilters
-        $this->assertArrayNotHasKey('sessions', $user);
+        // sessions should be present when explicitly selected
+        $this->assertArrayHasKey('sessions', $user);
         $this->assertArrayNotHasKey('email', $user); // Not selected
         
-        // Test that targets are NOT removed (since subQueryTargets is not skipped by default)
+        // Test that targets are available when selected (since subQueryTargets is not skipped by default)
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
