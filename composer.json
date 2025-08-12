@@ -60,7 +60,7 @@
         "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.4.*",
         "utopia-php/image": "0.8.*",
-        "utopia-php/locale": "0.4.*",
+        "utopia-php/locale": "0.8.*",
         "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.18.*",
         "utopia-php/migration": "0.11.*",

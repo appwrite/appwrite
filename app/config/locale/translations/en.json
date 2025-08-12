@@ -274,5 +274,6 @@
     "continents.eu": "Europe",
     "continents.na": "North America",
     "continents.oc": "Oceania",
-    "continents.sa": "South America"
+    "continents.sa": "South America",
+    "mock": "A mock translation for testing purposes."
 }
