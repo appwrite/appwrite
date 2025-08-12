@@ -251,6 +251,10 @@ Server::setResource('publisherDatabases', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
 
+Server::setResource('publisherFunctions', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
 Server::setResource('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
@@ -264,6 +268,10 @@ Server::setResource('consumer', function (Group $pools) {
 }, ['pools']);
 
 Server::setResource('consumerDatabases', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+
+Server::setResource('consumerFunctions', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);
 
