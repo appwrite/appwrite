@@ -12,8 +12,6 @@
     "emails.verification.signature": "Η ομάδα του {{project}}",
     "emails.magicSession.subject": "Είσοδος",
     "emails.magicSession.hello": "Γεια σου,",
-    "emails.magicSession.body": "Ακολουθήστε αυτό το link για να συνδεθείτε",
-    "emails.magicSession.footer": "Εάν δεν ζητήσατε να συνδεθείτε χρησιμοποιώντας αυτό το email, μπορείτε να αγνοήσετε αυτό το μήνυμα.",
     "emails.magicSession.thanks": "Ευχαριστούμε,",
     "emails.magicSession.signature": "Η ομάδα του {{project}}",
     "emails.recovery.subject": "Αλλαγή κωδικού πρόσβασης",

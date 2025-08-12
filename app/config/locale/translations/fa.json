@@ -12,8 +12,6 @@
     "emails.verification.signature": "تیم {{user}}",
     "emails.magicSession.subject": "ورود به حساب کاربری",
     "emails.magicSession.hello": "سلام،",
-    "emails.magicSession.body": "برای ورود به حساب‌تان پیوند زیر را دنبال کنید.",
-    "emails.magicSession.footer": "اگر شما درخواست ورود به حساب کاربری با استفاده از این ایمیل را نداد‌ه‌اید، می‌توانید این پیام را نادیده بگیرید.",
     "emails.magicSession.thanks": "سپاس فراوان،",
     "emails.magicSession.signature": "تیم {{user}}",
     "emails.recovery.subject": "بازیابی گذرواژه",

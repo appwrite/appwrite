@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} ٽيم",
     "emails.magicSession.subject": "لاگ ان",
     "emails.magicSession.hello": "هي ,",
-    "emails.magicSession.body": "لاگ ان ٿيڻ لاءِ ھن لنڪ تي عمل ڪريو.",
-    "emails.magicSession.footer": "جيڪڏھن توھان نه پ پيا ھي لاگ ان استعمال ڪندي اي ميل ، توھان نظر انداز ڪري سگھوٿا ھن پيغام کي.",
     "emails.magicSession.thanks": "مهرباني,",
     "emails.magicSession.signature": "{{project}} ٽيم",
     "emails.recovery.subject": "پاسورڊ ري سيٽ",

@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}}チーム",
     "emails.magicSession.subject": "ログイン",
     "emails.magicSession.hello": "こんにちは、",
-    "emails.magicSession.body": "ログインするためには下記リンクをクリックしてください。",
-    "emails.magicSession.footer": "このメールに心当たりが無い場合は破棄をお願いいたします。",
     "emails.magicSession.thanks": "ご利用いただきありがとうございます。、",
     "emails.magicSession.signature": "{{project}}チーム",
     "emails.recovery.subject": "パスワードリセット",

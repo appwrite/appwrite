@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} 团队",
     "emails.magicSession.subject": "登录",
     "emails.magicSession.hello": "你好、",
-    "emails.magicSession.body": "点此链接登录。",
-    "emails.magicSession.footer": "如果您没有要求使用此电子邮件登录，则可忽略此消息。",
     "emails.magicSession.thanks": "谢谢、",
     "emails.magicSession.signature": "{{project}} 团队",
     "emails.recovery.subject": "重设密码",
