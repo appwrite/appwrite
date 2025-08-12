@@ -14,3 +14,8 @@ jobs:
       run: |
         docker run --rm -v $PWD:/app composer:2.6 sh -c \
         "composer install --profile --ignore-platform-reqs && composer check"
+    
+    - name: Run Locale check
+      run: |
+        docker run --rm -v $PWD:/app node:24-alpine sh -c \
+        "cd .github/workflows/static-analysis/locale && node index.js"
