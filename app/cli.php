@@ -194,9 +194,6 @@ CLI::setResource('publisher', function (Group $pools) {
 CLI::setResource('publisherDatabases', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-CLI::setResource('publisherFunctions', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
 CLI::setResource('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);

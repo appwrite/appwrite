@@ -29,7 +29,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -409,7 +408,6 @@ App::init()
     ->inject('project')
     ->inject('user')
     ->inject('publisher')
-    ->inject('publisherFunctions')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -425,7 +423,7 @@ App::init()
     ->inject('plan')
     ->inject('devKey')
     ->inject('telemetry')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, BrokerPool $publisherFunctions, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -537,7 +535,7 @@ App::init()
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
-        $queueForFunctions = new Func($publisherFunctions);
+        $queueForFunctions = new Func($publisher);
         $queueForWebhooks = new Webhook($publisher);
         $queueForRealtime = new Realtime();
 

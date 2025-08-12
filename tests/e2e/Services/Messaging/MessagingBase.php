@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Messaging\Status as MessageStatus;
-use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
@@ -1191,7 +1190,6 @@ trait MessagingBase
         $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
     }
 
-    #[Retry(count: 3)]
     public function testUpdateScheduledAt(): void
     {
         // Create user
