@@ -74,6 +74,50 @@ class FunctionsCustomClientTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testCreateHeadExecution()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'timeout' => 10,
+        ]);
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true
+        ]);
+
+        // Deny create async execution as guest
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'async' => true,
+        ]);
+        $this->assertEquals(401, $execution['headers']['status-code']);
+
+        // Allow create async execution as user
+        $execution = $this->client->call(Client::METHOD_HEAD, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+        ]);
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testCreateCustomExecution(): array
     {
         /**
