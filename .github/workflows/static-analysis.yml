@@ -18,4 +18,4 @@ jobs:
     - name: Run Locale check
       run: |
         docker run --rm -v $PWD:/app node:24-alpine sh -c \
-        "cd .github/workflows/static-analysis/locale && node index.js"
+        "cd /app/.github/workflows/static-analysis/locale && node index.js"
