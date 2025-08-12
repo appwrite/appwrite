@@ -668,11 +668,12 @@ App::get('/v1/users')
         }
 
         // Process select queries and identify subQueryX attributes
-        $skipFilters = array_values($subQueryAttributes); // Use all subQuery filters from config
-        $additionalSkipFilters = [];
+        $skipFilters = array_values($subQueryAttributes); // Default: skip all subQuery filters
+        $requestedSubQueryAttributes = []; // Track which subQuery attributes are explicitly requested
         
         // Process queries to handle select queries with subQueryX attributes
         $processedQueries = [];
+        
         foreach ($queries as $query) {
             if ($query->getMethod() === Query::TYPE_SELECT) {
                 $selectedAttributes = $query->getValues();
@@ -680,8 +681,8 @@ App::get('/v1/users')
 
                 foreach ($selectedAttributes as $attribute) {
                     if (array_key_exists($attribute, $subQueryAttributes)) {
-                        // Add the corresponding subQuery filter to skipFilters
-                        $additionalSkipFilters[] = $subQueryAttributes[$attribute];
+                        // This subQuery attribute is being requested, so don't skip its filter
+                        $requestedSubQueryAttributes[] = $subQueryAttributes[$attribute];
                     } else {
                         // Keep this attribute in the select query
                         $filteredAttributes[] = $attribute;
@@ -701,9 +702,8 @@ App::get('/v1/users')
         // Update queries with processed queries
         $queries = $processedQueries;
 
-        // Add additional skip filters to the existing ones
-        $skipFilters = array_merge($skipFilters, $additionalSkipFilters);
-        $skipFilters = array_unique($skipFilters);
+        // Remove from skipFilters any subQuery filters that were explicitly requested
+        $skipFilters = array_diff($skipFilters, $requestedSubQueryAttributes);
 
         $users = [];
         $total = 0;
