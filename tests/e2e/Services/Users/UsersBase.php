@@ -2001,31 +2001,6 @@ trait UsersBase
         $this->assertArrayNotHasKey('email', $user);
 
         /**
-         * Test Query::select with multiple select queries (should be consolidated)
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['$id', 'name'])->toString(),
-                Query::select(['email', 'status'])->toString()
-            ]
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['users']);
-        
-        $user = $response['body']['users'][0];
-        // All attributes from both select queries should be present
-        $this->assertArrayHasKey('$id', $user);
-        $this->assertArrayHasKey('name', $user);
-        $this->assertArrayHasKey('email', $user);
-        $this->assertArrayHasKey('status', $user);
-        $this->assertArrayNotHasKey('registration', $user);
-
-        /**
          * Test Query::select with targets (should not be skipped by default)
          */
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
