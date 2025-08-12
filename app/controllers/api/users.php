@@ -643,6 +643,54 @@ App::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
+        // Define attributes that have subQueryX filters
+        $subQueryAttributes = [
+            'authenticators' => 'subQueryAuthenticators',
+            'sessions' => 'subQuerySessions',
+            'tokens' => 'subQueryTokens',
+            'challenges' => 'subQueryChallenges',
+            'memberships' => 'subQueryMemberships',
+            'targets' => 'subQueryTargets'
+        ];
+
+        // Process select queries and identify subQueryX attributes
+        $skipFilters = ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets'];
+        $additionalSkipFilters = [];
+        
+        // Process queries to handle select queries with subQueryX attributes
+        $processedQueries = [];
+        foreach ($queries as $query) {
+            if ($query->getMethod() === Query::TYPE_SELECT) {
+                $selectedAttributes = $query->getValues();
+                $filteredAttributes = [];
+
+                foreach ($selectedAttributes as $attribute) {
+                    if (array_key_exists($attribute, $subQueryAttributes)) {
+                        // Add the corresponding subQuery filter to skipFilters
+                        $additionalSkipFilters[] = $subQueryAttributes[$attribute];
+                    } else {
+                        // Keep this attribute in the select query
+                        $filteredAttributes[] = $attribute;
+                    }
+                }
+
+                // Only add the select query if there are valid attributes remaining
+                if (!empty($filteredAttributes)) {
+                    $processedQueries[] = Query::select($filteredAttributes);
+                }
+            } else {
+                // Keep non-select queries as they are
+                $processedQueries[] = $query;
+            }
+        }
+
+        // Update queries with processed queries
+        $queries = $processedQueries;
+
+        // Add additional skip filters to the existing ones
+        $skipFilters = array_merge($skipFilters, $additionalSkipFilters);
+        $skipFilters = array_unique($skipFilters);
+
         $users = [];
         $total = 0;
 
@@ -655,7 +703,7 @@ App::get('/v1/users')
             } catch (QueryException $e) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
-        }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
+        }, $skipFilters);
 
         $response->dynamic(new Document([
             'users' => $users,

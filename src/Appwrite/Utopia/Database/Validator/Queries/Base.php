@@ -11,6 +11,7 @@ use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
+use Appwrite\Utopia\Database\Validator\Query\Select;
 
 class Base extends Queries
 {
@@ -82,6 +83,7 @@ class Base extends Queries
             new Cursor(),
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
             new Order($attributes),
+            new Select($attributes),
         ];
 
         parent::__construct($validators);
