@@ -43,8 +43,8 @@ class Database extends Model
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Database type.',
-                'default' => 'grids',
-                'example' => 'grids',
+                'default' => 'legacy',
+                'example' => 'legacy',
             ])
         ;
     }

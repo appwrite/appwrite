@@ -225,9 +225,11 @@ class Databases extends Action
 
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
+                $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
 
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
+            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         }
     }
 
@@ -383,9 +385,11 @@ class Databases extends Action
             }
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
+            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
+                $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
         }
     }
@@ -444,6 +448,7 @@ class Databases extends Action
         } finally {
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
+            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         }
     }
 
@@ -500,6 +505,7 @@ class Databases extends Action
         } finally {
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         }
     }
 
