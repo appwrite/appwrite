@@ -216,20 +216,15 @@ class Client
             return $len;
         });
 
-        // Special handling for HEAD requests
+
         if ($method === self::METHOD_HEAD) {
             curl_setopt($ch, CURLOPT_NOBODY, true); // This is crucial for HEAD requests
-            curl_setopt($ch, CURLOPT_HEADER, false); // We handle headers via HEADERFUNCTION
+            curl_setopt($ch, CURLOPT_HEADER, false);
         } else {
             curl_setopt($ch, CURLOPT_NOBODY, false);
         }
 
-        // Only set POST fields for non-GET and non-HEAD requests
         if ($method != self::METHOD_GET && $method != self::METHOD_HEAD) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
-        }
-
-        if ($method != self::METHOD_GET) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         }
 
