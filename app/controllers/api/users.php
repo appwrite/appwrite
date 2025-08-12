@@ -661,26 +661,26 @@ App::get('/v1/users')
         $requestedSubQueryAttributes = [];
         
         $processedQueries = [];
+        $allSelectedAttributes = [];
         
         foreach ($queries as $query) {
             if ($query->getMethod() === Query::TYPE_SELECT) {
                 $selectedAttributes = $query->getValues();
-                $filteredAttributes = [];
 
                 foreach ($selectedAttributes as $attribute) {
                     if (array_key_exists($attribute, $subQueryAttributes)) {
                         $requestedSubQueryAttributes[] = $subQueryAttributes[$attribute];
                     } else {
-                        $filteredAttributes[] = $attribute;
+                        $allSelectedAttributes[] = $attribute;
                     }
-                }
-
-                if (!empty($filteredAttributes)) {
-                    $processedQueries[] = Query::select($filteredAttributes);
                 }
             } else {
                 $processedQueries[] = $query;
             }
+        }
+
+        if (!empty($allSelectedAttributes)) {
+            $processedQueries[] = Query::select(array_unique($allSelectedAttributes));
         }
 
         $queries = $processedQueries;
