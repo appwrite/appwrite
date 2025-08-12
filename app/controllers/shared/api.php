@@ -438,9 +438,10 @@ App::init()
         /*
         * Abuse Check
         */
+        
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
-
+     
         $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
@@ -476,7 +477,7 @@ App::init()
             
             $limit = $timeLimit->limit();
             $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
-         
+        
             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
                 $closestLimit = $remaining;
                 $response
@@ -486,7 +487,10 @@ App::init()
             }
 
             $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-
+            var_dump(
+                [
+                    'enabled' => $enabled,
+            ]);
             if (
                 $enabled                // Abuse is enabled
                 && !$isAppUser          // User is not API key

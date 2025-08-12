@@ -4442,7 +4442,7 @@ trait DatabasesBase
     public function testOneToOneRelationship(array $data): array
     {
 
-        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+        if('mongodb' === strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){ 
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -4689,7 +4689,7 @@ trait DatabasesBase
     public function testOneToManyRelationship(array $data): array
     {
 
-        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+        if('mongodb' === strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){  
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -4849,7 +4849,7 @@ trait DatabasesBase
     public function testManyToOneRelationship(array $data): array
     {
 
-        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+        if('mongodb' === strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){  
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -5006,7 +5006,7 @@ trait DatabasesBase
     public function testManyToManyRelationship(array $data): array
     {
 
-        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+        if('mongodb' === strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){ 
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -5404,7 +5404,7 @@ trait DatabasesBase
     public function testUpdateWithExistingRelationships(array $data): void
     {
 
-        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){
+        if('mongodb' === strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){ 
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 

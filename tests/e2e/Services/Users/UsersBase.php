@@ -695,7 +695,7 @@ trait UsersBase
         $this->assertCount(1, $response['body']['users']);
 
          //mongodb fulltext search support only in complete words.
-        if('mongodb' !== System::getEnv('_APP_DB_ADAPTER', 'mongodb')) {
+         if('mongodb' !== strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){ 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

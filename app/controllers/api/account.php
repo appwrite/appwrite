@@ -1258,8 +1258,6 @@ App::get('/v1/account/sessions/oauth2/:provider')
             'token' => false,
         ], $scopes);
 
-        //var_dump('Url: /v1/account/sessions/oauth2/:provider redirecting to -> '. $oauth2->getLoginURL());
-
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
@@ -1289,14 +1287,11 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         } elseif ($protocol === 'http' && $port !== '80') {
             $callbackBase .= ':' . $port;
         }
-
+        
         $params = $request->getParams();
         $params['project'] = $projectId;
         unset($params['projectId']);
-
-        var_dump('Url  : /v1/account/sessions/oauth2/callback/'.$provider. '/ '.$projectId.  'redirect to '. $callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-        . \http_build_query($params));
-
+      
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
@@ -1375,6 +1370,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         } elseif ($protocol === 'http' && $port !== '80') {
             $callbackBase .= ':' . $port;
         }
+
         $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $redirect = new Redirect($platforms);
@@ -1456,9 +1452,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $accessToken = '';
         $refreshToken = '';
         $accessTokenExpiry = 0;
-
-        var_dump('Url: /v1/account/sessions/oauth2/' .$provider. '/redirect: Before attempting to get the tokens');
-
+         
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
@@ -1472,8 +1466,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $ex->getCode(),
             );
         }
-
-        var_dump('Url: /v1/account/sessions/oauth2/' .$provider. '/redirect: After getting the tokens');
 
         $oauth2ID = $oauth2->getUserID($accessToken);
         if (empty($oauth2ID)) {
@@ -1851,7 +1843,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
         } elseif ($protocol === 'http' && $port !== '80') {
             $callbackBase .= ':' . $port;
         }
-
+       var_dump( $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId());
         $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 

@@ -56,16 +56,8 @@ class Mock extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if (empty($this->tokens)) {
-            var_dump('Tring to get tokes from url:  http://localhost/' . $this->version . '/mock/tests/general/oauth2/token?' .
-            \http_build_query([
-                'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
-                'client_secret' => $this->appSecret,
-                'code' => $code
-            ]));
 
-            var_dump('Sending.......');
+        if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'GET',
                 'http://localhost/' . $this->version . '/mock/tests/general/oauth2/token?' .

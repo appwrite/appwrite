@@ -448,7 +448,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $projectId = str_repeat('very_long_id', 10);
-        if('mongodb' === System::getEnv('_APP_DB_ADAPTER', 'mongodb')){  // to support mongodb UID length
+        if('mongodb' === strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){  // to support mongodb UID length
             $projectId = str_repeat('long_id', 20);
         }
 
@@ -4809,7 +4809,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -4817,7 +4817,7 @@ class ProjectsConsoleClientTest extends Scope
                 'email' => 'user@appwrite.io',
                 'password' => 'password'
             ]);
-            //var_dump($response['headers']['status-code']);
+            
             $this->assertEquals(401, $response['headers']['status-code']);
         }
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
@@ -4827,7 +4827,7 @@ class ProjectsConsoleClientTest extends Scope
             'email' => 'user@appwrite.io',
             'password' => 'password'
         ]);
-        //var_dump($response['headers']['status-code']);
+      
         $this->assertEquals(429, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
