@@ -1965,16 +1965,17 @@ trait UsersBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         
-        // When only subQuery attributes are selected, they should be available since their filters are not skipped
+        // When only subQuery attributes are selected, only $id is passed to database select
+        // but the subQuery attributes should be available since their filters are not skipped
         $user = $response['body']['users'][0];
+        $this->assertArrayHasKey('$id', $user); // Only $id from database select
         $this->assertArrayHasKey('sessions', $user);
         $this->assertArrayHasKey('challenges', $user);
         $this->assertArrayHasKey('authenticators', $user);
         
-        // Other attributes should also be present since no select query is passed to database
-        $this->assertArrayHasKey('$id', $user);
-        $this->assertArrayHasKey('name', $user);
-        $this->assertArrayHasKey('email', $user);
+        // Other attributes should NOT be present since only $id was selected from database
+        $this->assertArrayNotHasKey('name', $user);
+        $this->assertArrayNotHasKey('email', $user);
 
         /**
          * Test Query::select with system attributes
@@ -2168,10 +2169,14 @@ trait UsersBase
         $this->assertNotEmpty($response['body']['users']);
         
         // Since targets is the only selected attribute and it's a subQuery attribute,
-        // but subQueryTargets is not skipped by default, all attributes should be returned
+        // only $id should be passed to database select, but targets should be available
         $user = $response['body']['users'][0];
-        $this->assertArrayHasKey('$id', $user);
+        $this->assertArrayHasKey('$id', $user); // Only $id from database select
         $this->assertArrayHasKey('targets', $user);
+        
+        // Other attributes should NOT be present since only $id was selected from database
+        $this->assertArrayNotHasKey('name', $user);
+        $this->assertArrayNotHasKey('email', $user);
 
         /**
          * Core functionality test: verify subQuery attributes handling

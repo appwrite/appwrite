@@ -662,9 +662,11 @@ App::get('/v1/users')
         
         $processedQueries = [];
         $allSelectedAttributes = [];
+        $hasSelectQuery = false;
         
         foreach ($queries as $query) {
             if ($query->getMethod() === Query::TYPE_SELECT) {
+                $hasSelectQuery = true;
                 $selectedAttributes = $query->getValues();
 
                 foreach ($selectedAttributes as $attribute) {
@@ -679,8 +681,12 @@ App::get('/v1/users')
             }
         }
 
-        if (!empty($allSelectedAttributes)) {
-            $processedQueries[] = Query::select(array_unique($allSelectedAttributes));
+        if ($hasSelectQuery) {
+            if (!empty($allSelectedAttributes)) {
+                $processedQueries[] = Query::select(array_unique($allSelectedAttributes));
+            } else {
+                $processedQueries[] = Query::select(['$id']);
+            }
         }
 
         $queries = $processedQueries;
