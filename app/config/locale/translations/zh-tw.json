@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} 團隊",
     "emails.magicSession.subject": "登入",
     "emails.magicSession.hello": "嗨、",
-    "emails.magicSession.body": "點此連結登入。",
-    "emails.magicSession.footer": "如果您沒有要求使用此電子郵件登入，則可以忽略此消息。",
     "emails.magicSession.thanks": "謝謝、",
     "emails.magicSession.signature": "{{project}} 團隊",
     "emails.recovery.subject": "重設密碼",

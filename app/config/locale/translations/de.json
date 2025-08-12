@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}}-Team",
     "emails.magicSession.subject": "Login",
     "emails.magicSession.hello": "Hey,",
-    "emails.magicSession.body": "Folge diesem Link, um dich einzuloggen.",
-    "emails.magicSession.footer": "Solltest du keinen Login für diese E-Mail-Adresse angefordert haben, kannst du diese Nachricht ignorieren.",
     "emails.magicSession.thanks": "Danke,",
     "emails.magicSession.signature": "{{project}}-Team",
     "emails.recovery.subject": "Kennwort zurücksetzen",

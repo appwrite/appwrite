@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} ತಂಡ",
     "emails.magicSession.subject": "ಲಾಗಿನ್",
     "emails.magicSession.hello": "ನಮಸ್ಕಾರ,",
-    "emails.magicSession.body": "ಲಾಗಿನ್ ಮಾಡಲಿಕ್ಕೆ ಈ ಲಿಂಕನ್ನು ಅನುಸರಿಸಿ",
-    "emails.magicSession.footer": "ನೀವು ಈ ಇಮೇಲನಿಂದ ಲಾಗಿನ್ ಮಾಡಲು ಕೇಳದಿದ್ದರೆ, ಈ ಸಂದೇಶವನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ",
     "emails.magicSession.thanks": "ಧನ್ಯವಾದಗಳು,",
     "emails.magicSession.signature": "{{project}} ತಂಡ",
     "emails.recovery.subject": "ಗುಪ್ತಪದ ಮರುಹೊಂದಿಸಿ",

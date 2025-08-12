@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} দল",
     "emails.magicSession.subject": "লগইন",
     "emails.magicSession.hello": "নমস্কাৰ,",
-    "emails.magicSession.body": "লগইন কৰিবলৈ এই লিংকটো অনুসৰণ কৰক।",
-    "emails.magicSession.footer": "যদি আপুনি এই ইমেইল ব্যৱহাৰ কৰি লগইন কৰিবলৈ কোৱা নাছিল, আপুনি এই বাৰ্তাটো উপেক্ষা কৰিব পাৰে।",
     "emails.magicSession.thanks": "ধন্যবাদ,",
     "emails.magicSession.signature": "{{project}} দল",
     "emails.recovery.subject": "পাছৱাৰ্ড ৰিছেট",
