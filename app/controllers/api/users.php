@@ -644,16 +644,7 @@ App::get('/v1/users')
         }
 
         // Define attributes that have subQueryX filters by pulling from collection config
-        $config = Config::getParam('collections', []);
-        $collections = \array_merge(
-            $config['projects'],
-            $config['buckets'],
-            $config['databases'],
-            $config['console'],
-            $config['logs']
-        );
-        
-        $usersCollection = $collections['users'];
+        $usersCollection = Config::getParam('collections', [])['projects']['users'];
         $subQueryAttributes = [];
         
         // Find attributes that have subQuery filters
