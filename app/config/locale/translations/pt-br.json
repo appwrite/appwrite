@@ -12,8 +12,6 @@
     "emails.verification.signature": "Time {{project}}",
     "emails.magicSession.subject": "Login",
     "emails.magicSession.hello": "Olá,",
-    "emails.magicSession.body": "Clique neste link para entrar.",
-    "emails.magicSession.footer": "Se você não solicitou conectar-se com este e-mail, ignore essa mensagem.",
     "emails.magicSession.thanks": "Muito obrigado,",
     "emails.magicSession.signature": "Time {{project}}",
     "emails.recovery.subject": "Redefinição de senha",

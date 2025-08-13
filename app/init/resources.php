@@ -70,7 +70,11 @@ App::setResource('hooks', function ($register) {
 }, ['register']);
 
 App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+App::setResource('locale', function () {
+    $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+    $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+    return $locale;
+});
 
 App::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));

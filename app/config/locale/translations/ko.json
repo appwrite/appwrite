@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} 팀",
     "emails.magicSession.subject": "로그인",
     "emails.magicSession.hello": "안녕하세요、",
-    "emails.magicSession.body": "로그인 하시려면 링크를 클릭하여주세요.",
-    "emails.magicSession.footer": "이 이메일 계정으로 로그인 신청을 하지 않으셨다면 이 메세지를 무시하여주세요.",
     "emails.magicSession.thanks": "감사합니다、",
     "emails.magicSession.signature": "{{project}} 팀",
     "emails.recovery.subject": "비밀번호 재설정",
