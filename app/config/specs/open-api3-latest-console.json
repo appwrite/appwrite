@@ -8025,6 +8025,7 @@
                     "methods": [
                         {
                             "name": "createDocument",
+                            "desc": "Create document",
                             "auth": {
                                 "Project": []
                             },
@@ -8047,10 +8048,12 @@
                                     "model": "#\/components\/schemas\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/create-document.md"
                         },
                         {
                             "name": "createDocuments",
+                            "desc": "Create documents",
                             "auth": {
                                 "Project": []
                             },
@@ -8070,7 +8073,8 @@
                                     "model": "#\/components\/schemas\/documentList"
                                 }
                             ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/create-documents.md"
                         }
                     ],
                     "auth": {
