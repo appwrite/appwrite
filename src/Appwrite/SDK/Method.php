@@ -18,6 +18,7 @@ class Method
      * @param string $namespace
      * @param ?string $group
      * @param string $name
+     * @param string $desc
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
@@ -29,6 +30,7 @@ class Method
      * @param ContentType $requestType
      * @param array<Parameter> $parameters
      * @param array $additionalParameters
+     * @param string $desc
      */
     public function __construct(
         protected string $namespace,
@@ -44,7 +46,8 @@ class Method
         protected bool $packaging = false,
         protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
-        protected array $additionalParameters = []
+        protected array $additionalParameters = [],
+        protected string $desc = ''
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -137,6 +140,11 @@ class Method
         return $this->name;
     }
 
+    public function getDesc(): string
+    {
+        return $this->desc;
+    }
+
     public function getDescription(): string
     {
         return $this->description;
@@ -217,6 +225,12 @@ class Method
     public function setMethodName(string $name): self
     {
         $this->name = $name;
+        return $this;
+    }
+
+    public function setDesc(string $desc): self
+    {
+        $this->desc = $desc;
         return $this;
     }
 

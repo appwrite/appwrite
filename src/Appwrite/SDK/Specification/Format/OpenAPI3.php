@@ -213,11 +213,13 @@ class OpenAPI3 extends Format
 
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
+                        'desc' => $method->getDesc() ?? '',
                         'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method->getMethodName()) . '.md',
                     ];
 
                     foreach ($method->getParameters() as $parameter) {
