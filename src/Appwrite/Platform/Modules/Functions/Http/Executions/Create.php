@@ -314,7 +314,6 @@ class Create extends Base
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
                     'resourceInternalId' => $execution->getSequence(),
-                    //'resourceInternalId' => $execution->getSequence() ?? '', // resourceInternalId is required and always empty
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,

@@ -89,7 +89,6 @@ class Audits extends Action
 
         // Create event data
         $eventData = [
-            //'userId' => $user->getSequence() ?? '', // userId is required
             'userId' => $user->getSequence(),
             'event' => $event,
             'resource' => $resource,
