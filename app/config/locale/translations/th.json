@@ -12,8 +12,6 @@
     "emails.verification.signature": "ทีม {{project}}",
     "emails.magicSession.subject": "เข้าสู่ระบบ",
     "emails.magicSession.hello": "เรียนผู้ใช้งาน",
-    "emails.magicSession.body": "กดเข้าไปที่ลิงก์นี้เพื่อเข้าสู่ระบบ",
-    "emails.magicSession.footer": "หากท่านไม่ได้ต้องการที่จะเข้าสู่ระบบด้วยอีเมลนี้ ท่านสามารถเพิกเฉยข้อความนี้ได้",
     "emails.magicSession.thanks": "ขอบคุณ",
     "emails.magicSession.signature": "ทีม {{project}}",
     "emails.recovery.subject": "รีเซ็ตรหัสผ่าน",

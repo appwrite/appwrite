@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} ടീം",
     "emails.magicSession.subject": "ലോഗിൻ",
     "emails.magicSession.hello": "നമസ്കാരം,",
-    "emails.magicSession.body": "ലോഗിൻ ചെയ്യുന്നതിനായി ഈ ലിങ്ക് പിന്തുടരുക.",
-    "emails.magicSession.footer": "ഈ ഇമെയിൽ ഉപയോഗിച്ച് ലോഗിൻ ചെയ്യാൻ നിങ്ങൾ ആവശ്യപ്പെട്ടില്ലെങ്കിൽ, ഈ സന്ദേശം അവഗണിക്കാവുന്നതാണ്.",
     "emails.magicSession.thanks": "നന്ദി,",
     "emails.magicSession.signature": "{{project}} ടീം",
     "emails.recovery.subject": "രഹസ്യവാക്ക് പുനക്രമീകരണം",

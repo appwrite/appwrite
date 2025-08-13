@@ -3945,22 +3945,24 @@
         },
         {
             "name": "utopia-php/locale",
-            "version": "0.4.0",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
-                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447"
+                "reference": "10ffc869c904c45e32ab0c61f4b33ba774777eb6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/locale/zipball/c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
-                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/10ffc869c904c45e32ab0c61f4b33ba774777eb6",
+                "reference": "10ffc869c904c45e32ab0c61f4b33ba774777eb6",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.*",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
@@ -3974,12 +3976,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple locale library to manage application translations",
             "keywords": [
                 "framework",
@@ -3990,9 +3986,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/locale/issues",
-                "source": "https://github.com/utopia-php/locale/tree/0.4.0"
+                "source": "https://github.com/utopia-php/locale/tree/0.8.0"
             },
-            "time": "2021-07-24T11:35:55+00:00"
+            "time": "2025-08-12T12:58:26+00:00"
         },
         {
             "name": "utopia-php/logger",
