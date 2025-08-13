@@ -3220,6 +3220,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 namespace: 'databases',
                 group: 'documents',
                 name: 'createDocument',
+                desc: 'Create document',
                 description: '/docs/references/databases/create-document.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -3241,6 +3242,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 namespace: 'databases',
                 group: 'documents',
                 name: 'createDocuments',
+                desc: 'Create documents',
                 description: '/docs/references/databases/create-documents.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
