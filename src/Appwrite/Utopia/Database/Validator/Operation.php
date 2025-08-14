@@ -16,16 +16,24 @@ class Operation extends Validator
         'data',
     ];
 
-    /** @var array<string> */
+    /** @var array<string, bool> */
+    private array $requiresDocumentId = [
+        'create' => true,
+        'update' => true,
+        'upsert' => true,
+        'delete' => true,
+    ];
+
+    /** @var array<string, bool> */
     private array $actions = [
-        'create',
-        'update',
-        'upsert',
-        'delete',
-        'bulkCreate',
-        'bulkUpdate',
-        'bulkUpsert',
-        'bulkDelete',
+        'create' => true,
+        'update' => true,
+        'upsert' => true,
+        'delete' => true,
+        'bulkCreate' => true,
+        'bulkUpdate' => true,
+        'bulkUpsert' => true,
+        'bulkDelete' => true,
     ];
 
     public function getDescription(): string
@@ -66,7 +74,7 @@ class Operation extends Validator
         }
 
         // Validate action
-        if (!\in_array($value['action'], $this->actions, true)) {
+        if (!isset($this->actions[$value['action']])) {
             $this->description = "Key 'action' must be one of: " . \implode(', ', $this->actions);
             return false;
         }
