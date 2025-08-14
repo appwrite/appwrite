@@ -201,6 +201,12 @@ class Update extends Action
                     ]));
 
                     throw new Exception(Exception::TRANSACTION_CONFLICT);
+                } catch (TransactionException $e) {
+                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                        'status' => 'failed',
+                    ]));
+
+                    throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
                 }
             });
         }
