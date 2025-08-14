@@ -107,6 +107,16 @@ class Upsert extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + \count($documents)) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
+                );
+            }
+
             // Stage the operations in transaction logs
             $staged = [];
             foreach ($documents as $document) {

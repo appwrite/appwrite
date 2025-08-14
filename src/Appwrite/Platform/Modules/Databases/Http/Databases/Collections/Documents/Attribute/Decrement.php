@@ -79,10 +79,13 @@ class Decrement extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -99,6 +102,16 @@ class Decrement extends Action
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
             }
 
             // Stage the operation in transaction logs
