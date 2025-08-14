@@ -152,13 +152,29 @@ class Update extends Action
                                         min: $data['min'] ?? null
                                     );
                                     break;
-                                    
+
+                                case 'bulkCreate':
+                                    $documents = [];
+                                    foreach ($data as $docData) {
+                                        $documents[] = new Document($docData);
+                                    }
+                                    $dbForProject->createDocuments($collectionId, $documents);
+                                    break;
+
                                 case 'bulkUpdate':
                                     $dbForProject->updateDocuments(
-                                        $collectionName,
+                                        $collectionId,
                                         $data['data'] ?? null,
                                         $data['queries'] ?? []
                                     );
+                                    break;
+
+                                case 'bulkUpsert':
+                                    $documents = [];
+                                    foreach ($data as $docData) {
+                                        $documents[] = new Document($docData);
+                                    }
+                                    $dbForProject->createOrUpdateDocuments($collectionId, $documents);
                                     break;
                                     
                                 case 'bulkDelete':
