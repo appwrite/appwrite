@@ -31,13 +31,15 @@ class DevGenerateTranslations extends Action
         $this
             ->desc('Generate missing translations in all locales. This task does not translate english keys.')
             ->param('dry-run', 'true', new Boolean(true), 'If action should do a dry run. Dry run only lists missing translations', true)
-            ->param('api-key', '', new Text(256), 'Open AI API key. Only used during non-dry runs to generate translations.', true)
+            ->param('api-key', '', new Text(1024), 'Open AI API key. Only used during non-dry runs to generate translations.', true)
+            ->param('enforced-keys', '', new Text(1024), 'Comma-separated keys to translate even if they are already translated. Useful when doing changes to english version of existing translation.', true)
             ->callback($this->action(...));
     }
 
-    public function action(mixed $dryRun, string $apiKey): void
+    public function action(mixed $dryRun, string $apiKey, string $enforcedKeys): void
     {
         $dryRun = \strval($dryRun) === 'true';
+        $enforcedKeys = \explode(',', $enforcedKeys);
 
         Console::info("Started");
 
@@ -67,6 +69,8 @@ class DevGenerateTranslations extends Action
             $missingKeys = [];
             foreach ($mainKeys as $key) {
                 if (!(\in_array($key, $fileKeys)) && !\str_starts_with($key, 'mock')) {
+                    $missingKeys[] = $key;
+                } elseif (\in_array($key, $enforcedKeys)) {
                     $missingKeys[] = $key;
                 }
             }
