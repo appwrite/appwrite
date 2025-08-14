@@ -12,6 +12,6 @@ class Transactions extends Base
 
     public function __construct()
     {
-        parent::__construct('functions', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('transactions', self::ALLOWED_ATTRIBUTES);
     }
 }
