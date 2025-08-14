@@ -2268,6 +2268,8 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         $localeObj = new Locale($locale);
+        $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+
         if (is_null($template)) {
             /**
              * different templates, different placeholders.

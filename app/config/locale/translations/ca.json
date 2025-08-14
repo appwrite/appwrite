@@ -12,8 +12,6 @@
     "emails.verification.signature": "Equip {{project}}",
     "emails.magicSession.subject": "Entrar",
     "emails.magicSession.hello": "Hola,",
-    "emails.magicSession.body": "Accedeix a aquest enllaç per a entrar.",
-    "emails.magicSession.footer": "Si no has sol·licitat entrar amb aquesta adreça electrònica, pots ignorar aquest missatge.",
     "emails.magicSession.thanks": "Gràcies,",
     "emails.magicSession.signature": "Equip {{project}}",
     "emails.recovery.subject": "Reinicialitzar contrasenya",

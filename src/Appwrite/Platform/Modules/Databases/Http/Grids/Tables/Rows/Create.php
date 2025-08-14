@@ -53,6 +53,7 @@ class Create extends DocumentCreate
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: self::getName(),
+                    desc: 'Create row',
                     description: '/docs/references/grids/create-row.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -74,6 +75,7 @@ class Create extends DocumentCreate
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: $this->getBulkActionName(self::getName()),
+                    desc: 'Create rows',
                     description: '/docs/references/grids/create-rows.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [

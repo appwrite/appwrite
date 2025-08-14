@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} tím",
     "emails.magicSession.subject": "Prihlásenie",
     "emails.magicSession.hello": "Ahoj,",
-    "emails.magicSession.body": "Použi tento link pre prihlásenie.",
-    "emails.magicSession.footer": "Ak si nepožiadal o prihlásenie cez email, túto správu môžeš ignorovať.",
     "emails.magicSession.thanks": "Ďakujeme,",
     "emails.magicSession.signature": "{{project}} tím",
     "emails.recovery.subject": "Obnovenie hesla",
