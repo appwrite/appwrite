@@ -13,6 +13,7 @@ class Operation extends Validator
         'databaseId',
         'collectionId',
         'action',
+        'data',
     ];
 
     /** @var array<string> */
