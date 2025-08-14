@@ -135,6 +135,44 @@ class Update extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
+            // Map aggregate permissions into the multiple permissions they represent (align with non-transaction path)
+            $aggregatedPermissions = Permission::aggregate($permissions, [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ]);
+
+            // If not provided, fallback to current document permissions
+            if (\is_null($aggregatedPermissions)) {
+                $aggregatedPermissions = $document->getPermissions() ?? [];
+            }
+
+            // Users can only manage their own roles, API keys and Admin users can manage any
+            $roles = Authorization::getRoles();
+            if (!$isAPIKey && !$isPrivilegedUser && !\is_null($aggregatedPermissions)) {
+                foreach (Database::PERMISSIONS as $type) {
+                    foreach ($aggregatedPermissions as $permission) {
+                        $permission = Permission::parse($permission);
+                        if ($permission->getPermission() != $type) {
+                            continue;
+                        }
+                        $role = (new Role(
+                            $permission->getRole(),
+                            $permission->getIdentifier(),
+                            $permission->getDimension()
+                        ))->toString();
+                        if (!Authorization::isRole($role)) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                        }
+                    }
+                }
+            }
+
+            $stagedData = [
+                ...$data,
+                '$permissions' => $aggregatedPermissions,
+            ];
+
             // Stage the operation in transaction logs
             $staged = new Document([
                 '$id' => ID::unique(),
@@ -143,7 +181,7 @@ class Update extends Action
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $documentId,
                 'action' => 'update',
-                'data' => $data,
+                'data' => $stagedData,
             ]);
 
             $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
@@ -162,7 +200,7 @@ class Update extends Action
                 '$collectionId' => $collectionId,
                 '$databaseId' => $databaseId,
                 ...$document->getArrayCopy(),
-                ...$data
+                ...$stagedData
             ]);
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_OK)

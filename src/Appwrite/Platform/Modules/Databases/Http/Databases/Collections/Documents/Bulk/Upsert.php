@@ -107,9 +107,20 @@ class Upsert extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
+            $allowedPermissions = [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ];
+
             // Stage the operations in transaction logs
             $staged = [];
             foreach ($documents as $document) {
+                // If permissions present, aggregate them
+                if (!empty($document['$permissions'])) {
+                    $document['$permissions'] = \Utopia\Database\Helpers\Permission::aggregate($document['$permissions'], $allowedPermissions);
+                }
+
                 $staged[] = new Document([
                     '$id' => ID::unique(),
                     'databaseInternalId' => $database->getSequence(),

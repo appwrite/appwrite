@@ -13,6 +13,8 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Validator\Permissions as PermissionsValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -89,6 +91,39 @@ class AddOperations extends Action
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
 
+            // Aggregate permissions in operation payload when present to mirror non-transaction behavior
+            $data = $operation['data'] ?? new \stdClass();
+            if (\is_array($data)) {
+                $allowedPermissions = [
+                    Database::PERMISSION_READ,
+                    Database::PERMISSION_UPDATE,
+                    Database::PERMISSION_DELETE,
+                ];
+
+                switch ($operation['action']) {
+                    case 'create':
+                    case 'update':
+                    case 'upsert':
+                        if (!empty($data['$permissions'])) {
+                            $validator = new PermissionsValidator();
+                            if (!$validator->isValid($data['$permissions'])) {
+                                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                            }
+                            $data['$permissions'] = Permission::aggregate($data['$permissions'], $allowedPermissions);
+                        }
+                        break;
+                    case 'bulkUpdate':
+                        if (!empty($data['data']['$permissions'])) {
+                            $validator = new PermissionsValidator();
+                            if (!$validator->isValid($data['data']['$permissions'])) {
+                                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                            }
+                            $data['data']['$permissions'] = Permission::aggregate($data['data']['$permissions'], $allowedPermissions);
+                        }
+                        break;
+                }
+            }
+
             $staged[] = new Document([
                 '$id' => ID::unique(),
                 'databaseInternalId' => $database->getSequence(),
@@ -96,7 +131,7 @@ class AddOperations extends Action
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $operation['documentId'] ?? ID::unique(),
                 'action' => $operation['action'],
-                'data' => $operation['data'] ?? new \stdClass(),
+                'data' => $data,
             ]);
         }
 

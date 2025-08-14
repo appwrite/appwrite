@@ -118,6 +118,54 @@ class Upsert extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
+            $allowedPermissions = [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ];
+
+            $aggregatedPermissions = Permission::aggregate($permissions, $allowedPermissions);
+            if (\is_null($aggregatedPermissions)) {
+                $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+                if ($oldDocument->isEmpty()) {
+                    if (!empty($user->getId())) {
+                        $defaultPermissions = [];
+                        foreach ($allowedPermissions as $permission) {
+                            $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        }
+                        $aggregatedPermissions = $defaultPermissions;
+                    }
+                } else {
+                    $aggregatedPermissions = $oldDocument->getPermissions();
+                }
+            }
+
+            // Users can only manage their own roles, API keys and Admin users can manage any
+            $roles = Authorization::getRoles();
+            if (!$isAPIKey && !$isPrivilegedUser && !\is_null($aggregatedPermissions)) {
+                foreach (Database::PERMISSIONS as $type) {
+                    foreach ($aggregatedPermissions as $permission) {
+                        $permission = Permission::parse($permission);
+                        if ($permission->getPermission() != $type) {
+                            continue;
+                        }
+                        $role = (new Role(
+                            $permission->getRole(),
+                            $permission->getIdentifier(),
+                            $permission->getDimension()
+                        ))->toString();
+                        if (!Authorization::isRole($role)) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                        }
+                    }
+                }
+            }
+
+            $stagedData = [
+                ...$data,
+                '$permissions' => $aggregatedPermissions ?? [],
+            ];
+
             // Stage the operation in transaction logs
             $staged = new Document([
                 '$id' => ID::unique(),
@@ -126,7 +174,7 @@ class Upsert extends Action
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $documentId,
                 'action' => 'upsert',
-                'data' => $data,
+                'data' => $stagedData,
             ]);
 
             $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
@@ -144,7 +192,7 @@ class Upsert extends Action
                 '$id' => $documentId,
                 '$collectionId' => $collectionId,
                 '$databaseId' => $databaseId,
-                ...$data
+                ...$stagedData
             ]);
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)

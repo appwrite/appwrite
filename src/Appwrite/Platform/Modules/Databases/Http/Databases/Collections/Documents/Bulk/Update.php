@@ -128,6 +128,20 @@ class Update extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
+            // If permissions are provided in data, validate and aggregate them
+            if (!empty($data['$permissions'])) {
+                $validator = new Permissions();
+                if (!$validator->isValid($data['$permissions'])) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                }
+                $allowedPermissions = [
+                    Database::PERMISSION_READ,
+                    Database::PERMISSION_UPDATE,
+                    Database::PERMISSION_DELETE,
+                ];
+                $data['$permissions'] = \Utopia\Database\Helpers\Permission::aggregate($data['$permissions'], $allowedPermissions);
+            }
+
             // Stage the operation in transaction logs
             $staged = new Document([
                 '$id' => ID::unique(),
