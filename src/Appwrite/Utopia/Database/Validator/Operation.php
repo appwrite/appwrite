@@ -21,7 +21,9 @@ class Operation extends Validator
         'update',
         'upsert',
         'delete',
+        'bulkCreate',
         'bulkUpdate',
+        'bulkUpsert',
         'bulkDelete',
     ];
 
