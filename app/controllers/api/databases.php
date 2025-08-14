@@ -4493,7 +4493,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/increment')
     ->desc('Increment document attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].increment')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'documents.increment')
@@ -4563,6 +4563,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
+            ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
@@ -4572,7 +4573,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/decrement')
     ->desc('Decrement document attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].decrement')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'documents.decrement')
@@ -4642,6 +4643,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
+            ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
