@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} ଦଳ",
     "emails.magicSession.subject": "ଲଗଇନ୍ କରନ୍ତୁ",
     "emails.magicSession.hello": "ନମସ୍କାର,",
-    "emails.magicSession.body": "ଲଗଇନ୍ କରିବାକୁ ଏହି ଲିଙ୍କ୍ ଅନୁସରଣ କରନ୍ତୁ |",
-    "emails.magicSession.footer": "ଯଦି ଆପଣ ଏହି ଇମେଲ୍ ବ୍ୟବହାର କରି ଲଗଇନ୍ କରିବାକୁ କହି ନାହାଁନ୍ତି, ତେବେ ଆପଣ ଏହି ସନ୍ଦେଶକୁ ଉପେକ୍ଷା କରିପାରିବେ |",
     "emails.magicSession.thanks": "ଧନ୍ୟବାଦ,",
     "emails.magicSession.signature": "{{project}} ଦଳ",
     "emails.recovery.subject": "ପାସୱାର୍ଡ ପୁନଃ ସେଟ୍ କରନ୍ତୁ |",

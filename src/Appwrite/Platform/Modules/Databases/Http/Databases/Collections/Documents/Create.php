@@ -66,6 +66,7 @@ class Create extends Action
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: self::getName(),
+                    desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -91,6 +92,7 @@ class Create extends Action
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: $this->getBulkActionName(self::getName()),
+                    desc: 'Create documents',
                     description: '/docs/references/databases/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
@@ -463,8 +465,7 @@ class Create extends Action
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
-
-
+        
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($documents),

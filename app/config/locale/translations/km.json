@@ -11,8 +11,6 @@
     "emails.verification.signature": "",
     "emails.magicSession.subject": "",
     "emails.magicSession.hello": "",
-    "emails.magicSession.body": "",
-    "emails.magicSession.footer": "",
     "emails.magicSession.thanks": "",
     "emails.magicSession.signature": "",
     "emails.recovery.subject": "",
