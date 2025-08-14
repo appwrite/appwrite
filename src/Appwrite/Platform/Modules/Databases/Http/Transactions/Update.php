@@ -57,14 +57,13 @@ class Update extends Action
             ->param('transactionId', '', new UID(), 'Transaction ID.')
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
-            ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
+            ->inject('queueForDeletes')
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, bool $commit, bool $rollback, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Document $project): void
+    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Delete $queueForDeletes): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -88,15 +87,14 @@ class Update extends Action
         }
 
         if ($commit) {
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $transaction, $requestTimestamp) {
+            $dbForProject->withTransaction(function () use ($dbForProject, $queueForDeletes, $transactionId, $transaction) {
                 $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'committing',
                 ]));
 
-                // Fetch operations ordered by creation time to maintain exact sequence
+                // Fetch operations ordered by sequence by default
                 $operations = $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                    Query::orderAsc('$createdAt'),
                 ]);
 
                 try {
