@@ -165,7 +165,7 @@ class Update extends Action
                                     $dbForProject->updateDocuments(
                                         $collectionId,
                                         $data['data'] ?? null,
-                                        $data['queries'] ?? []
+                                        Query::parseQueries($data['queries'] ?? [])
                                     );
                                     break;
 
@@ -179,8 +179,8 @@ class Update extends Action
                                     
                                 case 'bulkDelete':
                                     $dbForProject->deleteDocuments(
-                                        $collectionName,
-                                        $data['queries'] ?? []
+                                        $collectionId,
+                                        Query::parseQueries($data['queries'] ?? [])
                                     );
                                     break;
                             }
