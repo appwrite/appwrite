@@ -192,70 +192,6 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        // Handle transaction staging
-        if ($transactionId !== null) {
-            $transaction = $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
-            }
-            if ($transaction->getAttribute('status', '') !== 'pending') {
-                throw new Exception(Exception::TRANSACTION_NOT_READY);
-            }
-
-            // Enforce max operations per transaction
-            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
-            $existing = $transaction->getAttribute('operations', 0);
-            if (($existing + \count($documents)) > $maxBatch) {
-                throw new Exception(
-                    Exception::TRANSACTION_LIMIT_EXCEEDED,
-                    'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
-                );
-            }
-
-            // Stage the operation(s) in transaction logs
-            $staged = [];
-            foreach ($documents as $document) {
-                $staged[] = new Document([
-                    '$id' => ID::unique(),
-                    'databaseInternalId' => $database->getSequence(),
-                    'collectionInternalId' => $collection->getSequence(),
-                    'transactionInternalId' => $transaction->getSequence(),
-                    'documentId' => $document['$id'] ?? $documentId ?? ID::unique(),
-                    'action' => 'create',
-                    'data' => $document,
-                ]);
-            }
-
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocuments('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    \count($staged)
-                );
-            });
-
-            // Return successful response without actually creating documents
-            if ($isBulk) {
-                $response->dynamic(new Document([
-                    $this->getSdkGroup() => [],
-                    'total' => \count($documents),
-                ]), $this->getBulkResponseModel());
-            } else {
-                $mockDocument = new Document([
-                    '$id' => $documents[0]['$id'] ?? $documentId,
-                    '$collectionId' => $collectionId,
-                    '$databaseId' => $databaseId,
-                    ...$documents[0]
-                ]);
-                $response
-                    ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
-                    ->dynamic($mockDocument, $this->getResponseModel());
-            }
-            return;
-        }
-
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
             fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -438,6 +374,65 @@ class Create extends Action
 
             return $document;
         }, $documents);
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $isBulk ? null: $documentId,
+                'action' => $isBulk ? 'bulkCreate' : 'create',
+                'data' => $isBulk ? $documents : $documents[0],
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                );
+            });
+
+            // Return successful response without actually creating documents
+            if ($isBulk) {
+                $response->dynamic(new Document([
+                    $this->getSdkGroup() => [],
+                    'total' => \count($documents),
+                ]), $this->getBulkResponseModel());
+            } else {
+                $mockDocument = new Document([
+                    '$id' => $documents[0]['$id'] ?? $documentId,
+                    '$collectionId' => $collectionId,
+                    '$databaseId' => $databaseId,
+                    ...$documents[0]
+                ]);
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+                    ->dynamic($mockDocument, $this->getResponseModel());
+            }
+            return;
+        }
 
         try {
             $dbForProject->withPreserveDates(
