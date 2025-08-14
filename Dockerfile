@@ -74,6 +74,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/vars && \
+    chmod +x /usr/local/bin/dev-generate-translations && \
     chmod +x /usr/local/bin/queue-retry && \
     chmod +x /usr/local/bin/queue-count-failed && \
     chmod +x /usr/local/bin/queue-count-processing && \
