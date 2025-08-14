@@ -100,9 +100,9 @@ class Create extends Action
             ]);
         }
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
+        $transaction = $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
             $dbForProject->createDocuments('transactionLogs', $staged);
-            $dbForProject->increaseDocumentAttribute(
+            return $dbForProject->increaseDocumentAttribute(
                 'transactions',
                 $transactionId,
                 'operations',
