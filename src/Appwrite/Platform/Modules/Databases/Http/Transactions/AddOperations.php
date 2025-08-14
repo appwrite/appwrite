@@ -67,7 +67,7 @@ class AddOperations extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
         }
 
-        $maxBatch = $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH;
+        $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
         $existing = $transaction->getAttribute('operations', 0);
 
         if (($existing + \count($operations)) > $maxBatch) {

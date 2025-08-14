@@ -198,7 +198,7 @@ class Create extends Action
             }
 
             // Enforce max operations per transaction
-            $maxBatch = $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH;
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
             $existing = $transaction->getAttribute('operations', 0);
             if (($existing + \count($documents)) > $maxBatch) {
                 throw new Exception(
