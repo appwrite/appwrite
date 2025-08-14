@@ -267,6 +267,7 @@ class Exception extends \Exception
     public const TRANSACTION_NOT_FOUND             = 'transaction_not_found';
     public const TRANSACTION_ALREADY_EXISTS        = 'transaction_already_exists';
     public const TRANSACTION_INVALID               = 'transaction_invalid';
+    public const TRANSACTION_FAILED               = 'transaction_expired';
     public const TRANSACTION_EXPIRED               = 'transaction_expired';
     public const TRANSACTION_CONFLICT              = 'transaction_conflict';
     public const TRANSACTION_LIMIT_EXCEEDED        = 'transaction_limit_exceeded';

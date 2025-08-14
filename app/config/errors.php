@@ -963,7 +963,12 @@ return [
     ],
     Exception::TRANSACTION_INVALID => [
         'name' => Exception::TRANSACTION_INVALID,
-        'description' => 'The transaction is invalid. Please check the transaction data and try again.',
+        'description' => 'The transaction is invalid. Please check the transaction state and try again.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_FAILED => [
+        'name' => Exception::TRANSACTION_FAILED,
+        'description' => 'The transaction has errored. Please check the transaction data and try again.',
         'code' => 400,
     ],
     Exception::TRANSACTION_EXPIRED => [
