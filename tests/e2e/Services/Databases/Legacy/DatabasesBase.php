@@ -6195,10 +6195,10 @@ trait DatabasesBase
         $this->assertEquals(200, $rollback['headers']['status-code']);
         $this->assertEquals('rolledBack', $rollback['body']['status']);
 
-        $documents = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/collections/$collectionId/documents", [
+        $documents = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/collections/$collectionId/documents", \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        ], $this->getHeaders()));
 
         $this->assertEquals(0, count($documents['body']['documents']));
     }
@@ -6260,7 +6260,7 @@ trait DatabasesBase
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'data' => ['attribute' => 'value'],
+                    'data' => ['name' => 'value'],
                 ]
             ]
         ]);
