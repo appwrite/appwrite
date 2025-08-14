@@ -53,20 +53,14 @@ class DevGenerateTranslations extends Action
         $mainKeys = \array_keys($mainJson);
 
         $files = \array_diff(\scandir($dir), array('.', '..', $mainFile));
-        
+
         $filesProcessed = 0;
         $keysProcessed = 0;
 
         foreach ($files as $file) {
-            
-            if($file !== 'de.json') {
-                continue;
-            }
-
-            
             Console::log('Processing ' . $file);
             $filesProcessed++;
-          
+
             $fileJson = \json_decode(\file_get_contents($dir . '/' . $file), true);
             $fileKeys = \array_keys($fileJson);
 
@@ -96,7 +90,7 @@ class DevGenerateTranslations extends Action
                         Console::log('Translation results:');
                         Console::log('English: ' . $mainJson[$missingKey]);
                         Console::log($language . ': ' . $translation);
-                        
+
                         $keysProcessed++;
 
                         // This puts new key at beginning to prevent merge conflict issue and ending comma
@@ -168,7 +162,7 @@ class DevGenerateTranslations extends Action
         // Replace XML tags back to placeholders
         $id = 0;
         foreach ($placeholders as $placeholder) {
-            $pattern = '/\<m id=' . $id . ' label="\w+" \/>/';
+            $pattern = '/\<m id=' . $id . ' label=".+" \/>/';
             $targetTranslation = \preg_replace($pattern, $placeholder, $targetTranslation);
             $id++;
         }
