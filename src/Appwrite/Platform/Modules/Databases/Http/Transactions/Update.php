@@ -177,9 +177,10 @@ class Update extends Action
                         'status' => 'committed',
                     ]));
 
-                    $dbForProject->deleteDocuments('transactionLogs', [
-                        Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                    ]);
+                    // Clear the transaction logs
+                    $queueForDeletes
+                        ->setType(DELETE_TYPE_DOCUMENT)
+                        ->setDocument($transaction);
                 } catch (DuplicateException|ConflictException) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
@@ -193,9 +194,9 @@ class Update extends Action
         }
 
         if ($rollback) {
-            $dbForProject->deleteDocuments('transactionLogs', [
-                Query::equal('transactionInternalId', [$transaction->getSequence()]),
-            ]);
+            $queueForDeletes
+                ->setType(DELETE_TYPE_DOCUMENT)
+                ->setDocument($transaction);
 
             $transaction = $dbForProject->updateDocument('transactions', $transactionId, new Document([
                 'status' => 'rolledBack',
