@@ -5701,7 +5701,7 @@ trait DatabasesBase
         $this->assertEquals(400, $typeErr['headers']['status-code']);
 
         // Test decrement with value 0
-        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/collections/$collectionId/documents/$docId/count/increment", array_merge([
+        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/collections/$collectionId/documents/$documentId/count/increment", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
