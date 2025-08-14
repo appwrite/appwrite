@@ -12,8 +12,6 @@
     "emails.verification.signature": "каманда {{project}}",
     "emails.magicSession.subject": "Лагін",
     "emails.magicSession.hello": "Прывітанне,",
-    "emails.magicSession.body": "Перайдзіце па спасылцы, каб увайсці.",
-    "emails.magicSession.footer": "Калі вы не прасілі ўвайсці, выкарыстоўваючы гэты адрас электроннай пошты, праігнаруйце гэтае паведамленне.",
     "emails.magicSession.thanks": "Дзякуем,",
     "emails.magicSession.signature": "каманда {{project}}",
     "emails.recovery.subject": "Скід пароля",

@@ -18,6 +18,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -108,7 +109,7 @@ class Update extends Action
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
         );
 
         if ($hasRelationships) {
@@ -128,6 +129,16 @@ class Update extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
+            }
+
             // If permissions are provided in data, validate and aggregate them
             if (!empty($data['$permissions'])) {
                 $validator = new Permissions();
@@ -139,7 +150,7 @@ class Update extends Action
                     Database::PERMISSION_UPDATE,
                     Database::PERMISSION_DELETE,
                 ];
-                $data['$permissions'] = \Utopia\Database\Helpers\Permission::aggregate($data['$permissions'], $allowedPermissions);
+                $data['$permissions'] = Permission::aggregate($data['$permissions'], $allowedPermissions);
             }
 
             // Stage the operation in transaction logs

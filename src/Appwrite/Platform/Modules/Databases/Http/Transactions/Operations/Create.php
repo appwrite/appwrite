@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Transactions;
+namespace Appwrite\Platform\Modules\Databases\Http\Transactions\Operations;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -19,7 +19,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 
-class AddOperations extends Action
+class Create extends Action
 {
     public static function getName(): string
     {
@@ -69,7 +69,7 @@ class AddOperations extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
         }
 
-        $maxBatch = $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH;
+        $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
         $existing = $transaction->getAttribute('operations', 0);
 
         if (($existing + \count($operations)) > $maxBatch) {

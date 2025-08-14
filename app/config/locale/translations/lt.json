@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} komanda",
     "emails.magicSession.subject": "Prisijungti",
     "emails.magicSession.hello": "Labas,",
-    "emails.magicSession.body": "Spauskite šią nuorodą, kad prisijungtumėte.",
-    "emails.magicSession.footer": "Jei neprašėte prisijungti naudojantis šiuo el. paštu, galite ignoruoti šį pranešimą.",
     "emails.magicSession.thanks": "Ačiū,",
     "emails.magicSession.signature": "{{project}} komanda",
     "emails.recovery.subject": "Slaptažodžio Atkūrimas",

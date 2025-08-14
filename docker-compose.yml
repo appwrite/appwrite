@@ -216,7 +216,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:6.2.0
+    image: appwrite/console:7.0.0-qa.8
     restart: unless-stopped
     networks:
       - appwrite
@@ -963,7 +963,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.22
+    image: openruntimes/executor:0.8.1
     restart: unless-stopped
     networks:
       - appwrite

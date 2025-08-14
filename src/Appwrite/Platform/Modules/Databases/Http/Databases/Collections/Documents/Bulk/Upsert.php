@@ -17,6 +17,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -107,6 +108,16 @@ class Upsert extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + \count($documents)) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
+                );
+            }
+
             $allowedPermissions = [
                 Database::PERMISSION_READ,
                 Database::PERMISSION_UPDATE,
@@ -118,7 +129,7 @@ class Upsert extends Action
             foreach ($documents as $document) {
                 // If permissions present, aggregate them
                 if (!empty($document['$permissions'])) {
-                    $document['$permissions'] = \Utopia\Database\Helpers\Permission::aggregate($document['$permissions'], $allowedPermissions);
+                    $document['$permissions'] = Permission::aggregate($document['$permissions'], $allowedPermissions);
                 }
 
                 $staged[] = new Document([
