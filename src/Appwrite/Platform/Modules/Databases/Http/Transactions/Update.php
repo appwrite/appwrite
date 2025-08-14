@@ -187,7 +187,7 @@ class Update extends Action
                         });
                     }
 
-                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    $transaction = $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committed',
                     ]));
 
@@ -203,8 +203,6 @@ class Update extends Action
                     throw new Exception(Exception::TRANSACTION_CONFLICT);
                 }
             });
-
-            $transaction = $dbForProject->getDocument('transactions', $transactionId);
         }
 
         if ($rollback) {
