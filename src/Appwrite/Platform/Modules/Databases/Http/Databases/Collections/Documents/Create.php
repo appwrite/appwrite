@@ -126,10 +126,12 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->inject('plan')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, array $plan): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
