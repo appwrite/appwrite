@@ -4,7 +4,8 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 
 class Transactions extends Base
 {
-    public const array ALLOWED_ATTRIBUTES = [
+    /** @var string[] */
+    public const ALLOWED_ATTRIBUTES = [
         'status',
         'expiresAt',
     ];
