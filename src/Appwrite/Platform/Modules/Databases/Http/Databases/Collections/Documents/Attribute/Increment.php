@@ -13,10 +13,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Type as TypeException;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -74,14 +76,16 @@ class Increment extends Action
             ->param('attribute', '', new Key(), 'Attribute key.')
             ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
             ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -91,6 +95,61 @@ class Increment extends Action
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
+        }
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            // Stage the operation in transaction logs
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'increment',
+                'data' => [
+                    'attribute' => $attribute,
+                    'value' => $value,
+                    'max' => $max,
+                ],
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    1
+                );
+            });
+
+            // Return successful response without actually incrementing
+            $mockDocument = new Document([
+                '$id' => $documentId,
+                '$collectionId' => $collectionId,
+                '$databaseId' => $databaseId,
+                $attribute => $value,
+            ]);
+            $response
+                ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                ->dynamic($mockDocument, $this->getResponseModel());
+            return;
         }
 
         try {

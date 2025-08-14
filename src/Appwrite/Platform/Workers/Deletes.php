@@ -130,6 +130,9 @@ class Deletes extends Action
                     case DELETE_TYPE_RULES:
                         $this->deleteRule($dbForPlatform, $document, $certificates);
                         break;
+                    case DELETE_TYPE_TRANSACTION:
+                        $this->deleteTransactionLogs($getProjectDB, $document, $project);
+                        break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
@@ -1297,6 +1300,22 @@ class Deletes extends Action
                     $deleteByFunction($function);
                 }
             );
+        }
+    }
+
+    private function deleteTransactionLogs(callable $getProjectDB, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+        $transactionId = $document->getId();
+        $transactionInternalId = $document->getSequence();
+
+        try {
+            $dbForProject->deleteDocuments('transactionLogs', [
+                Query::equal('transactionInternalId', [$transactionInternalId]),
+            ]);
+            Console::info("Transaction logs for {$transactionId} deleted.");
+        } catch (Throwable $th) {
+            Console::error("Failed to delete transaction logs for {$transactionId}: " . $th->getMessage());
         }
     }
 }

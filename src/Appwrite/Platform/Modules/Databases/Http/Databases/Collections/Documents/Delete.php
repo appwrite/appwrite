@@ -13,8 +13,10 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -71,15 +73,17 @@ class Delete extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('documentId', '', new UID(), 'Document ID.')
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -101,6 +105,52 @@ class Delete extends Action
 
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException());
+        }
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            // Stage the operation in transaction logs
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'delete',
+                'data' => [],
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    1
+                );
+            });
+
+            // Return successful response without actually deleting document
+            $response->noContent();
+            return;
         }
 
         try {

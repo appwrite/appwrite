@@ -82,6 +82,7 @@ class Create extends Action
                         new Parameter('documentId', optional: false),
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -106,6 +107,7 @@ class Create extends Action
                         new Parameter('databaseId', optional: false),
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -119,6 +121,7 @@ class Create extends Action
             ->param('data', [], new JSON(), 'Document data as JSON object.', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -127,9 +130,10 @@ class Create extends Action
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
+            ->inject('plan')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -373,6 +377,65 @@ class Create extends Action
             return $document;
         }, $documents);
 
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $isBulk ? null : $documentId,
+                'action' => $isBulk ? 'bulkCreate' : 'create',
+                'data' => $isBulk ? $documents : $documents[0],
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                );
+            });
+
+            // Return successful response without actually creating documents
+            if ($isBulk) {
+                $response->dynamic(new Document([
+                    $this->getSdkGroup() => [],
+                    'total' => \count($documents),
+                ]), $this->getBulkResponseModel());
+            } else {
+                $mockDocument = new Document([
+                    '$id' => $documents[0]['$id'] ?? $documentId,
+                    '$collectionId' => $collectionId,
+                    '$databaseId' => $databaseId,
+                    ...$documents[0]
+                ]);
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+                    ->dynamic($mockDocument, $this->getResponseModel());
+            }
+            return;
+        }
+
         try {
             $dbForProject->withPreserveDates(
                 fn () => $dbForProject->createDocuments(
@@ -413,7 +476,7 @@ class Create extends Action
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
-        
+
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($documents),

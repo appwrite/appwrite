@@ -58,6 +58,7 @@ class Update extends DocumentsUpdate
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('data', [], new JSON(), 'Row data as JSON object. Include only column and value pairs to be updated.', true)
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
