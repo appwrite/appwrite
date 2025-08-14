@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Transactions;
 
+use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -13,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
@@ -102,40 +104,37 @@ class Update extends Action
                     foreach ($operations as $operation) {
                         $databaseInternalId = $operation['databaseInternalId'];
                         $collectionInternalId = $operation['collectionInternalId'];
+                        $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
                         $documentId = $operation['documentId'];
+                        $createdAt = new \DateTime($operation['$createdAt']);
                         $action = $operation['action'];
                         $data = $operation['data'];
-                        $operationCreatedAt = new \DateTime($operation['$createdAt']);
-                        
-                        $collectionName = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
 
                         // Wrap each operation with the timestamp from when it was logged
-                        $dbForProject->withRequestTimestamp($operationCreatedAt, function () use ($dbForProject, $action, $collectionName, $documentId, $data) {
+                        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $queueForDeletes, $action, $collectionId, $documentId, $data) {
                             switch ($action) {
                                 case 'create':
-                                    $document = new Document([
-                                        '$id' => $documentId ?? ID::unique(),
-                                        ...$data
-                                    ]);
-                                    $dbForProject->createDocument($collectionName, $document);
+                                    $document = new Document($data);
+                                    $dbForProject->createDocument($collectionId, $document);
                                     break;
-                                    
+
                                 case 'update':
+                                    $document = new Document($data);
+                                    $dbForProject->updateDocument($collectionId, $documentId, $document);
+                                    break;
+
                                 case 'upsert':
-                                    $document = new Document([
-                                        '$id' => $documentId,
-                                        ...$data,
-                                    ]);
-                                    $dbForProject->createOrUpdateDocument($collectionName, $document);
+                                    $document = new Document($data);
+                                    $dbForProject->createOrUpdateDocuments($collectionId, [$document]);
                                     break;
                                     
                                 case 'delete':
-                                    $dbForProject->deleteDocument($collectionName, $documentId);
+                                    $dbForProject->deleteDocument($collectionId, $documentId);
                                     break;
                                     
                                 case 'increment':
                                     $dbForProject->increaseDocumentAttribute(
-                                        collection: $collectionName,
+                                        collection: $collectionId,
                                         id: $documentId,
                                         attribute: $data['attribute'],
                                         value: $data['value'] ?? 1,
@@ -145,7 +144,7 @@ class Update extends Action
                                     
                                 case 'decrement':
                                     $dbForProject->decreaseDocumentAttribute(
-                                        collection: $collectionName,
+                                        collection: $collectionId,
                                         id: $documentId,
                                         attribute: $data['attribute'],
                                         value: $data['value'] ?? 1,
