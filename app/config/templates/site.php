@@ -473,13 +473,13 @@ return [
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
-                'buildCommand' => 'bash build.sh',
+                'buildCommand' => 'bash prepare-env.sh && flutter build web',
             ]),
         ],
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-flutter',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [
             [
                 'name' => 'APPWRITE_PUBLIC_ENDPOINT',

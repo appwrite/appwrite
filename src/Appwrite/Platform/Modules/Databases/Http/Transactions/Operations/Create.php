@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Transactions;
+namespace Appwrite\Platform\Modules\Databases\Http\Transactions\Operations;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -17,7 +17,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 
-class AddOperations extends Action
+class Create extends Action
 {
     public static function getName(): string
     {

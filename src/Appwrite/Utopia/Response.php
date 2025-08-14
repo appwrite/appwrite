@@ -218,6 +218,10 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_DATETIME = 'columnDatetime';
     public const MODEL_COLUMN_RELATIONSHIP = 'columnRelationship';
 
+    // Transactions
+    public const MODEL_TRANSACTION = 'transaction';
+    public const MODEL_TRANSACTION_LIST = 'transactionList';
+
     // Users
     public const MODEL_ACCOUNT = 'account';
     public const MODEL_USER = 'user';

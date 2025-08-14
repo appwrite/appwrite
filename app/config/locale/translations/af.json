@@ -12,8 +12,6 @@
     "emails.verification.signature": "Die {{project}} span",
     "emails.magicSession.subject": "Teken aan",
     "emails.magicSession.hello": "Goeie dag,",
-    "emails.magicSession.body": "Volg hierdie skakel om in te teken.",
-    "emails.magicSession.footer": "Ignoreer gerus hierdie boodskap as u nie die versoek gestuur het om met die' adres in te teken nie.",
     "emails.magicSession.thanks": "Baie dankie,",
     "emails.magicSession.signature": "Die {{project}} span",
     "emails.recovery.subject": "Herstel Wagwoord",
