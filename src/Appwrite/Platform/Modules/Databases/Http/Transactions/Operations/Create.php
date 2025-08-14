@@ -94,9 +94,9 @@ class Create extends Action
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $operation['documentId'] ?? ID::unique(),
+                'documentId' => $operation['documentId'] ?? null,
                 'action' => $operation['action'],
-                'data' => $operation['data'] ?? new \stdClass(),
+                'data' => $operation['data'] ?? [],
             ]);
         }
 
