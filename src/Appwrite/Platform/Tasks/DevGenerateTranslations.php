@@ -24,6 +24,10 @@ class DevGenerateTranslations extends Action
 
     public function __construct()
     {
+        // Example usage:
+        // docker compose exec appwrite dev-generate-translations --api-key="sk-proj-YNz.."
+        // docker compose exec appwrite dev-generate-translations --api-key="sk-proj-YNz.." --dry-run="false"
+
         $this
             ->desc('Generate missing translations in all locales. This task does not translate english keys.')
             ->param('dry-run', 'true', new Boolean(true), 'If action should do a dry run. Dry run only lists missing translations', true)
@@ -49,16 +53,26 @@ class DevGenerateTranslations extends Action
         $mainKeys = \array_keys($mainJson);
 
         $files = \array_diff(\scandir($dir), array('.', '..', $mainFile));
+        
+        $filesProcessed = 0;
+        $keysProcessed = 0;
 
         foreach ($files as $file) {
-            Console::log('Processing ' . $file);
+            
+            if($file !== 'de.json') {
+                continue;
+            }
 
+            
+            Console::log('Processing ' . $file);
+            $filesProcessed++;
+          
             $fileJson = \json_decode(\file_get_contents($dir . '/' . $file), true);
             $fileKeys = \array_keys($fileJson);
 
             $missingKeys = [];
             foreach ($mainKeys as $key) {
-                if (!(\in_array($key, $fileKeys))) {
+                if (!(\in_array($key, $fileKeys)) && !\str_starts_with($key, 'mock')) {
                     $missingKeys[] = $key;
                 }
             }
@@ -69,6 +83,7 @@ class DevGenerateTranslations extends Action
                 if ($dryRun) {
                     foreach ($missingKeys as $missingKey) {
                         Console::log('Missing translation for key ' . $missingKey);
+                        $keysProcessed++;
                     }
                 } else {
                     $language = \explode('.', $file)[0];
@@ -81,6 +96,8 @@ class DevGenerateTranslations extends Action
                         Console::log('Translation results:');
                         Console::log('English: ' . $mainJson[$missingKey]);
                         Console::log($language . ': ' . $translation);
+                        
+                        $keysProcessed++;
 
                         // This puts new key at beginning to prevent merge conflict issue and ending comma
                         $newPair = [];
@@ -98,7 +115,7 @@ class DevGenerateTranslations extends Action
             }
         }
 
-        Console::info("Done");
+        Console::info("Done. Processed {$filesProcessed} files and {$keysProcessed} keys.");
     }
 
     private function generateTranslation(string $targetLanguage, string $enTranslation, string $apiKey): string
