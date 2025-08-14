@@ -130,107 +130,16 @@ class Update extends Action
             throw new Exception($this->getNotFoundException());
         }
 
-        // Handle transaction staging
-        if ($transactionId !== null) {
-            $transaction = $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
-            }
-            if ($transaction->getAttribute('status', '') !== 'pending') {
-                throw new Exception(Exception::TRANSACTION_NOT_READY);
-            }
-
-            // Enforce max operations per transaction
-            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
-            $existing = $transaction->getAttribute('operations', 0);
-            if (($existing + 1) > $maxBatch) {
-                throw new Exception(
-                    Exception::TRANSACTION_LIMIT_EXCEEDED,
-                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
-                );
-            }
-
-            // Map aggregate permissions into the multiple permissions they represent (align with non-transaction path)
-            $aggregatedPermissions = Permission::aggregate($permissions, [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
-            ]);
-
-            // If not provided, fallback to current document permissions
-            if (\is_null($aggregatedPermissions)) {
-                $aggregatedPermissions = $document->getPermissions() ?? [];
-            }
-
-            // Users can only manage their own roles, API keys and Admin users can manage any
-            $roles = Authorization::getRoles();
-            if (!$isAPIKey && !$isPrivilegedUser && !\is_null($aggregatedPermissions)) {
-                foreach (Database::PERMISSIONS as $type) {
-                    foreach ($aggregatedPermissions as $permission) {
-                        $permission = Permission::parse($permission);
-                        if ($permission->getPermission() != $type) {
-                            continue;
-                        }
-                        $role = (new Role(
-                            $permission->getRole(),
-                            $permission->getIdentifier(),
-                            $permission->getDimension()
-                        ))->toString();
-                        if (!Authorization::isRole($role)) {
-                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
-                        }
-                    }
-                }
-            }
-
-            $stagedData = [
-                ...$data,
-                '$permissions' => $aggregatedPermissions,
-            ];
-
-            // Stage the operation in transaction logs
-            $staged = new Document([
-                '$id' => ID::unique(),
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $documentId,
-                'action' => 'update',
-                'data' => $stagedData,
-            ]);
-
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
-
-            // Return successful response without actually updating document
-            $mockDocument = new Document([
-                '$id' => $documentId,
-                '$collectionId' => $collectionId,
-                '$databaseId' => $databaseId,
-                ...$document->getArrayCopy(),
-                ...$stagedData
-            ]);
-            $response
-                ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-                ->dynamic($mockDocument, $this->getResponseModel());
-            return;
-        }
-
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
+        // Prepare permissions before transaction handling
+        $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
             Database::PERMISSION_DELETE,
-        ]);
-
-        // Users can only manage their own roles, API keys and Admin users can manage any
+        ];
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+        if (\is_null($permissions)) {
+            $permissions = $document->getPermissions() ?? [];
+        }
         $roles = Authorization::getRoles();
         if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
@@ -250,14 +159,49 @@ class Update extends Action
                 }
             }
         }
-
-        if (\is_null($permissions)) {
-            $permissions = $document->getPermissions() ?? [];
-        }
-
-        $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
-        $newDocument = new Document($data);
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            // Stage the operation in transaction logs
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'update',
+                'data' => $data,
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    1
+                );
+            });
+
+            // Return successful response without actually updating document
+            $mockDocument = new Document([
+                '$id' => $documentId,
+                '$collectionId' => $collectionId,
+                '$databaseId' => $databaseId,
+                ...$document->getArrayCopy(),
+                ...$data
+            ]);
+            $response
+                ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                ->dynamic($mockDocument, $this->getResponseModel());
+            return;
+        }
 
         $operations = 0;
 

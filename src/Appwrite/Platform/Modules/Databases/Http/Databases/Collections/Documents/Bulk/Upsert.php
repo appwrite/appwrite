@@ -101,6 +101,19 @@ class Upsert extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSdkNamespace() .  ' with relationship attributes');
         }
 
+        // Prepare per-document permissions before transaction handling
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ];
+        foreach ($documents as &$document) {
+            if (!empty($document['$permissions'])) {
+                $document['$permissions'] = \Utopia\Database\Helpers\Permission::aggregate($document['$permissions'], $allowedPermissions);
+            }
+        }
+        unset($document);
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
@@ -118,20 +131,9 @@ class Upsert extends Action
                 );
             }
 
-            $allowedPermissions = [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
-            ];
-
-            // Stage the operations in transaction logs
+            // Stage the operations in transaction logs (documents are already prepared)
             $staged = [];
             foreach ($documents as $document) {
-                // If permissions present, aggregate them
-                if (!empty($document['$permissions'])) {
-                    $document['$permissions'] = Permission::aggregate($document['$permissions'], $allowedPermissions);
-                }
-
                 $staged[] = new Document([
                     '$id' => ID::unique(),
                     'databaseInternalId' => $database->getSequence(),

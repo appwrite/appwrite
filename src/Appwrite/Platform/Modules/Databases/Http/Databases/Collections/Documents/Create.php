@@ -192,6 +192,89 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        // Prepare permissions for documents before handling transaction staging
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ];
+
+        if ($isBulk) {
+            foreach ($documents as &$doc) {
+                $docPermissions = $doc['$permissions'] ?? null;
+
+                if (!empty($docPermissions)) {
+                    $validator = new Permissions();
+                    if (!$validator->isValid($docPermissions)) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                    }
+                }
+
+                $docPermissions = Permission::aggregate($docPermissions, $allowedPermissions);
+                if (\is_null($docPermissions)) {
+                    $docPermissions = [];
+                    if (!empty($user->getId())) {
+                        foreach ($allowedPermissions as $p) {
+                            $docPermissions[] = (new Permission($p, 'user', $user->getId()))->toString();
+                        }
+                    }
+                }
+
+                if (!$isAPIKey && !$isPrivilegedUser) {
+                    foreach (Database::PERMISSIONS as $type) {
+                        foreach ($docPermissions as $permission) {
+                            $permission = Permission::parse($permission);
+                            if ($permission->getPermission() != $type) {
+                                continue;
+                            }
+                            $role = (new Role(
+                                $permission->getRole(),
+                                $permission->getIdentifier(),
+                                $permission->getDimension()
+                            ))->toString();
+                            if (!Authorization::isRole($role)) {
+                                throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                            }
+                        }
+                    }
+                }
+
+                $doc['$permissions'] = $docPermissions;
+            }
+            unset($doc);
+        } else {
+            $singlePermissions = Permission::aggregate($permissions, $allowedPermissions);
+            if (\is_null($singlePermissions)) {
+                $singlePermissions = [];
+                if (!empty($user->getId())) {
+                    foreach ($allowedPermissions as $p) {
+                        $singlePermissions[] = (new Permission($p, 'user', $user->getId()))->toString();
+                    }
+                }
+            }
+
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                foreach (Database::PERMISSIONS as $type) {
+                    foreach ($singlePermissions as $permission) {
+                        $permission = Permission::parse($permission);
+                        if ($permission->getPermission() != $type) {
+                            continue;
+                        }
+                        $role = (new Role(
+                            $permission->getRole(),
+                            $permission->getIdentifier(),
+                            $permission->getDimension()
+                        ))->toString();
+                        if (!Authorization::isRole($role)) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                        }
+                    }
+                }
+            }
+
+            $documents[0]['$permissions'] = $singlePermissions;
+        }
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
@@ -211,103 +294,9 @@ class Create extends Action
                     'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
                 );
             }
-
-            // Prepare and normalize documents with permissions consistent with non-transaction path
-            $allowedPermissions = [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
-            ];
-
-            $preparedDocuments = [];
-            if ($isBulk) {
-                foreach ($documents as $doc) {
-                    $docPermissions = $doc['$permissions'] ?? null;
-
-                    // Validate if provided in bulk
-                    if (!empty($docPermissions)) {
-                        $validator = new Permissions();
-                        if (!$validator->isValid($docPermissions)) {
-                            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
-                        }
-                    }
-
-                    // Aggregate and set defaults
-                    $docPermissions = Permission::aggregate($docPermissions, $allowedPermissions);
-                    if (\is_null($docPermissions)) {
-                        $docPermissions = [];
-                        if (!empty($user->getId())) {
-                            foreach ($allowedPermissions as $p) {
-                                $docPermissions[] = (new Permission($p, 'user', $user->getId()))->toString();
-                            }
-                        }
-                    }
-
-                    // Users can only manage their own roles, API keys and Admin users can manage any
-                    if (!$isAPIKey && !$isPrivilegedUser) {
-                        foreach (Database::PERMISSIONS as $type) {
-                            foreach ($docPermissions as $permission) {
-                                $permission = Permission::parse($permission);
-                                if ($permission->getPermission() != $type) {
-                                    continue;
-                                }
-                                $role = (new Role(
-                                    $permission->getRole(),
-                                    $permission->getIdentifier(),
-                                    $permission->getDimension()
-                                ))->toString();
-                                if (!Authorization::isRole($role)) {
-                                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
-                                }
-                            }
-                        }
-                    }
-
-                    $preparedDocuments[] = [
-                        ...$doc,
-                        '$permissions' => $docPermissions,
-                    ];
-                }
-            } else {
-                // Single document mode: use request-level permissions
-                $singlePermissions = Permission::aggregate($permissions, $allowedPermissions);
-                if (\is_null($singlePermissions)) {
-                    $singlePermissions = [];
-                    if (!empty($user->getId())) {
-                        foreach ($allowedPermissions as $p) {
-                            $singlePermissions[] = (new Permission($p, 'user', $user->getId()))->toString();
-                        }
-                    }
-                }
-
-                if (!$isAPIKey && !$isPrivilegedUser) {
-                    foreach (Database::PERMISSIONS as $type) {
-                        foreach ($singlePermissions as $permission) {
-                            $permission = Permission::parse($permission);
-                            if ($permission->getPermission() != $type) {
-                                continue;
-                            }
-                            $role = (new Role(
-                                $permission->getRole(),
-                                $permission->getIdentifier(),
-                                $permission->getDimension()
-                            ))->toString();
-                            if (!Authorization::isRole($role)) {
-                                throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
-                            }
-                        }
-                    }
-                }
-
-                $preparedDocuments[] = [
-                    ...$documents[0],
-                    '$permissions' => $singlePermissions,
-                ];
-            }
-
-            // Stage the operation(s) in transaction logs
+            // Stage the operation(s) in transaction logs with already prepared documents
             $staged = [];
-            foreach ($preparedDocuments as $doc) {
+            foreach ($documents as $doc) {
                 $staged[] = new Document([
                     '$id' => ID::unique(),
                     'databaseInternalId' => $database->getSequence(),
@@ -333,14 +322,14 @@ class Create extends Action
             if ($isBulk) {
                 $response->dynamic(new Document([
                     $this->getSdkGroup() => [],
-                    'total' => \count($preparedDocuments),
+                    'total' => \count($documents),
                 ]), $this->getBulkResponseModel());
             } else {
                 $mockDocument = new Document([
-                    '$id' => $preparedDocuments[0]['$id'] ?? $documentId,
+                    '$id' => $documents[0]['$id'] ?? $documentId,
                     '$collectionId' => $collectionId,
                     '$databaseId' => $databaseId,
-                    ...$preparedDocuments[0]
+                    ...$documents[0]
                 ]);
                 $response
                     ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)

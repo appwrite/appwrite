@@ -122,6 +122,20 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        // Prepare permissions in $data before transaction handling
+        if (!empty($data['$permissions'])) {
+            $validator = new Permissions();
+            if (!$validator->isValid($data['$permissions'])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+            }
+            $allowedPermissions = [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ];
+            $data['$permissions'] = \Utopia\Database\Helpers\Permission::aggregate($data['$permissions'], $allowedPermissions);
+        }
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
@@ -137,20 +151,6 @@ class Update extends Action
                     Exception::TRANSACTION_LIMIT_EXCEEDED,
                     'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
                 );
-            }
-
-            // If permissions are provided in data, validate and aggregate them
-            if (!empty($data['$permissions'])) {
-                $validator = new Permissions();
-                if (!$validator->isValid($data['$permissions'])) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
-                }
-                $allowedPermissions = [
-                    Database::PERMISSION_READ,
-                    Database::PERMISSION_UPDATE,
-                    Database::PERMISSION_DELETE,
-                ];
-                $data['$permissions'] = Permission::aggregate($data['$permissions'], $allowedPermissions);
             }
 
             // Stage the operation in transaction logs

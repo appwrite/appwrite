@@ -112,14 +112,53 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        // Prepare permissions before transaction handling
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ];
+        $aggregatedPermissions = Permission::aggregate($permissions, $allowedPermissions);
+        if (\is_null($aggregatedPermissions)) {
+            $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            if ($oldDocument->isEmpty()) {
+                if (!empty($user->getId())) {
+                    $defaultPermissions = [];
+                    foreach ($allowedPermissions as $permission) {
+                        $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    }
+                    $aggregatedPermissions = $defaultPermissions;
+                }
+            } else {
+                $aggregatedPermissions = $oldDocument->getPermissions();
+            }
+        }
+        $roles = Authorization::getRoles();
+        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($aggregatedPermissions)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($aggregatedPermissions as $permission) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
+                        continue;
+                    }
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    }
+                }
+            }
+        }
+        $data['$permissions'] = $aggregatedPermissions ?? [];
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
-            }
-            if ($transaction->getAttribute('status', '') !== 'pending') {
-                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
 
             // Enforce max operations per transaction
@@ -132,54 +171,6 @@ class Upsert extends Action
                 );
             }
 
-            $allowedPermissions = [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
-            ];
-
-            $aggregatedPermissions = Permission::aggregate($permissions, $allowedPermissions);
-            if (\is_null($aggregatedPermissions)) {
-                $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
-                if ($oldDocument->isEmpty()) {
-                    if (!empty($user->getId())) {
-                        $defaultPermissions = [];
-                        foreach ($allowedPermissions as $permission) {
-                            $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
-                        }
-                        $aggregatedPermissions = $defaultPermissions;
-                    }
-                } else {
-                    $aggregatedPermissions = $oldDocument->getPermissions();
-                }
-            }
-
-            // Users can only manage their own roles, API keys and Admin users can manage any
-            $roles = Authorization::getRoles();
-            if (!$isAPIKey && !$isPrivilegedUser && !\is_null($aggregatedPermissions)) {
-                foreach (Database::PERMISSIONS as $type) {
-                    foreach ($aggregatedPermissions as $permission) {
-                        $permission = Permission::parse($permission);
-                        if ($permission->getPermission() != $type) {
-                            continue;
-                        }
-                        $role = (new Role(
-                            $permission->getRole(),
-                            $permission->getIdentifier(),
-                            $permission->getDimension()
-                        ))->toString();
-                        if (!Authorization::isRole($role)) {
-                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
-                        }
-                    }
-                }
-            }
-
-            $stagedData = [
-                ...$data,
-                '$permissions' => $aggregatedPermissions ?? [],
-            ];
-
             // Stage the operation in transaction logs
             $staged = new Document([
                 '$id' => ID::unique(),
@@ -188,7 +179,7 @@ class Upsert extends Action
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $documentId,
                 'action' => 'upsert',
-                'data' => $stagedData,
+                'data' => $data,
             ]);
 
             $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
@@ -206,7 +197,7 @@ class Upsert extends Action
                 '$id' => $documentId,
                 '$collectionId' => $collectionId,
                 '$databaseId' => $databaseId,
-                ...$stagedData
+                ...$data
             ]);
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
