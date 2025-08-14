@@ -66,6 +66,7 @@ class Update extends DocumentUpdate
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 }

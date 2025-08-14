@@ -65,6 +65,7 @@ class Increment extends IncrementDocumentAttribute
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 }
