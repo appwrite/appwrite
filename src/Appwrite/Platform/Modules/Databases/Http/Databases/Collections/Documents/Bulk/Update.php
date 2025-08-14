@@ -109,7 +109,7 @@ class Update extends Action
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
         );
 
         if ($hasRelationships) {

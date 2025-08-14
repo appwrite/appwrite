@@ -15,7 +15,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Transaction as TransactionException;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -127,11 +126,11 @@ class Update extends Action
                                     $document = new Document($data);
                                     $dbForProject->createOrUpdateDocuments($collectionId, [$document]);
                                     break;
-                                    
+
                                 case 'delete':
                                     $dbForProject->deleteDocument($collectionId, $documentId);
                                     break;
-                                    
+
                                 case 'increment':
                                     $dbForProject->increaseDocumentAttribute(
                                         collection: $collectionId,
@@ -141,7 +140,7 @@ class Update extends Action
                                         max: $data['max'] ?? null
                                     );
                                     break;
-                                    
+
                                 case 'decrement':
                                     $dbForProject->decreaseDocumentAttribute(
                                         collection: $collectionId,
@@ -175,7 +174,7 @@ class Update extends Action
                                     }
                                     $dbForProject->createOrUpdateDocuments($collectionId, $documents);
                                     break;
-                                    
+
                                 case 'bulkDelete':
                                     $dbForProject->deleteDocuments(
                                         $collectionId,

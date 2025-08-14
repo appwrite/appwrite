@@ -402,7 +402,7 @@ class Create extends Action
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $isBulk ? null: $documentId,
+                'documentId' => $isBulk ? null : $documentId,
                 'action' => $isBulk ? 'bulkCreate' : 'create',
                 'data' => $isBulk ? $documents : $documents[0],
             ]);
@@ -476,7 +476,7 @@ class Create extends Action
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
-        
+
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($documents),
