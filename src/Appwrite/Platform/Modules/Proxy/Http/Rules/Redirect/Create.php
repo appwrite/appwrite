@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 
+use Appwrite\Domain\Validator\AppwriteDomain;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -20,7 +21,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
-use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -63,7 +63,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
-            ->param('domain', null, new ValidatorDomain(), 'Domain name.')
+            ->param('domain', null, new AppwriteDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
             ->param('resourceId', '', new UID(), 'ID of parent resource.')
@@ -107,10 +107,6 @@ class Create extends Action
         }
 
         if (\in_array($domain, $deniedDomains)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
