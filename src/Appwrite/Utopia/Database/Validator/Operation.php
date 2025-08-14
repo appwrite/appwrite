@@ -71,6 +71,15 @@ class Operation extends Validator
             return false;
         }
 
+        // If action requires documentId, it must be present
+        if (
+            isset($this->requiresDocumentId[$value['action']]) &&
+            !\array_key_exists('documentId', $value)
+        ) {
+            $this->description = "Key 'documentId' is required for action '{$value['action']}'";
+            return false;
+        }
+
         // Data must be array (can be empty)
         if (!\is_array($value['data'])) {
             $this->description = "Key 'data' must be an array";
