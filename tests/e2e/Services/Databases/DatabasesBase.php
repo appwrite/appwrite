@@ -5569,6 +5569,15 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
         $this->assertEquals(404, $notFound['headers']['status-code']);
+
+        // Test increment with value 0
+        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/collections/$collectionId/documents/$docId/count/increment", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'value' => 0
+        ]);
+        $this->assertEquals(400, $inc3['headers']['status-code']);
     }
 
     public function testDecrementAttribute(): void
@@ -5690,6 +5699,15 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), ['value' => 'not-a-number']);
         $this->assertEquals(400, $typeErr['headers']['status-code']);
+
+        // Test decrement with value 0
+        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/collections/$collectionId/documents/$docId/count/increment", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'value' => 0
+        ]);
+        $this->assertEquals(400, $inc3['headers']['status-code']);
     }
 
 

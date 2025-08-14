@@ -4552,6 +4552,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the maximum value of ' . $max);
         } catch (TypeException) {
             throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        } catch (InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
 
         $queueForStatsUsage
@@ -4629,6 +4631,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the minimum value of ' . $min);
         } catch (TypeException) {
             throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        } catch (InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
 
         $queueForStatsUsage
