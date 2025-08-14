@@ -101,6 +101,10 @@ class Upsert extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSdkNamespace() .  ' with relationship attributes');
         }
 
+        foreach ($documents as $key => $document) {
+            $documents[$key] = new Document($document);
+        }
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
@@ -111,7 +115,7 @@ class Upsert extends Action
             // Enforce max operations per transaction
             $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
             $existing = $transaction->getAttribute('operations', 0);
-            if (($existing + \count($documents)) > $maxBatch) {
+            if (($existing + 1) > $maxBatch) {
                 throw new Exception(
                     Exception::TRANSACTION_LIMIT_EXCEEDED,
                     'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
@@ -119,21 +123,17 @@ class Upsert extends Action
             }
 
             // Stage the operations in transaction logs
-            $staged = [];
-            foreach ($documents as $document) {
-                $staged[] = new Document([
-                    '$id' => ID::unique(),
-                    'databaseInternalId' => $database->getSequence(),
-                    'collectionInternalId' => $collection->getSequence(),
-                    'transactionInternalId' => $transaction->getSequence(),
-                    'documentId' => $document['$id'] ?? ID::unique(),
-                    'action' => 'upsert',
-                    'data' => $document,
-                ]);
-            }
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'action' => 'bulkUpsert',
+                'data' => $documents,
+            ]);
 
             $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocuments('transactionLogs', $staged);
+                $dbForProject->createDocument('transactionLogs', $staged);
                 $dbForProject->increaseDocumentAttribute(
                     'transactions',
                     $transactionId,
@@ -147,11 +147,8 @@ class Upsert extends Action
                 $this->getSdkGroup() => [],
                 'total' => \count($documents),
             ]), $this->getResponseModel());
-            return;
-        }
 
-        foreach ($documents as $key => $document) {
-            $documents[$key] = new Document($document);
+            return;
         }
 
         $upserted = [];

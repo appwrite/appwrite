@@ -122,6 +122,13 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        if ($data['$permissions']) {
+            $validator = new Permissions();
+            if (!$validator->isValid($data['$permissions'])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+            }
+        }
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
@@ -145,7 +152,6 @@ class Update extends Action
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => null, // Bulk operation doesn't have specific document ID
                 'action' => 'bulkUpdate',
                 'data' => [
                     'data' => $data,
@@ -169,13 +175,6 @@ class Update extends Action
                 'total' => 0, // Can't predict how many would be updated
             ]), $this->getResponseModel());
             return;
-        }
-
-        if ($data['$permissions']) {
-            $validator = new Permissions();
-            if (!$validator->isValid($data['$permissions'])) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
-            }
         }
 
         $documents = [];

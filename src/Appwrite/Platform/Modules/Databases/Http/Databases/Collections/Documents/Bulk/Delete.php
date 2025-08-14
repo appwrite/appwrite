@@ -133,7 +133,6 @@ class Delete extends Action
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => null, // Bulk operation doesn't have specific document ID
                 'action' => 'bulkDelete',
                 'data' => [
                     'queries' => $queries,
@@ -146,7 +145,6 @@ class Delete extends Action
                     'transactions',
                     $transactionId,
                     'operations',
-                    1
                 );
             });
 

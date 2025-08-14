@@ -13,10 +13,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Type as TypeException;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -142,7 +144,7 @@ class Increment extends Action
                 '$id' => $documentId,
                 '$collectionId' => $collectionId,
                 '$databaseId' => $databaseId,
-                $attribute => $value, // Mock response - actual value would be computed during commit
+                $attribute => $value,
             ]);
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_OK)

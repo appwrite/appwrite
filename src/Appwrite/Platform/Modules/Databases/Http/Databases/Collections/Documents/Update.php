@@ -130,61 +130,6 @@ class Update extends Action
             throw new Exception($this->getNotFoundException());
         }
 
-        // Handle transaction staging
-        if ($transactionId !== null) {
-            $transaction = $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
-            }
-            if ($transaction->getAttribute('status', '') !== 'pending') {
-                throw new Exception(Exception::TRANSACTION_NOT_READY);
-            }
-
-            // Enforce max operations per transaction
-            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
-            $existing = $transaction->getAttribute('operations', 0);
-            if (($existing + 1) > $maxBatch) {
-                throw new Exception(
-                    Exception::TRANSACTION_LIMIT_EXCEEDED,
-                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
-                );
-            }
-
-            // Stage the operation in transaction logs
-            $staged = new Document([
-                '$id' => ID::unique(),
-                'databaseInternalId' => $database->getSequence(),
-                'collectionInternalId' => $collection->getSequence(),
-                'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $documentId,
-                'action' => 'update',
-                'data' => $data,
-            ]);
-
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
-
-            // Return successful response without actually updating document
-            $mockDocument = new Document([
-                '$id' => $documentId,
-                '$collectionId' => $collectionId,
-                '$databaseId' => $databaseId,
-                ...$document->getArrayCopy(),
-                ...$data
-            ]);
-            $response
-                ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-                ->dynamic($mockDocument, $this->getResponseModel());
-            return;
-        }
-
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
             Database::PERMISSION_READ,
@@ -297,6 +242,63 @@ class Update extends Action
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            // Stage the operation in transaction logs
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'update',
+                'data' => $data,
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    1
+                );
+            });
+
+            // Return successful response without actually updating document
+            $mockDocument = new Document([
+                '$id' => $documentId,
+                '$collectionId' => $collectionId,
+                '$databaseId' => $databaseId,
+                ...$document->getArrayCopy(),
+                ...$data
+            ]);
+            $response
+                ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                ->dynamic($mockDocument, $this->getResponseModel());
+            return;
+        }
+
 
         try {
             $document = $dbForProject->withRequestTimestamp(
