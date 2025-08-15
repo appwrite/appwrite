@@ -363,7 +363,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
 
-        $jwtExpiry = $resource->getAttribute('timeout', 900);
+        $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
             'projectId' => $project->getId(),
