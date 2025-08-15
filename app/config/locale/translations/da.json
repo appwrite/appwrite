@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} team",
     "emails.magicSession.subject": "Login",
     "emails.magicSession.hello": "Hej,",
-    "emails.magicSession.body": "Følg dette link for at logge ind.",
-    "emails.magicSession.footer": "Hvis du ikke har bedt om at logge ind med denne email, ignorer venligst denne besked.",
     "emails.magicSession.thanks": "Tak,",
     "emails.magicSession.signature": "{{project}} team",
     "emails.recovery.subject": "Nulstil Password",

@@ -97,8 +97,8 @@ class Create extends Action
         $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
         $deployment->removeAttribute('$sequence');
+
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$sequence' => '',
             '$id' => $deploymentId,
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),

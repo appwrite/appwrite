@@ -12,8 +12,6 @@
     "emails.verification.signature": "Nhóm {{project}}",
     "emails.magicSession.subject": "Đăng nhập",
     "emails.magicSession.hello": "Chào",
-    "emails.magicSession.body": "Nhấn vào đường dẫn sau để đăng nhập.",
-    "emails.magicSession.footer": "Nếu bạn không yêu cầu đăng nhập bằng email, bạn có thể bỏ qua email này.",
     "emails.magicSession.thanks": "Cảm ơn",
     "emails.magicSession.signature": "Nhóm {{project}}",
     "emails.recovery.subject": "Thiết lập lại mật khẩu",

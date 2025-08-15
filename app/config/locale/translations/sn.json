@@ -12,8 +12,6 @@
     "emails.verification.signature": "Chikwata che{{project}}",
     "emails.magicSession.subject": "Pinda",
     "emails.magicSession.hello": "Hesi,",
-    "emails.magicSession.body": "Baya chinongedzo ichi kuti upinde muakaundi yako.",
-    "emails.magicSession.footer": "Kana usina kukumbira kupinda muakaundi yako uchishandisa email iyi, unogona kufuratira meseji iyi.",
     "emails.magicSession.thanks": "Ndatenda,",
     "emails.magicSession.signature": "Chikwata che{{project}}",
     "emails.recovery.subject": "Kuchinja pasiwedhi",

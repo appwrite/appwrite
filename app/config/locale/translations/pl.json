@@ -12,8 +12,6 @@
     "emails.verification.signature": "Zespół {{project}}",
     "emails.magicSession.subject": "Logowanie",
     "emails.magicSession.hello": "Cześć,",
-    "emails.magicSession.body": "Kliknij w ten link, aby zalogować się.",
-    "emails.magicSession.footer": "Jeśli to nie Ty prosiłeś o logowanie przy użyciu tego adresu e-mail, zignoruj tę wiadomość.",
     "emails.magicSession.thanks": "Dziękujemy,",
     "emails.magicSession.signature": "Zespół {{project}}",
     "emails.recovery.subject": "Resetowanie hasła",

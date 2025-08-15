@@ -6,6 +6,7 @@ use Appwrite\Template\Template;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
+use Utopia\CLI\Console;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -14,6 +15,11 @@ use Utopia\System\System;
 
 class Mails extends Action
 {
+    protected int $previewMaxLen = 150;
+
+    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+
+
     public static function getName(): string
     {
         return 'mails';
@@ -74,6 +80,7 @@ class Mails extends Action
         $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
         $body = $payload['body'];
+        $preview = $payload['preview'] ?? '';
 
         $variables['subject'] = $subject;
         $variables['year'] = date("Y");
@@ -92,6 +99,27 @@ class Mails extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+
+        $previewWhitespace = '';
+
+        if (!empty($preview)) {
+            $previewTemplate = Template::fromString($preview);
+            foreach ($variables as $key => $value) {
+                $previewTemplate->setParam('{{' . $key . '}}', $value);
+            }
+            // render() will return the subject in <p> tags, so use strip_tags() to remove them
+            $preview = \strip_tags($previewTemplate->render());
+
+            $previewLen = strlen($preview);
+            if ($previewLen < $this->previewMaxLen) {
+                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+            }
+        }
+
+
+        $bodyTemplate->setParam('{{preview}}', $preview);
+        $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
+
         $body = $bodyTemplate->render();
 
         $subjectTemplate = Template::fromString($subject);
@@ -120,6 +148,17 @@ class Mails extends Action
         $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
         $mail->AltBody = \strip_tags($mail->AltBody);
         $mail->AltBody = \trim($mail->AltBody);
+
+        if (\str_contains($mail->Body, 'buttonText') || \str_contains($mail->AltBody, 'buttonText')) {
+            Console::warning('Email might contain placeholder. Logs relevant to verify and isolate the issue:');
+            var_dump($mail->Body);
+            var_dump($mail->AltBody);
+            \var_dump($message->getPayload());
+            \var_dump($message->getPid());
+            \var_dump($message->getQueue());
+            \var_dump($message->getTimestamp());
+            Console::warning('End of placeholder detection report.');
+        }
 
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));

@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} समूह",
     "emails.magicSession.subject": "लगइन",
     "emails.magicSession.hello": "नमस्ते,",
-    "emails.magicSession.body": "लगइन गर्नको लागी यो लिंकमा जानुहोस।",
-    "emails.magicSession.footer": "यदि तपाइँले यो इमेल प्रयोग गरेर लगइन गर्न सोध्नु भएको छैन भने तपाइँले यो सन्देश लाई बेवास्ता गर्न सक्नुहुन्छ।",
     "emails.magicSession.thanks": "धन्यवाद,",
     "emails.magicSession.signature": "{{project}} समूह",
     "emails.recovery.subject": "पासवर्ड रिसेट",

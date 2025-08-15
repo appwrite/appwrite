@@ -7,7 +7,7 @@ use Utopia\Queue\Queue;
 
 class MockPublisher implements Publisher
 {
-    private $events = [];
+    private array $events = [];
 
     public function enqueue(Queue $queue, array $payload): bool
     {

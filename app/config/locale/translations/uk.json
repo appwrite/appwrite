@@ -12,8 +12,6 @@
     "emails.verification.signature": "команда {{project}}",
     "emails.magicSession.subject": "Логін",
     "emails.magicSession.hello": "Вітаємо,",
-    "emails.magicSession.body": "Перейдіть за цим посиланням, щоб увійти.",
-    "emails.magicSession.footer": "Якщо ви не просили увійти за допомогою цієї електронної пошти, ви можете ігнорувати це повідомлення.",
     "emails.magicSession.thanks": "Дякуємо,",
     "emails.magicSession.signature": "команда {{project}}",
     "emails.recovery.subject": "Скидання пароля",

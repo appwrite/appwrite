@@ -152,6 +152,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_TARGET_CAA',
+                'description' => 'A CAA record domain that can be used to validate custom domains. Value should be domain\'s hostname.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DNS',
+                'description' => 'DNS server to use for domain validation. Default: 8.8.8.8',
+                'introduction' => '',
+                'default' => '8.8.8.8',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
                 'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
@@ -827,7 +845,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.config.json.',
                 'introduction' => '0.7.0',
                 'default' => '900',
                 'required' => false,
@@ -1070,7 +1088,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SITES_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.json.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.config.json.',
                 'introduction' => '1.7.0',
                 'default' => '900',
                 'required' => false,

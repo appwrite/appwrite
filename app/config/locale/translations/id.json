@@ -12,8 +12,6 @@
     "emails.verification.signature": "Tim {{project}}",
     "emails.magicSession.subject": "Masuk",
     "emails.magicSession.hello": "Hai,",
-    "emails.magicSession.body": "Ikuti tautan ini untuk masuk.",
-    "emails.magicSession.footer": "Jika Anda tidak meminta untuk masuk menggunakan email ini, Anda dapat mengabaikan pesan ini.",
     "emails.magicSession.thanks": "Terima kasih,",
     "emails.magicSession.signature": "Tim {{project}}",
     "emails.recovery.subject": "Atur Ulang Kata Sandi",

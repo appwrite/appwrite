@@ -643,15 +643,20 @@ App::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-        try {
-            $users = $dbForProject->find('users', $queries);
-            $total = $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT);
-        } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
+        $users = [];
+        $total = 0;
+
+        $dbForProject->skipFilters(function () use ($dbForProject, $queries, &$users, &$total) {
+            try {
+                $users = $dbForProject->find('users', $queries);
+                $total = $dbForProject->count('users', $queries, APP_LIMIT_COUNT);
+            } catch (OrderException $e) {
+                throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
+        }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
+
         $response->dynamic(new Document([
             'users' => $users,
             'total' => $total,
@@ -1352,6 +1357,17 @@ App::patch('/v1/users/:userId/password')
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $sessions = $user->getAttribute('sessions', []);
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 

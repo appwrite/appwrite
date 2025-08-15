@@ -12,8 +12,6 @@
     "emails.verification.signature": "Il team {{project}}",
     "emails.magicSession.subject": "Login",
     "emails.magicSession.hello": "Ciao,",
-    "emails.magicSession.body": "Clicca questo link per accedere.",
-    "emails.magicSession.footer": "Se non hai richiesto di effettuare l’accesso, puoi ignorare questo messaggio.",
     "emails.magicSession.thanks": "Grazie,",
     "emails.magicSession.signature": "Il team {{project}}",
     "emails.recovery.subject": "Reimpostazione password",

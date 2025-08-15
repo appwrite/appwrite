@@ -483,7 +483,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
         $this->assertIsNumeric($response['body']['executionsTotal']);
-        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsNumeric($response['body']['rowsTotal']);
         $this->assertIsNumeric($response['body']['databasesTotal']);
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);
@@ -949,6 +949,55 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(Auth::TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
 
         return ['projectId' => $projectId];
+    }
+
+    /** @depends testCreateProject */
+    public function testUpdateProjectInvalidateSessions($data): array
+    {
+        $id = $data['projectId'];
+
+        // Check defaults
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['authInvalidateSessions']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/session-invalidation', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => false,
+        ]);
+        $this->assertFalse($response['body']['authInvalidateSessions']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['authInvalidateSessions']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/session-invalidation', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+        ]);
+        $this->assertTrue($response['body']['authInvalidateSessions']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['authInvalidateSessions']);
+
+        return $data;
     }
 
     /**
@@ -2942,7 +2991,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
-            'scopes' => ['users.read', 'users.write', 'collections.read'],
+            'scopes' => ['users.read', 'users.write', 'collections.read', 'tables.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 360),
         ]);
 
@@ -2953,6 +3002,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.read', $response['body']['scopes']);
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
+        $this->assertContains('tables.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
@@ -2971,6 +3021,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.read', $response['body']['scopes']);
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
+        $this->assertContains('tables.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);

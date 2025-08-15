@@ -12,8 +12,6 @@
     "emails.verification.signature": "فريق {{project}}",
     "emails.magicSession.subject": "تسجيل الدخول",
     "emails.magicSession.hello": "أهلا،",
-    "emails.magicSession.body": "اتبع هذا الرابط لتسجيل الدخول",
-    "emails.magicSession.footer": "لو لم تطلب تسجيل الدخول بهذا البريد الاكتروني ، يمكنك تجاهل هذه الرسالة",
     "emails.magicSession.thanks": "شكرا،",
     "emails.magicSession.signature": "فريق {{project}}",
     "emails.recovery.subject": "تغيير كلمة السر",

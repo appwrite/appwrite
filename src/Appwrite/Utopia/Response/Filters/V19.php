@@ -35,7 +35,7 @@ class V19 extends Filter
         return $parsedResponse;
     }
 
-    protected function parseFunction(array $content)
+    protected function parseFunction(array $content): array
     {
         $content['deployment'] = $content['deploymentId'] ?? '';
         unset($content['deploymentId']);

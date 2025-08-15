@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} ટીમ",
     "emails.magicSession.subject": "પ્રવેશ કરો",
     "emails.magicSession.hello": "નમસ્કાર,",
-    "emails.magicSession.body": "પ્રવેશ કરવા માટે આ લિંકને અનુસરો.",
-    "emails.magicSession.footer": "જો તમે આ ઇમેઇલનો ઉપયોગ કરીને પ્રવેશ કરવાનું ન કહ્યું હોય, તો તમે આ સંદેશને અવગણી શકો છો.",
     "emails.magicSession.thanks": "આભાર,",
     "emails.magicSession.signature": "{{project}} ટીમ",
     "emails.recovery.subject": "પાસવર્ડ ફરીથી સેટ કરો",

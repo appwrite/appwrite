@@ -51,6 +51,16 @@ return [
                 'default' => null,
                 'array' => false,
             ],
+            [
+                '$id' => ID::custom('type'),
+                'type' => Database::VAR_STRING,
+                'size' => 128,
+                'required' => false,
+                'default' => 'grids',
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

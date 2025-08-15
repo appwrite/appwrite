@@ -1,5 +1,11 @@
 # Change Log
 
+## 16.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `encrypt` support to string attribute model
+* Add `sequence` support to `Document` model
+
 ## 16.1.0
 
 * Add `gif` support to `ImageFormat` enum

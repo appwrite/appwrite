@@ -12,8 +12,6 @@
     "emails.verification.signature": "El equipo de {{project}}.",
     "emails.magicSession.subject": "Inicio de sesión",
     "emails.magicSession.hello": "Hola,",
-    "emails.magicSession.body": "Haz clic en este enlace para iniciar sesión:",
-    "emails.magicSession.footer": "Si no has solicitado iniciar sesión usando este correo, puedes ignorar este mensaje.",
     "emails.magicSession.thanks": "Gracias.,",
     "emails.magicSession.signature": "El equipo de {{project}}",
     "emails.recovery.subject": "Restablecer contraseña",
