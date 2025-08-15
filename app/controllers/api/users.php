@@ -643,6 +643,56 @@ App::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
+        // Define attributes that have subQueryX filters by pulling from collection config
+        $usersCollection = Config::getParam('collections', [])['projects']['users'];
+        $subQueryAttributes = [];
+        
+        foreach ($usersCollection['attributes'] as $attribute) {
+            $filters = $attribute['filters'] ?? [];
+            foreach ($filters as $filter) {
+                if (str_starts_with($filter, 'subQuery')) {
+                    $subQueryAttributes[$attribute['$id']] = $filter;
+                    break;
+                }
+            }
+        }
+
+        $skipFilters = array_values(array_diff($subQueryAttributes, ['subQueryTargets']));
+        $requestedSubQueryAttributes = [];
+        
+        $processedQueries = [];
+        $allSelectedAttributes = [];
+        $hasSelectQuery = false;
+        
+        foreach ($queries as $query) {
+            if ($query->getMethod() === Query::TYPE_SELECT) {
+                $hasSelectQuery = true;
+                $selectedAttributes = $query->getValues();
+
+                foreach ($selectedAttributes as $attribute) {
+                    if (array_key_exists($attribute, $subQueryAttributes)) {
+                        $requestedSubQueryAttributes[] = $subQueryAttributes[$attribute];
+                    } else {
+                        $allSelectedAttributes[] = $attribute;
+                    }
+                }
+            } else {
+                $processedQueries[] = $query;
+            }
+        }
+
+        if ($hasSelectQuery) {
+            if (!empty($allSelectedAttributes)) {
+                $processedQueries[] = Query::select(array_unique($allSelectedAttributes));
+            } else {
+                $processedQueries[] = Query::select(['$id']);
+            }
+        }
+
+        $queries = $processedQueries;
+
+        $skipFilters = array_diff($skipFilters, $requestedSubQueryAttributes);
+
         $users = [];
         $total = 0;
 
@@ -655,7 +705,7 @@ App::get('/v1/users')
             } catch (QueryException $e) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
-        }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
+        }, $skipFilters);
 
         $response->dynamic(new Document([
             'users' => $users,
