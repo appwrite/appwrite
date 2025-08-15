@@ -6948,7 +6948,7 @@ trait DatabasesBase
         $this->assertEquals(404, $notFound['headers']['status-code']);
 
         // Test decrement with value 0
-        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/documents/$rowId/count/decrement", array_merge([
+        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId/count/increment", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
@@ -7058,7 +7058,7 @@ trait DatabasesBase
         $this->assertEquals(400, $typeErr['headers']['status-code']);
 
         // Test decrement with value 0
-        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/documents/$rowId/count/decrement", array_merge([
+        $inc3 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId/count/decrement", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
