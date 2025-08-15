@@ -280,11 +280,11 @@ class Update extends Action
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setContext('database', $database)
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setParam('rowId', $document->getId())
+            ->setContext('database', $database)
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->getPayload(), sensitive: $relationships);
     }
