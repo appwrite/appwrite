@@ -82,7 +82,7 @@ class Create extends Base
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
             ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
             ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-            ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
+            ->param('scheduledAt', null, new Text(100), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
             ->inject('request')
             ->inject('project')
@@ -121,6 +121,13 @@ class Create extends Base
 
         if (!$async && !is_null($scheduledAt)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
+        }
+
+        if (!is_null($scheduledAt)) {
+            $validator = new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60);
+            if (!$validator->isValid($scheduledAt)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Execution schedule must be a valid date, and at least 1 minute from now');
+            }
         }
 
         /**
@@ -198,7 +205,7 @@ class Create extends Base
             }
 
             if (!$current->isEmpty()) {
-                $jwtExpiry = $function->getAttribute('timeout', 900);
+                $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
@@ -207,7 +214,7 @@ class Create extends Base
             }
         }
 
-        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),

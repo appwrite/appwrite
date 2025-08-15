@@ -176,13 +176,50 @@ class OpenAPI3 extends Format
                 foreach ($additionalMethods as $method) {
                     /** @var Method $method */
                     $desc = $method->getDescriptionFilePath();
+
+                    $methodSecurities = $method->getAuth();
+                    $methodSdkPlatforms = [];
+                    foreach ($methodSecurities as $value) {
+                        switch ($value) {
+                            case AuthType::SESSION:
+                                $methodSdkPlatforms[] = APP_PLATFORM_CLIENT;
+                                break;
+                            case AuthType::JWT:
+                            case AuthType::KEY:
+                                $methodSdkPlatforms[] = APP_PLATFORM_SERVER;
+                                break;
+                            case AuthType::ADMIN:
+                                $methodSdkPlatforms[] = APP_PLATFORM_CONSOLE;
+                                break;
+                        }
+                    }
+
+                    if (empty($methodSecurities)) {
+                        $methodSdkPlatforms[] = APP_PLATFORM_SERVER;
+                        $methodSdkPlatforms[] = APP_PLATFORM_CLIENT;
+                    }
+
+                    if ($this->platform !== APP_PLATFORM_CONSOLE && !\in_array($this->platform, $methodSdkPlatforms)) {
+                        continue;
+                    }
+
+                    $methodSecurities = ['Project' => []];
+                    foreach ($method->getAuth() as $security) {
+                        /** @var AuthType $security */
+                        if (\array_key_exists($security->value, $this->keys)) {
+                            $methodSecurities[$security->value] = [];
+                        }
+                    }
+
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
-                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
+                        'desc' => $method->getDesc() ?? '',
+                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method->getMethodName()) . '.md',
                     ];
 
                     foreach ($method->getParameters() as $parameter) {
@@ -281,7 +318,7 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if ((!empty($scope))) {
+            if (!empty($scope)) {
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
@@ -568,6 +605,7 @@ class OpenAPI3 extends Format
 
             $required = $model->getRequired();
             $rules = $model->getRules();
+            $examples = [];
 
             $output['components']['schemas'][$model->getType()] = [
                 'description' => $model->getName(),
@@ -590,6 +628,8 @@ class OpenAPI3 extends Format
                 $type = '';
                 $format = null;
                 $items = null;
+
+                $examples[$name] = $rule['example'] ?? null;
 
                 switch ($rule['type']) {
                     case 'string':
@@ -648,6 +688,7 @@ class OpenAPI3 extends Format
                         break;
                 }
 
+                $readOnly = $rule['readOnly'] ?? false;
                 if ($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
@@ -661,6 +702,9 @@ class OpenAPI3 extends Format
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                 } else {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -671,6 +715,9 @@ class OpenAPI3 extends Format
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                 }
                 if ($items) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
@@ -679,6 +726,12 @@ class OpenAPI3 extends Format
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
+
+            if ($model->isAny() && !empty($model->getSampleData())) {
+                $examples = array_merge($examples, $model->getSampleData());
+            }
+
+            $output['components']['schemas'][$model->getType()]['example'] = $examples;
         }
 
         \ksort($output['paths']);

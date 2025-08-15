@@ -71,6 +71,7 @@ $oauthDefaultFailure = '/console/auth/oauth2/failure';
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
+    $preview = $locale->getText("emails.sessionAlert.preview");
     $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
 
     $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
@@ -132,6 +133,16 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
             ->setSmtpSenderName($senderName);
     }
 
+    // session alerts should always have a client name!
+    $clientName = $session->getAttribute('clientName');
+    if (empty($clientName)) {
+        // fallback to the user agent and then unknown!
+        $userAgent = $session->getAttribute('userAgent');
+        $clientName = !empty($userAgent) ? $userAgent : 'UNKNOWN';
+
+        $session->setAttribute('clientName', $clientName);
+    }
+
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
         'date' => (new \DateTime())->format('F j'),
@@ -148,6 +159,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $queueForMails
         ->setSubject($subject)
+        ->setPreview($preview)
         ->setBody($body)
         ->setVariables($emailVariables)
         ->setRecipient($email)
@@ -2025,6 +2037,7 @@ App::post('/v1/account/tokens/magic-url')
         $url = Template::unParseURL($url);
 
         $subject = $locale->getText("emails.magicSession.subject");
+        $preview = $locale->getText("emails.magicSession.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -2113,6 +2126,7 @@ App::post('/v1/account/tokens/magic-url')
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
@@ -2225,7 +2239,30 @@ App::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'providerType' => MESSAGE_TYPE_EMAIL,
+                    'identifier' => $email,
+                ])));
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+            } catch (Duplicate) {
+                $existingTarget = $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$email]),
+                ]);
+                if (!$existingTarget->isEmpty()) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
         $tokenSecret = Auth::codeGenerator(6);
@@ -2254,6 +2291,7 @@ App::post('/v1/account/tokens/email')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
+        $preview = $locale->getText("emails.otpSession.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -2339,6 +2377,7 @@ App::post('/v1/account/tokens/email')
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
@@ -3265,6 +3304,7 @@ App::post('/v1/account/recovery')
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
+        $preview = $locale->getText("emails.recovery.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
@@ -3339,6 +3379,7 @@ App::post('/v1/account/recovery')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)
+            ->setPreview($preview)
             ->trigger();
 
         $recovery->setAttribute('secret', $secret);
@@ -3520,6 +3561,7 @@ App::post('/v1/account/verification')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.verification.body");
+        $preview = $locale->getText("emails.verification.preview");
         $subject = $locale->getText("emails.verification.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
 
@@ -3592,6 +3634,7 @@ App::post('/v1/account/verification')
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
@@ -4437,6 +4480,7 @@ App::post('/v1/account/mfa/challenge')
                 }
 
                 $subject = $locale->getText("emails.mfaChallenge.subject");
+                $preview = $locale->getText("emails.mfaChallenge.preview");
                 $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
 
                 $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -4513,6 +4557,7 @@ App::post('/v1/account/mfa/challenge')
 
                 $queueForMails
                     ->setSubject($subject)
+                    ->setPreview($preview)
                     ->setBody($body)
                     ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))

@@ -3220,6 +3220,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 namespace: 'databases',
                 group: 'documents',
                 name: 'createDocument',
+                desc: 'Create document',
                 description: '/docs/references/databases/create-document.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -3241,6 +3242,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 namespace: 'databases',
                 group: 'documents',
                 name: 'createDocuments',
+                desc: 'Create documents',
                 description: '/docs/references/databases/create-documents.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -3453,6 +3455,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         } else {
                             $relation->removeAttribute('$collectionId');
                             $relation->removeAttribute('$databaseId');
+                            $relation->removeAttribute('$sequence');
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
@@ -3484,6 +3487,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
                 }
             }
+
+            // Remove sequence if set
+            unset($document['$sequence']);
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
@@ -4074,6 +4080,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             $permissions = $document->getPermissions() ?? [];
         }
 
+        // Remove sequence if set
+        unset($data['$sequence']);
+
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
@@ -4126,6 +4135,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         ));
                         $relation->removeAttribute('$collectionId');
                         $relation->removeAttribute('$databaseId');
+                        $relation->removeAttribute('$sequence');
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
@@ -4257,10 +4267,11 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('requestTimestamp')
     ->inject('response')
+    ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -4280,12 +4291,28 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
+        $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
             Database::PERMISSION_DELETE,
-        ]);
+        ];
+
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+        // if no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
+        if (\is_null($permissions)) {
+            $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            if ($oldDocument->isEmpty()) {
+                if (!empty($user->getId())) {
+                    $defaultPermissions = [];
+                    foreach ($allowedPermissions as $permission) {
+                        $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    }
+                    $permissions = $defaultPermissions;
+                }
+            } else {
+                $permissions = $oldDocument->getPermissions();
+            }
+        }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
@@ -4466,7 +4493,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/increment')
     ->desc('Increment document attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].increment')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'documents.increment')
@@ -4525,6 +4552,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the maximum value of ' . $max);
         } catch (TypeException) {
             throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        } catch (InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
 
         $queueForStatsUsage
@@ -4534,6 +4563,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
+            ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
@@ -4543,7 +4573,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/decrement')
     ->desc('Decrement document attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].decrement')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'documents.decrement')
@@ -4602,6 +4632,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute "' . $attribute . '" has reached the minimum value of ' . $min);
         } catch (TypeException) {
             throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+        } catch (InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
 
         $queueForStatsUsage
@@ -4611,6 +4643,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
+            ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
@@ -4690,6 +4723,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
             }
         }
+
+        // Remove sequence if set
+        unset($data['$sequence']);
 
         $documents = [];
 

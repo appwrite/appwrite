@@ -1,5 +1,11 @@
 # Change Log
 
+## 17.1.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `gif` support to `ImageFormat` enum
+* Add `sequence` support to `Document` model
+
 ## 17.0.2
 
 * Add `gif` support to `ImageFormat` enum

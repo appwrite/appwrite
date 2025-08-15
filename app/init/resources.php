@@ -70,7 +70,11 @@ App::setResource('hooks', function ($register) {
 }, ['register']);
 
 App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+App::setResource('locale', function () {
+    $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+    $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+    return $locale;
+});
 
 App::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
@@ -80,15 +84,33 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-App::setResource('publisherRedis', function () {
-    // Stub
-});
+App::setResource('publisherDatabases', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherFunctions', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMigrations', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
 App::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
-App::setResource('consumerRedis', function () {
-    // Stub
-});
+App::setResource('consumerDatabases', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+App::setResource('consumerFunctions', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+App::setResource('consumerMigrations', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['publisher']);
+App::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
