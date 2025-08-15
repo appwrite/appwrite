@@ -6900,10 +6900,10 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $doc['headers']['status-code']);
 
-        $docId = $doc['body']['$id'];
+        $rowId = $doc['body']['$id'];
 
         // Increment by default 1
-        $inc = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$docId/count/increment", array_merge([
+        $inc = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId/count/increment", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
@@ -6911,14 +6911,14 @@ trait DatabasesBase
         $this->assertEquals(6, $inc['body']['count']);
 
         // Verify count = 6
-        $get = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/grids/tables/$tableId/rows/$docId", array_merge([
+        $get = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(6, $get['body']['count']);
 
         // Increment by custom value 4
-        $inc2 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$docId/count/increment", array_merge([
+        $inc2 = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId/count/increment", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
@@ -6927,21 +6927,21 @@ trait DatabasesBase
         $this->assertEquals(200, $inc2['headers']['status-code']);
         $this->assertEquals(10, $inc2['body']['count']);
 
-        $get2 = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/grids/tables/$tableId/rows/$docId", array_merge([
+        $get2 = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(10, $get2['body']['count']);
 
         // Test max limit exceeded
-        $err = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$docId/count/increment", array_merge([
+        $err = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId/count/increment", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), ['max' => 8]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
         // Test attribute not found
-        $notFound = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$docId/unknown/increment", array_merge([
+        $notFound = $this->client->call(Client::METHOD_PATCH, "/databases/$databaseId/grids/tables/$tableId/rows/$rowId/unknown/increment", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
