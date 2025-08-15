@@ -205,7 +205,7 @@ class Create extends Base
             }
 
             if (!$current->isEmpty()) {
-                $jwtExpiry = $function->getAttribute('timeout', 900);
+                $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
@@ -214,7 +214,7 @@ class Create extends Base
             }
         }
 
-        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
