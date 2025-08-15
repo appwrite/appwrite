@@ -106,11 +106,14 @@ return [
                 'create' => [
                     '$description' => 'This event triggers when a row is created.',
                 ],
-                'delete' => [
-                    '$description' => 'This event triggers when a row is deleted.'
-                ],
                 'update' => [
                     '$description' => 'This event triggers when a row is updated.'
+                ],
+                'upsert' => [
+                    '$description' => 'This event triggers when a document is upserted.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a row is deleted.'
                 ],
             ],
             'indexes' => [
