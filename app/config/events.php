@@ -106,11 +106,14 @@ return [
                 'create' => [
                     '$description' => 'This event triggers when a row is created.',
                 ],
-                'delete' => [
-                    '$description' => 'This event triggers when a row is deleted.'
-                ],
                 'update' => [
                     '$description' => 'This event triggers when a row is updated.'
+                ],
+                'upsert' => [
+                    '$description' => 'This event triggers when a document is upserted.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a row is deleted.'
                 ],
             ],
             'indexes' => [
@@ -119,6 +122,9 @@ return [
                 '$description' => 'This event triggers on any indexes event.',
                 'create' => [
                     '$description' => 'This event triggers when an index is created.',
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when an index is updated.',
                 ],
                 'delete' => [
                     '$description' => 'This event triggers when an index is deleted.'
@@ -133,17 +139,20 @@ return [
                 ],
                 'delete' => [
                     '$description' => 'This event triggers when an column is deleted.'
-                ]
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
             ],
             'create' => [
                 '$description' => 'This event triggers when a table is created.'
             ],
+            'update' => [
+                '$description' => 'This event triggers when a table is updated.',
+            ],
             'delete' => [
                 '$description' => 'This event triggers when a table is deleted.',
             ],
-            'update' => [
-                '$description' => 'This event triggers when a table is updated.',
-            ]
         ],
         'collections' => [
             '$model' => Response::MODEL_COLLECTION,
@@ -156,11 +165,14 @@ return [
                 'create' => [
                     '$description' => 'This event triggers when a document is created.',
                 ],
-                'delete' => [
-                    '$description' => 'This event triggers when a document is deleted.'
-                ],
                 'update' => [
                     '$description' => 'This event triggers when a document is updated.'
+                ],
+                'upsert' => [
+                    '$description' => 'This event triggers when a document is upserted.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a document is deleted.'
                 ],
             ],
             'indexes' => [
@@ -172,7 +184,10 @@ return [
                 ],
                 'delete' => [
                     '$description' => 'This event triggers when an index is deleted.'
-                ]
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
             ],
             'attributes' => [
                 '$model' => Response::MODEL_ATTRIBUTE,
@@ -181,6 +196,9 @@ return [
                 'create' => [
                     '$description' => 'This event triggers when an attribute is created.',
                 ],
+                'update' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
                 'delete' => [
                     '$description' => 'This event triggers when an attribute is deleted.'
                 ]
@@ -188,22 +206,22 @@ return [
             'create' => [
                 '$description' => 'This event triggers when a collection is created.'
             ],
+            'update' => [
+                '$description' => 'This event triggers when a collection is updated.',
+            ],
             'delete' => [
                 '$description' => 'This event triggers when a collection is deleted.',
             ],
-            'update' => [
-                '$description' => 'This event triggers when a collection is updated.',
-            ]
         ],
         'create' => [
             '$description' => 'This event triggers when a database is created.'
         ],
+        'update' => [
+            '$description' => 'This event triggers when a database is updated.',
+        ],
         'delete' => [
             '$description' => 'This event triggers when a database is deleted.',
         ],
-        'update' => [
-            '$description' => 'This event triggers when a database is updated.',
-        ]
     ],
     'buckets' => [
         '$model' => Response::MODEL_BUCKET,
