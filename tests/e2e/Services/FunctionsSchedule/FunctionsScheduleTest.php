@@ -112,13 +112,14 @@ class FunctionsScheduleTest extends Scope
                 ]
             ]
         );
-        $executionId = $execution['body']['$id'];
 
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertEquals('scheduled', $execution['body']['status']);
         $this->assertEquals('PATCH', $execution['body']['requestMethod']);
         $this->assertEquals('/custom-path', $execution['body']['requestPath']);
         $this->assertCount(0, $execution['body']['requestHeaders']);
+
+        $executionId = $execution['body']['$id'];
 
         \sleep(120);
 

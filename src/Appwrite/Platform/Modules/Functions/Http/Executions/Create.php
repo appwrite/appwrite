@@ -285,6 +285,7 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -320,7 +321,7 @@ class Create extends Base
                     'active' => true,
                 ]));
 
-                $execution = $execution
+                $execution
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
