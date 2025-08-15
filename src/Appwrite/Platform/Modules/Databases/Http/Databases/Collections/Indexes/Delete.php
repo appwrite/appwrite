@@ -42,7 +42,7 @@ class Delete extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
+            ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete')
             ->label('audits.event', 'index.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
