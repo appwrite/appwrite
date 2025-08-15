@@ -37,7 +37,7 @@ class Delete extends IndexDelete
             ->groups(['api', 'database'])
             ->label('scope', 'tables.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].delete')
+            ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
             ->label('audits.resource', 'database/{request.databaseId}/grid/table/{request.tableId}')
             ->label('sdk', new Method(
