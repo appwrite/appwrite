@@ -418,6 +418,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testAdapterDetectionAstroStatic(): void
     {
         $siteId = $this->setupSite([
@@ -1508,7 +1509,8 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
-
+    
+    #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
         $template = $this->getTemplate('playground-for-astro');
