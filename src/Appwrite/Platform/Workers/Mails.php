@@ -6,7 +6,6 @@ use Appwrite\Template\Template;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
-use Utopia\CLI\Console;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
