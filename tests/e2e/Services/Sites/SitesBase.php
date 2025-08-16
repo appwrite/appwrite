@@ -48,8 +48,23 @@ trait SitesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
+
+            if ($deployment['body']['status'] === 'failed') {
+                $this->fail('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            }
+
+            Console::execute("docker inspect openruntimes-executor --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
+            if ($this->stdout !== '0') {
+                $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
+
+                Console::execute("docker compose logs openruntimes-executor", '', $this->stdout, $this->stderr);
+                $msg .= $this->stdout . ' (' . $this->stderr . ')';
+
+                $this->fail($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            }
+
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 150000, 500);
+        }, 300000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {

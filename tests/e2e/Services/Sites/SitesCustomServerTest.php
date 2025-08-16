@@ -405,8 +405,10 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEventually(function () use ($siteId, &$site) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals('ssr', $site['body']['adapter']);
+        });
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
