@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Sites;
 
 use Appwrite\Tests\Async;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
@@ -50,17 +51,17 @@ trait SitesBase
             ]));
 
             if ($deployment['body']['status'] === 'failed') {
-                $this->fail('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+                throw new Critical('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
             Console::execute("docker inspect openruntimes-executor --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
-            if ($this->stdout !== '0') {
+            if (\trim($this->stdout) !== '0') {
                 $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
 
                 Console::execute("docker compose logs openruntimes-executor", '', $this->stdout, $this->stderr);
                 $msg .= $this->stdout . ' (' . $this->stderr . ')';
 
-                $this->fail($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+                throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
