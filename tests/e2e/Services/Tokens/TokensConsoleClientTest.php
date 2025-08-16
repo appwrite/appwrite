@@ -126,17 +126,17 @@ class TokensConsoleClientTest extends Scope
 
         $this->assertEquals(201, $expiredToken['headers']['status-code']);
         $this->assertEquals('files', $expiredToken['body']['resourceType']);
-        
+
         // Verify that the JWT is generated without causing a 500 error
         $this->assertNotEmpty($expiredToken['body']['secret']);
-        
+
         // Parse the JWT to verify expiration is set correctly for expired tokens
         $jwtParts = explode('.', $expiredToken['body']['secret']);
         $this->assertCount(3, $jwtParts, 'JWT should have 3 parts');
-        
+
         $payload = json_decode(base64_decode($jwtParts[1]), true);
         $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp field');
-        
+
         // For expired tokens, exp should be set to a short time in the future (around 1 minute)
         $now = time();
         $this->assertGreaterThan($now, $payload['exp'], 'JWT exp should be in the future even for expired tokens');
