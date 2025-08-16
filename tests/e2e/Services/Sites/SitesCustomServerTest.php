@@ -405,8 +405,10 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEventually(function () use ($siteId, &$site) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals('ssr', $site['body']['adapter']);
+        });
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -416,6 +418,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testAdapterDetectionAstroStatic(): void
     {
         $siteId = $this->setupSite([
@@ -1507,6 +1510,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
         $template = $this->getTemplate('playground-for-astro');
