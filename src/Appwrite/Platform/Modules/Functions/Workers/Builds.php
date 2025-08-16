@@ -117,6 +117,8 @@ class Builds extends Action
         Executor $executor,
         array $plan
     ): void {
+        Console::log('Build action started');
+
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -209,6 +211,8 @@ class Builds extends Action
         Executor $executor,
         array $plan
     ): void {
+        Console::info('Deployment action started');
+
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
 
@@ -277,6 +281,8 @@ class Builds extends Action
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
             $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
         }
+
+        Console::log('Status marked as processing');
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())
@@ -359,6 +365,8 @@ class Builds extends Action
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
                         ->trigger();
+
+                    Console::log('Template cloned');
                 }
             } elseif ($isVcsEnabled) {
                 // VCS and VCS+Temaplte
@@ -400,6 +408,8 @@ class Builds extends Action
                 if ($exit !== 0) {
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
+
+                Console::log('Git repository cloned');
 
                 // Local refactoring for function folder with spaces
                 if (str_contains($rootDirectory, ' ')) {
@@ -469,6 +479,8 @@ class Builds extends Action
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
                         ->trigger();
+
+                    Console::log('Git template pushed');
                 }
 
                 $tmpPath = '/tmp/builds/' . $deploymentId;
@@ -516,8 +528,12 @@ class Builds extends Action
                     ->setPayload($deployment->getArrayCopy())
                     ->trigger();
 
+                Console::log('Git source uploaded');
+
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
+
+            Console::log('Status marked as building');
 
             /** Request the executor to build the code... */
             $deployment->setAttribute('status', 'building');
@@ -662,6 +678,8 @@ class Builds extends Action
 
             $isCanceled = false;
 
+            Console::log('Runtime creation started');
+
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
                     try {
@@ -709,7 +727,10 @@ class Builds extends Action
                             command: $command,
                             outputDirectory: $resource->getAttribute('outputDirectory', '')
                         );
+
+                        Console::log('createRuntime finished');
                     } catch (\Throwable $error) {
+                        Console::warning('createRuntime failed');
                         $err = $error;
                     }
                 }),
@@ -798,13 +819,17 @@ class Builds extends Action
                                 }
                             }
                         );
+                        Console::warning('listLogs finished');
                     } catch (\Throwable $error) {
+                        Console::warning('listLogs failed');
                         if (empty($err)) {
                             $err = $error;
                         }
                     }
                 }),
             ]);
+
+            Console::log('Runtime creation finished');
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
@@ -860,6 +885,8 @@ class Builds extends Action
 
                     $deployment->setAttribute('adapter', $detection->getName());
                     $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+
+                    Console::log('Adapter detected');
                 } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
                     throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
                 }
@@ -870,10 +897,15 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
+            Console::log('Build details stored');
+
             $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
             $logs = $deployment->getAttribute('buildLogs', '');
 
+            /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
+                Console::log('Site screenshot started');
+
                 $date = \date('H:i:s');
                 $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
                 $deployment->setAttribute('buildLogs', $logs);
@@ -881,10 +913,7 @@ class Builds extends Action
                 $queueForRealtime
                     ->setPayload($deployment->getArrayCopy())
                     ->trigger();
-            }
 
-            /** Screenshot site */
-            if ($resource->getCollection() === 'sites') {
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getSequence()]),
@@ -1049,6 +1078,8 @@ class Builds extends Action
                     $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
+
+                Console::log('Site screenshot finished');
             }
 
             $logs = $deployment->getAttribute('buildLogs', '');
@@ -1059,6 +1090,8 @@ class Builds extends Action
             /** Update the status */
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+
+            Console::log('Status marked as ready');
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
@@ -1071,8 +1104,6 @@ class Builds extends Action
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
-
-            Console::success("Build id: $deploymentId created");
 
             /** Set auto deploy */
             $activateBuild = false;
@@ -1153,6 +1184,8 @@ class Builds extends Action
 
                         break;
                 }
+
+                Console::log('Deployment activated');
             }
 
             if ($resource->getCollection() === 'sites') {
@@ -1211,6 +1244,8 @@ class Builds extends Action
                             'deploymentInternalId' => $deployment->getSequence(),
                         ]));
                     }, $queries);
+
+                    Console::log('Preview rule created');
                 }
             }
 
@@ -1228,6 +1263,8 @@ class Builds extends Action
                 return;
             }
 
+            Console::log('Build duration updated');
+
             /** Update function schedule */
 
             // Inform scheduler if function is still active
@@ -1239,6 +1276,8 @@ class Builds extends Action
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
+
+            Console::info('Deployment action finished');
         } catch (\Throwable $th) {
             Console::warning('Build failed:');
             Console::error($th->getMessage());
