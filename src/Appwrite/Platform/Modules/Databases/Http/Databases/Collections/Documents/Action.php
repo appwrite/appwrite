@@ -9,9 +9,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-use const Appwrite\Platform\Modules\Databases\DOCUMENTS;
-use const Appwrite\Platform\Modules\Databases\ROWS;
-
 abstract class Action extends AppwriteAction
 {
     /**
