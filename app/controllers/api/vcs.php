@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -53,7 +54,6 @@ use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -78,11 +78,11 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
             $resourceId = $repository->getAttribute('resourceId');
             $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
-            $resourceInternalId = $resource->getInternalId();
+            $resourceInternalId = $resource->getSequence();
 
             $deploymentId = ID::unique();
             $repositoryId = $repository->getId();
-            $repositoryInternalId = $repository->getInternalId();
+            $repositoryInternalId = $repository->getSequence();
             $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
             $installationId = $repository->getAttribute('installationId');
             $installationInternalId = $repository->getAttribute('installationInternalId');
@@ -116,8 +116,10 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
-            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+            $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
             $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -157,7 +159,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                             ],
                             'installationInternalId' => $installationInternalId,
                             'installationId' => $installationId,
-                            'projectInternalId' => $project->getInternalId(),
+                            'projectInternalId' => $project->getSequence(),
                             'projectId' => $project->getId(),
                             'providerRepositoryId' => $providerRepositoryId,
                             'providerBranch' => $providerBranch,
@@ -257,7 +259,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $resource = $resource
                 ->setAttribute('latestDeploymentId', $deployment->getId())
-                ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                 ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                 ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
             Authorization::skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
@@ -273,12 +275,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getInternalId(),
+                        'projectInternalId' => $project->getSequence(),
                         'domain' => $domain,
                         'type' => 'deployment',
                         'trigger' => 'deployment',
                         'deploymentId' => $deployment->getId(),
-                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
                         'deploymentResourceType' => 'site',
                         'deploymentResourceId' => $resourceId,
                         'deploymentResourceInternalId' => $resourceInternalId,
@@ -293,19 +295,25 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $domain = "branch-{$providerBranch}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $branchPrefix = substr($providerBranch, 0, 16);
+                    if (strlen($providerBranch) > 16) {
+                        $remainingChars = substr($providerBranch, 16);
+                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+                    }
+                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
+                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
                         Authorization::skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
-                                'projectInternalId' => $project->getInternalId(),
+                                'projectInternalId' => $project->getSequence(),
                                 'domain' => $domain,
                                 'type' => 'deployment',
                                 'trigger' => 'deployment',
                                 'deploymentId' => $deployment->getId(),
-                                'deploymentInternalId' => $deployment->getInternalId(),
+                                'deploymentInternalId' => $deployment->getSequence(),
                                 'deploymentResourceType' => 'site',
                                 'deploymentResourceId' => $resourceId,
                                 'deploymentResourceInternalId' => $resourceInternalId,
@@ -324,19 +332,19 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS commit preview
                 if (!empty($providerCommitHash)) {
-                    $domain = "commit-{$providerCommitHash}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
                         Authorization::skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
-                                'projectInternalId' => $project->getInternalId(),
+                                'projectInternalId' => $project->getSequence(),
                                 'domain' => $domain,
                                 'type' => 'deployment',
                                 'trigger' => 'deployment',
                                 'deploymentId' => $deployment->getId(),
-                                'deploymentInternalId' => $deployment->getInternalId(),
+                                'deploymentInternalId' => $deployment->getSequence(),
                                 'deploymentResourceType' => 'site',
                                 'deploymentResourceId' => $resourceId,
                                 'deploymentResourceInternalId' => $resourceInternalId,
@@ -357,6 +365,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                 $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
+                $region = $project->getAttribute('region', 'default');
                 $name = "{$resourceName} ({$projectName})";
                 $message = 'Starting...';
 
@@ -371,7 +380,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
                 $owner = $github->getOwnerName($providerInstallationId);
 
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/$resourceCollection/$resourceType-$resourceId";
+                $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
@@ -417,8 +426,8 @@ App::get('/v1/vcs/github/authorize')
         type: MethodType::WEBAUTH,
         hide: true,
     ))
-    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
-    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
+    ->param('success', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a successful installation attempt.', true, ['platforms'])
+    ->param('failure', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a failed installation attempt.', true, ['platforms'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -430,6 +439,8 @@ App::get('/v1/vcs/github/authorize')
         ]);
 
         $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
         if (empty($appName)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
@@ -437,7 +448,7 @@ App::get('/v1/vcs/github/authorize')
 
         $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
             'state' => $state,
-            'redirect_uri' => $request->getProtocol() . '://' . $request->getHostname() . "/v1/vcs/github/callback"
+            'redirect_uri' => $protocol . '://' . $hostname . "/v1/vcs/github/callback"
         ]);
 
         $response
@@ -470,16 +481,6 @@ App::get('/v1/vcs/github/callback')
         $state = \json_decode($state, true);
         $projectId = $state['projectId'] ?? '';
 
-        $defaultState = [
-            'success' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations",
-            'failure' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations",
-        ];
-
-        $state = \array_merge($defaultState, $state ?? []);
-
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
-
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -496,6 +497,20 @@ App::get('/v1/vcs/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
+        $region = $project->getAttribute('region', 'default');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+
+        $defaultState = [
+            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+        ];
+
+        $state = \array_merge($defaultState, $state ?? []);
+
+        $redirectSuccess = $state['success'] ?? '';
+        $redirectFailure = $state['failure'] ?? '';
+
         // Create / Update installation
         if (!empty($providerInstallationId)) {
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
@@ -503,7 +518,7 @@ App::get('/v1/vcs/github/callback')
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
-            $projectInternalId = $project->getInternalId();
+            $projectInternalId = $project->getSequence();
 
             $installation = $dbForPlatform->findOne('installations', [
                 Query::equal('providerInstallationId', [$providerInstallationId]),
@@ -599,11 +614,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
+    ->param('providerReference', '', new Text(256, 0), 'Git reference (branch, tag, commit) to get contents from', true)
     ->inject('gitHub')
     ->inject('response')
     ->inject('project')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, string $providerReference, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
@@ -625,7 +641,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $contents = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
+        $contents = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory, $providerReference);
 
         $vcsContents = [];
         foreach ($contents as $content) {
@@ -999,7 +1015,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
                 $identity = $dbForPlatform->findOne('identities', [
                     Query::equal('provider', ['github']),
-                    Query::equal('userInternalId', [$user->getInternalId()]),
+                    Query::equal('userInternalId', [$user->getSequence()]),
                 ]);
                 if ($identity->isEmpty()) {
                     throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
@@ -1209,6 +1225,7 @@ App::post('/v1/vcs/github/events')
 
             if ($event == $github::EVENT_PUSH) {
                 $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
+                $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
                 $providerBranch = $parsedPayload["branch"] ?? '';
                 $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
@@ -1230,8 +1247,8 @@ App::post('/v1/vcs/github/events')
                     Query::limit(100),
                 ]));
 
-                // create new deployment only on push and not when branch is created
-                if (!$providerBranchCreated) {
+                // create new deployment only on push and not when branch is created or deleted
+                if (!$providerBranchCreated && !$providerBranchDeleted) {
                     $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
@@ -1246,7 +1263,7 @@ App::post('/v1/vcs/github/events')
 
                     foreach ($installations as $installation) {
                         $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
-                            Query::equal('installationInternalId', [$installation->getInternalId()]),
+                            Query::equal('installationInternalId', [$installation->getSequence()]),
                             Query::limit(1000)
                         ]));
 
@@ -1349,7 +1366,7 @@ App::get('/v1/vcs/installations')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
+        $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -1422,7 +1439,7 @@ App::get('/v1/vcs/installations/:installationId')
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if ($installation->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -1505,7 +1522,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         }
 
         $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
-            Query::equal('projectInternalId', [$project->getInternalId()])
+            Query::equal('projectInternalId', [$project->getSequence()])
         ]));
 
         if ($repository->isEmpty()) {

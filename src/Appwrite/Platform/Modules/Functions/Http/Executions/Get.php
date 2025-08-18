@@ -52,7 +52,7 @@ class Get extends Base
             ->param('executionId', '', new UID(), 'Execution ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -72,7 +72,7 @@ class Get extends Base
 
         $execution = $dbForProject->getDocument('executions', $executionId);
 
-        if ($execution->getAttribute('resourceType') !== 'functions' || $execution->getAttribute('resourceInternalId') !== $function->getInternalId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' || $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 

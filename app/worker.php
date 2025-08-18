@@ -40,7 +40,9 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
+use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 Authorization::disable();
@@ -90,13 +92,13 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getInternalId())
+            ->setTenant((int)$project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
             ->setSharedTables(false)
             ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
+            ->setNamespace('_' . $project->getSequence());
     }
 
     $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
@@ -127,13 +129,13 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
+                    ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
 
             return $database;
@@ -149,13 +151,13 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_' . $project->getSequence());
         }
 
         $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
@@ -168,7 +170,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
     return function (?Document $project = null) use ($pools, $cache, $database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant((int)$project->getSequence());
             return $database;
         }
 
@@ -183,7 +185,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant((int)$project->getSequence());
         }
 
         return $database;
@@ -245,9 +247,17 @@ Server::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 
+Server::setResource('publisherRedis', function () {
+    // Stub
+});
+
 Server::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
+
+Server::setResource('consumerRedis', function () {
+    // Stub
+});
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
@@ -311,29 +321,29 @@ Server::setResource('pools', function (Registry $register) {
 
 Server::setResource('telemetry', fn () => new NoTelemetry());
 
-Server::setResource('deviceForSites', function (Document $project) {
-    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForSites', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForImports', function (Document $project) {
-    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForFunctions', function (Document $project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForFunctions', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForFiles', function (Document $project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForFiles', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForBuilds', function (Document $project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForBuilds', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
-Server::setResource('deviceForCache', function (Document $project) {
-    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForCache', function (Document $project, Telemetry $telemetry) {
+    return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
 Server::setResource(
     'isResourceBlocked',
@@ -398,7 +408,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
     };
 }, ['register', 'project']);
 
-Server::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+Server::setResource('executor', fn () => new Executor());
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

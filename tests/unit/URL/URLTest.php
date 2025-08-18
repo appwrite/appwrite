@@ -26,6 +26,15 @@ class URLTest extends TestCase
         $this->assertEquals(null, $url['port']);
         $this->assertEquals('', $url['path']);
         $this->assertEquals('', $url['query']);
+
+        $url = URL::parse('appwrite-callback-project://');
+
+        $this->assertIsArray($url);
+        $this->assertEquals('appwrite-callback-project', $url['scheme']);
+        $this->assertEquals('', $url['host']);
+        $this->assertEquals(null, $url['port']);
+        $this->assertEquals('', $url['path']);
+        $this->assertEquals('', $url['query']);
     }
 
     public function testUnparse(): void
@@ -86,6 +95,19 @@ class URLTest extends TestCase
 
         $this->assertIsString($url);
         $this->assertEquals('https://eldad:fux@appwrite.io/#bottom', $url);
+
+        $url = URL::unparse([
+            'scheme' => 'https',
+            'user' => '',
+            'pass' => '',
+            'host' => 'appwrite.io',
+            'port' => null,
+            'path' => '',
+            'fragment' => '',
+        ]);
+
+        $this->assertIsString($url);
+        $this->assertEquals('https://appwrite.io/#', $url);
     }
 
     public function testParseQuery(): void

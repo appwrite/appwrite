@@ -5,13 +5,14 @@ namespace Appwrite\Platform\Modules\Sites\Http\Sites\Deployment;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -59,7 +60,7 @@ class Update extends Base
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -86,10 +87,8 @@ class Update extends Base
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $oldDeploymentInternalId = $site->getAttribute('deploymentInternalId', '');
-
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
-            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentId' => $deployment->getId(),
             'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
             'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
@@ -97,24 +96,21 @@ class Update extends Base
         ])));
 
         $queries = [
-            Query::equal('trigger', 'manual'),
-            Query::equal("type", ["deployment"]),
-            Query::equal("deploymentResourceType", ["site"]),
-            Query::equal("deploymentResourceInternalId", [$site->getInternalId()]),
+            Query::equal('trigger', ['manual']),
+            Query::equal('type', ['deployment']),
+            Query::equal('deploymentResourceType', ['site']),
+            Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
+            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        if (empty($oldDeploymentInternalId)) {
-            $queries[] =  Query::equal("deploymentInternalId", [""]);
-        } else {
-            $queries[] =  Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
-        }
-
-        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+        Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
-                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
-            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-        });
+                ->setAttribute('deploymentInternalId', $deployment->getSequence());
+
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+        }, $queries));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

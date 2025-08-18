@@ -52,7 +52,7 @@ class Update extends Action
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
     public function action(string $projectId, string $keyId, string $name, ?string $expire, Response $response, Database $dbForPlatform)
     {
@@ -65,7 +65,7 @@ class Update extends Action
 
         $key = $dbForPlatform->getDocument('devKeys', $keyId);
 
-        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 

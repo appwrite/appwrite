@@ -780,17 +780,18 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
-        $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode((new \DateTime($response['body']['expire']))->format('Y-m-d\TH:i:s.v')), 0);
-        $this->assertNotFalse($expireTime);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $verification = $tokens['secret'];
+        $expectedExpire = DateTime::formatTz($response['body']['expire']);
+        $this->assertEquals($expectedExpire, $tokens['expire']);
 
-        $secretTest = strpos($lastEmail['text'], 'secret=' . $response['body']['secret'], 0);
+        // Secret check
+        $this->assertArrayHasKey('secret', $tokens);
+        $this->assertNotEmpty($tokens['secret']);
 
-        $this->assertNotFalse($secretTest);
-
-        $userIDTest = strpos($lastEmail['text'], 'userId=' . $response['body']['userId'], 0);
-
-        $this->assertNotFalse($userIDTest);
+        // User ID check
+        $this->assertArrayHasKey('userId', $tokens);
+        $this->assertNotEmpty($tokens['userId']);
 
         /**
          * Test for FAILURE
@@ -1082,19 +1083,25 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset', $lastEmail['subject']);
 
-        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode((new \DateTime($response['body']['expire']))->format('Y-m-d\TH:i:s.v')), 0);
+        // Secret check
+        $this->assertArrayHasKey('secret', $tokens);
+        $this->assertNotEmpty($tokens['secret']);
+        $this->assertNotFalse($response['body']['secret']);
 
-        $this->assertNotFalse($expireTime);
+        // User ID check
+        $this->assertArrayHasKey('userId', $tokens);
+        $this->assertNotEmpty($tokens['userId']);
+        $this->assertNotFalse($response['body']['userId']);
 
-        $secretTest = strpos($lastEmail['text'], 'secret=' . $response['body']['secret'], 0);
-
-        $this->assertNotFalse($secretTest);
-
-        $userIDTest = strpos($lastEmail['text'], 'userId=' . $response['body']['userId'], 0);
-
-        $this->assertNotFalse($userIDTest);
+        // Expire check
+        $this->assertArrayHasKey('expire', $tokens);
+        $this->assertNotEmpty($tokens['expire']);
+        $this->assertEquals(
+            DateTime::formatTz($response['body']['expire']),
+            $tokens['expire']
+        );
 
         /**
          * Test for FAILURE
@@ -1132,7 +1139,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $data['recovery'] = $recovery;
+        $data['recovery'] = $tokens['secret'];
 
         return $data;
     }
@@ -1287,7 +1294,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('otpuser2@appwrite.io', $lastEmail['to'][0]['address']);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
-        // FInd 6 concurrent digits in email text - OTP
+        // Find 6 concurrent digits in email text - OTP
         preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
         $code = ($matches[0] ?? [])[0] ?? '';
 
@@ -2034,7 +2041,6 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['users'][0]['email'], $email);
     }
 
-    #[Retry(count: 2)]
     public function testCreatePhone(): array
     {
         $number = '+123456789';
@@ -2058,17 +2064,14 @@ class AccountCustomClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        \sleep(7);
-
-        $smsRequest = $this->getLastRequest();
-
-        $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
-        $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
-        $this->assertEquals('username', $smsRequest['headers']['X-Username']);
-        $this->assertEquals('password', $smsRequest['headers']['X-Key']);
-        $this->assertEquals('POST', $smsRequest['method']);
-        $this->assertEquals('+123456789', $smsRequest['data']['from']);
-        $this->assertEquals($number, $smsRequest['data']['to']);
+        $smsRequest = $this->assertLastRequest(function (array $request) use ($number) {
+            $this->assertEquals('Appwrite Mock Message Sender', $request['headers']['User-Agent']);
+            $this->assertEquals('username', $request['headers']['X-Username']);
+            $this->assertEquals('password', $request['headers']['X-Key']);
+            $this->assertEquals('POST', $request['method']);
+            $this->assertEquals('+123456789', $request['data']['from']);
+            $this->assertEquals($number, $request['data']['to']);
+        }, Scope::REQUEST_TYPE_SMS);
 
         $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
@@ -2396,7 +2399,6 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
-    #[Retry(count: 3)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
@@ -2413,13 +2415,21 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
-        $smsRequest = $this->getLastRequest();
+        $tokenCreatedAt = $response['body']['$createdAt'];
 
-        $message = $smsRequest['data']['message'];
-        $token = substr($message, 0, 6);
+        $smsRequest = $this->assertLastRequest(function ($request) use ($tokenCreatedAt) {
+            $this->assertArrayHasKey('data', $request);
+            $this->assertArrayHasKey('time', $request);
+            $this->assertArrayHasKey('message', $request['data'], "Last request missing message: " . \json_encode($request));
+
+            // Ensure we are not using token from last sms login
+            $tokenRecievedAt = $request['time'];
+            $this->assertGreaterThan($tokenCreatedAt, $tokenRecievedAt);
+        }, Scope::REQUEST_TYPE_SMS);
 
         /**
          * Test for FAILURE

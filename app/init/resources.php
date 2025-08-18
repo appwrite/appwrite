@@ -19,6 +19,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
@@ -52,6 +53,7 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\WhiteList;
@@ -78,9 +80,15 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
+App::setResource('publisherRedis', function () {
+    // Stub
+});
 App::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
+App::setResource('consumerRedis', function () {
+    // Stub
+});
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -120,11 +128,11 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('clients', function ($request, $console, $project) {
+App::setResource('platforms', function (Request $request, Document $console, Document $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
-        'type' => Origin::CLIENT_TYPE_WEB,
+        'type' => Platform::TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
@@ -137,39 +145,32 @@ App::setResource('clients', function ($request, $console, $project) {
         }
         $console->setAttribute('platforms', [
             '$collection' => ID::custom('platforms'),
-            'type' => Origin::CLIENT_TYPE_WEB,
+            'type' => Platform::TYPE_WEB,
             'name' => $hostname,
             'hostname' => $hostname,
         ], Document::SET_TYPE_APPEND);
     }
 
-    /**
-     * Get All verified client URLs for both console and current projects
-     * + Filter for duplicated entries
-     */
-    $clientsConsole = \array_map(
-        fn ($node) => $node['hostname'],
-        \array_filter(
-            $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
-        )
-    );
-
-    $clients = $clientsConsole;
-    $platforms = $project->getAttribute('platforms', []);
-
-    foreach ($platforms as $node) {
-        if (
-            isset($node['type']) &&
-            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
-            !empty($node['hostname'])
-        ) {
-            $clients[] = $node['hostname'];
-        }
+    // Add `exp` and `appwrite-callback-{projectId}` schemes
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $project->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Platform::TYPE_SCHEME,
+            'name' => 'Expo',
+            'key' => 'exp',
+        ], Document::SET_TYPE_APPEND);
+        $project->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Platform::TYPE_SCHEME,
+            'name' => 'Appwrite Callback',
+            'key' => 'appwrite-callback-' . $project->getId(),
+        ], Document::SET_TYPE_APPEND);
     }
 
-    return \array_unique($clients);
+    return [
+        ...$console->getAttribute('platforms', []),
+        ...$project->getAttribute('platforms', []),
+    ];
 }, ['request', 'console', 'project']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
@@ -221,7 +222,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if (APP_MODE_ADMIN !== $mode) {
+    if ($mode === APP_MODE_ADMIN) {
+        $user = $dbForPlatform->getDocument('users', Auth::$unique);
+    } else {
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
@@ -231,8 +234,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
                 $user = $dbForProject->getDocument('users', Auth::$unique);
             }
         }
-    } else {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
     }
 
     if (
@@ -263,7 +264,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtUserId = $payload['userId'] ?? '';
         if (!empty($jwtUserId)) {
-            $user = $dbForProject->getDocument('users', $jwtUserId);
+            if ($mode === APP_MODE_ADMIN) {
+                $user = $dbForPlatform->getDocument('users', $jwtUserId);
+            } else {
+                $user = $dbForProject->getDocument('users', $jwtUserId);
+            }
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
@@ -347,13 +352,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getInternalId())
+            ->setTenant((int)$project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
             ->setSharedTables(false)
             ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
+            ->setNamespace('_' . $project->getSequence());
     }
 
     return $database;
@@ -400,13 +405,13 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
+                    ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_' . $project->getSequence());
             }
         });
 
@@ -430,7 +435,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
     return function (?Document $project = null) use ($pools, $cache, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant((int)$project->getSequence());
             return $database;
         }
 
@@ -445,7 +450,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getInternalId());
+            $database->setTenant((int)$project->getSequence());
         }
 
         return $database;
@@ -454,7 +459,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
 App::setResource('telemetry', fn () => new NoTelemetry());
 
-App::setResource('cache', function (Group $pools) {
+App::setResource('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -462,8 +467,10 @@ App::setResource('cache', function (Group $pools) {
         $adapters[] = new CachePool($pools->get($value));
     }
 
-    return new Cache(new Sharding($adapters));
-}, ['pools']);
+    $cache = new Cache(new Sharding($adapters));
+    $cache->setTelemetry($telemetry);
+    return $cache;
+}, ['pools', 'telemetry']);
 
 App::setResource('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
@@ -486,24 +493,24 @@ App::setResource('timelimit', function (\Redis $redis) {
     };
 }, ['redis']);
 
-App::setResource('deviceForLocal', function () {
-    return new Local();
-});
-App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForSites', function ($project) {
-    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForImports', function ($project) {
-    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
-App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForLocal', function (Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, new Local());
+}, ['telemetry']);
+App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForSites', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForImports', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
+App::setResource('deviceForBuilds', function ($project, Telemetry $telemetry) {
+    return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+}, ['project', 'telemetry']);
 
 function getDevice(string $root, string $connection = ''): Device
 {
@@ -836,7 +843,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
 
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
         return $dbForPlatform->findOne('teams', [
-            Query::equal('$internalId', [$teamInternalId]),
+            Query::equal('$sequence', [$teamInternalId]),
         ]);
     });
 
@@ -877,7 +884,7 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
     return Key::decode($project, $key);
 }, ['request', 'project']);
 
-App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+App::setResource('executor', fn () => new Executor());
 
 App::setResource('resourceToken', function ($project, $dbForProject, $request) {
     $tokenJWT = $request->getParam('token');
@@ -915,10 +922,10 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
 
         return match ($token->getAttribute('resourceType')) {
             TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject) {
-                $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
+                $sequences = explode(':', $token->getAttribute('resourceInternalId'));
                 $ids = explode(':', $token->getAttribute('resourceId'));
 
-                if (count($internalIds) !== 2 || count($ids) !== 2) {
+                if (count($sequences) !== 2 || count($ids) !== 2) {
                     return new Document([]);
                 }
 
@@ -931,8 +938,8 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
                 return new Document([
                     'bucketId' => $ids[0],
                     'fileId' => $ids[1],
-                    'bucketInternalId' => $internalIds[0],
-                    'fileInternalId' => $internalIds[1],
+                    'bucketInternalId' => $sequences[0],
+                    'fileInternalId' => $sequences[1],
                 ]);
             })(),
 
@@ -941,3 +948,52 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
     }
     return new Document([]);
 }, ['project', 'dbForProject', 'request']);
+
+App::setResource('httpReferrer', function (Request $request): string {
+    $referrer = $request->getReferer();
+    return $referrer;
+}, ['request']);
+
+App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $platforms, Database $dbForPlatform, Document $project, App $utopia): string {
+    $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
+    $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
+    $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
+
+    // Safe if route is publicly accessible
+    $route = $utopia->getRoute();
+    if ($route->getLabel('origin', false)) {
+        return $referrer;
+    }
+
+    // Safe if added as web platform
+    $originValidator = new Origin($platforms);
+    if ($originValidator->isValid($request->getOrigin($httpReferrer))) {
+        return $referrer;
+    }
+
+    // Safe if rule with same project ID exists
+    if (!empty($origin)) {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
+        } else {
+            $rule = Authorization::skip(
+                fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', [$origin]),
+                    Query::limit(1)
+                ])
+            )[0] ?? new Document();
+        }
+
+        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
+            return $referrer;
+        }
+    }
+
+    // Unsafe; Localhost is always safe for ease of local development
+    $origin = 'localhost';
+    $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
+    $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
+    return $referrer;
+}, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);

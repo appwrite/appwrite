@@ -29,14 +29,15 @@ class Action extends UtopiaAction
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         if ($fileSecurity) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
+
         return [
             'bucket' => $bucket,
             'file' => $file,

@@ -49,7 +49,7 @@ class Get extends Action
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)
@@ -63,7 +63,7 @@ class Get extends Action
 
         $key = $dbForPlatform->getDocument('devKeys', $keyId);
 
-        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getInternalId()) {
+        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 

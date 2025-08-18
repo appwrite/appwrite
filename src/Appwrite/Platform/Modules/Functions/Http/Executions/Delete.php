@@ -62,7 +62,7 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -84,7 +84,7 @@ class Delete extends Base
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getInternalId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
         $status = $execution->getAttribute('status');

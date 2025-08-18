@@ -57,7 +57,7 @@ class XList extends Base
             ->param('queries', [], new Logs(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, array $queries, Response $response, Database $dbForProject)
@@ -75,7 +75,7 @@ class XList extends Base
         }
 
         // Set internal queries
-        $queries[] = Query::equal('resourceInternalId', [$site->getInternalId()]);
+        $queries[] = Query::equal('resourceInternalId', [$site->getSequence()]);
         $queries[] = Query::equal('resourceType', ['sites']);
 
         /**

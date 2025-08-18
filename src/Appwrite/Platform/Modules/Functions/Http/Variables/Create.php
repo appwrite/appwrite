@@ -65,7 +65,7 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -96,7 +96,7 @@ class Create extends Base
                 Permission::delete(Role::team(ID::custom($teamId), 'owner')),
                 Permission::delete(Role::team(ID::custom($teamId), 'developer')),
             ],
-            'resourceInternalId' => $function->getInternalId(),
+            'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'function',
             'key' => $key,

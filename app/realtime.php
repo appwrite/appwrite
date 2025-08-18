@@ -79,8 +79,8 @@ if (!function_exists('getProjectDB')) {
 
         static $databases = [];
 
-        if (isset($databases[$project->getInternalId()])) {
-            return $databases[$project->getInternalId()];
+        if (isset($databases[$project->getSequence()])) {
+            return $databases[$project->getSequence()];
         }
 
         /** @var Group $pools */
@@ -105,20 +105,20 @@ if (!function_exists('getProjectDB')) {
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_' . $project->getSequence());
         }
 
         $database
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
-        return $databases[$project->getInternalId()] = $database;
+        return $databases[$project->getSequence()] = $database;
     }
 }
 
@@ -532,7 +532,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $timelimit = $app->getResource('timelimit');
-        $console = $app->getResource('console'); /** @var Document $console */
+        $platforms = $app->getResource('platforms');
         $user = $app->getResource('user'); /** @var Document $user */
 
         /*
@@ -557,9 +557,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
-        $originValidator = new Origin(array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+        $originValidator = new Origin($platforms);
 
-        if (!$originValidator->isValid($origin) && $project->getId() !== 'console') {
+        if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 

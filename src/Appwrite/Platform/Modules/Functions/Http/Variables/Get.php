@@ -53,7 +53,7 @@ class Get extends Base
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $functionId, string $variableId, Response $response, Database $dbForProject)
@@ -68,7 +68,7 @@ class Get extends Base
         if (
             $variable === false ||
             $variable->isEmpty() ||
-            $variable->getAttribute('resourceInternalId') !== $function->getInternalId() ||
+            $variable->getAttribute('resourceInternalId') !== $function->getSequence() ||
             $variable->getAttribute('resourceType') !== 'function'
         ) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
