@@ -439,7 +439,7 @@ trait MigrationsBase
     {
         $databaseId = $data['databaseId'];
 
-        $table = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', [
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -453,7 +453,7 @@ trait MigrationsBase
         $tableId = $table['body']['$id'];
 
         // Create Column
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/string', [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -468,7 +468,7 @@ trait MigrationsBase
 
         // Wait for column to be ready
         $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/name', [
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -501,7 +501,7 @@ trait MigrationsBase
             $this->assertEquals(0, $result['statusCounters'][$resource]['warning']);
         }
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId, [
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -513,7 +513,7 @@ trait MigrationsBase
         $this->assertEquals($tableId, $response['body']['$id']);
         $this->assertEquals('Test Table', $response['body']['name']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/name', [
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -547,7 +547,7 @@ trait MigrationsBase
         $table = $data['tableId'];
         $databaseId = $data['databaseId'];
 
-        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $table . '/rows', [
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $table . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -597,7 +597,7 @@ trait MigrationsBase
             $this->assertEquals(0, $result['statusCounters'][$resource]['warning']);
         }
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/grids/tables/' . $table . '/rows/' . $rowId, [
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $table . '/rows/' . $rowId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -919,7 +919,7 @@ trait MigrationsBase
         $databaseId = $response['body']['$id'];
 
         // make a table
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -934,7 +934,7 @@ trait MigrationsBase
         $tableId = $response['body']['$id'];
 
         // make columns
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/string', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -950,7 +950,7 @@ trait MigrationsBase
         $this->assertEquals($response['body']['size'], 256);
         $this->assertEquals($response['body']['required'], true);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns/integer', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
