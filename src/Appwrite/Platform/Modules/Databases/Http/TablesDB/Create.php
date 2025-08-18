@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB;
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\Create as DatabaseCreate;
 use Appwrite\SDK\AuthType;
@@ -36,7 +36,7 @@ class Create extends DatabaseCreate
             ->label('sdk', new Method(
                 namespace: 'tablesdb',
                 group: 'tablesdb',
-                name: 'createDatabase',
+                name: 'create',
                 description: '/docs/references/tablesdb/create-database.md',
                 auth: [AuthType::KEY],
                 responses: [

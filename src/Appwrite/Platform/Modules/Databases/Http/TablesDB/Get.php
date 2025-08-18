@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB;
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\Get as DatabaseGet;
 use Appwrite\SDK\AuthType;
@@ -30,7 +30,7 @@ class Get extends DatabaseGet
             ->label('sdk', new Method(
                 namespace: 'tablesdb',
                 group: 'tablesdb',
-                name: 'getDatabase',
+                name: 'get',
                 description: '/docs/references/tablesdb/get-database.md',
                 auth: [AuthType::KEY],
                 responses: [

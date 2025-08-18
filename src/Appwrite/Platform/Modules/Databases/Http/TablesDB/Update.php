@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB;
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\Update as DatabaseUpdate;
 use Appwrite\SDK\AuthType;
@@ -35,7 +35,7 @@ class Update extends DatabaseUpdate
             ->label('sdk', new Method(
                 namespace: 'tablesdb',
                 group: 'tablesdb',
-                name: 'updateDatabase',
+                name: 'update',
                 description: '/docs/references/tablesdb/update-database.md',
                 auth: [AuthType::KEY],
                 responses: [

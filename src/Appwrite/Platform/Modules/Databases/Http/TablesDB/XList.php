@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB;
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\XList as DatabaseXList;
 use Appwrite\SDK\AuthType;
@@ -31,7 +31,7 @@ class XList extends DatabaseXList
             ->label('sdk', new Method(
                 namespace: 'tablesdb',
                 group: 'tablesdb',
-                name: 'listDatabases',
+                name: 'list',
                 description: '/docs/references/tablesdb/list-databases.md',
                 auth: [AuthType::KEY],
                 responses: [

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB;
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DatabaseDelete;
 use Appwrite\SDK\AuthType;
@@ -33,7 +33,7 @@ class Delete extends DatabaseDelete
             ->label('sdk', new Method(
                 namespace: 'tablesdb',
                 group: 'tablesdb',
-                name: 'deleteDatabase',
+                name: 'delete',
                 description: '/docs/references/tablesdb/delete-database.md',
                 auth: [AuthType::KEY],
                 responses: [
