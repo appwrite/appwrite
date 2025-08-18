@@ -60,7 +60,7 @@ class Delete extends Action
                 contentType: ContentType::NONE,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.deleteIndex',
+                    replaceWith: 'tablesdb.deleteIndex',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

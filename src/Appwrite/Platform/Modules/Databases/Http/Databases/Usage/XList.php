@@ -49,14 +49,14 @@ class XList extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.listDatabaseUsage'
+                        replaceWith: 'tablesdb.listDatabaseUsage'
                     )
                 ),
                 new Method(
-                    namespace: 'grids',
+                    namespace: 'tablesdb',
                     group: null,
                     name: 'listDatabaseUsage',
-                    description: '/docs/references/grids/list-database-usage.md',
+                    description: '/docs/references/tablesdb/list-database-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [
                         new SDKResponse(

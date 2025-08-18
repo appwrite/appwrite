@@ -46,14 +46,14 @@ class Get extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.getDatabase',
+                        replaceWith: 'tablesdb.getDatabase',
                     )
                 ),
                 new Method(
-                    namespace: 'grids',
-                    group: 'grids',
+                    namespace: 'tablesdb',
+                    group: 'tablesdb',
                     name: 'getDatabase',
-                    description: '/docs/references/grids/get-database.md',
+                    description: '/docs/references/tablesdb/get-database.md',
                     auth: [AuthType::KEY],
                     responses: [
                         new SDKResponse(

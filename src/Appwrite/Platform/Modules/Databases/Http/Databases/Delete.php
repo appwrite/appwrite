@@ -51,14 +51,14 @@ class Delete extends Action
                     contentType: ContentType::NONE,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.deleteDatabase',
+                        replaceWith: 'tablesdb.deleteDatabase',
                     )
                 ),
                 new Method(
-                    namespace: 'grids',
-                    group: 'grids',
+                    namespace: 'tablesdb',
+                    group: 'tablesdb',
                     name: 'deleteDatabase',
-                    description: '/docs/references/grids/delete-database.md',
+                    description: '/docs/references/tablesdb/delete-database.md',
                     auth: [AuthType::KEY],
                     responses: [
                         new SDKResponse(

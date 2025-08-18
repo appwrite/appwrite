@@ -64,7 +64,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.upsertRows',
+                        replaceWith: 'tablesdb.upsertRows',
                     ),
                 )
             ])

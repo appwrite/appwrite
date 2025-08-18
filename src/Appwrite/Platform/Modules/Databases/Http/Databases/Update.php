@@ -52,14 +52,14 @@ class Update extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.updateDatabase',
+                        replaceWith: 'tablesdb.updateDatabase',
                     )
                 ),
                 new Method(
-                    namespace: 'grids',
-                    group: 'grids',
+                    namespace: 'tablesdb',
+                    group: 'tablesdb',
                     name: 'updateDatabase',
-                    description: '/docs/references/grids/update-database.md',
+                    description: '/docs/references/tablesdb/update-database.md',
                     auth: [AuthType::KEY],
                     responses: [
                         new SDKResponse(

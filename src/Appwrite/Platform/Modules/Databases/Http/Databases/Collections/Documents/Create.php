@@ -85,7 +85,7 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRow',
+                        replaceWith: 'tablesdb.createRow',
                     ),
                 ),
                 new Method(
@@ -109,7 +109,7 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRows',
+                        replaceWith: 'tablesdb.createRows',
                     ),
                 )
             ])

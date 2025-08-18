@@ -66,7 +66,7 @@ class Decrement extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.decrementRowColumn',
+                    replaceWith: 'tablesdb.decrementRowColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

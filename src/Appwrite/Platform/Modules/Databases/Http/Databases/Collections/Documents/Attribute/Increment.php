@@ -66,7 +66,7 @@ class Increment extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.incrementRowColumn',
+                    replaceWith: 'tablesdb.incrementRowColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
