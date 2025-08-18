@@ -2,11 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Services\Registry;
 
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Create as CreateTablesDatabase;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Delete as DeleteTablesDatabase;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Get as GetTablesDatabase;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Update as UpdateTablesDatabase;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\XList as ListTablesDatabase;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Create as CreateTablesDatabase;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Delete as DeleteTablesDatabase;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Get as GetTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Boolean\Create as CreateBoolean;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Boolean\Update as UpdateBoolean;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Datetime\Create as CreateDatetime;
@@ -53,8 +51,10 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\XList as ListR
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Update as UpdateTable;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Usage\Get as GetTableUsage;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\XList as ListTables;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Usage\Get as GetTablesDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Usage\XList as ListTablesDatabaseUsage;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Update as UpdateTablesDatabase;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Usage\Get as GetTablesDatabaseUsage;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Usage\XList as ListTablesDatabaseUsage;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\XList as ListTablesDatabase;
 use Utopia\Platform\Service;
 
 /**
