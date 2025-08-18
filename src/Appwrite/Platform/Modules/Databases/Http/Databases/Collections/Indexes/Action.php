@@ -19,8 +19,9 @@ abstract class Action extends UtopiaAction
 
     public function setHttpPath(string $path): UtopiaAction
     {
-        // Context is automatically set by Documents/Action.php setHttpPath for tablesdb paths
-
+        if (\str_contains($path, '/tablesdb')) {
+            $this->context = COLUMN_INDEX;
+        }
         return parent::setHttpPath($path);
     }
 
