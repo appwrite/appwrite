@@ -120,6 +120,7 @@ use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Topic;
+use Appwrite\Utopia\Response\Model\Transaction;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -217,6 +218,10 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_URL = 'columnUrl';
     public const MODEL_COLUMN_DATETIME = 'columnDatetime';
     public const MODEL_COLUMN_RELATIONSHIP = 'columnRelationship';
+
+    // Transactions
+    public const MODEL_TRANSACTION = 'transaction';
+    public const MODEL_TRANSACTION_LIST = 'transactionList';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -402,7 +407,7 @@ class Response extends SwooleResponse
     /**
      * Response constructor.
      *
-     * @param float $time
+     * @param SwooleHTTPResponse $response
      */
     public function __construct(SwooleHTTPResponse $response)
     {
@@ -462,6 +467,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Topic list', self::MODEL_TOPIC_LIST, 'topics', self::MODEL_TOPIC))
             ->setModel(new BaseList('Subscriber list', self::MODEL_SUBSCRIBER_LIST, 'subscribers', self::MODEL_SUBSCRIBER))
             ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
+            ->setModel(new BaseList('Transaction List', self::MODEL_TRANSACTION_LIST, 'transactions', self::MODEL_TRANSACTION))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
@@ -588,6 +594,7 @@ class Response extends SwooleResponse
             ->setModel(new Provider())
             ->setModel(new Message())
             ->setModel(new Topic())
+            ->setModel(new Transaction())
             ->setModel(new Subscriber())
             ->setModel(new Target())
             ->setModel(new Migration())
