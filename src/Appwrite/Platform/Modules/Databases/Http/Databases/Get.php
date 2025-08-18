@@ -46,22 +46,8 @@ class Get extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tablesdb.getDatabase',
+                        replaceWith: 'tablesdb.get',
                     )
-                ),
-                new Method(
-                    namespace: 'tablesdb',
-                    group: 'tablesdb',
-                    name: 'getDatabase',
-                    description: '/docs/references/tablesdb/get-database.md',
-                    auth: [AuthType::KEY],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_DATABASE,
-                        )
-                    ],
-                    contentType: ContentType::JSON
                 ),
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')

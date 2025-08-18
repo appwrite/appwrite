@@ -62,20 +62,6 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'tablesdb.createDatabase',
                     )
-                ),
-                new Method(
-                    namespace: 'tablesdb',
-                    group: 'tablesdb',
-                    name: 'createDatabase',
-                    description: '/docs/references/tablesdb/create-database.md',
-                    auth: [AuthType::KEY],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_CREATED,
-                            model: UtopiaResponse::MODEL_DATABASE,
-                        )
-                    ],
-                    contentType: ContentType::JSON
                 )
             ])
             ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -103,8 +89,6 @@ class Create extends Action
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         } catch (StructureException $e) {
-            // TODO: @Jake, how do we handle this document/row?
-            // there's no context awareness at this level on what the api is.
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         }
 

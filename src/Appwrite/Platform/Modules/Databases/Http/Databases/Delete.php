@@ -51,22 +51,8 @@ class Delete extends Action
                     contentType: ContentType::NONE,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tablesdb.deleteDatabase',
+                        replaceWith: 'tablesdb.delete',
                     )
-                ),
-                new Method(
-                    namespace: 'tablesdb',
-                    group: 'tablesdb',
-                    name: 'deleteDatabase',
-                    description: '/docs/references/tablesdb/delete-database.md',
-                    auth: [AuthType::KEY],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_NOCONTENT,
-                            model: UtopiaResponse::MODEL_NONE,
-                        )
-                    ],
-                    contentType: ContentType::NONE
                 ),
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
