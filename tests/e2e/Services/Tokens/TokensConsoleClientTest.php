@@ -106,10 +106,10 @@ class TokensConsoleClientTest extends Scope
         // Add padding if needed
         $payloadB64 .= str_repeat('=', (4 - strlen($payloadB64) % 4) % 4);
         $payload = json_decode(base64_decode($payloadB64), true);
-        
+
         $this->assertIsArray($payload, 'JWT payload should decode to an array');
         $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp field');
-        
+
         $expectedExp = (new \DateTime($expiry))->getTimestamp();
         $this->assertEquals($expectedExp, $payload['exp'], 'JWT exp should match token expiry');
 
@@ -129,7 +129,7 @@ class TokensConsoleClientTest extends Scope
         $payloadB64 = str_replace(['-', '_'], ['+', '/'], $payloadB64);
         $payloadB64 .= str_repeat('=', (4 - strlen($payloadB64) % 4) % 4);
         $payload = json_decode(base64_decode($payloadB64), true);
-        
+
         $this->assertArrayNotHasKey('exp', $payload, 'JWT payload should not contain exp field for infinite expiry');
 
         return $data;
