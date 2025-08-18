@@ -107,23 +107,11 @@ switch ($type) {
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <link rel="icon" type="image/svg+xml" href="<?php echo $url; ?>/images/logos/appwrite-icon.svg" />
     <link rel="mask-icon" type="image/png" href="<?php echo $url; ?>/images/logos/appwrite-icon.png" />
-    <link
-        rel="preload"
-        href="/fonts/inter/inter-v8-latin-600.woff2"
-        as="font"
-        type="font/woff2"
-        crossorigin />
-    <link
-        rel="preload"
-        href="/fonts/inter/inter-v8-latin-regular.woff2"
-        as="font"
-        type="font/woff2"
-        crossorigin />
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=fira-code:400|inter:400,500" rel="stylesheet" />
     <title><?php echo $this->print($title); ?></title>
 
     <style>
-        @import url(https://fonts.bunny.net/css?family=fira-code:400|inter:400);
-
         * {
             margin: 0;
             padding: 0;
