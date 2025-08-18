@@ -51,24 +51,9 @@ class Get extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tablesdb.' . self::getName(),
+                        replaceWith: 'tablesdb.getUsage'
                     )
-                ),
-                new Method(
-                    namespace: 'tablesdb',
-                    group: null,
-                    name: self::getName(),
-                    description: '/docs/references/tablesdb/get-database-usage.md',
-                    auth: [AuthType::ADMIN],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_USAGE_DATABASE,
-                        )
-                    ],
-                    contentType: ContentType::JSON,
-                ),
-
+                )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)

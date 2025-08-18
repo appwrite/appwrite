@@ -209,8 +209,8 @@ abstract class Format
                 break;
             case 'tablesdb':
                 switch ($method) {
-                    case 'getDatabaseUsage':
-                    case 'listDatabaseUsage':
+                    case 'getUsage':
+                    case 'listUsage':
                     case 'getTableUsage':
                         switch ($param) {
                             case 'range':
@@ -489,8 +489,8 @@ abstract class Format
                 break;
             case 'tablesdb':
                 switch ($method) {
-                    case 'getDatabaseUsage':
-                    case 'listDatabaseUsage':
+                    case 'getUsage':
+                    case 'listUsage':
                     case 'getTableUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];

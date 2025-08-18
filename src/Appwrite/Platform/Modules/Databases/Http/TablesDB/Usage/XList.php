@@ -31,7 +31,7 @@ class XList extends DatabaseUsageXList
                 new Method(
                     namespace: 'tablesdb',
                     group: null,
-                    name: 'listDatabaseUsage',
+                    name: 'listUsage',
                     description: '/docs/references/tablesdb/list-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [

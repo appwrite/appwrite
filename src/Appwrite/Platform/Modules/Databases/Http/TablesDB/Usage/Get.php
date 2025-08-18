@@ -32,7 +32,7 @@ class Get extends DatabaseUsageGet
                 new Method(
                     namespace: 'tablesdb',
                     group: null,
-                    name: 'getDatabaseUsage',
+                    name: 'getUsage',
                     description: '/docs/references/tablesdb/get-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [
