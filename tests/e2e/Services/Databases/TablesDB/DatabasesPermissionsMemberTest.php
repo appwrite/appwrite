@@ -124,7 +124,7 @@ class DatabasesPermissionsMemberTest extends Scope
 
         $databaseId = $db['body']['$id'];
 
-        $public = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables', $this->getServerHeader(), [
+        $public = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $this->getServerHeader(), [
             'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
@@ -138,14 +138,14 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $public['headers']['status-code']);
         $this->tables = ['public' => $public['body']['$id']];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables/' . $this->tables['public'] . '/columns/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $this->tables['public'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        $private = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables', $this->getServerHeader(), [
+        $private = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $this->getServerHeader(), [
             'tableId' => ID::unique(),
             'name' => 'Private Movies',
             'permissions' => [
@@ -159,14 +159,14 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $private['headers']['status-code']);
         $this->tables['private'] = $private['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables/' . $this->tables['private'] . '/columns/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $this->tables['private'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        $doconly = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables', $this->getServerHeader(), [
+        $doconly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $this->getServerHeader(), [
             'tableId' => ID::unique(),
             'name' => 'Row Only Movies',
             'permissions' => [],
@@ -175,7 +175,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $private['headers']['status-code']);
         $this->tables['doconly'] = $doconly['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables/' . $this->tables['doconly'] . '/columns/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $this->tables['doconly'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -202,7 +202,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $tables = $data['tables'];
         $databaseId = $data['databaseId'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables/' . $tables['public'] . '/rows', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['public'] . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -211,7 +211,7 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables/' . $tables['private'] . '/rows', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['private'] . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -220,7 +220,7 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables/' . $tables['doconly'] . '/rows', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['doconly'] . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -232,7 +232,7 @@ class DatabasesPermissionsMemberTest extends Scope
         /**
          * Check "any" permission table
          */
-        $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $tables['public'] . '/rows', [
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['public'] . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -245,7 +245,7 @@ class DatabasesPermissionsMemberTest extends Scope
         /**
          * Check "users" permission table
          */
-        $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $tables['private'] . '/rows', [
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['private'] . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -258,7 +258,7 @@ class DatabasesPermissionsMemberTest extends Scope
         /**
          * Check "user:user1" row only permission table
          */
-        $rows = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $tables['doconly'] . '/rows', [
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['doconly'] . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -18,7 +18,7 @@ class DatabasesConsoleClientTest extends Scope
 
     public function testCreateTable(): array
     {
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -34,7 +34,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -55,7 +55,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test when database is disabled but can still create tables
          */
-        $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, array_merge([
+        $database = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -65,7 +65,7 @@ class DatabasesConsoleClientTest extends Scope
 
         $this->assertFalse($database['body']['enabled']);
 
-        $tvShows = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tablesdb/tables', array_merge([
+        $tvShows = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -83,7 +83,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test when table is disabled but can still modify tables
          */
-        $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tablesdb/tables/' . $movies['body']['$id'], array_merge([
+        $database = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $movies['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -109,7 +109,7 @@ class DatabasesConsoleClientTest extends Scope
          */
         $databaseId = $data['databaseId'];
 
-        $tables = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables', array_merge([
+        $tables = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
@@ -131,7 +131,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test when database and table are disabled but can still call get table
          */
-        $table = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $moviesCollectionId, array_merge([
+        $table = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $moviesCollectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -156,7 +156,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test When database and table are disabled but can still call update table
          */
-        $table = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/tablesdb/tables/' . $moviesCollectionId, array_merge([
+        $table = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $moviesCollectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -184,7 +184,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test when database and table are disabled but can still call delete table
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tablesdb/tables/' . $tvShowsId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tvShowsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -203,7 +203,7 @@ class DatabasesConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -216,7 +216,7 @@ class DatabasesConsoleClientTest extends Scope
          * Test for SUCCESS
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -245,7 +245,7 @@ class DatabasesConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $data['moviesId'] . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -254,7 +254,7 @@ class DatabasesConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/randomCollectionId/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/randomCollectionId/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -266,7 +266,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $data['moviesId'] . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -289,7 +289,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -298,7 +298,7 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -310,7 +310,7 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -321,7 +321,7 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tablesdb/tables/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
