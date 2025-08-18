@@ -4349,8 +4349,6 @@ trait DatabasesBase
             $this->assertEquals($document['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
 
         }
-
-        return $data;
     }
 
     public function testUpdatePermissionsWithEmptyPayload(): array
