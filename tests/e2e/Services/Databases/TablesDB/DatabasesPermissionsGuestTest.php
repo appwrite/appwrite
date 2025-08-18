@@ -173,7 +173,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $this->assertEquals(401, $privateResponse['headers']['status-code']);
 
-        // Create a row in private collection with API key so we can test that update and delete are also not allowed
+        // Create a row in private table with API key so we can test that update and delete are also not allowed
         $privateResponse = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $privateTableId . '/rows', $this->getServerHeader(), [
             'rowId' => ID::unique(),
             'data' => [

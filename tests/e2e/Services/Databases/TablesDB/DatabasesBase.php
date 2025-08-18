@@ -493,7 +493,7 @@ trait DatabasesBase
         sleep(1);
 
         /**
-         * Update attribute size to exceed Index maximum length
+         * Update column size to exceed Index maximum length
          */
         $attribute = $this->client->call(Client::METHOD_PATCH, '/tablesdb/'.$databaseId.'/tables/'.$table['body']['$id'].'/columns/string/'.$attribute['body']['key'], array_merge([
             'content-type' => 'application/json',
@@ -533,7 +533,7 @@ trait DatabasesBase
             ],
         ]);
 
-        // Create enum attribute
+        // Create enum column
         $attribute = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $database['body']['$id'] . '/tables/' . $players['body']['$id'] . '/columns/enum', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -551,7 +551,7 @@ trait DatabasesBase
 
         \sleep(2);
 
-        // Update enum attribute
+        // Update enum column
         $attribute = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $database['body']['$id'] . '/tables/' . $players['body']['$id'] . '/columns/enum/' . $attribute['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1417,7 +1417,7 @@ trait DatabasesBase
         ]), [
             'key' => 'integers-order',
             'type' => 'key',
-            'columns' => ['integers'], // array attribute
+            'columns' => ['integers'], // array column
             'orders' => ['DESC'], // Check order is removed in API
         ]);
 
@@ -1430,7 +1430,7 @@ trait DatabasesBase
         ]), [
             'key' => 'integers-size',
             'type' => 'key',
-            'columns' => ['integers'], // array attribute
+            'columns' => ['integers'], // array column
         ]);
 
         $this->assertEquals(202, $index2['headers']['status-code']);
@@ -2033,7 +2033,7 @@ trait DatabasesBase
         $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
         if ($this->getSide() === 'client') {
-            // Skipped on server side: Creating a document with no permissions results in an empty permissions array, whereas on client side it assigns permissions to the current user
+            // Skipped on server side: Creating a row with no permissions results in an empty permissions array, whereas on client side it assigns permissions to the current user
 
             // test without passing permissions
             $document = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
@@ -2133,7 +2133,7 @@ trait DatabasesBase
 
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
-            // upsertion for the related document without passing permissions
+            // upsertion for the related row without passing permissions
             // data should get added
             $newPersonId = ID::unique();
             $personNoPerm = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/' . $newPersonId, array_merge([
@@ -2232,7 +2232,7 @@ trait DatabasesBase
         $this->assertEquals(2019, $rows['body']['rows'][0]['releaseYear']);
         $this->assertCount(3, $rows['body']['rows']);
 
-        // changing description attribute to be null by default instead of empty string
+        // changing description column to be null by default instead of empty string
         $patchNull = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns/string/description', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3762,15 +3762,15 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'key' => 'attribute',
+            'key' => 'column',
             'size' => 64,
             'required' => true,
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code'], 202);
-        $this->assertEquals('attribute', $attribute['body']['key']);
+        $this->assertEquals('column', $attribute['body']['key']);
 
-        // wait for db to add attribute
+        // wait for db to add column
         sleep(2);
 
         $index = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
@@ -3786,7 +3786,7 @@ trait DatabasesBase
         $this->assertEquals(202, $index['headers']['status-code']);
         $this->assertEquals('key_attribute', $index['body']['key']);
 
-        // wait for db to add attribute
+        // wait for db to add column
         sleep(2);
 
         $row1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -3795,7 +3795,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'rowId' => ID::unique(),
             'data' => [
-                'attribute' => 'one',
+                'column' => 'one',
             ],
             'permissions' => [
                 Permission::read(Role::user($user)),
@@ -3812,7 +3812,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'rowId' => ID::unique(),
             'data' => [
-                'attribute' => 'one',
+                'column' => 'one',
             ],
             'permissions' => [
                 Permission::update(Role::user($user)),
@@ -3829,7 +3829,7 @@ trait DatabasesBase
         ], [
             'rowId' => ID::unique(),
             'data' => [
-                'attribute' => 'one',
+                'column' => 'one',
             ],
             'permissions' => [
                 Permission::read(Role::user(ID::custom('other'))),
@@ -3952,13 +3952,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'key' => 'attribute',
+            'key' => 'column',
             'size' => 64,
             'required' => true,
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code'], 202);
-        $this->assertEquals('attribute', $attribute['body']['key']);
+        $this->assertEquals('column', $attribute['body']['key']);
 
         \sleep(2);
 
@@ -3983,7 +3983,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'rowId' => ID::unique(),
             'data' => [
-                'attribute' => 'one',
+                'column' => 'one',
             ],
             'permissions' => [
                 Permission::read(Role::user($user)),
@@ -4000,7 +4000,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'rowId' => ID::unique(),
             'data' => [
-                'attribute' => 'one',
+                'column' => 'one',
             ],
             'permissions' => [
                 Permission::update(Role::user($user)),
@@ -4017,7 +4017,7 @@ trait DatabasesBase
         ], [
             'rowId' => ID::unique(),
             'data' => [
-                'attribute' => 'one',
+                'column' => 'one',
             ],
             'permissions' => [
                 Permission::read(Role::user(ID::custom('other2'))),
@@ -4302,7 +4302,7 @@ trait DatabasesBase
 
         $moviesId = $movies['body']['$id'];
 
-        // create attribute
+        // create column
         $title = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $moviesId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4849,7 +4849,7 @@ trait DatabasesBase
             ],
         ]);
 
-        // Create album name attribute
+        // Create album name column
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $albums['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4875,7 +4875,7 @@ trait DatabasesBase
             ],
         ]);
 
-        // Create artist name attribute
+        // Create artist name column
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $artists['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5001,7 +5001,7 @@ trait DatabasesBase
             ],
         ]);
 
-        // Create sport name attribute
+        // Create sport name column
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $sports['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5027,7 +5027,7 @@ trait DatabasesBase
             ],
         ]);
 
-        // Create player name attribute
+        // Create player name column
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $players['body']['$id'] . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6872,7 +6872,7 @@ trait DatabasesBase
         ]);
         $tableId = $table['body']['$id'];
 
-        // Add integer attribute
+        // Add integer column
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6940,7 +6940,7 @@ trait DatabasesBase
         ]), ['max' => 8]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
-        // Test attribute not found
+        // Test column not found
         $notFound = $this->client->call(Client::METHOD_PATCH, "/tablesdb/$databaseId/tables/$tableId/rows/$rowId/unknown/increment", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6986,7 +6986,7 @@ trait DatabasesBase
 
         $tableId = $table['body']['$id'];
 
-        // Add integer attribute
+        // Add integer column
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7050,7 +7050,7 @@ trait DatabasesBase
         ]), ['min' => 7]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
-        // Test type error on non-numeric attribute
+        // Test type error on non-numeric column
         $typeErr = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId . '/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
