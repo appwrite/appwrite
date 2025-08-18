@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Grids;
+namespace Tests\E2E\Services\Databases\TablesDB;
 
 use Tests\E2E\Client;
 
