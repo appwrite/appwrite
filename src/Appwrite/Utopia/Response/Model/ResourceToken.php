@@ -62,25 +62,9 @@ class ResourceToken extends Model
     public function filter(Document $document): Document
     {
         $expire = $document->getAttribute('expire');
-        $now = new \DateTime();
 
-        // Calculate expiration timestamp for JWT
-        $expTimestamp = null;
-        if ($expire !== null) {
-            $expiryDate = new \DateTime($expire);
-            $secondsUntilExpiry = $expiryDate->getTimestamp() - $now->getTimestamp();
-
-            // If token is expired, set expiration to 1 minute from now
-            // We check for actual expiry later on route hooks for validation
-            if ($secondsUntilExpiry <= 0) {
-                $expTimestamp = $now->getTimestamp() + 60;
-            } else {
-                $expTimestamp = $expiryDate->getTimestamp();
-            }
-        }
-
-        // Use maxAge as fallback, but rely on exp in payload for actual expiration
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', PHP_INT_MAX, 10);
+        // Disable library auto-exp; rely solely on explicit exp in payload when set
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 0, 10);
 
         $payload = [
             'tokenId' => $document->getId(),
@@ -90,8 +74,9 @@ class ResourceToken extends Model
         ];
 
         // Set explicit expiration in JWT payload if we have an expiry date
-        if ($expTimestamp !== null) {
-            $payload['exp'] = $expTimestamp;
+        if ($expire !== null) {
+            $expiryDate = new \DateTime($expire);
+            $payload['exp'] = $expiryDate->getTimestamp();
         }
 
         $secret = $jwt->encode($payload);

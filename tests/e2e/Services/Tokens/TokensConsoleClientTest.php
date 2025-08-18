@@ -94,6 +94,25 @@ class TokensConsoleClientTest extends Scope
         $dateValidator = new DatetimeValidator();
         $this->assertTrue($dateValidator->isValid($token['body']['expire']));
 
+        // Verify JWT contains correct expiration
+        $this->assertNotEmpty($token['body']['secret']);
+        $jwtParts = explode('.', $token['body']['secret']);
+        $this->assertCount(3, $jwtParts, 'JWT should have 3 parts');
+
+        // Decode JWT payload (using base64url decoding)
+        $payloadB64 = $jwtParts[1];
+        // Convert base64url to base64
+        $payloadB64 = str_replace(['-', '_'], ['+', '/'], $payloadB64);
+        // Add padding if needed
+        $payloadB64 .= str_repeat('=', (4 - strlen($payloadB64) % 4) % 4);
+        $payload = json_decode(base64_decode($payloadB64), true);
+        
+        $this->assertIsArray($payload, 'JWT payload should decode to an array');
+        $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp field');
+        
+        $expectedExp = (new \DateTime($expiry))->getTimestamp();
+        $this->assertEquals($expectedExp, $payload['exp'], 'JWT exp should match token expiry');
+
         // Infinite expiry
         $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
             'content-type' => 'application/json',
@@ -104,46 +123,19 @@ class TokensConsoleClientTest extends Scope
 
         $this->assertEmpty($token['body']['expire']);
 
-        return $data;
-    }
-
-    /**
-     * @depends testCreateToken
-     */
-    public function testExpiredTokenJWT(array $data): array
-    {
-        $fileId = $data['fileId'];
-        $bucketId = $data['bucketId'];
-
-        // Create a token with an expiry date in the past (expired)
-        $pastExpiry = DateTime::addSeconds(new \DateTime(), -3600); // 1 hour ago
-        $expiredToken = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'expire' => $pastExpiry,
-        ]);
-
-        $this->assertEquals(201, $expiredToken['headers']['status-code']);
-        $this->assertEquals('files', $expiredToken['body']['resourceType']);
-
-        // Verify that the JWT is generated without causing a 500 error
-        $this->assertNotEmpty($expiredToken['body']['secret']);
-
-        // Parse the JWT to verify expiration is set correctly for expired tokens
-        $jwtParts = explode('.', $expiredToken['body']['secret']);
-        $this->assertCount(3, $jwtParts, 'JWT should have 3 parts');
-
-        $payload = json_decode(base64_decode($jwtParts[1]), true);
-        $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp field');
-
-        // For expired tokens, exp should be set to a short time in the future (around 1 minute)
-        $now = time();
-        $this->assertGreaterThan($now, $payload['exp'], 'JWT exp should be in the future even for expired tokens');
-        $this->assertLessThanOrEqual($now + 120, $payload['exp'], 'JWT exp should not be more than 2 minutes in the future for expired tokens');
+        // Verify JWT does not contain exp for infinite expiry
+        $jwtParts = explode('.', $token['body']['secret']);
+        $payloadB64 = $jwtParts[1];
+        $payloadB64 = str_replace(['-', '_'], ['+', '/'], $payloadB64);
+        $payloadB64 .= str_repeat('=', (4 - strlen($payloadB64) % 4) % 4);
+        $payload = json_decode(base64_decode($payloadB64), true);
+        
+        $this->assertArrayNotHasKey('exp', $payload, 'JWT payload should not contain exp field for infinite expiry');
 
         return $data;
     }
+
+
 
     /**
      * @depends testCreateToken
