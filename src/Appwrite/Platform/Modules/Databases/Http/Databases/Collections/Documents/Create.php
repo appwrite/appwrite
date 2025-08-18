@@ -318,8 +318,7 @@ class Create extends Action
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $relation->removeAttribute('$collectionId');
-                            $relation->removeAttribute('$databaseId');
+                            $this->removeReadonlyAttributes($relation);
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }

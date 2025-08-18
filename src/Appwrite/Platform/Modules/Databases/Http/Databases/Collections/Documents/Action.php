@@ -4,12 +4,15 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action as UtopiaAction;
 
-abstract class Action extends UtopiaAction
+use const Appwrite\Platform\Modules\Databases\DOCUMENTS;
+use const Appwrite\Platform\Modules\Databases\ROWS;
+
+abstract class Action extends AppwriteAction
 {
     /**
      * @var string|null The current context (either 'row' or 'document')
@@ -21,10 +24,15 @@ abstract class Action extends UtopiaAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): AppwriteAction
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
+            // Set removable attributes for TablesDB API
+            $this->removableAttributes = ['$databaseId', '$tableId'];
+        } else {
+            // Set removable attributes for Collections API  
+            $this->removableAttributes = ['$databaseId', '$collectionId'];
         }
 
         return parent::setHttpPath($path);
@@ -190,6 +198,17 @@ abstract class Action extends UtopiaAction
     protected function getCollectionsEventsContext(): string
     {
         return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
+
+    /**
+     * Remove configured removable attributes from a document.
+     * Used for relationship path handling to remove API-specific attributes.
+     */
+    protected function removeReadonlyAttributes(Document $document): void
+    {
+        foreach ($this->removableAttributes as $attribute) {
+            $document->removeAttribute($attribute);
+        }
     }
 
     /**

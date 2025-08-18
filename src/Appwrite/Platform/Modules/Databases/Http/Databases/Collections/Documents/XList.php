@@ -167,11 +167,10 @@ class XList extends Action
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
         }, false);
 
-        // Check if the SELECT query includes $databaseId and $collectionId
+        // Check if the SELECT query includes the removable attributes
         $hasWildcard = false;
-        $hasDatabaseId = false;
-        $hasCollectionId = false;
         $hasSelectQueries = !empty($selectQueries);
+        $requestedAttributes = [];
 
         if ($hasSelectQueries) {
             foreach ($selectQueries as $query) {
@@ -185,22 +184,21 @@ class XList extends Action
                     break;
                 }
 
-                if (\in_array('$databaseId', $values, true)) {
-                    $hasDatabaseId = true;
-                }
-
-                if (\in_array('$collectionId', $values, true)) {
-                    $hasCollectionId = true;
+                // Check which removable attributes are explicitly requested
+                foreach ($this->removableAttributes as $attribute) {
+                    if (\in_array($attribute, $values, true)) {
+                        $requestedAttributes[$attribute] = true;
+                    }
                 }
             }
 
             if (!$hasWildcard) {
                 foreach ($documents as $document) {
-                    if (!$hasDatabaseId) {
-                        $document->removeAttribute('$databaseId');
-                    }
-                    if (!$hasCollectionId) {
-                        $document->removeAttribute('$collectionId');
+                    // Remove attributes that are not explicitly requested
+                    foreach ($this->removableAttributes as $attribute) {
+                        if (!isset($requestedAttributes[$attribute])) {
+                            $document->removeAttribute($attribute);
+                        }
                     }
                 }
             }
