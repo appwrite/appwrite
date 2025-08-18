@@ -53,6 +53,8 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\XList as ListR
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Update as UpdateTable;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Usage\Get as GetTableUsage;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\XList as ListTables;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Usage\Get as GetTablesDatabaseUsage;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Databases\Usage\XList as ListTablesDatabaseUsage;
 use Utopia\Platform\Service;
 
 /**
@@ -82,6 +84,8 @@ class Tables extends Base
         $service->addAction(UpdateTablesDatabase::getName(), new UpdateTablesDatabase());
         $service->addAction(DeleteTablesDatabase::getName(), new DeleteTablesDatabase());
         $service->addAction(ListTablesDatabase::getName(), new ListTablesDatabase());
+        $service->addAction(GetTablesDatabaseUsage::getName(), new GetTablesDatabaseUsage());
+        $service->addAction(ListTablesDatabaseUsage::getName(), new ListTablesDatabaseUsage());
     }
 
     private function registerTableActions(Service $service): void
