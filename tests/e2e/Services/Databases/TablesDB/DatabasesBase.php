@@ -181,7 +181,7 @@ trait DatabasesBase
         $this->assertFalse($response['body']['enabled']);
 
         if ($this->getSide() === 'client') {
-            $responseCreateDocument = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
+            $responseCreateRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -196,21 +196,21 @@ trait DatabasesBase
                 ],
             ]);
 
-            $this->assertEquals(404, $responseCreateDocument['headers']['status-code']);
+            $this->assertEquals(404, $responseCreateRow['headers']['status-code']);
 
-            $responseListDocument = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
+            $responseListRow = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals(404, $responseListDocument['headers']['status-code']);
+            $this->assertEquals(404, $responseListRow['headers']['status-code']);
 
-            $responseGetDocument = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/someID', array_merge([
+            $responseGetRow = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/someID', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals(404, $responseGetDocument['headers']['status-code']);
+            $this->assertEquals(404, $responseGetRow['headers']['status-code']);
         }
 
         $response = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'], array_merge([
@@ -426,7 +426,7 @@ trait DatabasesBase
             'queries' => [
                 Query::equal('type', ['string'])->toString(),
                 Query::limit(2)->toString(),
-                Query::cursorAfter(new Document(['$id' => 'title']))->toString()
+                Query::cursorAfter(new Row(['$id' => 'title']))->toString()
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2036,7 +2036,7 @@ trait DatabasesBase
             // Skipped on server side: Creating a row with no permissions results in an empty permissions array, whereas on client side it assigns permissions to the current user
 
             // test without passing permissions
-            $document = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -2046,10 +2046,10 @@ trait DatabasesBase
                 ]
             ]);
 
-            $this->assertEquals(200, $document['headers']['status-code']);
-            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
-            $this->assertCount(3, $document['body']['$permissions']);
-            $permissionsCreated = $document['body']['$permissions'];
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $row['body']['title']);
+            $this->assertCount(3, $row['body']['$permissions']);
+            $permissionsCreated = $row['body']['$permissions'];
             // checking the default created permission
             $defaultPermission = [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -2059,15 +2059,15 @@ trait DatabasesBase
             // ignoring the order of the permission and checking the permissions
             $this->assertEqualsCanonicalizing($defaultPermission, $permissionsCreated);
 
-            $document = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            $row = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()));
 
-            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertEquals(200, $row['headers']['status-code']);
 
             // updating the created doc
-            $document = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -2076,14 +2076,14 @@ trait DatabasesBase
                     'releaseYear' => 2002
                 ]
             ]);
-            $this->assertEquals(200, $document['headers']['status-code']);
-            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
-            $this->assertEquals(2002, $document['body']['releaseYear']);
-            $this->assertCount(3, $document['body']['$permissions']);
-            $this->assertEquals($permissionsCreated, $document['body']['$permissions']);
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $row['body']['title']);
+            $this->assertEquals(2002, $row['body']['releaseYear']);
+            $this->assertCount(3, $row['body']['$permissions']);
+            $this->assertEquals($permissionsCreated, $row['body']['$permissions']);
 
             // removing the delete permission
-            $document = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -2095,10 +2095,10 @@ trait DatabasesBase
                     Permission::update(Role::user($this->getUser()['$id']))
                 ]
             ]);
-            $this->assertEquals(200, $document['headers']['status-code']);
-            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
-            $this->assertEquals(2002, $document['body']['releaseYear']);
-            $this->assertCount(1, $document['body']['$permissions']);
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $row['body']['title']);
+            $this->assertEquals(2002, $row['body']['releaseYear']);
+            $this->assertCount(1, $row['body']['$permissions']);
 
             $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
                 'content-type' => 'application/json',
@@ -2108,7 +2108,7 @@ trait DatabasesBase
             $this->assertEquals(401, $deleteResponse['headers']['status-code']);
 
             // giving the delete permission
-            $document = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -2121,10 +2121,10 @@ trait DatabasesBase
                     Permission::delete(Role::user($this->getUser()['$id']))
                 ]
             ]);
-            $this->assertEquals(200, $document['headers']['status-code']);
-            $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
-            $this->assertEquals(2002, $document['body']['releaseYear']);
-            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertEquals(200, $row['headers']['status-code']);
+            $this->assertEquals('Thor: Ragnarok', $row['body']['title']);
+            $this->assertEquals(2002, $row['body']['releaseYear']);
+            $this->assertCount(2, $row['body']['$permissions']);
 
             $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
                 'content-type' => 'application/json',
@@ -2133,7 +2133,7 @@ trait DatabasesBase
 
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
-            // upsertion for the related row without passing permissions
+            // upsert for the related row without passing permissions
             // data should get added
             $newPersonId = ID::unique();
             $personNoPerm = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/' . $newPersonId, array_merge([
@@ -2151,7 +2151,7 @@ trait DatabasesBase
             $this->assertEquals('Library 3', $personNoPerm['body']['library']['libraryName']);
             $this->assertCount(3, $personNoPerm['body']['library']['$permissions']);
             $this->assertCount(3, $personNoPerm['body']['$permissions']);
-            $documents = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
+            $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -2159,22 +2159,22 @@ trait DatabasesBase
                     Query::select(['fullName', 'library.*'])->toString()
                 ],
             ]);
-            $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
-            $documentsDetails = $documents['body']['documents'];
-            foreach ($documentsDetails as $doc) {
+            $this->assertGreaterThanOrEqual(1, $rows['body']['total']);
+            $rowsDetails = $rows['body']['rows'];
+            foreach ($rowsDetails as $doc) {
                 $this->assertCount(3, $doc['$permissions']);
             }
             $found = false;
-            foreach ($documents['body']['documents'] as $doc) {
+            foreach ($rows['body']['rows'] as $doc) {
                 if (isset($doc['library']['libraryName']) && $doc['library']['libraryName'] === 'Library 3') {
                     $found = true;
                     break;
                 }
             }
-            $this->assertTrue($found, 'Library 3 should be present in the upserted documents.');
+            $this->assertTrue($found, 'Library 3 should be present in the upserted rows.');
 
             // Fetch the related library and assert on its permissions (should be default/inherited)
-            $library3 = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $library['body']['$id'] . '/documents/library3', array_merge([
+            $library3 = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $library['body']['$id'] . '/rows/library3', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
@@ -2266,7 +2266,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::orderAsc('dummy')->toString(),
-                Query::cursorAfter(new Document(['$id' => $row1['body']['$id']]))->toString()
+                Query::cursorAfter(new Row(['$id' => $row1['body']['$id']]))->toString()
             ],
         ]);
         // should throw 400 as the order attr description of the selected doc is null
@@ -3053,10 +3053,10 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'databaseId' => ID::unique(),
-            'name' => 'InvalidDocumentDatabase',
+            'name' => 'InvalidRowDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
+        $this->assertEquals('InvalidRowDatabase', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
@@ -3065,7 +3065,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'tableId' => ID::unique(),
-            'name' => 'invalidDocumentStructure',
+            'name' => 'invalidRowStructure',
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -3074,7 +3074,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
-        $this->assertEquals('invalidDocumentStructure', $table['body']['name']);
+        $this->assertEquals('invalidRowStructure', $table['body']['name']);
 
         $tableId = $table['body']['$id'];
 
@@ -3425,7 +3425,7 @@ trait DatabasesBase
         $this->assertEquals(201, $notTooLow['headers']['status-code']);
 
         /*
-         * Test that custom validators reject documents
+         * Test that custom validators reject rows
          */
 
         $badEmail = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -3726,10 +3726,10 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'databaseId' => ID::unique(),
-            'name' => 'EnforceCollectionAndDocumentPermissions',
+            'name' => 'EnforceCollectionAndRowPermissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('EnforceCollectionAndDocumentPermissions', $database['body']['name']);
+        $this->assertEquals('EnforceCollectionAndRowPermissions', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
         $user = $this->getUser()['$id'];
@@ -3739,7 +3739,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'tableId' => ID::unique(),
-            'name' => 'enforceCollectionAndDocumentPermissions',
+            'name' => 'enforceCollectionAndRowPermissions',
             'rowSecurity' => true,
             'permissions' => [
                 Permission::read(Role::user($user)),
@@ -3750,7 +3750,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
-        $this->assertEquals($table['body']['name'], 'enforceCollectionAndDocumentPermissions');
+        $this->assertEquals($table['body']['name'], 'enforceCollectionAndRowPermissions');
         $this->assertEquals($table['body']['rowSecurity'], true);
 
         $tableId = $table['body']['$id'];
@@ -3879,7 +3879,7 @@ trait DatabasesBase
         ]);
         $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $row3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $row3['body']['$id'], [
+        $row3GetWithRowRead = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $row3['body']['$id'], [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3887,7 +3887,7 @@ trait DatabasesBase
         ]);
 
         // Current user has no table permissions but has read permission for this row
-        $this->assertEquals(200, $row3GetWithDocumentRead['headers']['status-code']);
+        $this->assertEquals(200, $row3GetWithRowRead['headers']['status-code']);
 
         $row2GetFailure = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $row2['body']['$id'], [
             'origin' => 'http://localhost',
@@ -4067,7 +4067,7 @@ trait DatabasesBase
         ]);
         $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $row3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $row3['body']['$id'], [
+        $row3GetWithRowRead = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $row3['body']['$id'], [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4075,7 +4075,7 @@ trait DatabasesBase
         ]);
 
         // other2 has no table permissions and row permissions are disabled
-        $this->assertEquals(404, $row3GetWithDocumentRead['headers']['status-code']);
+        $this->assertEquals(404, $row3GetWithRowRead['headers']['status-code']);
 
         $rowsUser2 = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
             'origin' => 'http://localhost',
@@ -5984,7 +5984,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'rowId' => ID::unique(),
             'data' => [
-                'filename' => 'document.pdf',
+                'filename' => 'row.pdf',
                 'type' => 'PDF',
             ],
             'permissions' => [
@@ -6753,10 +6753,10 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'rowId' => ID::unique(),
             'data' => [
-                'name' => 'Document 1',
+                'name' => 'Row 1',
                 'collection2' => [
                     [
-                        'name' => 'Document 2',
+                        'name' => 'Row 2',
                     ],
                 ],
             ],
@@ -6767,7 +6767,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Document 1 Updated',
+                'name' => 'Row 1 Updated',
             ],
         ]);
 
