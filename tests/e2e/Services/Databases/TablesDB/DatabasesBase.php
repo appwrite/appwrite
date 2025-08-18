@@ -32,7 +32,7 @@ trait DatabasesBase
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
-        $this->assertEquals('grids', $database['body']['type']);
+        $this->assertEquals('tablesdb', $database['body']['type']);
 
         // testing to create a database with type
         $database2 = $this->client->call(Client::METHOD_POST, '/tablesdb', [

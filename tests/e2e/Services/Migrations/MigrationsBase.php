@@ -1144,7 +1144,7 @@ trait MigrationsBase
         }, 10_000, 500);
 
         // get rows count
-        $rows = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/grids/tables/'.$tableId.'/rows', array_merge([
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/'.$databaseId.'/tables/'.$tableId.'/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
