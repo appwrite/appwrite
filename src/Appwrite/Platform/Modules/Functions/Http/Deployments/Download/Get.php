@@ -134,6 +134,7 @@ class Get extends Action
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
             $response->send($device->read($path, $start, ($end - $start + 1)));
+            return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
