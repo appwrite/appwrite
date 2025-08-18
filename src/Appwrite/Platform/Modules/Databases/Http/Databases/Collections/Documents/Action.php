@@ -25,10 +25,8 @@ abstract class Action extends AppwriteAction
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
-            // Set removable attributes for TablesDB API
             $this->removableAttributes = ['$databaseId', '$tableId'];
         } else {
-            // Set removable attributes for Collections API  
             $this->removableAttributes = ['$databaseId', '$collectionId'];
         }
 
