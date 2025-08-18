@@ -426,7 +426,7 @@ trait DatabasesBase
             'queries' => [
                 Query::equal('type', ['string'])->toString(),
                 Query::limit(2)->toString(),
-                Query::cursorAfter(new Row(['$id' => 'title']))->toString()
+                Query::cursorAfter(new Document(['$id' => 'title']))->toString()
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2266,7 +2266,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::orderAsc('dummy')->toString(),
-                Query::cursorAfter(new Row(['$id' => $row1['body']['$id']]))->toString()
+                Query::cursorAfter(new Document(['$id' => $row1['body']['$id']]))->toString()
             ],
         ]);
         // should throw 400 as the order attr description of the selected doc is null

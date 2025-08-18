@@ -21,7 +21,7 @@ class XList extends Action
 {
     public static function getName(): string
     {
-        return 'listUsage';
+        return 'listDatabaseUsage';
     }
 
     public function __construct()
