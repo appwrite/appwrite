@@ -29,7 +29,6 @@ abstract class Action extends AppwriteAction
         } else {
             $this->removableAttributes = ['$databaseId', '$collectionId'];
         }
-
         return parent::setHttpPath($path);
     }
 
@@ -232,7 +231,7 @@ abstract class Action extends AppwriteAction
         $collectionId = $collection->getId();
         $document->removeAttribute('$collection');
         $document->setAttribute('$databaseId', $database->getId());
-        $document->setAttribute('$collectionId', $collectionId);
+        $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
 
         $relationships = $collectionsCache[$collectionId] ??= \array_filter(
             $collection->getAttribute('attributes', []),
