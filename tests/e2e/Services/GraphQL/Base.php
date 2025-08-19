@@ -2824,7 +2824,7 @@ trait Base
                     }
                 }';
             case self::UPDATE_EMAIL:
-                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, , $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
+                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
                     messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
                         _id
                         topics
