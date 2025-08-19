@@ -331,7 +331,7 @@ class DatabaseClientTest extends Scope
         $databaseId = $res['body']['data']['databasesCreate']['_id'];
 
         // Step 2: Create collection
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
