@@ -30679,13 +30679,13 @@
         "\/tablesdb": {
             "get": {
                 "summary": "List databases",
-                "operationId": "tablesdbList",
+                "operationId": "tablesDbList",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.",
                 "responses": {
@@ -30703,7 +30703,7 @@
                     "weight": 375,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/list.md",
+                    "demo": "tables-db\/list.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -30749,7 +30749,7 @@
             },
             "post": {
                 "summary": "Create database",
-                "operationId": "tablesdbCreate",
+                "operationId": "tablesDbCreate",
                 "consumes": [
                     "application\/json"
                 ],
@@ -30757,7 +30757,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Create a new Database.\n",
                 "responses": {
@@ -30775,7 +30775,7 @@
                     "weight": 371,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/create.md",
+                    "demo": "tables-db\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -30845,13 +30845,13 @@
         "\/tablesdb\/usage": {
             "get": {
                 "summary": "Get TablesDB usage stats",
-                "operationId": "tablesdbListUsage",
+                "operationId": "tablesDbListUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
@@ -30869,7 +30869,7 @@
                     "weight": 377,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/list-usage.md",
+                    "demo": "tables-db\/list-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -30882,7 +30882,7 @@
                     "methods": [
                         {
                             "name": "listUsage",
-                            "namespace": "tablesdb",
+                            "namespace": "tablesDb",
                             "desc": "",
                             "auth": {
                                 "Project": []
@@ -30898,7 +30898,7 @@
                                 }
                             ],
                             "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "tablesdb\/list-usage.md"
+                            "demo": "tables-db\/list-usage.md"
                         }
                     ],
                     "auth": {
@@ -30922,8 +30922,12 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": null,
-                        "x-enum-keys": [],
+                        "x-enum-name": "GridUsageRange",
+                        "x-enum-keys": [
+                            "Twenty Four Hours",
+                            "Thirty Days",
+                            "Ninety Days"
+                        ],
                         "default": "30d",
                         "in": "query"
                     }
@@ -30933,13 +30937,13 @@
         "\/tablesdb\/{databaseId}": {
             "get": {
                 "summary": "Get database",
-                "operationId": "tablesdbGet",
+                "operationId": "tablesDbGet",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata.",
                 "responses": {
@@ -30957,7 +30961,7 @@
                     "weight": 372,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/get.md",
+                    "demo": "tables-db\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -30990,7 +30994,7 @@
             },
             "put": {
                 "summary": "Update database",
-                "operationId": "tablesdbUpdate",
+                "operationId": "tablesDbUpdate",
                 "consumes": [
                     "application\/json"
                 ],
@@ -30998,7 +31002,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Update a database by its unique ID.",
                 "responses": {
@@ -31016,7 +31020,7 @@
                     "weight": 373,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/update.md",
+                    "demo": "tables-db\/update.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -31073,13 +31077,13 @@
             },
             "delete": {
                 "summary": "Delete database",
-                "operationId": "tablesdbDelete",
+                "operationId": "tablesDbDelete",
                 "consumes": [
                     "application\/json"
                 ],
                 "produces": [],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database.",
                 "responses": {
@@ -31094,7 +31098,7 @@
                     "weight": 374,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/delete.md",
+                    "demo": "tables-db\/delete.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -35797,13 +35801,13 @@
         "\/tablesdb\/{databaseId}\/usage": {
             "get": {
                 "summary": "Get TablesDB usage stats",
-                "operationId": "tablesdbGetUsage",
+                "operationId": "tablesDbGetUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
@@ -35821,7 +35825,7 @@
                     "weight": 376,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/get-usage.md",
+                    "demo": "tables-db\/get-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-database-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -35834,7 +35838,7 @@
                     "methods": [
                         {
                             "name": "getUsage",
-                            "namespace": "tablesdb",
+                            "namespace": "tablesDb",
                             "desc": "",
                             "auth": {
                                 "Project": []
@@ -35853,7 +35857,7 @@
                                 }
                             ],
                             "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "tablesdb\/get-usage.md"
+                            "demo": "tables-db\/get-usage.md"
                         }
                     ],
                     "auth": {
@@ -35885,8 +35889,12 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": null,
-                        "x-enum-keys": [],
+                        "x-enum-name": "GridUsageRange",
+                        "x-enum-keys": [
+                            "Twenty Four Hours",
+                            "Thirty Days",
+                            "Ninety Days"
+                        ],
                         "default": "30d",
                         "in": "query"
                     }

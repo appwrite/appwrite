@@ -21663,13 +21663,13 @@
         "\/tablesdb": {
             "get": {
                 "summary": "List databases",
-                "operationId": "tablesdbList",
+                "operationId": "tablesDbList",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.",
                 "responses": {
@@ -21687,7 +21687,7 @@
                     "weight": 375,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/list.md",
+                    "demo": "tables-db\/list.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21734,7 +21734,7 @@
             },
             "post": {
                 "summary": "Create database",
-                "operationId": "tablesdbCreate",
+                "operationId": "tablesDbCreate",
                 "consumes": [
                     "application\/json"
                 ],
@@ -21742,7 +21742,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Create a new Database.\n",
                 "responses": {
@@ -21760,7 +21760,7 @@
                     "weight": 371,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/create.md",
+                    "demo": "tables-db\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21831,13 +21831,13 @@
         "\/tablesdb\/{databaseId}": {
             "get": {
                 "summary": "Get database",
-                "operationId": "tablesdbGet",
+                "operationId": "tablesDbGet",
                 "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata.",
                 "responses": {
@@ -21855,7 +21855,7 @@
                     "weight": 372,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/get.md",
+                    "demo": "tables-db\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21889,7 +21889,7 @@
             },
             "put": {
                 "summary": "Update database",
-                "operationId": "tablesdbUpdate",
+                "operationId": "tablesDbUpdate",
                 "consumes": [
                     "application\/json"
                 ],
@@ -21897,7 +21897,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Update a database by its unique ID.",
                 "responses": {
@@ -21915,7 +21915,7 @@
                     "weight": 373,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/update.md",
+                    "demo": "tables-db\/update.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21973,13 +21973,13 @@
             },
             "delete": {
                 "summary": "Delete database",
-                "operationId": "tablesdbDelete",
+                "operationId": "tablesDbDelete",
                 "consumes": [
                     "application\/json"
                 ],
                 "produces": [],
                 "tags": [
-                    "tablesdb"
+                    "tablesDb"
                 ],
                 "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database.",
                 "responses": {
@@ -21994,7 +21994,7 @@
                     "weight": 374,
                     "cookies": false,
                     "type": "",
-                    "demo": "tablesdb\/delete.md",
+                    "demo": "tables-db\/delete.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
