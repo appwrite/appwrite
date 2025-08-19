@@ -175,13 +175,12 @@ abstract class Format
                 break;
             case 'databases':
                 switch ($method) {
-                    /*case 'getUsage':*/
+                    case 'getUsage':
                     case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
                         switch ($param) {
                             case 'range':
-                                return 'DatabaseUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createRelationshipAttribute':
@@ -214,7 +213,7 @@ abstract class Format
                     case 'getTableUsage':
                         switch ($param) {
                             case 'range':
-                                return 'GridUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createRelationshipColumn':
@@ -246,7 +245,7 @@ abstract class Format
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'FunctionUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createExecution':
@@ -281,7 +280,7 @@ abstract class Format
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'SiteUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createVcsDeployment':
@@ -404,7 +403,7 @@ abstract class Format
                     case 'getBucketUsage':
                         switch ($param) {
                             case 'range':
-                                return 'StorageUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'getFilePreview':
@@ -422,7 +421,7 @@ abstract class Format
                     case 'getUsage':
                         switch ($param) {
                             case 'range':
-                                return 'UserUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createMfaAuthenticator':

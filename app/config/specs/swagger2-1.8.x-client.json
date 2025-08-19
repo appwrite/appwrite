@@ -8496,8 +8496,8 @@
             "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
         },
         {
-            "name": "tables",
-            "description": "The Tables service allows you to create structured tables of rows, query and filter lists of rows"
+            "name": "tablesdb",
+            "description": "The TablesDB service allows you to create structured tables of columns, query and filter lists of rows"
         },
         {
             "name": "locale",

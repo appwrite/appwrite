@@ -4915,7 +4915,7 @@
         "\/databases\/usage": {
             "get": {
                 "summary": "Get databases usage stats",
-                "operationId": "databasesListDatabaseUsage",
+                "operationId": "databasesListUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
@@ -4934,12 +4934,12 @@
                 },
                 "deprecated": true,
                 "x-appwrite": {
-                    "method": "listDatabaseUsage",
+                    "method": "listUsage",
                     "group": null,
                     "weight": 324,
                     "cookies": false,
                     "type": "",
-                    "demo": "databases\/list-database-usage.md",
+                    "demo": "databases\/list-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -4955,7 +4955,7 @@
                     },
                     "methods": [
                         {
-                            "name": "listDatabaseUsage",
+                            "name": "listUsage",
                             "namespace": "databases",
                             "desc": "",
                             "auth": {
@@ -4972,7 +4972,7 @@
                                 }
                             ],
                             "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections\/tables, documents\/rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "databases\/list-database-usage.md",
+                            "demo": "databases\/list-usage.md",
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDb.listUsage"
@@ -5000,8 +5000,12 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": null,
-                        "x-enum-keys": [],
+                        "x-enum-name": "UsageRange",
+                        "x-enum-keys": [
+                            "Twenty Four Hours",
+                            "Thirty Days",
+                            "Ninety Days"
+                        ],
                         "default": "30d",
                         "in": "query"
                     }
@@ -10154,7 +10158,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "DatabaseUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -10280,7 +10284,7 @@
         "\/databases\/{databaseId}\/usage": {
             "get": {
                 "summary": "Get database usage stats",
-                "operationId": "databasesGetDatabaseUsage",
+                "operationId": "databasesGetUsage",
                 "consumes": [],
                 "produces": [
                     "application\/json"
@@ -10299,12 +10303,12 @@
                 },
                 "deprecated": true,
                 "x-appwrite": {
-                    "method": "getDatabaseUsage",
+                    "method": "getUsage",
                     "group": null,
                     "weight": 323,
                     "cookies": false,
                     "type": "",
-                    "demo": "databases\/get-database-usage.md",
+                    "demo": "databases\/get-usage.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-database-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -10320,7 +10324,7 @@
                     },
                     "methods": [
                         {
-                            "name": "getDatabaseUsage",
+                            "name": "getUsage",
                             "namespace": "databases",
                             "desc": "",
                             "auth": {
@@ -10340,7 +10344,7 @@
                                 }
                             ],
                             "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "databases\/get-database-usage.md",
+                            "demo": "databases\/get-usage.md",
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDb.getUsage"
@@ -10376,7 +10380,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "DatabaseUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -11020,7 +11024,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "FunctionUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -12602,7 +12606,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "FunctionUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -23872,7 +23876,7 @@
                                         "account",
                                         "avatars",
                                         "databases",
-                                        "tables",
+                                        "tablesdb",
                                         "locale",
                                         "health",
                                         "storage",
@@ -27440,7 +27444,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "SiteUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -28922,7 +28926,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "SiteUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -30586,7 +30590,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "StorageUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -30664,7 +30668,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "StorageUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -30922,7 +30926,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "GridUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -35778,7 +35782,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "GridUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -35889,7 +35893,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "GridUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -38400,7 +38404,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": "UserUsageRange",
+                        "x-enum-name": "UsageRange",
                         "x-enum-keys": [
                             "Twenty Four Hours",
                             "Thirty Days",
@@ -41397,8 +41401,8 @@
             "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
         },
         {
-            "name": "tables",
-            "description": "The Tables service allows you to create structured tables of rows, query and filter lists of rows"
+            "name": "tablesdb",
+            "description": "The TablesDB service allows you to create structured tables of columns, query and filter lists of rows"
         },
         {
             "name": "locale",
@@ -48871,9 +48875,9 @@
                     "description": "Databases (legacy) service status",
                     "x-example": true
                 },
-                "serviceStatusForTables": {
+                "serviceStatusForTablesdb": {
                     "type": "boolean",
-                    "description": "Tables service status",
+                    "description": "TablesDB service status",
                     "x-example": true
                 },
                 "serviceStatusForLocale": {
@@ -48975,7 +48979,7 @@
                 "serviceStatusForAccount",
                 "serviceStatusForAvatars",
                 "serviceStatusForDatabases",
-                "serviceStatusForTables",
+                "serviceStatusForTablesdb",
                 "serviceStatusForLocale",
                 "serviceStatusForHealth",
                 "serviceStatusForStorage",
@@ -49043,7 +49047,7 @@
                 "serviceStatusForAccount": true,
                 "serviceStatusForAvatars": true,
                 "serviceStatusForDatabases": true,
-                "serviceStatusForTables": true,
+                "serviceStatusForTablesdb": true,
                 "serviceStatusForLocale": true,
                 "serviceStatusForHealth": true,
                 "serviceStatusForStorage": true,
