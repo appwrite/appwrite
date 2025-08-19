@@ -29,7 +29,7 @@ class XList extends DatabaseUsageXList
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
-                    namespace: 'tablesdb',
+                    namespace: 'tablesDb',
                     group: null,
                     name: 'listUsage',
                     description: '/docs/references/tablesdb/list-usage.md',
