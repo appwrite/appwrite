@@ -479,10 +479,9 @@ abstract class Format
                 break;
             case 'databases':
                 switch ($method) {
-                    /*case 'getUsage':*/
+                    case 'getUsage':
                     case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }

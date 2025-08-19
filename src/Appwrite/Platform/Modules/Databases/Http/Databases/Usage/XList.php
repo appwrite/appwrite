@@ -37,7 +37,7 @@ class XList extends Action
                 new Method(
                     namespace: 'databases',
                     group: null,
-                    name: self::getName(),
+                    name: 'listUsage',
                     description: '/docs/references/databases/list-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [

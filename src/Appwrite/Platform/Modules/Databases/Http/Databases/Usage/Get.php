@@ -39,7 +39,7 @@ class Get extends Action
                 new Method(
                     namespace: 'databases',
                     group: null,
-                    name: self::getName(),
+                    name: 'getUsage',
                     description: '/docs/references/databases/get-database-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [
