@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL\Grids;
+namespace Tests\E2E\Services\GraphQL\TablesDB;
 
 use Exception;
 use Tests\E2E\Client;
@@ -23,7 +23,7 @@ class DatabaseServerTest extends Scope
     public function testCreateDatabase(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GRIDS_CREATE_DATABASE);
+        $query = $this->getQuery(self::TABLESDB_CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -39,7 +39,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($database['body']['data']);
         $this->assertArrayNotHasKey('errors', $database['body']);
-        $database = $database['body']['data']['gridsCreateDatabase'];
+        $database = $database['body']['data']['tablesdbCreate'];
         $this->assertEquals('Actors', $database['name']);
 
         return $database;
@@ -51,7 +51,7 @@ class DatabaseServerTest extends Scope
     public function testCreateTable($database): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_TABLE);
+        $query = $this->getQuery(self::CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -75,7 +75,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table['body']['data']);
         $this->assertArrayNotHasKey('errors', $table['body']);
-        $table = $table['body']['data']['gridsCreateTable'];
+        $table = $table['body']['data']['tablesdbCreateTable'];
         $this->assertEquals('Actors', $table['name']);
 
         $gqlPayload = [
@@ -101,7 +101,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table2['body']['data']);
         $this->assertArrayNotHasKey('errors', $table2['body']);
-        $table2 = $table2['body']['data']['gridsCreateTable'];
+        $table2 = $table2['body']['data']['tablesdbCreateTable'];
         $this->assertEquals('Movies', $table2['name']);
 
         return [
@@ -118,7 +118,7 @@ class DatabaseServerTest extends Scope
     public function testCreateStringColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
+        $query = $this->getQuery(self::CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -138,7 +138,7 @@ class DatabaseServerTest extends Scope
         // TODO: @itznotabug - check for `encrypt` attribute in string column's response body as well!
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateStringColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateStringColumn']);
 
         return $data;
     }
@@ -153,7 +153,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_STRING_COLUMN);
+        $query = $this->getQuery(self::UPDATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -171,9 +171,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateStringColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateStringColumn']['required']);
-        $this->assertEquals('Default Value', $column['body']['data']['gridsUpdateStringColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateStringColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateStringColumn']['required']);
+        $this->assertEquals('Default Value', $column['body']['data']['tablesdbUpdateStringColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -186,7 +186,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIntegerColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INTEGER_COLUMN);
+        $query = $this->getQuery(self::CREATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -206,7 +206,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateIntegerColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateIntegerColumn']);
 
         return $data;
     }
@@ -221,7 +221,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_INTEGER_COLUMN);
+        $query = $this->getQuery(self::UPDATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -241,11 +241,11 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateIntegerColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateIntegerColumn']['required']);
-        $this->assertEquals(12, $column['body']['data']['gridsUpdateIntegerColumn']['min']);
-        $this->assertEquals(160, $column['body']['data']['gridsUpdateIntegerColumn']['max']);
-        $this->assertEquals(50, $column['body']['data']['gridsUpdateIntegerColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateIntegerColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateIntegerColumn']['required']);
+        $this->assertEquals(12, $column['body']['data']['tablesdbUpdateIntegerColumn']['min']);
+        $this->assertEquals(160, $column['body']['data']['tablesdbUpdateIntegerColumn']['max']);
+        $this->assertEquals(50, $column['body']['data']['tablesdbUpdateIntegerColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -258,7 +258,7 @@ class DatabaseServerTest extends Scope
     public function testCreateBooleanColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_BOOLEAN_COLUMN);
+        $query = $this->getQuery(self::CREATE_BOOLEAN_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -276,7 +276,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateBooleanColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateBooleanColumn']);
 
         return $data;
     }
@@ -291,7 +291,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_BOOLEAN_COLUMN);
+        $query = $this->getQuery(self::UPDATE_BOOLEAN_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -309,9 +309,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateBooleanColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateBooleanColumn']['required']);
-        $this->assertTrue($column['body']['data']['gridsUpdateBooleanColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateBooleanColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateBooleanColumn']['required']);
+        $this->assertTrue($column['body']['data']['tablesdbUpdateBooleanColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -324,7 +324,7 @@ class DatabaseServerTest extends Scope
     public function testCreateFloatColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_FLOAT_COLUMN);
+        $query = $this->getQuery(self::CREATE_FLOAT_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -345,7 +345,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateFloatColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateFloatColumn']);
 
         return $data;
     }
@@ -360,7 +360,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_FLOAT_COLUMN);
+        $query = $this->getQuery(self::UPDATE_FLOAT_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -380,11 +380,11 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateFloatColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateFloatColumn']['required']);
-        $this->assertEquals(100.0, $column['body']['data']['gridsUpdateFloatColumn']['min']);
-        $this->assertEquals(1000000.0, $column['body']['data']['gridsUpdateFloatColumn']['max']);
-        $this->assertEquals(2500.0, $column['body']['data']['gridsUpdateFloatColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateFloatColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateFloatColumn']['required']);
+        $this->assertEquals(100.0, $column['body']['data']['tablesdbUpdateFloatColumn']['min']);
+        $this->assertEquals(1000000.0, $column['body']['data']['tablesdbUpdateFloatColumn']['max']);
+        $this->assertEquals(2500.0, $column['body']['data']['tablesdbUpdateFloatColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -397,7 +397,7 @@ class DatabaseServerTest extends Scope
     public function testCreateEmailColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_EMAIL_COLUMN);
+        $query = $this->getQuery(self::CREATE_EMAIL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -415,7 +415,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateEmailColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateEmailColumn']);
 
         return $data;
     }
@@ -430,7 +430,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_EMAIL_COLUMN);
+        $query = $this->getQuery(self::UPDATE_EMAIL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -448,9 +448,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateEmailColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateEmailColumn']['required']);
-        $this->assertEquals('torsten@appwrite.io', $column['body']['data']['gridsUpdateEmailColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateEmailColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateEmailColumn']['required']);
+        $this->assertEquals('torsten@appwrite.io', $column['body']['data']['tablesdbUpdateEmailColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -463,7 +463,7 @@ class DatabaseServerTest extends Scope
     public function testCreateEnumColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ENUM_COLUMN);
+        $query = $this->getQuery(self::CREATE_ENUM_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -486,7 +486,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateEnumColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateEnumColumn']);
 
         return $data;
     }
@@ -502,7 +502,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ENUM_COLUMN);
+        $query = $this->getQuery(self::UPDATE_ENUM_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -525,11 +525,11 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateEnumColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateEnumColumn']['required']);
-        $this->assertEquals('tech', $column['body']['data']['gridsUpdateEnumColumn']['default']);
-        $this->assertContains('tech', $column['body']['data']['gridsUpdateEnumColumn']['elements']);
-        $this->assertNotContains('guest', $column['body']['data']['gridsUpdateEnumColumn']['elements']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateEnumColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateEnumColumn']['required']);
+        $this->assertEquals('tech', $column['body']['data']['tablesdbUpdateEnumColumn']['default']);
+        $this->assertContains('tech', $column['body']['data']['tablesdbUpdateEnumColumn']['elements']);
+        $this->assertNotContains('guest', $column['body']['data']['tablesdbUpdateEnumColumn']['elements']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -542,7 +542,7 @@ class DatabaseServerTest extends Scope
     public function testCreateDatetimeColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATETIME_COLUMN);
+        $query = $this->getQuery(self::CREATE_DATETIME_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -560,7 +560,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateDatetimeColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateDatetimeColumn']);
 
         return $data;
     }
@@ -575,7 +575,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DATETIME_COLUMN);
+        $query = $this->getQuery(self::UPDATE_DATETIME_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -593,9 +593,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateDatetimeColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateDatetimeColumn']['required']);
-        $this->assertEquals('2000-01-01T00:00:00Z', $column['body']['data']['gridsUpdateDatetimeColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateDatetimeColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateDatetimeColumn']['required']);
+        $this->assertEquals('2000-01-01T00:00:00Z', $column['body']['data']['tablesdbUpdateDatetimeColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -607,7 +607,7 @@ class DatabaseServerTest extends Scope
     public function testCreateRelationshipColumn(array $data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_RELATIONSHIP_COLUMN);
+        $query = $this->getQuery(self::CREATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -628,7 +628,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateRelationshipColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateRelationshipColumn']);
 
         return $data;
     }
@@ -641,7 +641,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_RELATIONSHIP_COLUMN);
+        $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -659,7 +659,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateRelationshipColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateRelationshipColumn']);
 
         return $data;
     }
@@ -671,7 +671,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIPColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_IP_COLUMN);
+        $query = $this->getQuery(self::CREATE_IP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -690,7 +690,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateIpColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateIpColumn']);
 
         return $data;
     }
@@ -705,7 +705,7 @@ class DatabaseServerTest extends Scope
         sleep(3);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_IP_COLUMN);
+        $query = $this->getQuery(self::UPDATE_IP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -723,9 +723,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateIpColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateIpColumn']['required']);
-        $this->assertEquals('127.0.0.1', $column['body']['data']['gridsUpdateIpColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateIpColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateIpColumn']['required']);
+        $this->assertEquals('127.0.0.1', $column['body']['data']['tablesdbUpdateIpColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -738,7 +738,7 @@ class DatabaseServerTest extends Scope
     public function testCreateURLColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_URL_COLUMN);
+        $query = $this->getQuery(self::CREATE_URL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -757,7 +757,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsCreateUrlColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbCreateUrlColumn']);
 
         return $data;
     }
@@ -772,7 +772,7 @@ class DatabaseServerTest extends Scope
         sleep(3);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_URL_COLUMN);
+        $query = $this->getQuery(self::UPDATE_URL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -790,9 +790,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsUpdateUrlColumn']);
-        $this->assertFalse($column['body']['data']['gridsUpdateUrlColumn']['required']);
-        $this->assertEquals('https://cloud.appwrite.io', $column['body']['data']['gridsUpdateUrlColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesdbUpdateUrlColumn']);
+        $this->assertFalse($column['body']['data']['tablesdbUpdateUrlColumn']['required']);
+        $this->assertEquals('https://cloud.appwrite.io', $column['body']['data']['tablesdbUpdateUrlColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
     }
 
@@ -804,7 +804,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIndex($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_COLUMN_INDEX);
+        $query = $this->getQuery(self::CREATE_COLUMN_INDEX);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -826,12 +826,12 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
-        $this->assertIsArray($index['body']['data']['gridsCreateIndex']);
+        $this->assertIsArray($index['body']['data']['tablesdbCreateIndex']);
 
         return [
             'database' => $data['database'],
             'table' => $data['table'],
-            'index' => $index['body']['data']['gridsCreateIndex'],
+            'index' => $index['body']['data']['tablesdbCreateIndex'],
         ];
     }
 
@@ -845,7 +845,7 @@ class DatabaseServerTest extends Scope
     public function testCreateRow($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ROW);
+        $query = $this->getQuery(self::CREATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -877,7 +877,7 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
 
-        $row = $row['body']['data']['gridsCreateRow'];
+        $row = $row['body']['data']['tablesdbCreateRow'];
         $this->assertIsArray($row);
 
         return [
@@ -900,7 +900,7 @@ class DatabaseServerTest extends Scope
     //    public function testCreateCustomEntity(): array
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$CREATE_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::CREATE_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -930,7 +930,7 @@ class DatabaseServerTest extends Scope
     public function testGetDatabases(): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GRIDS_GET_DATABASES);
+        $query = $this->getQuery(self::TABLESDB_GET_DATABASES);
         $gqlPayload = [
             'query' => $query,
         ];
@@ -942,7 +942,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $databases['body']);
         $this->assertIsArray($databases['body']['data']);
-        $this->assertIsArray($databases['body']['data']['gridsListDatabases']);
+        $this->assertIsArray($databases['body']['data']['tablesdbList']);
     }
 
     /**
@@ -952,7 +952,7 @@ class DatabaseServerTest extends Scope
     public function testGetDatabase($database): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GRIDS_GET_DATABASE);
+        $query = $this->getQuery(self::TABLESDB_GET_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -967,7 +967,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $database['body']);
         $this->assertIsArray($database['body']['data']);
-        $this->assertIsArray($database['body']['data']['gridsGetDatabase']);
+        $this->assertIsArray($database['body']['data']['tablesdbGet']);
     }
 
     /**
@@ -977,7 +977,7 @@ class DatabaseServerTest extends Scope
     public function testGetTables($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TABLES);
+        $query = $this->getQuery(self::GET_TABLES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -994,7 +994,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $tables['body']);
         $this->assertIsArray($tables['body']['data']);
-        $this->assertIsArray($tables['body']['data']['gridsListTables']);
+        $this->assertIsArray($tables['body']['data']['tablesdbListTables']);
     }
 
     /**
@@ -1004,7 +1004,7 @@ class DatabaseServerTest extends Scope
     public function testGetTable($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TABLE);
+        $query = $this->getQuery(self::GET_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1020,7 +1020,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['gridsGetTable']);
+        $this->assertIsArray($table['body']['data']['tablesdbGetTable']);
     }
 
     /**
@@ -1031,7 +1031,7 @@ class DatabaseServerTest extends Scope
     public function testGetColumns($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLUMNS);
+        $query = $this->getQuery(self::GET_COLUMNS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1047,7 +1047,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $columns['body']);
         $this->assertIsArray($columns['body']['data']);
-        $this->assertIsArray($columns['body']['data']['gridsListColumns']);
+        $this->assertIsArray($columns['body']['data']['tablesdbListColumns']);
     }
 
     /**
@@ -1057,7 +1057,7 @@ class DatabaseServerTest extends Scope
     public function testGetColumn($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLUMN);
+        $query = $this->getQuery(self::GET_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1074,7 +1074,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['gridsGetColumn']);
+        $this->assertIsArray($column['body']['data']['tablesdbGetColumn']);
     }
 
     /**
@@ -1084,7 +1084,7 @@ class DatabaseServerTest extends Scope
     public function testGetIndexes($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLUMN_INDEXES);
+        $query = $this->getQuery(self::GET_COLUMN_INDEXES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1100,7 +1100,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $indices['body']);
         $this->assertIsArray($indices['body']['data']);
-        $this->assertIsArray($indices['body']['data']['gridsListIndexes']);
+        $this->assertIsArray($indices['body']['data']['tablesdbListIndexes']);
     }
 
     /**
@@ -1110,7 +1110,7 @@ class DatabaseServerTest extends Scope
     public function testGetIndex($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLUMN_INDEX);
+        $query = $this->getQuery(self::GET_COLUMN_INDEX);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1127,7 +1127,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
-        $this->assertIsArray($index['body']['data']['gridsGetIndex']);
+        $this->assertIsArray($index['body']['data']['tablesdbGetIndex']);
     }
 
     /**
@@ -1137,7 +1137,7 @@ class DatabaseServerTest extends Scope
     public function testGetRows($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ROWS);
+        $query = $this->getQuery(self::GET_ROWS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1153,7 +1153,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $rows['body']);
         $this->assertIsArray($rows['body']['data']);
-        $this->assertIsArray($rows['body']['data']['gridsListRows']);
+        $this->assertIsArray($rows['body']['data']['tablesdbListRows']);
     }
 
     /**
@@ -1163,7 +1163,7 @@ class DatabaseServerTest extends Scope
     public function testGetRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ROW);
+        $query = $this->getQuery(self::GET_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1180,7 +1180,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $this->assertIsArray($row['body']['data']['gridsGetRow']);
+        $this->assertIsArray($row['body']['data']['tablesdbGetRow']);
     }
 
     //    /**
@@ -1190,7 +1190,7 @@ class DatabaseServerTest extends Scope
     //    public function testGetCustomEntities($data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$GET_CUSTOM_ENTITIES);
+    //        $query = $this->getQuery(self::GET_CUSTOM_ENTITIES);
     //        $gqlPayload = [
     //            'query' => $query,
     //        ];
@@ -1212,7 +1212,7 @@ class DatabaseServerTest extends Scope
     //    public function testGetCustomEntity($data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$GET_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::GET_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -1237,7 +1237,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateDatabase($database)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GRIDS_UPDATE_DATABASE);
+        $query = $this->getQuery(self::TABLESDB_UPDATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1253,7 +1253,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $database['body']);
         $this->assertIsArray($database['body']['data']);
-        $this->assertIsArray($database['body']['data']['gridsUpdateDatabase']);
+        $this->assertIsArray($database['body']['data']['tablesdbUpdate']);
     }
 
     /**
@@ -1263,7 +1263,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateTable($data)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_TABLE);
+        $query = $this->getQuery(self::UPDATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1281,7 +1281,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['gridsUpdateTable']);
+        $this->assertIsArray($table['body']['data']['tablesdbUpdateTable']);
     }
 
     /**
@@ -1291,7 +1291,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ROW);
+        $query = $this->getQuery(self::UPDATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1311,7 +1311,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $row = $row['body']['data']['gridsUpdateRow'];
+        $row = $row['body']['data']['tablesdbUpdateRow'];
         $this->assertIsArray($row);
         $this->assertStringContainsString('New Row Name', $row['data']);
     }
@@ -1323,7 +1323,7 @@ class DatabaseServerTest extends Scope
     //    public function testUpdateCustomEntity(array $data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$UPDATE_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::UPDATE_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -1351,7 +1351,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteRow($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_ROW);
+        $query = $this->getQuery(self::DELETE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1377,7 +1377,7 @@ class DatabaseServerTest extends Scope
     //    public function testDeleteCustomEntity(array $data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$DELETE_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::DELETE_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -1401,7 +1401,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteColumn($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_COLUMN);
+        $query = $this->getQuery(self::DELETE_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1427,7 +1427,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteTable($data)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_TABLE);
+        $query = $this->getQuery(self::DELETE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1452,7 +1452,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteDatabase($database)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GRIDS_DELETE_DATABASE);
+        $query = $this->getQuery(self::TABLESDB_DELETE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1482,7 +1482,7 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders());
 
         // Step 1: Create database
-        $query = $this->getQuery(self::$GRIDS_CREATE_DATABASE);
+        $query = $this->getQuery(self::TABLESDB_CREATE_DATABASE);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1493,10 +1493,10 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $databaseId = $res['body']['data']['gridsCreateDatabase']['_id'];
+        $databaseId = $res['body']['data']['tablesdbCreate']['_id'];
 
         // Step 2: Create table
-        $query = $this->getQuery(self::$CREATE_TABLE);
+        $query = $this->getQuery(self::CREATE_TABLE);
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
@@ -1512,10 +1512,10 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $tableId = $res['body']['data']['gridsCreateTable']['_id'];
+        $tableId = $res['body']['data']['tablesdbCreateTable']['_id'];
 
         // Step 3: Create column
-        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
+        $query = $this->getQuery(self::CREATE_STRING_COLUMN);
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
@@ -1530,7 +1530,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         // Step 4: Create rows
-        $query = $this->getQuery(self::$CREATE_ROWS);
+        $query = $this->getQuery(self::CREATE_ROWS);
         $rows = [];
         for ($i = 1; $i <= 10; $i++) {
             $rows[] = ['$id' => 'row' . $i, 'name' => 'Row #' . $i];
@@ -1545,7 +1545,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['gridsCreateRows']['rows']);
+        $this->assertCount(10, $res['body']['data']['tablesdbCreateRows']['rows']);
 
         return compact('databaseId', 'tableId', 'projectId');
     }
@@ -1568,7 +1568,7 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders());
 
         // Step 1: Bulk update rows
-        $query = $this->getQuery(self::$UPDATE_ROWS);
+        $query = $this->getQuery(self::UPDATE_ROWS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1583,10 +1583,10 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['gridsUpdateRows']['rows']);
+        $this->assertCount(10, $res['body']['data']['tablesdbUpdateRows']['rows']);
 
         // Step 2: Fetch and validate updated rows
-        $query = $this->getQuery(self::$GET_ROWS);
+        $query = $this->getQuery(self::GET_ROWS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1599,7 +1599,7 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertEquals(200, $res['headers']['status-code']);
 
-        $fetched = $res['body']['data']['gridsListRows'];
+        $fetched = $res['body']['data']['tablesdbListRows'];
         $this->assertEquals(10, $fetched['total']);
 
         foreach ($fetched['rows'] as $row) {
@@ -1630,7 +1630,7 @@ class DatabaseServerTest extends Scope
         ];
 
         // Step 1: Mutate row 10 and add row 11
-        $query = $this->getQuery(self::$UPSERT_ROWS);
+        $query = $this->getQuery(self::UPSERT_ROWS);
         $upsertPayload = [
             'query' => $query,
             'variables' => [
@@ -1651,7 +1651,7 @@ class DatabaseServerTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $upsertPayload);
         $this->assertArrayNotHasKey('errors', $response['body']);
 
-        $rows = $response['body']['data']['gridsUpsertRows']['rows'];
+        $rows = $response['body']['data']['tablesdbUpsertRows']['rows'];
         $this->assertCount(2, $rows);
 
         $rowMap = [];
@@ -1664,7 +1664,7 @@ class DatabaseServerTest extends Scope
         $this->assertArrayHasKey('Row #11', $rowMap);
 
         // Step 2: Fetch all rows and confirm count is now 11
-        $query = $this->getQuery(self::$GET_ROWS);
+        $query = $this->getQuery(self::GET_ROWS);
         $fetchPayload = [
             'query' => $query,
             'variables' => [
@@ -1676,11 +1676,11 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $fetchPayload);
         $this->assertEquals(200, $res['headers']['status-code']);
 
-        $fetched = $res['body']['data']['gridsListRows'];
+        $fetched = $res['body']['data']['tablesdbListRows'];
         $this->assertEquals(11, $fetched['total']);
 
         // Step 3: Upsert row with new permissions using `tablesUpsertRow`
-        $query = $this->getQuery(self::$UPSERT_ROW);
+        $query = $this->getQuery(self::UPSERT_ROW);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1695,7 +1695,7 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
 
-        $updated = $res['body']['data']['gridsUpsertRow'];
+        $updated = $res['body']['data']['tablesdbUpsertRow'];
         $this->assertEquals('Row #10 Patched', json_decode($updated['data'], true)['name']);
         $this->assertEquals($data['databaseId'], $updated['_databaseId']);
         $this->assertEquals($data['tableId'], $updated['_tableId']);
@@ -1714,7 +1714,7 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders());
 
         // Step 1: Perform bulk delete
-        $query = $this->getQuery(self::$DELETE_ROWS);
+        $query = $this->getQuery(self::DELETE_ROWS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1726,12 +1726,12 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
 
-        $deleted = $res['body']['data']['gridsDeleteRows']['rows'];
+        $deleted = $res['body']['data']['tablesdbDeleteRows']['rows'];
         $this->assertIsArray($deleted);
         $this->assertCount(11, $deleted);
 
         // Step 2: Confirm deletion via refetch
-        $query = $this->getQuery(self::$GET_ROWS);
+        $query = $this->getQuery(self::GET_ROWS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1742,7 +1742,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertEquals(200, $res['headers']['status-code']);
-        $this->assertEquals(0, $res['body']['data']['gridsListRows']['total']);
+        $this->assertEquals(0, $res['body']['data']['tablesdbListRows']['total']);
 
         return $data;
     }

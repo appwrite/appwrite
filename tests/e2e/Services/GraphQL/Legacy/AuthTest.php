@@ -31,7 +31,7 @@ class AuthTest extends Scope
         parent::setUp();
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ACCOUNT);
+        $query = $this->getQuery(self::CREATE_ACCOUNT);
 
         $email1 = 'test' . \rand() . '@test.com';
         $email2 = 'test' . \rand() . '@test.com';
@@ -61,7 +61,7 @@ class AuthTest extends Scope
         ], $graphQLPayload);
 
         // Create session 1
-        $query = $this->getQuery(self::$CREATE_ACCOUNT_SESSION);
+        $query = $this->getQuery(self::CREATE_ACCOUNT_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -87,7 +87,7 @@ class AuthTest extends Scope
         $this->token2 = $session2['cookies']['a_session_' . $projectId];
 
         // Create database
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -102,7 +102,7 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Create collection
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
@@ -123,7 +123,7 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Create string attribute
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -148,7 +148,7 @@ class AuthTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         // Create document as account 1
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::CREATE_DOCUMENT);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
@@ -173,7 +173,7 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Try to read as account 1
-        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $query = $this->getQuery(self::GET_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -207,7 +207,7 @@ class AuthTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         // Create document as account 1
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::CREATE_DOCUMENT);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
@@ -232,7 +232,7 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Try to delete as account 1
-        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $query = $this->getQuery(self::DELETE_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

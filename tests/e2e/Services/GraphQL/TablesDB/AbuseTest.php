@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL\Grids;
+namespace Tests\E2E\Services\GraphQL\TablesDB;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -33,7 +33,7 @@ class AbuseTest extends Scope
         $databaseId = $data['databaseId'];
         $tableId = $data['tableId'];
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ROW);
+        $query = $this->getQuery(self::CREATE_ROW);
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
@@ -65,7 +65,7 @@ class AbuseTest extends Scope
     public function testComplexQueryBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$COMPLEX_QUERY_TABLE);
+        $query = $this->getQuery(self::COMPLEX_QUERY_TABLE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -103,7 +103,7 @@ class AbuseTest extends Scope
 
         $query = [];
         for ($i = 0; $i <= $maxQueries + 1; $i++) {
-            $query[] = ['query' => $this->getQuery(self::$LIST_COUNTRIES)];
+            $query[] = ['query' => $this->getQuery(self::LIST_COUNTRIES)];
         }
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -117,7 +117,7 @@ class AbuseTest extends Scope
     private function createTable(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -134,7 +134,7 @@ class AbuseTest extends Scope
 
         $databaseId = $response['body']['data']['databasesCreate']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_TABLE);
+        $query = $this->getQuery(self::CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -155,9 +155,9 @@ class AbuseTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $tableId = $response['body']['data']['gridsCreateTable']['_id'];
+        $tableId = $response['body']['data']['tablesdbCreateTable']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
+        $query = $this->getQuery(self::CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

@@ -20,7 +20,7 @@ class FunctionsClientTest extends Scope
     public function testCreateFunction(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_FUNCTION);
+        $query = $this->getQuery(self::CREATE_FUNCTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -82,7 +82,7 @@ class FunctionsClientTest extends Scope
     public function testCreateDeployment($function): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
+        $query = $this->getQuery(self::CREATE_DEPLOYMENT);
 
         $gqlPayload = [
             'operations' => \json_encode([
@@ -112,7 +112,7 @@ class FunctionsClientTest extends Scope
         $deployment = $deployment['body']['data']['functionsCreateDeployment'];
         $deploymentId = $deployment['_id'];
 
-        $query = $this->getQuery(self::$GET_DEPLOYMENT);
+        $query = $this->getQuery(self::GET_DEPLOYMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -149,7 +149,7 @@ class FunctionsClientTest extends Scope
     public function testCreateExecution($function, $deployment): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_EXECUTION);
+        $query = $this->getQuery(self::CREATE_EXECUTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -176,7 +176,7 @@ class FunctionsClientTest extends Scope
     public function testGetExecutions($function): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_EXECUTIONS);
+        $query = $this->getQuery(self::GET_EXECUTIONS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -208,7 +208,7 @@ class FunctionsClientTest extends Scope
     public function testGetExecution($function, $execution): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_EXECUTION);
+        $query = $this->getQuery(self::GET_EXECUTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

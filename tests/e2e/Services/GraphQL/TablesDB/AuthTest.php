@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\GraphQL\Grids;
+namespace Tests\E2E\Services\GraphQL\TablesDB;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -31,7 +31,7 @@ class AuthTest extends Scope
         parent::setUp();
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ACCOUNT);
+        $query = $this->getQuery(self::CREATE_ACCOUNT);
 
         $email1 = 'test' . \rand() . '@test.com';
         $email2 = 'test' . \rand() . '@test.com';
@@ -61,7 +61,7 @@ class AuthTest extends Scope
         ], $graphQLPayload);
 
         // Create session 1
-        $query = $this->getQuery(self::$CREATE_ACCOUNT_SESSION);
+        $query = $this->getQuery(self::CREATE_ACCOUNT_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -87,7 +87,7 @@ class AuthTest extends Scope
         $this->token2 = $session2['cookies']['a_session_' . $projectId];
 
         // Create database
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -102,7 +102,7 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Create table
-        $query = $this->getQuery(self::$CREATE_TABLE);
+        $query = $this->getQuery(self::CREATE_TABLE);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
@@ -123,12 +123,12 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Create string attribute
-        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
+        $query = $this->getQuery(self::CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesdbCreateTable']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -148,13 +148,13 @@ class AuthTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         // Create row as account 1
-        $query = $this->getQuery(self::$CREATE_ROW);
+        $query = $this->getQuery(self::CREATE_ROW);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesdbCreateTable']['_id'],
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -173,13 +173,13 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Try to read as account 1
-        $query = $this->getQuery(self::$GET_ROW);
+        $query = $this->getQuery(self::GET_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
-                'rowId' => $row['body']['data']['gridsCreateRow']['_id'],
+                'tableId' => $this->table['body']['data']['tablesdbCreateTable']['_id'],
+                'rowId' => $row['body']['data']['tablesdbCreateRow']['_id'],
             ]
         ];
         $row = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -188,7 +188,7 @@ class AuthTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
-        $this->assertIsArray($row['body']['data']['gridsGetRow']);
+        $this->assertIsArray($row['body']['data']['tablesdbGetRow']);
         $this->assertArrayNotHasKey('errors', $row['body']);
 
         // Try to read as account 2
@@ -207,13 +207,13 @@ class AuthTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         // Create row as account 1
-        $query = $this->getQuery(self::$CREATE_ROW);
+        $query = $this->getQuery(self::CREATE_ROW);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['tablesdbCreateTable']['_id'],
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -232,13 +232,13 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Try to delete as account 1
-        $query = $this->getQuery(self::$DELETE_ROW);
+        $query = $this->getQuery(self::DELETE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => $this->table['body']['data']['gridsCreateTable']['_id'],
-                'rowId' => $row['body']['data']['gridsCreateRow']['_id'],
+                'tableId' => $this->table['body']['data']['tablesdbCreateTable']['_id'],
+                'rowId' => $row['body']['data']['tablesdbCreateRow']['_id'],
             ]
         ];
         $row = $this->client->call(Client::METHOD_POST, '/graphql', [

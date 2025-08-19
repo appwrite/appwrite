@@ -18,7 +18,7 @@ class UsersTest extends Scope
     public function testCreateUser(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_USER);
+        $query = $this->getQuery(self::CREATE_USER);
         $email = 'users.service@example.com';
         $graphQLPayload = [
             'query' => $query,
@@ -52,7 +52,7 @@ class UsersTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
 
-        $query = $this->getQuery(self::$CREATE_MAILGUN_PROVIDER);
+        $query = $this->getQuery(self::CREATE_MAILGUN_PROVIDER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -73,7 +73,7 @@ class UsersTest extends Scope
 
         $this->assertEquals(200, $provider['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
+        $query = $this->getQuery(self::CREATE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -99,7 +99,7 @@ class UsersTest extends Scope
     public function testGetUsers()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USERS);
+        $query = $this->getQuery(self::GET_USERS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -124,7 +124,7 @@ class UsersTest extends Scope
     public function testGetUser()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER);
+        $query = $this->getQuery(self::GET_USER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -146,7 +146,7 @@ class UsersTest extends Scope
     public function testGetUserPreferences()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_PREFERENCES);
+        $query = $this->getQuery(self::GET_USER_PREFERENCES);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -167,7 +167,7 @@ class UsersTest extends Scope
     public function testGetUserSessions()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_SESSIONS);
+        $query = $this->getQuery(self::GET_USER_SESSIONS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -188,7 +188,7 @@ class UsersTest extends Scope
     public function testGetUserMemberships()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_MEMBERSHIPS);
+        $query = $this->getQuery(self::GET_USER_MEMBERSHIPS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -209,7 +209,7 @@ class UsersTest extends Scope
     public function testGetUserLogs()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_LOGS);
+        $query = $this->getQuery(self::GET_USER_LOGS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -233,7 +233,7 @@ class UsersTest extends Scope
     public function testListUserTargets(array $target)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$LIST_USER_TARGETS);
+        $query = $this->getQuery(self::LIST_USER_TARGETS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -257,7 +257,7 @@ class UsersTest extends Scope
     public function testGetUserTarget(array $target)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_TARGET);
+        $query = $this->getQuery(self::GET_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -278,7 +278,7 @@ class UsersTest extends Scope
     public function testUpdateUserStatus()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_STATUS);
+        $query = $this->getQuery(self::UPDATE_USER_STATUS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -301,7 +301,7 @@ class UsersTest extends Scope
     public function testUpdateUserEmailVerification()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_EMAIL_VERIFICATION);
+        $query = $this->getQuery(self::UPDATE_USER_EMAIL_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -323,7 +323,7 @@ class UsersTest extends Scope
     public function testUpdateUserPhoneVerification()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PHONE_VERIFICATION);
+        $query = $this->getQuery(self::UPDATE_USER_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -346,7 +346,7 @@ class UsersTest extends Scope
     public function testUpdateUserName()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_NAME);
+        $query = $this->getQuery(self::UPDATE_USER_NAME);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -369,7 +369,7 @@ class UsersTest extends Scope
     public function testUpdateUserEmail()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_EMAIL);
+        $query = $this->getQuery(self::UPDATE_USER_EMAIL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -392,7 +392,7 @@ class UsersTest extends Scope
     public function testUpdateUserPassword()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PASSWORD);
+        $query = $this->getQuery(self::UPDATE_USER_PASSWORD);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -414,7 +414,7 @@ class UsersTest extends Scope
     public function testUpdateUserPhone()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PHONE);
+        $query = $this->getQuery(self::UPDATE_USER_PHONE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -437,7 +437,7 @@ class UsersTest extends Scope
     public function testUpdateUserPrefs()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PREFS);
+        $query = $this->getQuery(self::UPDATE_USER_PREFS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -465,7 +465,7 @@ class UsersTest extends Scope
     public function testUpdateUserTarget(array $target)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_TARGET);
+        $query = $this->getQuery(self::UPDATE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -487,7 +487,7 @@ class UsersTest extends Scope
     public function testDeleteUserSessions()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_USER_SESSIONS);
+        $query = $this->getQuery(self::DELETE_USER_SESSIONS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -503,14 +503,14 @@ class UsersTest extends Scope
         $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
 
-        unset(self::$user[$this->getProject()['$id']]);
+        unset(self::user[$this->getProject()['$id']]);
         $this->getUser();
     }
 
     public function testDeleteUserSession()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_USER_SESSION);
+        $query = $this->getQuery(self::DELETE_USER_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -527,7 +527,7 @@ class UsersTest extends Scope
         $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
 
-        unset(self::$user[$this->getProject()['$id']]);
+        unset(self::user[$this->getProject()['$id']]);
         $this->getUser();
     }
 
@@ -537,7 +537,7 @@ class UsersTest extends Scope
     public function testDeleteUserTarget(array $target)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_USER_TARGET);
+        $query = $this->getQuery(self::DELETE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -557,7 +557,7 @@ class UsersTest extends Scope
     public function testDeleteUser()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_USER);
+        $query = $this->getQuery(self::DELETE_USER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
