@@ -32,7 +32,7 @@ class XList extends DatabaseXList
                 namespace: 'tablesdb',
                 group: 'tablesdb',
                 name: 'list',
-                description: '/docs/references/tablesdb/list-databases.md',
+                description: '/docs/references/tablesdb/list.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

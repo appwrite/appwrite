@@ -37,7 +37,7 @@ class Create extends DatabaseCreate
                 namespace: 'tablesdb',
                 group: 'tablesdb',
                 name: 'create',
-                description: '/docs/references/tablesdb/create-database.md',
+                description: '/docs/references/tablesdb/create.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

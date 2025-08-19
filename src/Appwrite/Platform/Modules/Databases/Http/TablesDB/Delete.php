@@ -34,7 +34,7 @@ class Delete extends DatabaseDelete
                 namespace: 'tablesdb',
                 group: 'tablesdb',
                 name: 'delete',
-                description: '/docs/references/tablesdb/delete-database.md',
+                description: '/docs/references/tablesdb/delete.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

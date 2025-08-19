@@ -36,7 +36,7 @@ class Update extends DatabaseUpdate
                 namespace: 'tablesdb',
                 group: 'tablesdb',
                 name: 'update',
-                description: '/docs/references/tablesdb/update-database.md',
+                description: '/docs/references/tablesdb/update.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -31,7 +31,7 @@ class Get extends DatabaseGet
                 namespace: 'tablesdb',
                 group: 'tablesdb',
                 name: 'get',
-                description: '/docs/references/tablesdb/get-database.md',
+                description: '/docs/references/tablesdb/get.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

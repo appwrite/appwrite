@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Databases\Logs;
+namespace Appwrite\Platform\Modules\Databases\Http\Databases\TablesDB\Logs;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -37,35 +37,17 @@ class XList extends Action
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/tabledb/:databaseId/logs')
+            ->setHttpPath('/v1/tablesdb/:databaseId/logs')
             ->desc('List database logs')
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
-                    namespace: 'databases',
-                    group: 'logs',
-                    name: 'listLogs',
-                    description: '/docs/references/databases/get-logs.md',
-                    auth: [AuthType::ADMIN],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_LOG_LIST,
-                        )
-                    ],
-                    contentType: ContentType::JSON,
-                    deprecated: new Deprecated(
-                        since: '1.8.0',
-                        replaceWith: 'tablesdb.listDatabaseLogs',
-                    )
-                ),
-                new Method(
                     namespace: 'tablesdb',
                     group: 'logs',
                     name: 'listDatabaseLogs',
-                    description: '/docs/references/tablesdb/list-database-logs.md',
+                    description: '/docs/references/tablesdb/get-logs.md',
                     auth: [AuthType::ADMIN],
                     responses: [
                         new SDKResponse(

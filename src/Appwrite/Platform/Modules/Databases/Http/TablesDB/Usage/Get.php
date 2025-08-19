@@ -33,7 +33,7 @@ class Get extends DatabaseUsageGet
                     namespace: 'tablesdb',
                     group: null,
                     name: 'getUsage',
-                    description: '/docs/references/tablesdb/get-usage.md',
+                    description: '/docs/references/tablesdb/get-database-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
