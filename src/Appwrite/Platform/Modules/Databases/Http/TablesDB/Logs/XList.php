@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Databases\TablesDB\Logs;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Logs;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
