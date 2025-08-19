@@ -29,7 +29,7 @@ class XList extends DatabaseXList
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'tablesdb',
+                namespace: 'tablesDb',
                 group: 'tablesdb',
                 name: 'list',
                 description: '/docs/references/tablesdb/list.md',

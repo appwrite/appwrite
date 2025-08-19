@@ -43,7 +43,7 @@ class XList extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
-                    namespace: 'tablesdb',
+                    namespace: 'tablesDb',
                     group: 'logs',
                     name: 'listDatabaseLogs',
                     description: '/docs/references/tablesdb/get-logs.md',
