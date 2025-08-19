@@ -4504,7 +4504,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 339,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-documents.md",
@@ -4520,7 +4520,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.listRows"
+                        "replaceWith": "tablesDb.listRows"
                     },
                     "auth": {
                         "Project": []
@@ -4589,7 +4589,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 331,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-document.md",
@@ -4605,12 +4605,13 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.createRow"
+                        "replaceWith": "tablesDb.createRow"
                     },
                     "methods": [
                         {
                             "name": "createDocument",
                             "namespace": "databases",
+                            "desc": "Create document",
                             "auth": {
                                 "Project": []
                             },
@@ -4634,9 +4635,10 @@
                                 }
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/create-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "grids.createRow"
+                                "replaceWith": "tablesDb.createRow"
                             }
                         }
                     ],
@@ -4734,7 +4736,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 332,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-document.md",
@@ -4750,7 +4752,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.getRow"
+                        "replaceWith": "tablesDb.getRow"
                     },
                     "auth": {
                         "Project": []
@@ -4814,7 +4816,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4827,7 +4829,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 335,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-document.md",
@@ -4843,12 +4845,13 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.upsertRow"
+                        "replaceWith": "tablesDb.upsertRow"
                     },
                     "methods": [
                         {
                             "name": "upsertDocument",
                             "namespace": "databases",
+                            "desc": "",
                             "auth": {
                                 "Project": []
                             },
@@ -4871,10 +4874,11 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/upsert-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "grids.upsertRow"
+                                "replaceWith": "tablesDb.upsertRow"
                             }
                         }
                     ],
@@ -4968,7 +4972,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 333,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-document.md",
@@ -4984,7 +4988,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.updateRow"
+                        "replaceWith": "tablesDb.updateRow"
                     },
                     "auth": {
                         "Project": []
@@ -5068,7 +5072,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 337,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-document.md",
@@ -5084,7 +5088,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.deleteRow"
+                        "replaceWith": "tablesDb.deleteRow"
                     },
                     "auth": {
                         "Project": []
@@ -5125,615 +5129,6 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows": {
-            "get": {
-                "summary": "List rows",
-                "operationId": "gridsListRows",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
-                "responses": {
-                    "200": {
-                        "description": "Rows List",
-                        "schema": {
-                            "$ref": "#\/definitions\/rowList"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "listRows",
-                    "group": "rows",
-                    "weight": 412,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/list-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-rows.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
-                        "required": false,
-                        "type": "array",
-                        "collectionFormat": "multi",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": [],
-                        "in": "query"
-                    }
-                ]
-            },
-            "post": {
-                "summary": "Create row",
-                "operationId": "gridsCreateRow",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                "responses": {
-                    "201": {
-                        "description": "Row",
-                        "schema": {
-                            "$ref": "#\/definitions\/row"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "createRow",
-                    "group": "rows",
-                    "weight": 404,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/create-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-row.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "methods": [
-                        {
-                            "name": "createRow",
-                            "namespace": "grids",
-                            "auth": {
-                                "Project": []
-                            },
-                            "parameters": [
-                                "databaseId",
-                                "tableId",
-                                "rowId",
-                                "data",
-                                "permissions"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "tableId",
-                                "rowId",
-                                "data"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/definitions\/row"
-                                }
-                            ],
-                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
-                        }
-                    ],
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate). Make sure to define columns before creating rows.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "rowId": {
-                                    "type": "string",
-                                    "description": "Row ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
-                                    "default": "",
-                                    "x-example": "<ROW_ID>"
-                                },
-                                "data": {
-                                    "type": "object",
-                                    "description": "Row data as JSON object.",
-                                    "default": [],
-                                    "x-example": "{}"
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                },
-                                "rows": {
-                                    "type": "array",
-                                    "description": "Array of documents data as JSON objects.",
-                                    "default": [],
-                                    "x-example": null,
-                                    "items": {
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            }
-        },
-        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}": {
-            "get": {
-                "summary": "Get row",
-                "operationId": "gridsGetRow",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
-                "responses": {
-                    "200": {
-                        "description": "Row",
-                        "schema": {
-                            "$ref": "#\/definitions\/row"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "getRow",
-                    "group": "rows",
-                    "weight": 405,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/get-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-row.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "rowId",
-                        "description": "Row ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<ROW_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
-                        "required": false,
-                        "type": "array",
-                        "collectionFormat": "multi",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": [],
-                        "in": "query"
-                    }
-                ]
-            },
-            "put": {
-                "summary": "Create or update a row",
-                "operationId": "gridsUpsertRow",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                "responses": {
-                    "201": {
-                        "description": "Row",
-                        "schema": {
-                            "$ref": "#\/definitions\/row"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "upsertRow",
-                    "group": "rows",
-                    "weight": 408,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/upsert-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/upsert-row.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "methods": [
-                        {
-                            "name": "upsertRow",
-                            "namespace": "grids",
-                            "auth": {
-                                "Project": []
-                            },
-                            "parameters": [
-                                "databaseId",
-                                "tableId",
-                                "rowId",
-                                "data",
-                                "permissions"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "tableId",
-                                "rowId"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/definitions\/row"
-                                }
-                            ],
-                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
-                        }
-                    ],
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "rowId",
-                        "description": "Row ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<ROW_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
-                                    "default": [],
-                                    "x-example": "{}"
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            },
-            "patch": {
-                "summary": "Update row",
-                "operationId": "gridsUpdateRow",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
-                "responses": {
-                    "200": {
-                        "description": "Row",
-                        "schema": {
-                            "$ref": "#\/definitions\/row"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "updateRow",
-                    "group": "rows",
-                    "weight": 406,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/update-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-row.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "rowId",
-                        "description": "Row ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<ROW_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
-                                    "default": [],
-                                    "x-example": "{}"
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            },
-            "delete": {
-                "summary": "Delete row",
-                "operationId": "gridsDeleteRow",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Delete a row by its unique ID.",
-                "responses": {
-                    "204": {
-                        "description": "No content"
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "deleteRow",
-                    "group": "rows",
-                    "weight": 410,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/delete-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-row.md",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "rowId",
-                        "description": "Row ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<ROW_ID>",
-                        "in": "path"
-                    }
-                ]
-            }
-        },
         "\/functions\/{functionId}\/executions": {
             "get": {
                 "summary": "List executions",
@@ -5758,7 +5153,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 440,
+                    "weight": 448,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -5831,7 +5226,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 438,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -5947,7 +5342,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 439,
+                    "weight": 447,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -6018,7 +5413,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 254,
+                    "weight": 255,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -6091,7 +5486,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 253,
+                    "weight": 254,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -6572,7 +5967,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 300,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -6656,7 +6051,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 304,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -7457,6 +6852,619 @@
                         "x-example": "<TOKEN>",
                         "default": "",
                         "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows": {
+            "get": {
+                "summary": "List rows",
+                "operationId": "tablesDbListRows",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
+                "responses": {
+                    "200": {
+                        "description": "Rows List",
+                        "schema": {
+                            "$ref": "#\/definitions\/rowList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listRows",
+                    "group": "rows",
+                    "weight": 420,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/list-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create row",
+                "operationId": "tablesDbCreateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createRow",
+                    "group": "rows",
+                    "weight": 412,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/create-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createRow",
+                            "namespace": "tablesDb",
+                            "desc": "Create row",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                            "demo": "tables-db\/create-row.md"
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate). Make sure to define columns before creating rows.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "rowId": {
+                                    "type": "string",
+                                    "description": "Row ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "default": "",
+                                    "x-example": "<ROW_ID>"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "rows": {
+                                    "type": "array",
+                                    "description": "Array of documents data as JSON objects.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}": {
+            "get": {
+                "summary": "Get row",
+                "operationId": "tablesDbGetRow",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getRow",
+                    "group": "rows",
+                    "weight": 413,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/get-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Create or update a row",
+                "operationId": "tablesDbUpsertRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "upsertRow",
+                    "group": "rows",
+                    "weight": 416,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/upsert-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "upsertRow",
+                            "namespace": "tablesDb",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                            "demo": "tables-db\/upsert-row.md"
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update row",
+                "operationId": "tablesDbUpdateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateRow",
+                    "group": "rows",
+                    "weight": 414,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/update-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete row",
+                "operationId": "tablesDbDeleteRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Delete a row by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteRow",
+                    "group": "rows",
+                    "weight": 418,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/delete-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
                     }
                 ]
             }
@@ -8552,7 +8560,8 @@
         "any": {
             "description": "Any",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": []
         },
         "rowList": {
             "description": "Rows List",
@@ -8577,7 +8586,11 @@
             "required": [
                 "total",
                 "rows"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "rows": ""
+            }
         },
         "documentList": {
             "description": "Documents List",
@@ -8602,7 +8615,11 @@
             "required": [
                 "total",
                 "documents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "documents": ""
+            }
         },
         "sessionList": {
             "description": "Sessions List",
@@ -8627,7 +8644,11 @@
             "required": [
                 "total",
                 "sessions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "sessions": ""
+            }
         },
         "identityList": {
             "description": "Identities List",
@@ -8652,7 +8673,11 @@
             "required": [
                 "total",
                 "identities"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "identities": ""
+            }
         },
         "logList": {
             "description": "Logs List",
@@ -8677,7 +8702,11 @@
             "required": [
                 "total",
                 "logs"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "logs": ""
+            }
         },
         "fileList": {
             "description": "Files List",
@@ -8702,7 +8731,11 @@
             "required": [
                 "total",
                 "files"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "files": ""
+            }
         },
         "teamList": {
             "description": "Teams List",
@@ -8727,7 +8760,11 @@
             "required": [
                 "total",
                 "teams"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "teams": ""
+            }
         },
         "membershipList": {
             "description": "Memberships List",
@@ -8752,7 +8789,11 @@
             "required": [
                 "total",
                 "memberships"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "memberships": ""
+            }
         },
         "executionList": {
             "description": "Executions List",
@@ -8777,7 +8818,11 @@
             "required": [
                 "total",
                 "executions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "executions": ""
+            }
         },
         "countryList": {
             "description": "Countries List",
@@ -8802,7 +8847,11 @@
             "required": [
                 "total",
                 "countries"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "countries": ""
+            }
         },
         "continentList": {
             "description": "Continents List",
@@ -8827,7 +8876,11 @@
             "required": [
                 "total",
                 "continents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "continents": ""
+            }
         },
         "languageList": {
             "description": "Languages List",
@@ -8852,7 +8905,11 @@
             "required": [
                 "total",
                 "languages"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "languages": ""
+            }
         },
         "currencyList": {
             "description": "Currencies List",
@@ -8877,7 +8934,11 @@
             "required": [
                 "total",
                 "currencies"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "currencies": ""
+            }
         },
         "phoneList": {
             "description": "Phones List",
@@ -8902,7 +8963,11 @@
             "required": [
                 "total",
                 "phones"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "phones": ""
+            }
         },
         "localeCodeList": {
             "description": "Locale codes list",
@@ -8927,7 +8992,11 @@
             "required": [
                 "total",
                 "localeCodes"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "localeCodes": ""
+            }
         },
         "row": {
             "description": "Row",
@@ -8984,7 +9053,18 @@
                 "$createdAt",
                 "$updatedAt",
                 "$permissions"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$sequence": 1,
+                "$tableId": "5e5ea5c15117e",
+                "$databaseId": "5e5ea5c15117e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ]
+            }
         },
         "document": {
             "description": "Document",
@@ -9044,7 +9124,23 @@
                 "$createdAt",
                 "$updatedAt",
                 "$permissions"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$sequence": 1,
+                "$collectionId": "5e5ea5c15117e",
+                "$databaseId": "5e5ea5c15117e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "username": "john.doe",
+                "email": "john.doe@example.com",
+                "fullName": "John Doe",
+                "age": 30,
+                "isAdmin": false
+            }
         },
         "log": {
             "description": "Log",
@@ -9178,7 +9274,30 @@
                 "deviceModel",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "event": "account.sessions.create",
+                "userId": "610fc2f985ee0",
+                "userEmail": "john@appwrite.io",
+                "userName": "John Doe",
+                "mode": "admin",
+                "ip": "127.0.0.1",
+                "time": "2020-10-15T06:38:00.000+00:00",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "user": {
             "description": "User",
@@ -9341,7 +9460,33 @@
                 "prefs",
                 "targets",
                 "accessedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "John Doe",
+                "password": "$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L\/4LdgrVRXxE",
+                "hash": "argon2",
+                "hashOptions": {},
+                "registration": "2020-10-15T06:38:00.000+00:00",
+                "status": true,
+                "labels": [
+                    "vip"
+                ],
+                "passwordUpdate": "2020-10-15T06:38:00.000+00:00",
+                "email": "john@appwrite.io",
+                "phone": "+4930901820",
+                "emailVerification": true,
+                "phoneVerification": true,
+                "mfa": true,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                },
+                "targets": [],
+                "accessedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "algoMd5": {
             "description": "AlgoMD5",
@@ -9355,7 +9500,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "md5"
+            }
         },
         "algoSha": {
             "description": "AlgoSHA",
@@ -9369,7 +9517,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "sha"
+            }
         },
         "algoPhpass": {
             "description": "AlgoPHPass",
@@ -9383,7 +9534,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "phpass"
+            }
         },
         "algoBcrypt": {
             "description": "AlgoBcrypt",
@@ -9397,7 +9551,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "bcrypt"
+            }
         },
         "algoScrypt": {
             "description": "AlgoScrypt",
@@ -9439,7 +9596,14 @@
                 "costMemory",
                 "costParallel",
                 "length"
-            ]
+            ],
+            "example": {
+                "type": "scrypt",
+                "costCpu": 8,
+                "costMemory": 14,
+                "costParallel": 1,
+                "length": 64
+            }
         },
         "algoScryptModified": {
             "description": "AlgoScryptModified",
@@ -9471,7 +9635,13 @@
                 "salt",
                 "saltSeparator",
                 "signerKey"
-            ]
+            ],
+            "example": {
+                "type": "scryptMod",
+                "salt": "UxLMreBr6tYyjQ==",
+                "saltSeparator": "Bw==",
+                "signerKey": "XyEKE9RcTDeLEsL\/RjwPDBv\/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=="
+            }
         },
         "algoArgon2": {
             "description": "AlgoArgon2",
@@ -9506,12 +9676,23 @@
                 "memoryCost",
                 "timeCost",
                 "threads"
-            ]
+            ],
+            "example": {
+                "type": "argon2",
+                "memoryCost": 65536,
+                "timeCost": 4,
+                "threads": 3
+            }
         },
         "preferences": {
             "description": "Preferences",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": {
+                "language": "en",
+                "timezone": "UTC",
+                "darkTheme": true
+            }
         },
         "session": {
             "description": "Session",
@@ -9698,7 +9879,40 @@
                 "factors",
                 "secret",
                 "mfaUpdatedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "provider": "email",
+                "providerUid": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "ip": "127.0.0.1",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States",
+                "current": true,
+                "factors": [
+                    "email"
+                ],
+                "secret": "5e5bb8c16897e",
+                "mfaUpdatedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "identity": {
             "description": "Identity",
@@ -9766,7 +9980,19 @@
                 "providerAccessToken",
                 "providerAccessTokenExpiry",
                 "providerRefreshToken"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "provider": "email",
+                "providerUid": "5e5bb8c16897e",
+                "providerEmail": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+            }
         },
         "token": {
             "description": "Token",
@@ -9810,7 +10036,15 @@
                 "secret",
                 "expire",
                 "phrase"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "secret": "",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "phrase": "Golden Fox"
+            }
         },
         "jwt": {
             "description": "JWT",
@@ -9824,7 +10058,10 @@
             },
             "required": [
                 "jwt"
-            ]
+            ],
+            "example": {
+                "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            }
         },
         "locale": {
             "description": "Locale",
@@ -9874,7 +10111,16 @@
                 "continent",
                 "eu",
                 "currency"
-            ]
+            ],
+            "example": {
+                "ip": "127.0.0.1",
+                "countryCode": "US",
+                "country": "United States",
+                "continentCode": "NA",
+                "continent": "North America",
+                "eu": false,
+                "currency": "USD"
+            }
         },
         "localeCode": {
             "description": "LocaleCode",
@@ -9894,7 +10140,11 @@
             "required": [
                 "code",
                 "name"
-            ]
+            ],
+            "example": {
+                "code": "en-us",
+                "name": "US"
+            }
         },
         "file": {
             "description": "File",
@@ -9976,7 +10226,22 @@
                 "sizeOriginal",
                 "chunksTotal",
                 "chunksUploaded"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "bucketId": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "name": "Pink.png",
+                "signature": "5d529fd02b544198ae075bd57c1762bb",
+                "mimeType": "image\/png",
+                "sizeOriginal": 17890,
+                "chunksTotal": 17890,
+                "chunksUploaded": 17890
+            }
         },
         "team": {
             "description": "Team",
@@ -10028,7 +10293,18 @@
                 "name",
                 "total",
                 "prefs"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "VIP",
+                "total": 7,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                }
+            }
         },
         "membership": {
             "description": "Membership",
@@ -10119,7 +10395,24 @@
                 "confirm",
                 "mfa",
                 "roles"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c16897e",
+                "userName": "John Doe",
+                "userEmail": "john@appwrite.io",
+                "teamId": "5e5ea5c16897e",
+                "teamName": "VIP",
+                "invited": "2020-10-15T06:38:00.000+00:00",
+                "joined": "2020-10-15T06:38:00.000+00:00",
+                "confirm": false,
+                "mfa": false,
+                "roles": [
+                    "owner"
+                ]
+            }
         },
         "execution": {
             "description": "Execution",
@@ -10252,7 +10545,36 @@
                 "logs",
                 "errors",
                 "duration"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "any"
+                ],
+                "functionId": "5e5ea6g16897e",
+                "trigger": "http",
+                "status": "processing",
+                "requestMethod": "GET",
+                "requestPath": "\/articles?id=5",
+                "requestHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "responseStatusCode": 200,
+                "responseBody": "",
+                "responseHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "logs": "",
+                "errors": "",
+                "duration": 0.4,
+                "scheduledAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "country": {
             "description": "Country",
@@ -10272,7 +10594,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "United States",
+                "code": "US"
+            }
         },
         "continent": {
             "description": "Continent",
@@ -10292,7 +10618,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "Europe",
+                "code": "EU"
+            }
         },
         "language": {
             "description": "Language",
@@ -10318,7 +10648,12 @@
                 "name",
                 "code",
                 "nativeName"
-            ]
+            ],
+            "example": {
+                "name": "Italian",
+                "code": "it",
+                "nativeName": "Italiano"
+            }
         },
         "currency": {
             "description": "Currency",
@@ -10370,7 +10705,16 @@
                 "rounding",
                 "code",
                 "namePlural"
-            ]
+            ],
+            "example": {
+                "symbol": "$",
+                "name": "US dollar",
+                "symbolNative": "$",
+                "decimalDigits": 2,
+                "rounding": 0,
+                "code": "USD",
+                "namePlural": "US dollars"
+            }
         },
         "phone": {
             "description": "Phone",
@@ -10396,7 +10740,12 @@
                 "code",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "code": "+1",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "headers": {
             "description": "Headers",
@@ -10416,7 +10765,11 @@
             "required": [
                 "name",
                 "value"
-            ]
+            ],
+            "example": {
+                "name": "Content-Type",
+                "value": "application\/json"
+            }
         },
         "mfaChallenge": {
             "description": "MFA Challenge",
@@ -10448,7 +10801,13 @@
                 "$createdAt",
                 "userId",
                 "expire"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "expire": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "mfaRecoveryCodes": {
             "description": "MFA Recovery Codes",
@@ -10468,7 +10827,13 @@
             },
             "required": [
                 "recoveryCodes"
-            ]
+            ],
+            "example": {
+                "recoveryCodes": [
+                    "a3kf0-s0cl2",
+                    "s0co1-as98s"
+                ]
+            }
         },
         "mfaType": {
             "description": "MFAType",
@@ -10488,7 +10853,11 @@
             "required": [
                 "secret",
                 "uri"
-            ]
+            ],
+            "example": {
+                "secret": true,
+                "uri": true
+            }
         },
         "mfaFactors": {
             "description": "MFAFactors",
@@ -10520,7 +10889,13 @@
                 "phone",
                 "email",
                 "recoveryCode"
-            ]
+            ],
+            "example": {
+                "totp": true,
+                "phone": true,
+                "email": true,
+                "recoveryCode": true
+            }
         },
         "subscriber": {
             "description": "Subscriber",
@@ -10595,7 +10970,27 @@
                 "userName",
                 "topicId",
                 "providerType"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "targetId": "259125845563242502",
+                "target": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "providerType": "email",
+                    "providerId": "259125845563242502",
+                    "name": "ageon-app-email",
+                    "identifier": "random-mail@email.org",
+                    "userId": "5e5ea5c16897e"
+                },
+                "userId": "5e5ea5c16897e",
+                "userName": "Aegon Targaryen",
+                "topicId": "259125845563242502",
+                "providerType": "email"
+            }
         },
         "target": {
             "description": "Target",
@@ -10657,7 +11052,18 @@
                 "providerType",
                 "identifier",
                 "expired"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "Apple iPhone 12",
+                "userId": "259125845563242502",
+                "providerId": "259125845563242502",
+                "providerType": "email",
+                "identifier": "token",
+                "expired": false
+            }
         }
     },
     "externalDocs": {
