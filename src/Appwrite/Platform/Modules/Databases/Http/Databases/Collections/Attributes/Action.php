@@ -614,14 +614,14 @@ abstract class Action extends UtopiaAction
              */
             foreach ($collection->getAttribute('indexes') as $index) {
                 /**
-                 * @var string[] $attribute
+                 * @var array<string> $attributes
                  */
-                $attribute = $index->getAttribute('attributes', []);
-                $found = \array_search($key, $attribute);
+                $attributes = $index->getAttribute('attributes', []);
+                $found = \array_search($key, $attributes);
 
                 if ($found !== false) {
-                    $attribute[$found] = $newKey;
-                    $index->setAttribute('attributes', $attribute);
+                    $attributes[$found] = $newKey;
+                    $index->setAttribute('attributes', $attributes);
                     $dbForProject->updateDocument('indexes', $index->getId(), $index);
                 }
             }
