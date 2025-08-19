@@ -427,7 +427,7 @@ class AccountTest extends Scope
         $this->assertIsArray($account['body']['data']['accountUpdateStatus']);
         $this->assertEquals(false, $account['body']['data']['accountUpdateStatus']['status']);
 
-        unset(self::user[$this->getProject()['$id']]);
+        unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
 
         return $account;
@@ -475,7 +475,7 @@ class AccountTest extends Scope
         $this->assertIsNotArray($account['body']);
         $this->assertEquals(204, $account['headers']['status-code']);
 
-        unset(self::user[$this->getProject()['$id']]);
+        unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
 
         return $account;
@@ -500,7 +500,7 @@ class AccountTest extends Scope
         $this->assertIsNotArray($account['body']);
         $this->assertEquals(204, $account['headers']['status-code']);
 
-        unset(self::user[$this->getProject()['$id']]);
+        unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
 
         return $account;

@@ -26,11 +26,11 @@ abstract class Action extends AppwriteAction
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
         }
-        
+
         // Use the same helper method to ensure consistency
         $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
         $this->removableAttributes = ['$databaseId', $contextId];
-        
+
         return parent::setHttpPath($path);
     }
 

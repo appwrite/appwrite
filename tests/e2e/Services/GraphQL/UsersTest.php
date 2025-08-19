@@ -503,7 +503,7 @@ class UsersTest extends Scope
         $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
 
-        unset(self::user[$this->getProject()['$id']]);
+        unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
     }
 
@@ -527,7 +527,7 @@ class UsersTest extends Scope
         $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
 
-        unset(self::user[$this->getProject()['$id']]);
+        unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
     }
 
