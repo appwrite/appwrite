@@ -1,1 +1,0 @@
-Delete a row by its unique ID.

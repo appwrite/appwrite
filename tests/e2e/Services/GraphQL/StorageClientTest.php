@@ -20,7 +20,7 @@ class StorageClientTest extends Scope
     public function testCreateBucket(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_BUCKET);
+        $query = $this->getQuery(self::CREATE_BUCKET);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -56,7 +56,7 @@ class StorageClientTest extends Scope
     public function testCreateFile($bucket): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_FILE);
+        $query = $this->getQuery(self::CREATE_FILE);
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
@@ -98,7 +98,7 @@ class StorageClientTest extends Scope
     public function testGetFiles($bucket): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILES);
+        $query = $this->getQuery(self::GET_FILES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -130,7 +130,7 @@ class StorageClientTest extends Scope
     public function testGetFile($bucket, $file)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE);
+        $query = $this->getQuery(self::GET_FILE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -159,7 +159,7 @@ class StorageClientTest extends Scope
     public function testGetFilePreview($file)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE_PREVIEW);
+        $query = $this->getQuery(self::GET_FILE_PREVIEW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -189,7 +189,7 @@ class StorageClientTest extends Scope
     public function testGetFileDownload($file)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE_DOWNLOAD);
+        $query = $this->getQuery(self::GET_FILE_DOWNLOAD);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -215,7 +215,7 @@ class StorageClientTest extends Scope
     public function testGetFileView($file): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE_VIEW);
+        $query = $this->getQuery(self::GET_FILE_VIEW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -241,7 +241,7 @@ class StorageClientTest extends Scope
     public function testUpdateFile($file): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_FILE);
+        $query = $this->getQuery(self::UPDATE_FILE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -276,7 +276,7 @@ class StorageClientTest extends Scope
     public function testDeleteFile($file): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_FILE);
+        $query = $this->getQuery(self::DELETE_FILE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

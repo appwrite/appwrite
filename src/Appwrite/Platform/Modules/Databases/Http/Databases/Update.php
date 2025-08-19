@@ -52,22 +52,8 @@ class Update extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.updateDatabase',
+                        replaceWith: 'tablesDb.update',
                     )
-                ),
-                new Method(
-                    namespace: 'grids',
-                    group: 'grids',
-                    name: 'updateDatabase',
-                    description: '/docs/references/grids/update-database.md',
-                    auth: [AuthType::KEY],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_DATABASE,
-                        )
-                    ],
-                    contentType: ContentType::JSON
                 ),
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')

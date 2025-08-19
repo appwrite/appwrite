@@ -8,330 +8,330 @@ use Utopia\CLI\Console;
 trait Base
 {
     // Databases
-    public static string $CREATE_DATABASE = 'create_database';
-    public static string $GET_DATABASES = 'get_databases';
-    public static string $GET_DATABASE = 'get_database';
-    public static string $UPDATE_DATABASE = 'update_database';
-    public static string $DELETE_DATABASE = 'delete_database';
+    public const string CREATE_DATABASE = 'create_database';
+    public const string GET_DATABASES = 'get_databases';
+    public const string GET_DATABASE = 'get_database';
+    public const string UPDATE_DATABASE = 'update_database';
+    public const string DELETE_DATABASE = 'delete_database';
 
     // Collections
-    public static string $CREATE_COLLECTION = 'create_collection';
-    public static string $GET_COLLECTION = 'get_collection';
-    public static string $GET_COLLECTIONS = 'list_collections';
-    public static string $UPDATE_COLLECTION = 'update_collection';
-    public static string $DELETE_COLLECTION = 'delete_collection';
+    public const string CREATE_COLLECTION = 'create_collection';
+    public const string GET_COLLECTION = 'get_collection';
+    public const string GET_COLLECTIONS = 'list_collections';
+    public const string UPDATE_COLLECTION = 'update_collection';
+    public const string DELETE_COLLECTION = 'delete_collection';
 
     // Grid databases
-    public static string $GRIDS_CREATE_DATABASE = 'grids_create_database';
-    public static string $GRIDS_GET_DATABASES = 'grids_get_databases';
-    public static string $GRIDS_GET_DATABASE = 'grids_get_database';
-    public static string $GRIDS_UPDATE_DATABASE = 'grids_update_database';
-    public static string $GRIDS_DELETE_DATABASE = 'grids_delete_database';
+    public const string TABLESDB_CREATE_DATABASE = 'tablesdb_create_database';
+    public const string TABLESDB_GET_DATABASES = 'tablesdb_get_databases';
+    public const string TABLESDB_GET_DATABASE = 'tablesdb_get_database';
+    public const string TABLESDB_UPDATE_DATABASE = 'tablesdb_update_database';
+    public const string TABLESDB_DELETE_DATABASE = 'tablesdb_delete_database';
 
     // Grid tables
-    public static string $CREATE_TABLE = 'create_table';
-    public static string $GET_TABLE = 'get_table';
-    public static string $GET_TABLES = 'list_tables';
-    public static string $UPDATE_TABLE = 'update_table';
-    public static string $DELETE_TABLE = 'delete_table';
+    public const string CREATE_TABLE = 'create_table';
+    public const string GET_TABLE = 'get_table';
+    public const string GET_TABLES = 'list_tables';
+    public const string UPDATE_TABLE = 'update_table';
+    public const string DELETE_TABLE = 'delete_table';
 
     // Attributes
-    public static string $CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
-    public static string $CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
-    public static string $CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
-    public static string $CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
-    public static string $CREATE_URL_ATTRIBUTE = 'create_url_attribute';
-    public static string $CREATE_EMAIL_ATTRIBUTE = 'create_email_attribute';
-    public static string $CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
-    public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
-    public static string $CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
+    public const string CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
+    public const string CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
+    public const string CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
+    public const string CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
+    public const string CREATE_URL_ATTRIBUTE = 'create_url_attribute';
+    public const string CREATE_EMAIL_ATTRIBUTE = 'create_email_attribute';
+    public const string CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
+    public const string CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
+    public const string CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
 
-    public static string $CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
-    public static string $UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
-    public static string $UPDATE_INTEGER_ATTRIBUTE = 'update_integer_attribute';
-    public static string $UPDATE_FLOAT_ATTRIBUTE = 'update_float_attribute';
-    public static string $UPDATE_BOOLEAN_ATTRIBUTE = 'update_boolean_attribute';
-    public static string $UPDATE_URL_ATTRIBUTE = 'update_url_attribute';
-    public static string $UPDATE_EMAIL_ATTRIBUTE = 'update_email_attribute';
-    public static string $UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
-    public static string $UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
-    public static string $UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
+    public const string CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
+    public const string UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
+    public const string UPDATE_INTEGER_ATTRIBUTE = 'update_integer_attribute';
+    public const string UPDATE_FLOAT_ATTRIBUTE = 'update_float_attribute';
+    public const string UPDATE_BOOLEAN_ATTRIBUTE = 'update_boolean_attribute';
+    public const string UPDATE_URL_ATTRIBUTE = 'update_url_attribute';
+    public const string UPDATE_EMAIL_ATTRIBUTE = 'update_email_attribute';
+    public const string UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
+    public const string UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
+    public const string UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
 
-    public static string $UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
-    public static string $GET_ATTRIBUTES = 'get_attributes';
-    public static string $GET_ATTRIBUTE = 'get_attribute';
-    public static string $DELETE_ATTRIBUTE = 'delete_attribute';
+    public const string UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
+    public const string GET_ATTRIBUTES = 'get_attributes';
+    public const string GET_ATTRIBUTE = 'get_attribute';
+    public const string DELETE_ATTRIBUTE = 'delete_attribute';
 
-    // Grids columns
-    public static string $CREATE_STRING_COLUMN = 'create_string_column';
-    public static string $CREATE_INTEGER_COLUMN = 'create_integer_column';
-    public static string $CREATE_FLOAT_COLUMN = 'create_float_column';
-    public static string $CREATE_BOOLEAN_COLUMN = 'create_boolean_column';
-    public static string $CREATE_URL_COLUMN = 'create_url_column';
-    public static string $CREATE_EMAIL_COLUMN = 'create_email_column';
-    public static string $CREATE_IP_COLUMN = 'create_ip_column';
-    public static string $CREATE_ENUM_COLUMN = 'create_enum_column';
-    public static string $CREATE_DATETIME_COLUMN = 'create_datetime_column';
+    // TablesDB columns
+    public const string CREATE_STRING_COLUMN = 'create_string_column';
+    public const string CREATE_INTEGER_COLUMN = 'create_integer_column';
+    public const string CREATE_FLOAT_COLUMN = 'create_float_column';
+    public const string CREATE_BOOLEAN_COLUMN = 'create_boolean_column';
+    public const string CREATE_URL_COLUMN = 'create_url_column';
+    public const string CREATE_EMAIL_COLUMN = 'create_email_column';
+    public const string CREATE_IP_COLUMN = 'create_ip_column';
+    public const string CREATE_ENUM_COLUMN = 'create_enum_column';
+    public const string CREATE_DATETIME_COLUMN = 'create_datetime_column';
 
-    public static string $CREATE_RELATIONSHIP_COLUMN = 'create_relationship_column';
-    public static string $UPDATE_STRING_COLUMN = 'update_string_column';
-    public static string $UPDATE_INTEGER_COLUMN = 'update_integer_column';
-    public static string $UPDATE_FLOAT_COLUMN = 'update_float_column';
-    public static string $UPDATE_BOOLEAN_COLUMN = 'update_boolean_column';
-    public static string $UPDATE_URL_COLUMN = 'update_url_column';
-    public static string $UPDATE_EMAIL_COLUMN = 'update_email_column';
-    public static string $UPDATE_IP_COLUMN = 'update_ip_column';
-    public static string $UPDATE_ENUM_COLUMN = 'update_enum_column';
-    public static string $UPDATE_DATETIME_COLUMN = 'update_datetime_column';
+    public const string CREATE_RELATIONSHIP_COLUMN = 'create_relationship_column';
+    public const string UPDATE_STRING_COLUMN = 'update_string_column';
+    public const string UPDATE_INTEGER_COLUMN = 'update_integer_column';
+    public const string UPDATE_FLOAT_COLUMN = 'update_float_column';
+    public const string UPDATE_BOOLEAN_COLUMN = 'update_boolean_column';
+    public const string UPDATE_URL_COLUMN = 'update_url_column';
+    public const string UPDATE_EMAIL_COLUMN = 'update_email_column';
+    public const string UPDATE_IP_COLUMN = 'update_ip_column';
+    public const string UPDATE_ENUM_COLUMN = 'update_enum_column';
+    public const string UPDATE_DATETIME_COLUMN = 'update_datetime_column';
 
-    public static string $UPDATE_RELATIONSHIP_COLUMN = 'update_relationship_column';
-    public static string $GET_COLUMNS = 'get_columns';
-    public static string $GET_COLUMN = 'get_column';
-    public static string $DELETE_COLUMN = 'delete_column';
+    public const string UPDATE_RELATIONSHIP_COLUMN = 'update_relationship_column';
+    public const string GET_COLUMNS = 'get_columns';
+    public const string GET_COLUMN = 'get_column';
+    public const string DELETE_COLUMN = 'delete_column';
 
     // Attribute Indexes
-    public static string $CREATE_INDEX = 'create_attribute_index';
-    public static string $GET_INDEXES = 'get_attribute_indexes';
-    public static string $GET_INDEX = 'get_attribute_index';
-    public static string $DELETE_INDEX = 'delete_attribute_index';
+    public const string CREATE_INDEX = 'create_attribute_index';
+    public const string GET_INDEXES = 'get_attribute_indexes';
+    public const string GET_INDEX = 'get_attribute_index';
+    public const string DELETE_INDEX = 'delete_attribute_index';
 
     // Grid column indexes
-    public static string $CREATE_COLUMN_INDEX = 'create_column_index';
-    public static string $GET_COLUMN_INDEXES = 'get_column_indexes';
-    public static string $GET_COLUMN_INDEX = 'get_column_index';
-    public static string $DELETE_COLUMN_INDEX = 'delete_column_index';
+    public const string CREATE_COLUMN_INDEX = 'create_column_index';
+    public const string GET_COLUMN_INDEXES = 'get_column_indexes';
+    public const string GET_COLUMN_INDEX = 'get_column_index';
+    public const string DELETE_COLUMN_INDEX = 'delete_column_index';
 
     // Documents
-    public static string $CREATE_DOCUMENT = 'create_document_rest';
-    public static string $GET_DOCUMENTS = 'list_documents';
-    public static string $GET_DOCUMENT = 'get_document';
-    public static string $UPDATE_DOCUMENT = 'update_document';
-    public static string $UPSERT_DOCUMENT  = 'upsert_document';
-    public static string $DELETE_DOCUMENT = 'delete_document';
+    public const string CREATE_DOCUMENT = 'create_document_rest';
+    public const string GET_DOCUMENTS = 'list_documents';
+    public const string GET_DOCUMENT = 'get_document';
+    public const string UPDATE_DOCUMENT = 'update_document';
+    public const string UPSERT_DOCUMENT  = 'upsert_document';
+    public const string DELETE_DOCUMENT = 'delete_document';
 
     // Documents - Bulk APIs
-    public static string $CREATE_DOCUMENTS = 'create_documents_rest';
-    public static string $UPDATE_DOCUMENTS = 'update_documents';
-    public static string $UPSERT_DOCUMENTS = 'upsert_documents';
-    public static string $DELETE_DOCUMENTS = 'delete_documents';
+    public const string CREATE_DOCUMENTS = 'create_documents_rest';
+    public const string UPDATE_DOCUMENTS = 'update_documents';
+    public const string UPSERT_DOCUMENTS = 'upsert_documents';
+    public const string DELETE_DOCUMENTS = 'delete_documents';
 
     // Grid rows
-    public static string $CREATE_ROW = 'create_row_rest';
-    public static string $GET_ROWS = 'list_rows';
-    public static string $GET_ROW = 'get_row';
-    public static string $UPDATE_ROW = 'update_row';
-    public static string $UPSERT_ROW  = 'upsert_row';
-    public static string $DELETE_ROW = 'delete_row';
+    public const string CREATE_ROW = 'create_row_rest';
+    public const string GET_ROWS = 'list_rows';
+    public const string GET_ROW = 'get_row';
+    public const string UPDATE_ROW = 'update_row';
+    public const string UPSERT_ROW  = 'upsert_row';
+    public const string DELETE_ROW = 'delete_row';
 
     // Grid rows - Bulk APIs
-    public static string $CREATE_ROWS = 'create_rows_rest';
-    public static string $UPDATE_ROWS = 'update_rows';
-    public static string $UPSERT_ROWS = 'upsert_rows';
-    public static string $DELETE_ROWS = 'delete_rows';
+    public const string CREATE_ROWS = 'create_rows_rest';
+    public const string UPDATE_ROWS = 'update_rows';
+    public const string UPSERT_ROWS = 'upsert_rows';
+    public const string DELETE_ROWS = 'delete_rows';
 
     // Custom Entities
-    public static string $CREATE_CUSTOM_ENTITY = 'create_custom_entity';
-    public static string $GET_CUSTOM_ENTITIES = 'get_custom_entities';
-    public static string $GET_CUSTOM_ENTITY = 'get_custom_entity';
-    public static string $UPDATE_CUSTOM_ENTITY = 'update_custom_entity';
-    public static string $DELETE_CUSTOM_ENTITY = 'delete_custom_entity';
+    public const string CREATE_CUSTOM_ENTITY = 'create_custom_entity';
+    public const string GET_CUSTOM_ENTITIES = 'get_custom_entities';
+    public const string GET_CUSTOM_ENTITY = 'get_custom_entity';
+    public const string UPDATE_CUSTOM_ENTITY = 'update_custom_entity';
+    public const string DELETE_CUSTOM_ENTITY = 'delete_custom_entity';
 
     // Account
-    public static string $CREATE_ACCOUNT = 'create_account';
-    public static string $CREATE_ACCOUNT_SESSION = 'create_account_session';
-    public static string $CREATE_ANONYMOUS_SESSION = 'create_anonymous_session';
-    public static string $CREATE_ACCOUNT_JWT = 'create_account_jwt';
-    public static string $CREATE_MAGIC_URL = 'create_magic_url';
-    public static string $CREATE_PASSWORD_RECOVERY = 'create_password_recovery';
-    public static string $CREATE_EMAIL_VERIFICATION = 'create_email_verification';
-    public static string $CREATE_PHONE_VERIFICATION = 'create_phone_verification';
-    public static string $GET_ACCOUNT = 'get_account';
-    public static string $GET_ACCOUNT_SESSION = 'get_account_session';
-    public static string $GET_ACCOUNT_SESSIONS = 'get_account_sessions';
-    public static string $GET_ACCOUNT_PREFS = 'get_account_preferences';
-    public static string $GET_ACCOUNT_LOGS = 'get_account_logs';
-    public static string $UPDATE_ACCOUNT_NAME = 'update_account_name';
-    public static string $UPDATE_ACCOUNT_EMAIL = 'update_account_email';
-    public static string $UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
-    public static string $UPDATE_ACCOUNT_PREFS = 'update_account_prefs';
-    public static string $UPDATE_ACCOUNT_PHONE = 'update_account_phone';
-    public static string $UPDATE_ACCOUNT_STATUS = 'update_account_status';
-    public static string $UPDATE_MAGIC_URL = 'confirm_magic_url';
-    public static string $UPDATE_PASSWORD_RECOVERY = 'confirm_password_recovery';
-    public static string $UPDATE_EMAIL_VERIFICATION = 'confirm_email_verification';
-    public static string $UPDATE_PHONE_VERIFICATION = 'confirm_phone_verification';
-    public static string $DELETE_ACCOUNT_SESSION = 'delete_account_session';
-    public static string $DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
+    public const string CREATE_ACCOUNT = 'create_account';
+    public const string CREATE_ACCOUNT_SESSION = 'create_account_session';
+    public const string CREATE_ANONYMOUS_SESSION = 'create_anonymous_session';
+    public const string CREATE_ACCOUNT_JWT = 'create_account_jwt';
+    public const string CREATE_MAGIC_URL = 'create_magic_url';
+    public const string CREATE_PASSWORD_RECOVERY = 'create_password_recovery';
+    public const string CREATE_EMAIL_VERIFICATION = 'create_email_verification';
+    public const string CREATE_PHONE_VERIFICATION = 'create_phone_verification';
+    public const string GET_ACCOUNT = 'get_account';
+    public const string GET_ACCOUNT_SESSION = 'get_account_session';
+    public const string GET_ACCOUNT_SESSIONS = 'get_account_sessions';
+    public const string GET_ACCOUNT_PREFS = 'get_account_preferences';
+    public const string GET_ACCOUNT_LOGS = 'get_account_logs';
+    public const string UPDATE_ACCOUNT_NAME = 'update_account_name';
+    public const string UPDATE_ACCOUNT_EMAIL = 'update_account_email';
+    public const string UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
+    public const string UPDATE_ACCOUNT_PREFS = 'update_account_prefs';
+    public const string UPDATE_ACCOUNT_PHONE = 'update_account_phone';
+    public const string UPDATE_ACCOUNT_STATUS = 'update_account_status';
+    public const string UPDATE_MAGIC_URL = 'confirm_magic_url';
+    public const string UPDATE_PASSWORD_RECOVERY = 'confirm_password_recovery';
+    public const string UPDATE_EMAIL_VERIFICATION = 'confirm_email_verification';
+    public const string UPDATE_PHONE_VERIFICATION = 'confirm_phone_verification';
+    public const string DELETE_ACCOUNT_SESSION = 'delete_account_session';
+    public const string DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
 
     // Users
-    public static string $CREATE_USER = 'create_user';
-    public static string $GET_USER = 'get_user';
-    public static string $GET_USERS = 'list_user';
-    public static string $GET_USER_PREFERENCES = 'get_user_preferences';
-    public static string $GET_USER_SESSIONS = 'get_user_sessions';
-    public static string $GET_USER_MEMBERSHIPS = 'get_user_memberships';
-    public static string $GET_USER_LOGS = 'get_user_logs';
-    public static string $UPDATE_USER_STATUS = 'update_user_status';
-    public static string $UPDATE_USER_NAME = 'update_user_name';
-    public static string $UPDATE_USER_EMAIL = 'update_user_email';
-    public static string $UPDATE_USER_EMAIL_VERIFICATION = 'update_email_verification';
-    public static string $UPDATE_USER_PHONE_VERIFICATION = 'update_phone_verification';
-    public static string $UPDATE_USER_PASSWORD = 'update_user_password';
-    public static string $UPDATE_USER_PHONE = 'update_user_phone';
-    public static string $UPDATE_USER_PREFS = 'update_user_prefs';
-    public static string $DELETE_USER_SESSIONS = 'delete_user_sessions';
-    public static string $DELETE_USER_SESSION = 'delete_user_session';
-    public static string $DELETE_USER = 'delete_user';
-    public static string $CREATE_USER_TARGET = 'create_user_target';
-    public static string $LIST_USER_TARGETS = 'list_user_targets';
-    public static string $GET_USER_TARGET = 'get_user_target';
-    public static string $UPDATE_USER_TARGET = 'update_user_target';
-    public static string $DELETE_USER_TARGET = 'delete_user_target';
+    public const string CREATE_USER = 'create_user';
+    public const string GET_USER = 'get_user';
+    public const string GET_USERS = 'list_user';
+    public const string GET_USER_PREFERENCES = 'get_user_preferences';
+    public const string GET_USER_SESSIONS = 'get_user_sessions';
+    public const string GET_USER_MEMBERSHIPS = 'get_user_memberships';
+    public const string GET_USER_LOGS = 'get_user_logs';
+    public const string UPDATE_USER_STATUS = 'update_user_status';
+    public const string UPDATE_USER_NAME = 'update_user_name';
+    public const string UPDATE_USER_EMAIL = 'update_user_email';
+    public const string UPDATE_USER_EMAIL_VERIFICATION = 'update_email_verification';
+    public const string UPDATE_USER_PHONE_VERIFICATION = 'update_phone_verification';
+    public const string UPDATE_USER_PASSWORD = 'update_user_password';
+    public const string UPDATE_USER_PHONE = 'update_user_phone';
+    public const string UPDATE_USER_PREFS = 'update_user_prefs';
+    public const string DELETE_USER_SESSIONS = 'delete_user_sessions';
+    public const string DELETE_USER_SESSION = 'delete_user_session';
+    public const string DELETE_USER = 'delete_user';
+    public const string CREATE_USER_TARGET = 'create_user_target';
+    public const string LIST_USER_TARGETS = 'list_user_targets';
+    public const string GET_USER_TARGET = 'get_user_target';
+    public const string UPDATE_USER_TARGET = 'update_user_target';
+    public const string DELETE_USER_TARGET = 'delete_user_target';
 
     // Teams
-    public static string $GET_TEAM = 'get_team';
-    public static string $GET_TEAM_PREFERENCES = 'get_team_preferences';
-    public static string $GET_TEAMS = 'list_teams';
-    public static string $CREATE_TEAM = 'create_team';
-    public static string $UPDATE_TEAM_NAME = 'update_team_name';
-    public static string $UPDATE_TEAM_PREFERENCES = 'update_team_preferences';
+    public const string GET_TEAM = 'get_team';
+    public const string GET_TEAM_PREFERENCES = 'get_team_preferences';
+    public const string GET_TEAMS = 'list_teams';
+    public const string CREATE_TEAM = 'create_team';
+    public const string UPDATE_TEAM_NAME = 'update_team_name';
+    public const string UPDATE_TEAM_PREFERENCES = 'update_team_preferences';
 
-    public static string $DELETE_TEAM = 'delete_team';
-    public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
-    public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
-    public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
-    public static string $UPDATE_TEAM_MEMBERSHIP = 'update_team_membership';
-    public static string $UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
-    public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
+    public const string DELETE_TEAM = 'delete_team';
+    public const string GET_TEAM_MEMBERSHIP = 'get_team_membership';
+    public const string GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
+    public const string CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
+    public const string UPDATE_TEAM_MEMBERSHIP = 'update_team_membership';
+    public const string UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
+    public const string DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
     // Functions
-    public static string $CREATE_FUNCTION = 'create_function';
-    public static string $GET_FUNCTIONS = 'list_functions';
-    public static string $GET_FUNCTION = 'get_function';
-    public static string $GET_RUNTIMES = 'list_runtimes';
-    public static string $UPDATE_FUNCTION = 'update_function';
-    public static string $DELETE_FUNCTION = 'delete_function';
+    public const string CREATE_FUNCTION = 'create_function';
+    public const string GET_FUNCTIONS = 'list_functions';
+    public const string GET_FUNCTION = 'get_function';
+    public const string GET_RUNTIMES = 'list_runtimes';
+    public const string UPDATE_FUNCTION = 'update_function';
+    public const string DELETE_FUNCTION = 'delete_function';
     // Variables
-    public static string $CREATE_VARIABLE = 'create_variable';
-    public static string $GET_VARIABLES = 'list_variables';
-    public static string $GET_VARIABLE = 'get_variable';
-    public static string $UPDATE_VARIABLE = 'update_variable';
-    public static string $DELETE_VARIABLE = 'delete_variable';
+    public const string CREATE_VARIABLE = 'create_variable';
+    public const string GET_VARIABLES = 'list_variables';
+    public const string GET_VARIABLE = 'get_variable';
+    public const string UPDATE_VARIABLE = 'update_variable';
+    public const string DELETE_VARIABLE = 'delete_variable';
 
     //Deployments
-    public static string $CREATE_DEPLOYMENT = 'create_deployment';
-    public static string $GET_DEPLOYMENTS = 'list_deployments';
-    public static string $GET_DEPLOYMENT = 'get_deployment';
-    public static string $UPDATE_DEPLOYMENT = 'update_deployment';
-    public static string $DELETE_DEPLOYMENT = 'delete_deployment';
+    public const string CREATE_DEPLOYMENT = 'create_deployment';
+    public const string GET_DEPLOYMENTS = 'list_deployments';
+    public const string GET_DEPLOYMENT = 'get_deployment';
+    public const string UPDATE_DEPLOYMENT = 'update_deployment';
+    public const string DELETE_DEPLOYMENT = 'delete_deployment';
     // Executions
-    public static string $GET_EXECUTIONS = 'list_executions';
-    public static string $GET_EXECUTION = 'get_execution';
-    public static string $CREATE_EXECUTION = 'create_execution';
-    public static string $DELETE_EXECUTION = 'delete_execution';
-    public static string $RETRY_BUILD = 'retry_build';
+    public const string GET_EXECUTIONS = 'list_executions';
+    public const string GET_EXECUTION = 'get_execution';
+    public const string CREATE_EXECUTION = 'create_execution';
+    public const string DELETE_EXECUTION = 'delete_execution';
+    public const string RETRY_BUILD = 'retry_build';
 
     // Buckets
-    public static string $CREATE_BUCKET = 'create_bucket';
-    public static string $GET_BUCKETS = 'list_buckets';
-    public static string $GET_BUCKET = 'get_bucket';
-    public static string $UPDATE_BUCKET = 'update_bucket';
-    public static string $DELETE_BUCKET = 'delete_bucket';
+    public const string CREATE_BUCKET = 'create_bucket';
+    public const string GET_BUCKETS = 'list_buckets';
+    public const string GET_BUCKET = 'get_bucket';
+    public const string UPDATE_BUCKET = 'update_bucket';
+    public const string DELETE_BUCKET = 'delete_bucket';
     // Files
-    public static string $CREATE_FILE = 'create_file';
-    public static string $GET_FILES = 'list_files';
-    public static string $GET_FILE = 'get_file';
-    public static string $GET_FILE_PREVIEW = 'get_file_preview';
-    public static string $GET_FILE_DOWNLOAD = 'get_file_download';
-    public static string $GET_FILE_VIEW = 'get_file_view';
-    public static string $UPDATE_FILE = 'update_file';
-    public static string $DELETE_FILE = 'delete_file';
+    public const string CREATE_FILE = 'create_file';
+    public const string GET_FILES = 'list_files';
+    public const string GET_FILE = 'get_file';
+    public const string GET_FILE_PREVIEW = 'get_file_preview';
+    public const string GET_FILE_DOWNLOAD = 'get_file_download';
+    public const string GET_FILE_VIEW = 'get_file_view';
+    public const string UPDATE_FILE = 'update_file';
+    public const string DELETE_FILE = 'delete_file';
 
     // Health
-    public static string $GET_HTTP_HEALTH = 'get_http_health';
-    public static string $GET_DB_HEALTH = 'get_db_health';
-    public static string $GET_CACHE_HEALTH = 'get_cache_health';
-    public static string $GET_TIME_HEALTH = 'get_time_health';
-    public static string $GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
-    public static string $GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
-    public static string $GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
-    public static string $GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
-    public static string $GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
-    public static string $GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
+    public const string GET_HTTP_HEALTH = 'get_http_health';
+    public const string GET_DB_HEALTH = 'get_db_health';
+    public const string GET_CACHE_HEALTH = 'get_cache_health';
+    public const string GET_TIME_HEALTH = 'get_time_health';
+    public const string GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
+    public const string GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
+    public const string GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
+    public const string GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
+    public const string GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
+    public const string GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
 
     // Localization
-    public static string $GET_LOCALE = 'get_locale';
-    public static string $LIST_COUNTRIES = 'list_countries';
-    public static string $LIST_EU_COUNTRIES = 'list_eu_countries';
-    public static string $LIST_COUNTRY_PHONE_CODES = 'list_country_phone_codes';
-    public static string $LIST_CONTINENTS = 'list_continents';
-    public static string $LIST_CURRENCIES = 'list_currencies';
-    public static string $LIST_LANGUAGES = 'list_languages';
+    public const string GET_LOCALE = 'get_locale';
+    public const string LIST_COUNTRIES = 'list_countries';
+    public const string LIST_EU_COUNTRIES = 'list_eu_countries';
+    public const string LIST_COUNTRY_PHONE_CODES = 'list_country_phone_codes';
+    public const string LIST_CONTINENTS = 'list_continents';
+    public const string LIST_CURRENCIES = 'list_currencies';
+    public const string LIST_LANGUAGES = 'list_languages';
 
     // Avatars
-    public static string $GET_CREDIT_CARD_ICON = 'get_credit_card_icon';
-    public static string $GET_BROWSER_ICON = 'get_browser_icon';
-    public static string $GET_COUNTRY_FLAG = 'get_country_flag';
-    public static string $GET_IMAGE_FROM_URL = 'get_image_from_url';
-    public static string $GET_FAVICON = 'get_favicon';
-    public static string $GET_QRCODE = 'get_qrcode';
-    public static string $GET_USER_INITIALS = 'get_user_initials';
+    public const string GET_CREDIT_CARD_ICON = 'get_credit_card_icon';
+    public const string GET_BROWSER_ICON = 'get_browser_icon';
+    public const string GET_COUNTRY_FLAG = 'get_country_flag';
+    public const string GET_IMAGE_FROM_URL = 'get_image_from_url';
+    public const string GET_FAVICON = 'get_favicon';
+    public const string GET_QRCODE = 'get_qrcode';
+    public const string GET_USER_INITIALS = 'get_user_initials';
 
     // Providers
-    public static string $CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
-    public static string $CREATE_SENDGRID_PROVIDER = 'create_sendgrid_provider';
-    public static string $CREATE_SMTP_PROVIDER = 'create_smtp_provider';
-    public static string $CREATE_TWILIO_PROVIDER = 'create_twilio_provider';
-    public static string $CREATE_TELESIGN_PROVIDER = 'create_telesign_provider';
-    public static string $CREATE_TEXTMAGIC_PROVIDER = 'create_textmagic_provider';
-    public static string $CREATE_MSG91_PROVIDER = 'create_msg91_provider';
-    public static string $CREATE_VONAGE_PROVIDER = 'create_vonage_provider';
-    public static string $CREATE_FCM_PROVIDER = 'create_fcm_provider';
-    public static string $CREATE_APNS_PROVIDER = 'create_apns_provider';
-    public static string $LIST_PROVIDERS = 'list_providers';
-    public static string $GET_PROVIDER = 'get_provider';
-    public static string $UPDATE_MAILGUN_PROVIDER = 'update_mailgun_provider';
-    public static string $UPDATE_SENDGRID_PROVIDER = 'update_sendgrid_provider';
-    public static string $UPDATE_SMTP_PROVIDER = 'update_smtp_provider';
-    public static string $UPDATE_TWILIO_PROVIDER = 'update_twilio_provider';
-    public static string $UPDATE_TELESIGN_PROVIDER = 'update_telesign_provider';
-    public static string $UPDATE_TEXTMAGIC_PROVIDER = 'update_textmagic_provider';
-    public static string $UPDATE_MSG91_PROVIDER = 'update_msg91_provider';
-    public static string $UPDATE_VONAGE_PROVIDER = 'update_vonage_provider';
-    public static string $UPDATE_FCM_PROVIDER = 'update_fcm_provider';
-    public static string $UPDATE_APNS_PROVIDER = 'update_apns_provider';
-    public static string $DELETE_PROVIDER = 'delete_provider';
+    public const string CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
+    public const string CREATE_SENDGRID_PROVIDER = 'create_sendgrid_provider';
+    public const string CREATE_SMTP_PROVIDER = 'create_smtp_provider';
+    public const string CREATE_TWILIO_PROVIDER = 'create_twilio_provider';
+    public const string CREATE_TELESIGN_PROVIDER = 'create_telesign_provider';
+    public const string CREATE_TEXTMAGIC_PROVIDER = 'create_textmagic_provider';
+    public const string CREATE_MSG91_PROVIDER = 'create_msg91_provider';
+    public const string CREATE_VONAGE_PROVIDER = 'create_vonage_provider';
+    public const string CREATE_FCM_PROVIDER = 'create_fcm_provider';
+    public const string CREATE_APNS_PROVIDER = 'create_apns_provider';
+    public const string LIST_PROVIDERS = 'list_providers';
+    public const string GET_PROVIDER = 'get_provider';
+    public const string UPDATE_MAILGUN_PROVIDER = 'update_mailgun_provider';
+    public const string UPDATE_SENDGRID_PROVIDER = 'update_sendgrid_provider';
+    public const string UPDATE_SMTP_PROVIDER = 'update_smtp_provider';
+    public const string UPDATE_TWILIO_PROVIDER = 'update_twilio_provider';
+    public const string UPDATE_TELESIGN_PROVIDER = 'update_telesign_provider';
+    public const string UPDATE_TEXTMAGIC_PROVIDER = 'update_textmagic_provider';
+    public const string UPDATE_MSG91_PROVIDER = 'update_msg91_provider';
+    public const string UPDATE_VONAGE_PROVIDER = 'update_vonage_provider';
+    public const string UPDATE_FCM_PROVIDER = 'update_fcm_provider';
+    public const string UPDATE_APNS_PROVIDER = 'update_apns_provider';
+    public const string DELETE_PROVIDER = 'delete_provider';
 
     // Topics
-    public static string $CREATE_TOPIC = 'create_topic';
-    public static string $LIST_TOPICS = 'list_topics';
-    public static string $GET_TOPIC = 'get_topic';
-    public static string $UPDATE_TOPIC = 'update_topic';
-    public static string $DELETE_TOPIC = 'delete_topic';
+    public const string CREATE_TOPIC = 'create_topic';
+    public const string LIST_TOPICS = 'list_topics';
+    public const string GET_TOPIC = 'get_topic';
+    public const string UPDATE_TOPIC = 'update_topic';
+    public const string DELETE_TOPIC = 'delete_topic';
 
     // Subscriptions
-    public static string $CREATE_SUBSCRIBER = 'create_subscriber';
-    public static string $LIST_SUBSCRIBERS = 'list_subscribers';
-    public static string $GET_SUBSCRIBER = 'get_subscriber';
-    public static string $DELETE_SUBSCRIBER = 'delete_subscriber';
+    public const string CREATE_SUBSCRIBER = 'create_subscriber';
+    public const string LIST_SUBSCRIBERS = 'list_subscribers';
+    public const string GET_SUBSCRIBER = 'get_subscriber';
+    public const string DELETE_SUBSCRIBER = 'delete_subscriber';
 
     // Messages
-    public static string $CREATE_EMAIL = 'create_email';
-    public static string $CREATE_SMS = 'create_sms';
-    public static string $CREATE_PUSH_NOTIFICATION = 'create_push_notification';
-    public static string $LIST_MESSAGES = 'list_messages';
-    public static string $GET_MESSAGE = 'get_message';
+    public const string CREATE_EMAIL = 'create_email';
+    public const string CREATE_SMS = 'create_sms';
+    public const string CREATE_PUSH_NOTIFICATION = 'create_push_notification';
+    public const string LIST_MESSAGES = 'list_messages';
+    public const string GET_MESSAGE = 'get_message';
 
-    public static string $UPDATE_EMAIL = 'update_email';
-    public static string $UPDATE_SMS = 'update_sms';
-    public static string $UPDATE_PUSH_NOTIFICATION = 'update_push_notification';
+    public const string UPDATE_EMAIL = 'update_email';
+    public const string UPDATE_SMS = 'update_sms';
+    public const string UPDATE_PUSH_NOTIFICATION = 'update_push_notification';
 
     // Complex queries
-    public static string $COMPLEX_QUERY_TABLE = 'complex_query_table';
-    public static string $COMPLEX_QUERY_COLLECTION = 'complex_query_collection';
+    public const string COMPLEX_QUERY_TABLE = 'complex_query_table';
+    public const string COMPLEX_QUERY_COLLECTION = 'complex_query_collection';
 
     // Attribute Fragments
-    public static string $FRAGMENT_ATTRIBUTES = '
+    public const string FRAGMENT_ATTRIBUTES = '
         fragment attributeProperties on Attributes {
             ... on AttributeString {
                 key
@@ -406,7 +406,7 @@ trait Base
     ';
 
     // Column Fragments
-    public static string $FRAGMENT_COLUMNS = '
+    public const string FRAGMENT_COLUMNS = '
         fragment columnProperties on Columns {
             ... on ColumnString {
                 key
@@ -480,7 +480,7 @@ trait Base
         }
     ';
 
-    public static string $FRAGMENT_HASH_OPTIONS = '
+    public const string FRAGMENT_HASH_OPTIONS = '
         fragment options on HashOptions {
             ... on AlgoArgon2 {
                 memoryCost
@@ -504,14 +504,14 @@ trait Base
     public function getQuery(string $name): string
     {
         switch ($name) {
-            case self::$CREATE_DATABASE:
+            case self::CREATE_DATABASE:
                 return 'mutation createDatabase($databaseId: String!, $name: String!) {
                     databasesCreate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
-            case self::$GET_DATABASES:
+            case self::GET_DATABASES:
                 return 'query listDatabases {
                     databasesList {
                         total
@@ -521,36 +521,36 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_DATABASE:
+            case self::GET_DATABASE:
                 return 'query getDatabase($databaseId: String!) {
                     databasesGet(databaseId: $databaseId) {
                         _id
                         name
                     }
                 }';
-            case self::$UPDATE_DATABASE:
+            case self::UPDATE_DATABASE:
                 return 'mutation updateDatabase($databaseId: String!, $name: String!) {
                     databasesUpdate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
-            case self::$DELETE_DATABASE:
+            case self::DELETE_DATABASE:
                 return 'mutation deleteDatabase($databaseId: String!) {
                     databasesDelete(databaseId: $databaseId) {
                         status
                     }
                 }';
-            case self::$GRIDS_CREATE_DATABASE:
-                return 'mutation gridsCreateDatabase($databaseId: String!, $name: String!) {
-                    gridsCreateDatabase(databaseId: $databaseId, name: $name) {
+            case self::TABLESDB_CREATE_DATABASE:
+                return 'mutation tablesDbCreate($databaseId: String!, $name: String!) {
+                    tablesDbCreate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
-            case self::$GRIDS_GET_DATABASES:
-                return 'query gridsListDatabases {
-                    gridsListDatabases {
+            case self::TABLESDB_GET_DATABASES:
+                return 'query tablesDbList {
+                    tablesDbList {
                         total
                         databases {
                             _id
@@ -558,27 +558,27 @@ trait Base
                         }
                     }
                 }';
-            case self::$GRIDS_GET_DATABASE:
-                return 'query gridsGetDatabase($databaseId: String!) {
-                    gridsGetDatabase(databaseId: $databaseId) {
+            case self::TABLESDB_GET_DATABASE:
+                return 'query tablesDbGet($databaseId: String!) {
+                    tablesDbGet(databaseId: $databaseId) {
                         _id
                         name
                     }
                 }';
-            case self::$GRIDS_UPDATE_DATABASE:
-                return 'mutation gridsUpdateDatabase($databaseId: String!, $name: String!) {
-                    gridsUpdateDatabase(databaseId: $databaseId, name: $name) {
+            case self::TABLESDB_UPDATE_DATABASE:
+                return 'mutation tablesDbUpdate($databaseId: String!, $name: String!) {
+                    tablesDbUpdate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
-            case self::$GRIDS_DELETE_DATABASE:
-                return 'mutation gridsDeleteDatabase($databaseId: String!) {
-                    gridsDeleteDatabase(databaseId: $databaseId) {
+            case self::TABLESDB_DELETE_DATABASE:
+                return 'mutation tablesDbDelete($databaseId: String!) {
+                    tablesDbDelete(databaseId: $databaseId) {
                         status
                     }
                 }';
-            case self::$GET_COLLECTION:
+            case self::GET_COLLECTION:
                 return 'query getCollection($databaseId: String!, $collectionId: String!) {
                     databasesGetCollection(databaseId: $databaseId, collectionId: $collectionId) {
                         _id
@@ -587,7 +587,7 @@ trait Base
                         name
                     }
                 }';
-            case self::$GET_COLLECTIONS:
+            case self::GET_COLLECTIONS:
                 return 'query listCollections($databaseId: String!) {
                     databasesListCollections(databaseId: $databaseId) {
                         total
@@ -599,7 +599,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_COLLECTION:
+            case self::CREATE_COLLECTION:
                 return 'mutation createCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!]!) {
                     databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, documentSecurity: $documentSecurity, permissions: $permissions) {
                         _id
@@ -608,7 +608,7 @@ trait Base
                         name
                     }
                 }';
-            case self::$UPDATE_COLLECTION:
+            case self::UPDATE_COLLECTION:
                 return 'mutation updateCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!], $enabled: Boolean){
                     databasesUpdateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, documentSecurity: $documentSecurity, permissions: $permissions, enabled: $enabled) {
                         _id
@@ -617,24 +617,24 @@ trait Base
                         name
                     }
                 }';
-            case self::$DELETE_COLLECTION:
+            case self::DELETE_COLLECTION:
                 return 'mutation deleteCollection($databaseId: String!, $collectionId: String!){
                     databasesDeleteCollection(databaseId: $databaseId, collectionId: $collectionId) {
                         status
                     }
                 }';
-            case self::$GET_TABLE:
-                return 'query gridsGetTable($databaseId: String!, $tableId: String!) {
-                    gridsGetTable(databaseId: $databaseId, tableId: $tableId) {
+            case self::GET_TABLE:
+                return 'query tablesDbGetTable($databaseId: String!, $tableId: String!) {
+                    tablesDbGetTable(databaseId: $databaseId, tableId: $tableId) {
                         _id
                         _permissions
                         rowSecurity
                         name
                     }
                 }';
-            case self::$GET_TABLES:
-                return 'query gridsListTables($databaseId: String!) {
-                    gridsListTables(databaseId: $databaseId) {
+            case self::GET_TABLES:
+                return 'query tablesDbListTables($databaseId: String!) {
+                    tablesDbListTables(databaseId: $databaseId) {
                         total
                         tables {
                             _id
@@ -644,31 +644,31 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_TABLE:
-                return 'mutation gridsCreateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!]!) {
-                    gridsCreateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions) {
+            case self::CREATE_TABLE:
+                return 'mutation tablesDbCreateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!]!) {
+                    tablesDbCreateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions) {
                         _id
                         _permissions
                         rowSecurity
                         name
                     }
                 }';
-            case self::$UPDATE_TABLE:
-                return 'mutation gridsUpdateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!], $enabled: Boolean) {
-                    gridsUpdateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions, enabled: $enabled) {
+            case self::UPDATE_TABLE:
+                return 'mutation tablesDbUpdateTable($databaseId: String!, $tableId: String!, $name: String!, $rowSecurity: Boolean!, $permissions: [String!], $enabled: Boolean) {
+                    tablesDbUpdateTable(databaseId: $databaseId, tableId: $tableId, name: $name, rowSecurity: $rowSecurity, permissions: $permissions, enabled: $enabled) {
                         _id
                         _permissions
                         rowSecurity
                         name
                     }
                 }';
-            case self::$DELETE_TABLE:
-                return 'mutation gridsDeleteTable($databaseId: String!, $tableId: String!) {
-                    gridsDeleteTable(databaseId: $databaseId, tableId: $tableId) {
+            case self::DELETE_TABLE:
+                return 'mutation tablesDbDeleteTable($databaseId: String!, $tableId: String!) {
+                    tablesDbDeleteTable(databaseId: $databaseId, tableId: $tableId) {
                         status
                     }
                 }';
-            case self::$CREATE_STRING_ATTRIBUTE:
+            case self::CREATE_STRING_ATTRIBUTE:
                 return 'mutation createStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
                     databasesCreateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, size: $size, required: $required, default: $default, array: $array) {
                         key
@@ -677,7 +677,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_INTEGER_ATTRIBUTE:
+            case self::CREATE_INTEGER_ATTRIBUTE:
                 return 'mutation createIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
                     databasesCreateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
@@ -688,7 +688,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_FLOAT_ATTRIBUTE:
+            case self::CREATE_FLOAT_ATTRIBUTE:
                 return 'mutation createFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
                     databasesCreateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
@@ -699,7 +699,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_BOOLEAN_ATTRIBUTE:
+            case self::CREATE_BOOLEAN_ATTRIBUTE:
                 return 'mutation createBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
                     databasesCreateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
@@ -708,7 +708,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_URL_ATTRIBUTE:
+            case self::CREATE_URL_ATTRIBUTE:
                 return 'mutation createUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
                     databasesCreateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
@@ -717,7 +717,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_EMAIL_ATTRIBUTE:
+            case self::CREATE_EMAIL_ATTRIBUTE:
                 return 'mutation createEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
                     databasesCreateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
@@ -726,7 +726,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_IP_ATTRIBUTE:
+            case self::CREATE_IP_ATTRIBUTE:
                 return 'mutation createIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
                     databasesCreateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
@@ -735,7 +735,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_ENUM_ATTRIBUTE:
+            case self::CREATE_ENUM_ATTRIBUTE:
                 return 'mutation createEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
                     databasesCreateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
                         key
@@ -745,7 +745,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_DATETIME_ATTRIBUTE:
+            case self::CREATE_DATETIME_ATTRIBUTE:
                 return 'mutation createDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
                     databasesCreateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
@@ -754,7 +754,7 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_RELATIONSHIP_ATTRIBUTE:
+            case self::CREATE_RELATIONSHIP_ATTRIBUTE:
                 return 'mutation createRelationshipAttribute($databaseId: String!, $collectionId: String!, $relatedCollectionId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
                     databasesCreateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, relatedCollectionId: $relatedCollectionId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
                         relatedCollection
@@ -765,14 +765,14 @@ trait Base
                         onDelete
                     }
                 }';
-            case self::$UPDATE_STRING_ATTRIBUTE:
+            case self::UPDATE_STRING_ATTRIBUTE:
                 return 'mutation updateStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-            case self::$UPDATE_INTEGER_ATTRIBUTE:
+            case self::UPDATE_INTEGER_ATTRIBUTE:
                 return 'mutation updateIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
                         databasesUpdateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, min: $min, max: $max, default: $default) {
                             required
@@ -781,7 +781,7 @@ trait Base
                             default
                         }
                     }';
-            case self::$UPDATE_FLOAT_ATTRIBUTE:
+            case self::UPDATE_FLOAT_ATTRIBUTE:
                 return 'mutation updateFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
                         databasesUpdateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default) {
                             required
@@ -790,35 +790,35 @@ trait Base
                             default
                         }
                     }';
-            case self::$UPDATE_BOOLEAN_ATTRIBUTE:
+            case self::UPDATE_BOOLEAN_ATTRIBUTE:
                 return 'mutation updateBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean){
                         databasesUpdateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-            case self::$UPDATE_URL_ATTRIBUTE:
+            case self::UPDATE_URL_ATTRIBUTE:
                 return 'mutation updateUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-            case self::$UPDATE_EMAIL_ATTRIBUTE:
+            case self::UPDATE_EMAIL_ATTRIBUTE:
                 return 'mutation updateEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-            case self::$UPDATE_IP_ATTRIBUTE:
+            case self::UPDATE_IP_ATTRIBUTE:
                 return 'mutation updateIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-            case self::$UPDATE_ENUM_ATTRIBUTE:
+            case self::UPDATE_ENUM_ATTRIBUTE:
                 return 'mutation updateEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
                         databasesUpdateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default) {
                             elements
@@ -826,14 +826,14 @@ trait Base
                             default
                         }
                     }';
-            case self::$UPDATE_DATETIME_ATTRIBUTE:
+            case self::UPDATE_DATETIME_ATTRIBUTE:
                 return 'mutation updateDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-            case self::$UPDATE_RELATIONSHIP_ATTRIBUTE:
+            case self::UPDATE_RELATIONSHIP_ATTRIBUTE:
                 return 'mutation updateRelationshipAttribute($databaseId: String!, $collectionId: String!, $key: String!, $onDelete: String){
                         databasesUpdateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, onDelete: $onDelete) {
                             relatedCollection
@@ -844,18 +844,18 @@ trait Base
                             onDelete
                         }
                     }';
-            case self::$CREATE_STRING_COLUMN:
+            case self::CREATE_STRING_COLUMN:
                 return 'mutation createStringColumn($databaseId: String!, $tableId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
-                    gridsCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, size: $size, required: $required, default: $default, array: $array) {
+                    tablesDbCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, size: $size, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
                         array
                     }
                 }';
-            case self::$CREATE_INTEGER_COLUMN:
+            case self::CREATE_INTEGER_COLUMN:
                 return 'mutation createIntegerColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
-                    gridsCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                    tablesDbCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -864,9 +864,9 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_FLOAT_COLUMN:
+            case self::CREATE_FLOAT_COLUMN:
                 return 'mutation createFloatColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
-                    gridsCreateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                    tablesDbCreateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -875,45 +875,45 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_BOOLEAN_COLUMN:
+            case self::CREATE_BOOLEAN_COLUMN:
                 return 'mutation createBooleanColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
-                    gridsCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    tablesDbCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
                         array
                     }
                 }';
-            case self::$CREATE_URL_COLUMN:
+            case self::CREATE_URL_COLUMN:
                 return 'mutation createUrlColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    gridsCreateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    tablesDbCreateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
                         array
                     }
                 }';
-            case self::$CREATE_EMAIL_COLUMN:
+            case self::CREATE_EMAIL_COLUMN:
                 return 'mutation createEmailColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    gridsCreateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    tablesDbCreateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
                         array
                     }
                 }';
-            case self::$CREATE_IP_COLUMN:
+            case self::CREATE_IP_COLUMN:
                 return 'mutation createIpColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    gridsCreateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    tablesDbCreateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
                         array
                     }
                 }';
-            case self::$CREATE_ENUM_COLUMN:
+            case self::CREATE_ENUM_COLUMN:
                 return 'mutation createEnumColumn($databaseId: String!, $tableId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
-                    gridsCreateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
+                    tablesDbCreateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
                         key
                         elements
                         required
@@ -921,18 +921,18 @@ trait Base
                         array
                     }
                 }';
-            case self::$CREATE_DATETIME_COLUMN:
+            case self::CREATE_DATETIME_COLUMN:
                 return 'mutation createDatetimeColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    gridsCreateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
+                    tablesDbCreateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
                         array
                     }
                 }';
-            case self::$CREATE_RELATIONSHIP_COLUMN:
+            case self::CREATE_RELATIONSHIP_COLUMN:
                 return 'mutation createRelationshipColumn($databaseId: String!, $tableId: String!, $relatedTableId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
-                    gridsCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
+                    tablesDbCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
                         relatedTable
                         relationType
                         twoWay
@@ -941,77 +941,77 @@ trait Base
                         onDelete
                     }
                 }';
-            case self::$UPDATE_STRING_COLUMN:
+            case self::UPDATE_STRING_COLUMN:
                 return 'mutation updateStringColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    gridsUpdateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    tablesDbUpdateStringColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
-            case self::$UPDATE_INTEGER_COLUMN:
+            case self::UPDATE_INTEGER_COLUMN:
                 return 'mutation updateIntegerColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
-                    gridsUpdateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, min: $min, max: $max, default: $default) {
+                    tablesDbUpdateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, min: $min, max: $max, default: $default) {
                         required
                         min
                         max
                         default
                     }
                 }';
-            case self::$UPDATE_FLOAT_COLUMN:
+            case self::UPDATE_FLOAT_COLUMN:
                 return 'mutation updateFloatColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
-                    gridsUpdateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default) {
+                    tablesDbUpdateFloatColumn(databaseId: $databaseId, tableId: $tableId, key: $key, min: $min, max: $max, required: $required, default: $default) {
                         required
                         min
                         max
                         default
                     }
                 }';
-            case self::$UPDATE_BOOLEAN_COLUMN:
+            case self::UPDATE_BOOLEAN_COLUMN:
                 return 'mutation updateBooleanColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: Boolean){
-                    gridsUpdateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    tablesDbUpdateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
-            case self::$UPDATE_URL_COLUMN:
+            case self::UPDATE_URL_COLUMN:
                 return 'mutation updateUrlColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    gridsUpdateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    tablesDbUpdateUrlColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
-            case self::$UPDATE_EMAIL_COLUMN:
+            case self::UPDATE_EMAIL_COLUMN:
                 return 'mutation updateEmailColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    gridsUpdateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    tablesDbUpdateEmailColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
-            case self::$UPDATE_IP_COLUMN:
+            case self::UPDATE_IP_COLUMN:
                 return 'mutation updateIpColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    gridsUpdateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    tablesDbUpdateIpColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
-            case self::$UPDATE_ENUM_COLUMN:
+            case self::UPDATE_ENUM_COLUMN:
                 return 'mutation updateEnumColumn($databaseId: String!, $tableId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
-                    gridsUpdateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default) {
+                    tablesDbUpdateEnumColumn(databaseId: $databaseId, tableId: $tableId, key: $key, elements: $elements, required: $required, default: $default) {
                         elements
                         required
                         default
                     }
                 }';
-            case self::$UPDATE_DATETIME_COLUMN:
+            case self::UPDATE_DATETIME_COLUMN:
                 return 'mutation updateDatetimeColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $default: String){
-                    gridsUpdateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
+                    tablesDbUpdateDatetimeColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, default: $default) {
                         required
                         default
                     }
                 }';
-            case self::$UPDATE_RELATIONSHIP_COLUMN:
+            case self::UPDATE_RELATIONSHIP_COLUMN:
                 return 'mutation updateRelationshipColumn($databaseId: String!, $tableId: String!, $key: String!, $onDelete: String){
-                    gridsUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
+                    tablesDbUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
                         relatedTable
                         relationType
                         twoWay
@@ -1020,7 +1020,7 @@ trait Base
                         onDelete
                     }
                 }';
-            case self::$CREATE_INDEX:
+            case self::CREATE_INDEX:
                 return 'mutation createIndex($databaseId: String!, $collectionId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
                     databasesCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
                         key
@@ -1028,7 +1028,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$GET_INDEXES:
+            case self::GET_INDEXES:
                 return 'query listIndexes($databaseId: String!, $collectionId: String!) {
                     databasesListIndexes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
@@ -1039,7 +1039,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_INDEX:
+            case self::GET_INDEX:
                 return 'query getIndex($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesGetIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         key
@@ -1047,23 +1047,23 @@ trait Base
                         status
                     }
                 }';
-            case self::$DELETE_INDEX:
+            case self::DELETE_INDEX:
                 return 'mutation deleteIndex($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesDeleteIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         status
                     }
                 }';
-            case self::$CREATE_COLUMN_INDEX:
+            case self::CREATE_COLUMN_INDEX:
                 return 'mutation createIndex($databaseId: String!, $tableId: String!, $key: String!, $type: String!, $columns: [String!]!, $orders: [String!]){
-                    gridsCreateIndex(databaseId: $databaseId, tableId: $tableId, key: $key, type: $type, columns: $columns, orders: $orders) {
+                    tablesDbCreateIndex(databaseId: $databaseId, tableId: $tableId, key: $key, type: $type, columns: $columns, orders: $orders) {
                         key
                         type
                         status
                     }
                 }';
-            case self::$GET_COLUMN_INDEXES:
+            case self::GET_COLUMN_INDEXES:
                 return 'query listIndexes($databaseId: String!, $tableId: String!) {
-                    gridsListIndexes(databaseId: $databaseId, tableId: $tableId) {
+                    tablesDbListIndexes(databaseId: $databaseId, tableId: $tableId) {
                         total
                         indexes {
                             key
@@ -1072,21 +1072,21 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_COLUMN_INDEX:
+            case self::GET_COLUMN_INDEX:
                 return 'query getIndex($databaseId: String!, $tableId: String!, $key: String!) {
-                    gridsGetIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    tablesDbGetIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         key
                         type
                         status
                     }
                 }';
-            case self::$DELETE_COLUMN_INDEX:
+            case self::DELETE_COLUMN_INDEX:
                 return 'mutation deleteIndex($databaseId: String!, $tableId: String!, $key: String!) {
-                    gridsDeleteIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    tablesDbDeleteIndex(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         status
                     }
                 }';
-            case self::$GET_ATTRIBUTES:
+            case self::GET_ATTRIBUTES:
                 return 'query listAttributes($databaseId: String!, $collectionId: String!) {
                     databasesListAttributes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
@@ -1094,42 +1094,42 @@ trait Base
                             ...attributeProperties
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
-            case self::$GET_ATTRIBUTE:
+                }' . PHP_EOL . self::FRAGMENT_ATTRIBUTES;
+            case self::GET_ATTRIBUTE:
                 return 'query getAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesGetAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         ...attributeProperties
                     }
-                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
-            case self::$DELETE_ATTRIBUTE:
+                }' . PHP_EOL . self::FRAGMENT_ATTRIBUTES;
+            case self::DELETE_ATTRIBUTE:
                 return 'mutation deleteAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         status
                     }
                 }';
-            case self::$GET_COLUMNS:
+            case self::GET_COLUMNS:
                 return 'query listColumns($databaseId: String!, $tableId: String!) {
-                    gridsListColumns(databaseId: $databaseId, tableId: $tableId) {
+                    tablesDbListColumns(databaseId: $databaseId, tableId: $tableId) {
                         total
                         columns {
                             ...columnProperties
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
-            case self::$GET_COLUMN:
+                }' . PHP_EOL . self::FRAGMENT_COLUMNS;
+            case self::GET_COLUMN:
                 return 'query getColumn($databaseId: String!, $tableId: String!, $key: String!) {
-                    gridsGetColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    tablesDbGetColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         ...columnProperties
                     }
-                }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
-            case self::$DELETE_COLUMN:
+                }' . PHP_EOL . self::FRAGMENT_COLUMNS;
+            case self::DELETE_COLUMN:
                 return 'mutation deleteColumn($databaseId: String!, $tableId: String!, $key: String!) {
-                    gridsDeleteColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
+                    tablesDbDeleteColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         status
                     }
                 }';
 
-            case self::$GET_DOCUMENT:
+            case self::GET_DOCUMENT:
                 return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!) {
                     databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
                         _id
@@ -1138,7 +1138,7 @@ trait Base
                         data
                     }
                 }';
-            case self::$GET_DOCUMENTS:
+            case self::GET_DOCUMENTS:
                 return 'query listDocuments($databaseId: String!, $collectionId: String!){
                     databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId) {
                         total
@@ -1150,7 +1150,7 @@ trait Base
                         }
                     }   
                 }';
-            case self::$CREATE_DOCUMENT:
+            case self::CREATE_DOCUMENT:
                 return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
                     databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
@@ -1158,7 +1158,7 @@ trait Base
                         _permissions
                     }
                 }';
-            case self::$CREATE_DOCUMENTS:
+            case self::CREATE_DOCUMENTS:
                 return 'mutation createDocuments($databaseId: String!, $collectionId: String!, $documents: [Json!]!) {
                     databasesCreateDocuments(databaseId: $databaseId, collectionId: $collectionId, documents: $documents) {
                         documents {
@@ -1169,9 +1169,9 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_ROWS:
+            case self::CREATE_ROWS:
                 return 'mutation createRows($databaseId: String!, $tableId: String!, $rows: [Json!]!) {
-                    gridsCreateRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
+                    tablesDbCreateRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
                         rows {
                             _id
                             _tableId
@@ -1180,18 +1180,18 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_ROW:
+            case self::GET_ROW:
                 return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!) {
-                    gridsGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                    tablesDbGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
                         _id
                         _tableId
                         _permissions
                         data
                     }
                 }';
-            case self::$GET_ROWS:
+            case self::GET_ROWS:
                 return 'query listRows($databaseId: String!, $tableId: String!, $queries: [String!] = []) {
-                    gridsListRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
+                    tablesDbListRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
                         total
                         rows {
                             _id
@@ -1202,15 +1202,15 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_ROW:
+            case self::CREATE_ROW:
                 return 'mutation createRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]) {
-                    gridsCreateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                    tablesDbCreateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
                         _tableId
                         _permissions
                     }
                 }';
-            case self::$CREATE_CUSTOM_ENTITY:
+            case self::CREATE_CUSTOM_ENTITY:
                 return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $dob: String!, $ip: String, $url: String){
                     actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, dob: $dob, ip: $ip, url: $url) {
                         _id
@@ -1222,7 +1222,7 @@ trait Base
                         role
                     }
                 }';
-            case self::$GET_CUSTOM_ENTITIES:
+            case self::GET_CUSTOM_ENTITIES:
                 return 'query getCustomEntities {
                     actorsList {
                         _id
@@ -1237,7 +1237,7 @@ trait Base
                         url
                     }
                 }';
-            case self::$GET_CUSTOM_ENTITY:
+            case self::GET_CUSTOM_ENTITY:
                 return 'query getCustomEntity($id: String!) {
                     actorsGet(id: $id) {
                         name
@@ -1251,7 +1251,7 @@ trait Base
                         url
                     }
                 }';
-            case self::$UPDATE_CUSTOM_ENTITY:
+            case self::UPDATE_CUSTOM_ENTITY:
                 return 'mutation updateCustomEntity($id: String!, $name: String, $age: Int, $alive: Boolean, $salary: Float, $email: String, $role: String, $dob: String, $ip: String, $url: String){
                     actorsUpdate(id: $id, name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, dob: $dob, ip: $ip, url: $url) {
                         name
@@ -1265,11 +1265,11 @@ trait Base
                         url
                     }
                 }';
-            case self::$DELETE_CUSTOM_ENTITY:
+            case self::DELETE_CUSTOM_ENTITY:
                 return 'mutation deleteCustomEntity($id: String!){
                         actorsDelete(id: $id)
                     }';
-            case self::$UPDATE_DOCUMENT:
+            case self::UPDATE_DOCUMENT:
                 return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
                     databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
@@ -1277,7 +1277,7 @@ trait Base
                         data
                     }
                 }';
-            case self::$UPSERT_DOCUMENT:
+            case self::UPSERT_DOCUMENT:
                 return 'mutation upsertDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!] = []) {
                     databasesUpsertDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
@@ -1286,7 +1286,7 @@ trait Base
                         data
                     }
                 }';
-            case self::$UPDATE_DOCUMENTS:
+            case self::UPDATE_DOCUMENTS:
                 return 'mutation updateDocuments($databaseId: String!, $collectionId: String!, $data: Json!, $queries: [String!]) {
                     databasesUpdateDocuments(databaseId: $databaseId, collectionId: $collectionId, data: $data, queries: $queries) {
                         total
@@ -1299,7 +1299,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$UPSERT_DOCUMENTS:
+            case self::UPSERT_DOCUMENTS:
                 return 'mutation upsertDocuments($databaseId: String!, $collectionId: String!, $documents: [Json!]!) {
                     databasesUpsertDocuments(databaseId: $databaseId, collectionId: $collectionId, documents: $documents) {
                         total
@@ -1312,7 +1312,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$DELETE_DOCUMENTS:
+            case self::DELETE_DOCUMENTS:
                 return 'mutation deleteDocuments($databaseId: String!, $collectionId: String!, $queries: [String!] = []) {
                     databasesDeleteDocuments(databaseId: $databaseId, collectionId: $collectionId, queries: $queries) {
                         total
@@ -1324,38 +1324,38 @@ trait Base
                         }
                     }
                 }';
-            case self::$DELETE_DOCUMENT:
+            case self::DELETE_DOCUMENT:
                 return 'mutation deleteDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
                     databasesDeleteDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
                         status
                     }
                 }';
-            case self::$UPDATE_ROW:
+            case self::UPDATE_ROW:
                 return 'mutation updateRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]) {
-                    gridsUpdateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                    tablesDbUpdateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
                         _tableId
                         data
                     }
                 }';
-            case self::$UPSERT_ROW:
+            case self::UPSERT_ROW:
                 return 'mutation upsertRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!] = []) {
-                    gridsUpsertRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
+                    tablesDbUpsertRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
                         _databaseId
                         _tableId
                         data
                     }
                 }';
-            case self::$DELETE_ROW:
+            case self::DELETE_ROW:
                 return 'mutation deleteRow($databaseId: String!, $tableId: String!, $rowId: String!) {
-                    gridsDeleteRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                    tablesDbDeleteRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
                         status
                     }
                 }';
-            case self::$UPDATE_ROWS:
+            case self::UPDATE_ROWS:
                 return 'mutation updateRows($databaseId: String!, $tableId: String!, $data: Json!, $queries: [String!]) {
-                    gridsUpdateRows(databaseId: $databaseId, tableId: $tableId, data: $data, queries: $queries) {
+                    tablesDbUpdateRows(databaseId: $databaseId, tableId: $tableId, data: $data, queries: $queries) {
                         total
                         rows {
                             _id
@@ -1366,9 +1366,9 @@ trait Base
                         }
                     }
                 }';
-            case self::$UPSERT_ROWS:
+            case self::UPSERT_ROWS:
                 return 'mutation upsertRows($databaseId: String!, $tableId: String!, $rows: [Json!]!) {
-                    gridsUpsertRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
+                    tablesDbUpsertRows(databaseId: $databaseId, tableId: $tableId, rows: $rows) {
                         total
                         rows {
                             _id
@@ -1379,9 +1379,9 @@ trait Base
                         }
                     }
                 }';
-            case self::$DELETE_ROWS:
+            case self::DELETE_ROWS:
                 return 'mutation deleteRows($databaseId: String!, $tableId: String!, $queries: [String!] = []) {
-                    gridsDeleteRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
+                    tablesDbDeleteRows(databaseId: $databaseId, tableId: $tableId, queries: $queries) {
                         total
                         rows {
                             _id
@@ -1391,7 +1391,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_USER:
+            case self::GET_USER:
                 return 'query getUser($userId : String!) {
                     usersGet(userId : $userId) {
                         _id
@@ -1405,14 +1405,14 @@ trait Base
                             ...options
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_HASH_OPTIONS;
-            case self::$GET_USER_PREFERENCES:
+                }' . PHP_EOL . self::FRAGMENT_HASH_OPTIONS;
+            case self::GET_USER_PREFERENCES:
                 return 'query getUserPreferences($userId : String!) {
                     usersGetPrefs(userId : $userId) {
                         data
                     }
                 }';
-            case self::$GET_USER_SESSIONS:
+            case self::GET_USER_SESSIONS:
                 return 'query listUserSessions($userId : String!) {
                     usersListSessions(userId : $userId) {
                         total 
@@ -1422,7 +1422,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_USER_MEMBERSHIPS:
+            case self::GET_USER_MEMBERSHIPS:
                 return 'query listUserMemberships($userId : String!) {
                     usersListMemberships(userId : $userId) {
                         total
@@ -1433,7 +1433,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_USER_LOGS:
+            case self::GET_USER_LOGS:
                 return 'query listUserLogs($userId : String!) {
                     usersListLogs(userId : $userId) {
                         total
@@ -1443,7 +1443,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_USERS:
+            case self::GET_USERS:
                 return 'query listUsers($queries: [String!], $search: String) {
                     usersList(queries: $queries, search: $search) {
                         total
@@ -1457,7 +1457,7 @@ trait Base
                         }
                     }   
                 }';
-            case self::$CREATE_USER:
+            case self::CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
                     usersCreate(userId: $userId, email: $email, password: $password, name: $name) {
                         _id
@@ -1468,7 +1468,7 @@ trait Base
                         emailVerification
                     }
                 }';
-            case self::$UPDATE_USER_STATUS:
+            case self::UPDATE_USER_STATUS:
                 return 'mutation updateUserStatus($userId: String!, $status: Boolean!){
                     usersUpdateStatus(userId: $userId, status: $status) {
                         _id
@@ -1476,7 +1476,7 @@ trait Base
                         email
                     }
                 }';
-            case self::$UPDATE_USER_NAME:
+            case self::UPDATE_USER_NAME:
                 return 'mutation updateUserName($userId: String!, $name: String!){
                     usersUpdateName(userId: $userId, name: $name) {
                         _id
@@ -1487,7 +1487,7 @@ trait Base
                         emailVerification
                     }
                 }';
-            case self::$UPDATE_USER_EMAIL:
+            case self::UPDATE_USER_EMAIL:
                 return 'mutation updateUserEmail($userId: String!, $email: String!){
                     usersUpdateEmail(userId: $userId, email: $email) {
                         _id
@@ -1498,7 +1498,7 @@ trait Base
                         emailVerification
                     }
                 }';
-            case self::$UPDATE_USER_PASSWORD:
+            case self::UPDATE_USER_PASSWORD:
                 return 'mutation updateUserPassword($userId: String!, $password: String!){
                     usersUpdatePassword(userId: $userId, password: $password) {
                         _id
@@ -1509,7 +1509,7 @@ trait Base
                         emailVerification
                     }
                 }';
-            case self::$UPDATE_USER_PHONE:
+            case self::UPDATE_USER_PHONE:
                 return 'mutation updateUserPhone($userId: String!, $number: String!){
                     usersUpdatePhone(userId: $userId, number: $number) {
                         name
@@ -1517,20 +1517,20 @@ trait Base
                         email
                     }
                 }';
-            case self::$UPDATE_USER_PREFS:
+            case self::UPDATE_USER_PREFS:
                 return 'mutation updateUserPrefs($userId: String!, $prefs: Assoc!){
                     usersUpdatePrefs(userId: $userId, prefs: $prefs) {
                         data
                     }
                 }';
-            case self::$UPDATE_USER_EMAIL_VERIFICATION:
+            case self::UPDATE_USER_EMAIL_VERIFICATION:
                 return 'mutation updateUserEmailVerification($userId: String!, $emailVerification: Boolean!){
                     usersUpdateEmailVerification(userId: $userId, emailVerification: $emailVerification) {
                         name
                         email
                     }
                 }';
-            case self::$UPDATE_USER_PHONE_VERIFICATION:
+            case self::UPDATE_USER_PHONE_VERIFICATION:
                 return 'mutation updateUserPhoneVerification($userId: String!, $phoneVerification: Boolean!){
                     usersUpdatePhoneVerification(userId: $userId, phoneVerification: $phoneVerification) {
                         _id
@@ -1538,25 +1538,25 @@ trait Base
                         email
                     }
                 }';
-            case self::$DELETE_USER_SESSIONS:
+            case self::DELETE_USER_SESSIONS:
                 return 'mutation deleteUserSessions($userId: String!){
                     usersDeleteSessions(userId: $userId) {
                         status
                     }
                 }';
-            case self::$DELETE_USER_SESSION:
+            case self::DELETE_USER_SESSION:
                 return 'mutation deleteUserSession($userId: String!, $sessionId: String!){
                     usersDeleteSession(userId: $userId, sessionId: $sessionId) {
                         status
                     }
                 }';
-            case self::$DELETE_USER:
+            case self::DELETE_USER:
                 return 'mutation deleteUser($userId: String!) {
                     usersDelete(userId: $userId) {
                         status
                     }
                 }';
-            case self::$CREATE_USER_TARGET:
+            case self::CREATE_USER_TARGET:
                 return 'mutation createUserTarget($userId: String!, $targetId: String!, $providerType: String!, $identifier: String! $providerId: String){
                     usersCreateTarget(userId: $userId, targetId: $targetId, providerType: $providerType, identifier: $identifier, providerId: $providerId) {
                         _id
@@ -1566,7 +1566,7 @@ trait Base
                         identifier
                     }
                 }';
-            case self::$LIST_USER_TARGETS:
+            case self::LIST_USER_TARGETS:
                 return 'query listUserTargets($userId: String!) {
                     usersListTargets(userId: $userId) {
                         total
@@ -1579,7 +1579,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_USER_TARGET:
+            case self::GET_USER_TARGET:
                 return 'query getUserTarget($userId: String!, $targetId: String!) {
                     usersGetTarget(userId: $userId, targetId: $targetId) {
                         _id
@@ -1589,7 +1589,7 @@ trait Base
                         identifier
                     }
                 }';
-            case self::$UPDATE_USER_TARGET:
+            case self::UPDATE_USER_TARGET:
                 return 'mutation updateUserTarget($userId: String!, $targetId: String!, $providerId: String, $identifier: String){
                     usersUpdateTarget(userId: $userId, targetId: $targetId, providerId: $providerId, identifier: $identifier) {
                         _id
@@ -1599,13 +1599,13 @@ trait Base
                         identifier
                     }
                 }';
-            case self::$DELETE_USER_TARGET:
+            case self::DELETE_USER_TARGET:
                 return 'mutation deleteUserTarget($userId: String!, $targetId: String!){
                     usersDeleteTarget(userId: $userId, targetId: $targetId) {
                         status
                     }
                 }';
-            case self::$GET_LOCALE:
+            case self::GET_LOCALE:
                 return 'query getLocale {
                     localeGet {
                         ip
@@ -1614,7 +1614,7 @@ trait Base
                         currency
                     }
                 }';
-            case self::$LIST_COUNTRIES:
+            case self::LIST_COUNTRIES:
                 return 'query listCountries {
                     localeListCountries{
                         total
@@ -1624,7 +1624,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$LIST_EU_COUNTRIES:
+            case self::LIST_EU_COUNTRIES:
                 return 'query listEuCountries {
                     localeListCountriesEU{
                         total
@@ -1634,7 +1634,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$LIST_COUNTRY_PHONE_CODES:
+            case self::LIST_COUNTRY_PHONE_CODES:
                 return 'query listCountryPhoneCodes {
                     localeListCountriesPhones {
                         total
@@ -1644,7 +1644,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$LIST_CONTINENTS:
+            case self::LIST_CONTINENTS:
                 return 'query listContinents {
                     localeListContinents{
                         total
@@ -1654,7 +1654,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$LIST_CURRENCIES:
+            case self::LIST_CURRENCIES:
                 return 'query listCurrencies {
                     localeListCurrencies{
                         total
@@ -1665,7 +1665,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$LIST_LANGUAGES:
+            case self::LIST_LANGUAGES:
                 return 'query listLanguages {
                     localeListLanguages{
                         total
@@ -1675,49 +1675,49 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_CREDIT_CARD_ICON:
+            case self::GET_CREDIT_CARD_ICON:
                 return 'query getCreditCardIcon($code: String!) {
                     avatarsGetCreditCard(code: $code) {
                         status
                     }
                 }';
-            case self::$GET_BROWSER_ICON:
+            case self::GET_BROWSER_ICON:
                 return 'query getBrowserIcon($code: String!) {
                     avatarsGetBrowser(code: $code) {
                         status
                     }
                 }';
-            case self::$GET_COUNTRY_FLAG:
+            case self::GET_COUNTRY_FLAG:
                 return 'query getCountryFlag($code: String!) {
                     avatarsGetFlag(code: $code) {
                         status
                     }
                 }';
-            case self::$GET_IMAGE_FROM_URL:
+            case self::GET_IMAGE_FROM_URL:
                 return 'query getImageFromUrl($url: String!) {
                     avatarsGetImage(url: $url) {
                         status
                     }
                 }';
-            case self::$GET_FAVICON:
+            case self::GET_FAVICON:
                 return 'query getFavicon($url: String!) {
                     avatarsGetFavicon(url: $url) {
                         status
                     }
                 }';
-            case self::$GET_QRCODE:
+            case self::GET_QRCODE:
                 return 'query getQrCode($text: String!) {
                     avatarsGetQR(text: $text) {
                         status
                     }
                 }';
-            case self::$GET_USER_INITIALS:
+            case self::GET_USER_INITIALS:
                 return 'query getUserInitials($name: String!) {
                     avatarsGetInitials(name: $name) {
                         status
                     }
                 }';
-            case self::$GET_ACCOUNT:
+            case self::GET_ACCOUNT:
                 return 'query getAccount {
                     accountGet {
                         _id
@@ -1728,7 +1728,7 @@ trait Base
                         emailVerification
                     }
                 }';
-            case self::$CREATE_ACCOUNT:
+            case self::CREATE_ACCOUNT:
                 return 'mutation createAccount($userId: String!, $email: String!, $password: String!, $name: String){
                     accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
                         _id
@@ -1739,7 +1739,7 @@ trait Base
                         emailVerification
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_NAME:
+            case self::UPDATE_ACCOUNT_NAME:
                 return 'mutation updateAccountName($name: String!){
                     accountUpdateName(name: $name) {
                         _id
@@ -1749,7 +1749,7 @@ trait Base
                         phone
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_EMAIL:
+            case self::UPDATE_ACCOUNT_EMAIL:
                 return 'mutation updateAccountEmail($email: String!, $password: String!){
                     accountUpdateEmail(email: $email, password: $password) {
                         _id
@@ -1758,7 +1758,7 @@ trait Base
                         email
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_PASSWORD:
+            case self::UPDATE_ACCOUNT_PASSWORD:
                 return 'mutation updateAccountPassword($password: String!, $oldPassword: String!){
                     accountUpdatePassword(password: $password, oldPassword: $oldPassword) {
                         _id
@@ -1767,7 +1767,7 @@ trait Base
                         email
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_PHONE:
+            case self::UPDATE_ACCOUNT_PHONE:
                 return 'mutation updateAccountPhone($phone: String!, $password: String!){
                     accountUpdatePhone(phone: $phone, password: $password) {
                         _id
@@ -1777,7 +1777,7 @@ trait Base
                         phone
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_PREFS:
+            case self::UPDATE_ACCOUNT_PREFS:
                 return 'mutation updateAccountPrefs($prefs: Assoc!){
                     accountUpdatePrefs(prefs: $prefs) {
                         _id
@@ -1791,21 +1791,21 @@ trait Base
                         }
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_STATUS:
+            case self::UPDATE_ACCOUNT_STATUS:
                 return 'mutation updateAccountStatus{
                     accountUpdateStatus {
                         status
                         email
                     }
                 }';
-            case self::$GET_ACCOUNT_SESSION:
+            case self::GET_ACCOUNT_SESSION:
                 return 'query getAccountSession($sessionId: String!) {
                     accountGetSession(sessionId: $sessionId) {
                         _id
                         userId
                     }
                 }';
-            case self::$CREATE_ACCOUNT_SESSION:
+            case self::CREATE_ACCOUNT_SESSION:
                 return 'mutation createAccountEmailSession($email: String!, $password: String!){
                     accountCreateEmailPasswordSession(email: $email, password: $password) {
                         _id
@@ -1815,26 +1815,26 @@ trait Base
                         current
                     }
                 }';
-            case self::$DELETE_ACCOUNT_SESSION:
+            case self::DELETE_ACCOUNT_SESSION:
                 return 'mutation deleteAccountSession($sessionId: String!){
                     accountDeleteSession(sessionId: $sessionId) {
                         status
                     }
                 }';
-            case self::$DELETE_ACCOUNT_SESSIONS:
+            case self::DELETE_ACCOUNT_SESSIONS:
                 return 'mutation deleteAccountSessions {
                     accountDeleteSessions {
                         status
                     }
                 }';
-            case self::$CREATE_MAGIC_URL:
+            case self::CREATE_MAGIC_URL:
                 return 'mutation createMagicURL($userId: String!, $email: String!){
                     accountCreateMagicURLToken(userId: $userId, email: $email) {
                         userId
                         expire
                     }
                 }';
-            case self::$UPDATE_MAGIC_URL:
+            case self::UPDATE_MAGIC_URL:
                 return 'mutation confirmMagicURL($userId: String!, $secret: String!){
                     accountUpdateMagicURLSession(userId: $userId, secret: $secret) {
                         userId
@@ -1843,26 +1843,26 @@ trait Base
                         ip
                     }
                 }';
-            case self::$CREATE_ANONYMOUS_SESSION:
+            case self::CREATE_ANONYMOUS_SESSION:
                 return 'mutation createAnonymousSession {
                     accountCreateAnonymousSession {
                         _id
                         userId
                     }
                 }';
-            case self::$CREATE_ACCOUNT_JWT:
+            case self::CREATE_ACCOUNT_JWT:
                 return 'mutation createJWT{
                     accountCreateJWT {
                         jwt
                     }
                 }';
-            case self::$GET_ACCOUNT_PREFS:
+            case self::GET_ACCOUNT_PREFS:
                 return 'query getAccountPreferences {
                     accountGetPrefs { 
                         data 
                     }
                 }';
-            case self::$GET_ACCOUNT_SESSIONS:
+            case self::GET_ACCOUNT_SESSIONS:
                 return 'query listAccountSessions {
                     accountListSessions {
                         total
@@ -1873,7 +1873,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_ACCOUNT_LOGS:
+            case self::GET_ACCOUNT_LOGS:
                 return 'query getAccountLogs {
                     accountListLogs {
                         total
@@ -1885,7 +1885,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_PASSWORD_RECOVERY:
+            case self::CREATE_PASSWORD_RECOVERY:
                 return 'mutation createPasswordRecovery($email: String!, $url: String!){
                     accountCreateRecovery(email: $email, url: $url) {
                         userId
@@ -1893,7 +1893,7 @@ trait Base
                         expire
                     }
                 }';
-            case self::$UPDATE_PASSWORD_RECOVERY:
+            case self::UPDATE_PASSWORD_RECOVERY:
                 return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!) {
                     accountUpdateRecovery(userId: $userId, secret: $secret, password: $password) {
                         userId
@@ -1901,7 +1901,7 @@ trait Base
                         expire
                     }
                 }';
-            case self::$CREATE_EMAIL_VERIFICATION:
+            case self::CREATE_EMAIL_VERIFICATION:
                 return 'mutation createVerification($url: String!){
                     accountCreateVerification(url: $url) {
                         userId
@@ -1909,7 +1909,7 @@ trait Base
                         expire
                     }
                 }';
-            case self::$UPDATE_EMAIL_VERIFICATION:
+            case self::UPDATE_EMAIL_VERIFICATION:
                 return 'mutation confirmVerification($userId: String!, $secret: String!) {
                     accountUpdateVerification(userId: $userId, secret: $secret) {
                         userId
@@ -1917,7 +1917,7 @@ trait Base
                         expire
                     }
                 }';
-            case self::$CREATE_PHONE_VERIFICATION:
+            case self::CREATE_PHONE_VERIFICATION:
                 return 'mutation createPhoneVerification {
                     accountCreatePhoneVerification {
                         userId
@@ -1925,7 +1925,7 @@ trait Base
                         expire
                     }
                 }';
-            case self::$UPDATE_PHONE_VERIFICATION:
+            case self::UPDATE_PHONE_VERIFICATION:
                 return 'mutation confirmPhoneVerification($userId: String!, $phoneVerification: Boolean!) {
                     accountUpdatePhoneVerification(userId: $userId, phoneVerification: $phoneVerification) {
                         userId
@@ -1933,7 +1933,7 @@ trait Base
                         expire
                     }
                 }';
-            case self::$GET_TEAM:
+            case self::GET_TEAM:
                 return 'query getTeam($teamId: String!){
                         teamsGet(teamId: $teamId) {
                             _id
@@ -1941,13 +1941,13 @@ trait Base
                             total
                         }
                     }';
-            case self::$GET_TEAM_PREFERENCES:
+            case self::GET_TEAM_PREFERENCES:
                 return 'query getTeamPreferences($teamId: String!) {
                     teamsGetPrefs(teamId: $teamId) {
                         data
                     }
                 }';
-            case self::$GET_TEAMS:
+            case self::GET_TEAMS:
                 return 'query listTeams {
                     teamsList {
                         total
@@ -1957,7 +1957,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_TEAM:
+            case self::CREATE_TEAM:
                 return 'mutation createTeam($teamId: String!, $name: String!, $roles: [String]){
                     teamsCreate(teamId: $teamId, name : $name, roles: $roles) {
                         _id
@@ -1965,7 +1965,7 @@ trait Base
                         total
                     }
                 }';
-            case self::$UPDATE_TEAM_NAME:
+            case self::UPDATE_TEAM_NAME:
                 return 'mutation updateTeamName($teamId: String!, $name: String!){
                         teamsUpdateName(teamId: $teamId, name : $name) {
                             _id
@@ -1973,19 +1973,19 @@ trait Base
                             total
                         }
                     }';
-            case self::$UPDATE_TEAM_PREFERENCES:
+            case self::UPDATE_TEAM_PREFERENCES:
                 return 'mutation updateTeamPrefs($teamId: String!, $prefs: Assoc!){
                     teamsUpdatePrefs(teamId: $teamId, prefs: $prefs) {
                         data
                     }
                 }';
-            case self::$DELETE_TEAM:
+            case self::DELETE_TEAM:
                 return 'mutation deleteTeam($teamId: String!){
                     teamsDelete(teamId: $teamId) {
                         status
                     }
                 }';
-            case self::$GET_TEAM_MEMBERSHIP:
+            case self::GET_TEAM_MEMBERSHIP:
                 return 'query getTeamMembership($teamId: String!, $membershipId: String!){
                     teamsGetMembership(teamId: $teamId, membershipId: $membershipId) {
                         _id
@@ -1995,7 +1995,7 @@ trait Base
                         userEmail
                     }
                 }';
-            case self::$GET_TEAM_MEMBERSHIPS:
+            case self::GET_TEAM_MEMBERSHIPS:
                 return 'query listTeamMemberships($teamId: String!){
                     teamsListMemberships(teamId: $teamId) {
                         total
@@ -2008,7 +2008,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_TEAM_MEMBERSHIP:
+            case self::CREATE_TEAM_MEMBERSHIP:
                 return 'mutation createTeamMembership($teamId: String!, $email: String!, $name: String, $roles: [String!]!, $url: String!){
                     teamsCreateMembership(teamId: $teamId, email: $email, name : $name, roles: $roles, url: $url) {
                         _id
@@ -2022,7 +2022,7 @@ trait Base
                         roles
                     }
                 }';
-            case self::$UPDATE_TEAM_MEMBERSHIP:
+            case self::UPDATE_TEAM_MEMBERSHIP:
                 return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $roles: [String!]!){
                     teamsUpdateMembership(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
                         _id
@@ -2036,7 +2036,7 @@ trait Base
                         roles
                     }
                 }';
-            case self::$UPDATE_TEAM_MEMBERSHIP_STATUS:
+            case self::UPDATE_TEAM_MEMBERSHIP_STATUS:
                 return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $userId: String!, $secret: String!){
                     teamsUpdateMembershipStatus(teamId: $teamId, membershipId: $membershipId, userId: $userId, secret: $secret ) {
                         _id
@@ -2050,13 +2050,13 @@ trait Base
                         roles
                     }
                 }';
-            case self::$DELETE_TEAM_MEMBERSHIP:
+            case self::DELETE_TEAM_MEMBERSHIP:
                 return 'mutation deleteTeamMembership($teamId: String!, $membershipId: String!){
                     teamsDeleteMembership(teamId: $teamId, membershipId: $membershipId) {
                         status
                     }
                 }';
-            case self::$GET_FUNCTION:
+            case self::GET_FUNCTION:
                 return 'query getFunction($functionId: String!) { 
                     functionsGet(functionId: $functionId) {
                         _id
@@ -2065,7 +2065,7 @@ trait Base
                         execute
                     }
                 }';
-            case self::$GET_FUNCTIONS:
+            case self::GET_FUNCTIONS:
                 return 'query listFunctions {
                     functionsList {
                         total
@@ -2077,7 +2077,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_RUNTIMES:
+            case self::GET_RUNTIMES:
                 return 'query listRuntimes {
                     functionsListRuntimes {
                         total
@@ -2088,7 +2088,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_DEPLOYMENTS:
+            case self::GET_DEPLOYMENTS:
                 return 'query listDeployments($functionId: String!) {
                     functionsListDeployments(functionId: $functionId) {
                         total
@@ -2098,7 +2098,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_DEPLOYMENT:
+            case self::GET_DEPLOYMENT:
                 return 'query getDeployment($functionId: String!, $deploymentId: String!) {
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
@@ -2108,7 +2108,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$CREATE_FUNCTION:
+            case self::CREATE_FUNCTION:
                 return 'mutation createFunction($functionId: String!, $name: String!, $runtime: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int, $entrypoint: String!) {
                     functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout, entrypoint: $entrypoint) {
                         _id
@@ -2117,7 +2117,7 @@ trait Base
                         execute
                     }
                 }';
-            case self::$UPDATE_FUNCTION:
+            case self::UPDATE_FUNCTION:
                 return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String!, $entrypoint: String!, $events: [String], $schedule: String, $timeout: Int) {
                     functionsUpdate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, entrypoint: $entrypoint, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
@@ -2126,7 +2126,7 @@ trait Base
                         execute
                     }
                 }';
-            case self::$UPDATE_DEPLOYMENT:
+            case self::UPDATE_DEPLOYMENT:
                 return 'mutation updateFunctionDeployment($functionId: String!, $deploymentId: String!) {
                     functionsUpdateDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
@@ -2135,13 +2135,13 @@ trait Base
                         execute
                     }
                 }';
-            case self::$DELETE_FUNCTION:
+            case self::DELETE_FUNCTION:
                 return 'mutation deleteFunction($functionId: String!) {
                     functionsDelete(functionId: $functionId) {
                         status
                     }
                 }';
-            case self::$CREATE_VARIABLE:
+            case self::CREATE_VARIABLE:
                 return 'mutation createVariable($functionId: String!, $key: String!, $value: String!) {
                     functionsCreateVariable(functionId: $functionId, key: $key, value: $value) {
                         _id
@@ -2149,7 +2149,7 @@ trait Base
                         value
                     }
                 }';
-            case self::$GET_VARIABLES:
+            case self::GET_VARIABLES:
                 return 'query listVariables($functionId: String!) {
                     functionsListVariables(functionId: $functionId) {
                         total
@@ -2160,7 +2160,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_VARIABLE:
+            case self::GET_VARIABLE:
                 return 'query getVariable($functionId: String!, $variableId: String!) {
                     functionsGetVariable(functionId: $functionId, variableId: $variableId) {
                         _id
@@ -2168,7 +2168,7 @@ trait Base
                         value
                     }
                 }';
-            case self::$UPDATE_VARIABLE:
+            case self::UPDATE_VARIABLE:
                 return 'mutation updateVariable($functionId: String!, $variableId: String!, $key: String!, $value: String) {
                     functionsUpdateVariable(functionId: $functionId, variableId: $variableId, key: $key, value: $value) {
                         _id
@@ -2176,13 +2176,13 @@ trait Base
                         value
                     }
                 }';
-            case self::$DELETE_VARIABLE:
+            case self::DELETE_VARIABLE:
                 return 'mutation deleteVariable($functionId: String!, $variableId: String!) {
                     functionsDeleteVariable(functionId: $functionId, variableId: $variableId) {
                         status
                     }
                 }';
-            case self::$CREATE_DEPLOYMENT:
+            case self::CREATE_DEPLOYMENT:
                 return 'mutation createDeployment($functionId: String!, $code: InputFile!, $activate: Boolean!) {
                     functionsCreateDeployment(functionId: $functionId, code: $code, activate: $activate) {
                         _id
@@ -2193,13 +2193,13 @@ trait Base
                         buildLogs
                     }
                 }';
-            case self::$DELETE_DEPLOYMENT:
+            case self::DELETE_DEPLOYMENT:
                 return 'mutation deleteDeployment($functionId: String!, $deploymentId: String!) {
                     functionsDeleteDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         status
                     }
                 }';
-            case self::$GET_EXECUTION:
+            case self::GET_EXECUTION:
                 return 'query getExecution($functionId: String!$executionId: String!) {
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
@@ -2209,7 +2209,7 @@ trait Base
                         errors
                     }
                 }';
-            case self::$GET_EXECUTIONS:
+            case self::GET_EXECUTIONS:
                 return 'query listExecutions($functionId: String!) {
                     functionsListExecutions(functionId: $functionId) {
                         total
@@ -2222,7 +2222,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$CREATE_EXECUTION:
+            case self::CREATE_EXECUTION:
                 return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
                     functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
@@ -2232,19 +2232,19 @@ trait Base
                         errors
                     }
                 }';
-            case self::$DELETE_EXECUTION:
+            case self::DELETE_EXECUTION:
                 return 'mutation deleteExecution($functionId: String!, $executionId: String!) {
                     functionsDeleteExecution(functionId: $functionId, executionId: $executionId) {
                         status
                     }
                 }';
-            case self::$RETRY_BUILD:
+            case self::RETRY_BUILD:
                 return 'mutation retryBuild($functionId: String!, $deploymentId: String!, $buildId: String!) {
                     functionsCreateDuplicateDeployment(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId) {
                         status
                     }
                 }';
-            case self::$CREATE_BUCKET:
+            case self::CREATE_BUCKET:
                 return 'mutation createBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
                     storageCreateBucket(bucketId: $bucketId, name: $name, fileSecurity: $fileSecurity, permissions: $permissions) {
                         _id
@@ -2256,7 +2256,7 @@ trait Base
                         fileSecurity
                     }
                 }';
-            case self::$GET_BUCKETS:
+            case self::GET_BUCKETS:
                 return 'query getBuckets {
                     storageListBuckets {
                         total
@@ -2267,7 +2267,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_BUCKET:
+            case self::GET_BUCKET:
                 return 'query getBucket($bucketId: String!) {
                     storageGetBucket(bucketId: $bucketId) {
                         _id
@@ -2275,7 +2275,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_BUCKET:
+            case self::UPDATE_BUCKET:
                 return 'mutation updateBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
                     storageUpdateBucket(bucketId: $bucketId, name: $name, fileSecurity: $fileSecurity, permissions: $permissions) {
                         _id
@@ -2283,13 +2283,13 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$DELETE_BUCKET:
+            case self::DELETE_BUCKET:
                 return 'mutation deleteBucket($bucketId: String!) {
                     storageDeleteBucket(bucketId: $bucketId) {
                         status
                     }
                 }';
-            case self::$CREATE_FILE:
+            case self::CREATE_FILE:
                 return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $permissions: [String!]) {
                     storageCreateFile(bucketId: $bucketId, fileId: $fileId, file: $file, permissions: $permissions) {
                         _id
@@ -2297,7 +2297,7 @@ trait Base
                         name
                     }
                 }';
-            case self::$GET_FILES:
+            case self::GET_FILES:
                 return 'query getFiles($bucketId: String!) {
                     storageListFiles(bucketId: $bucketId) {
                         total
@@ -2307,66 +2307,66 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_FILE:
+            case self::GET_FILE:
                 return 'query getFile($bucketId: String!, $fileId: String!) {
                     storageGetFile(bucketId: $bucketId, fileId: $fileId) {
                         _id
                         name
                     }
                 }';
-            case self::$GET_FILE_PREVIEW:
+            case self::GET_FILE_PREVIEW:
                 return 'query getFilePreview($bucketId: String!, $fileId: String!) {
                     storageGetFilePreview(bucketId: $bucketId, fileId: $fileId) {
                         status
                     }
                 }';
-            case self::$GET_FILE_DOWNLOAD:
+            case self::GET_FILE_DOWNLOAD:
                 return 'query getFileDownload($bucketId: String!, $fileId: String!) {
                     storageGetFileDownload(bucketId: $bucketId, fileId: $fileId) {
                         status
                     }
                 }';
-            case self::$GET_FILE_VIEW:
+            case self::GET_FILE_VIEW:
                 return 'query getFileView($bucketId: String!, $fileId: String!) {
                     storageGetFileView(bucketId: $bucketId, fileId: $fileId) {
                         status
                     }
                 }';
-            case self::$UPDATE_FILE:
+            case self::UPDATE_FILE:
                 return 'mutation updateFile($bucketId: String!, $fileId: String!, $permissions: [String!]) {
                     storageUpdateFile(bucketId: $bucketId, fileId: $fileId, permissions: $permissions) {
                         _id
                         name
                     }
                 }';
-            case self::$DELETE_FILE:
+            case self::DELETE_FILE:
                 return 'mutation deleteFile($bucketId: String!, $fileId: String!) {
                     storageDeleteFile(bucketId: $bucketId, fileId: $fileId) {
                         status
                     }
                 }';
-            case self::$GET_HTTP_HEALTH:
+            case self::GET_HTTP_HEALTH:
                 return 'query getHttpHealth {
                     healthGet {
                         ping
                         status
                     }
                 }';
-            case self::$GET_DB_HEALTH:
+            case self::GET_DB_HEALTH:
                 return 'query getDbHealth {
                     healthGetDB {
                         ping
                         status
                     }
                 }';
-            case self::$GET_CACHE_HEALTH:
+            case self::GET_CACHE_HEALTH:
                 return 'query getCacheHealth {
                     healthGetCache {
                         ping
                         status
                     }
                 }';
-            case self::$GET_TIME_HEALTH:
+            case self::GET_TIME_HEALTH:
                 return 'query getTimeHealth {
                     healthGetTime {
                         remoteTime
@@ -2374,45 +2374,45 @@ trait Base
                         diff
                     }
                 }';
-            case self::$GET_WEBHOOKS_QUEUE_HEALTH:
+            case self::GET_WEBHOOKS_QUEUE_HEALTH:
                 return 'query getWebhooksQueueHealth {
                     healthGetQueueWebhooks {
                         size
                     }
                 }';
-            case self::$GET_LOGS_QUEUE_HEALTH:
+            case self::GET_LOGS_QUEUE_HEALTH:
                 return 'query getLogsQueueHealth {
                     healthGetQueueLogs {
                         size
                     }
                 }';
-            case self::$GET_CERTIFICATES_QUEUE_HEALTH:
+            case self::GET_CERTIFICATES_QUEUE_HEALTH:
                 return 'query getCertificatesQueueHealth {
                     healthGetQueueCertificates {
                         size
                     }
                 }';
-            case self::$GET_FUNCTION_QUEUE_HEALTH:
+            case self::GET_FUNCTION_QUEUE_HEALTH:
                 return 'query getFunctionQueueHealth {
                     healthGetQueueFunctions {
                         size
                     }
                 }';
-            case self::$GET_LOCAL_STORAGE_HEALTH:
+            case self::GET_LOCAL_STORAGE_HEALTH:
                 return 'query getLocalStorageHealth {
                     healthGetStorageLocal {
                         ping
                         status
                     }
                 }';
-            case self::$GET_ANITVIRUS_HEALTH:
+            case self::GET_ANITVIRUS_HEALTH:
                 return 'query getAntivirusHealth {
                     healthGetAntivirus {
                         version
                         status
                     }
                 }';
-            case self::$CREATE_MAILGUN_PROVIDER:
+            case self::CREATE_MAILGUN_PROVIDER:
                 return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $fromName: String!, $fromEmail: String!, $isEuRegion: Boolean!, $replyToName: String, $replyToEmail: String) {
                     messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, fromName: $fromName, fromEmail: $fromEmail, isEuRegion: $isEuRegion, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
@@ -2422,7 +2422,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_SENDGRID_PROVIDER:
+            case self::CREATE_SENDGRID_PROVIDER:
                 return 'mutation createSendgridProvider($providerId: String!, $name: String!, $fromName: String!, $fromEmail: String!, $apiKey: String!, $replyToName: String, $replyToEmail: String) {
                     messagingCreateSendgridProvider(providerId: $providerId, name: $name, fromName: $fromName, fromEmail: $fromEmail, apiKey: $apiKey, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
@@ -2432,7 +2432,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_SMTP_PROVIDER:
+            case self::CREATE_SMTP_PROVIDER:
                 return 'mutation createSmtpProvider($providerId: String!, $name: String!, $host: String!, $port: Int!, $username: String!, $password: String!, $encryption: String!, $autoTLS: Boolean! $fromName: String!, $fromEmail: String!, $replyToName: String, $replyToEmail: String) {
                     messagingCreateSmtpProvider(providerId: $providerId, name: $name, host: $host, port: $port, username: $username, password: $password, encryption: $encryption, autoTLS: $autoTLS, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
@@ -2442,7 +2442,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_TWILIO_PROVIDER:
+            case self::CREATE_TWILIO_PROVIDER:
                 return 'mutation createTwilioProvider($providerId: String!, $name: String!, $from: String!, $accountSid: String!, $authToken: String!) {
                     messagingCreateTwilioProvider(providerId: $providerId, name: $name, from: $from, accountSid: $accountSid, authToken: $authToken) {
                         _id
@@ -2452,7 +2452,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_TELESIGN_PROVIDER:
+            case self::CREATE_TELESIGN_PROVIDER:
                 return 'mutation createTelesignProvider($providerId: String!, $name: String!, $from: String!, $customerId: String!, $apiKey: String!) {
                     messagingCreateTelesignProvider(providerId: $providerId, name: $name, from: $from, customerId: $customerId, apiKey: $apiKey) {
                         _id
@@ -2462,7 +2462,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_TEXTMAGIC_PROVIDER:
+            case self::CREATE_TEXTMAGIC_PROVIDER:
                 return 'mutation createTextmagicProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $apiKey: String!) {
                     messagingCreateTextmagicProvider(providerId: $providerId, name: $name, from: $from, username: $username, apiKey: $apiKey) {
                         _id
@@ -2472,7 +2472,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_MSG91_PROVIDER:
+            case self::CREATE_MSG91_PROVIDER:
                 return 'mutation createMsg91Provider($providerId: String!, $name: String!, $templateId: String!, $senderId: String!, $authKey: String!, $enabled: Boolean) {
                     messagingCreateMsg91Provider(providerId: $providerId, name: $name, templateId: $templateId, senderId: $senderId, authKey: $authKey, enabled: $enabled) {
                         _id
@@ -2482,7 +2482,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_VONAGE_PROVIDER:
+            case self::CREATE_VONAGE_PROVIDER:
                 return 'mutation createVonageProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!, $apiSecret: String!) {
                     messagingCreateVonageProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey, apiSecret: $apiSecret) {
                         _id
@@ -2492,7 +2492,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_FCM_PROVIDER:
+            case self::CREATE_FCM_PROVIDER:
                 return 'mutation createFcmProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
                     messagingCreateFcmProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
                         _id
@@ -2502,7 +2502,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$CREATE_APNS_PROVIDER:
+            case self::CREATE_APNS_PROVIDER:
                 return 'mutation createApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
                     messagingCreateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
@@ -2512,7 +2512,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$LIST_PROVIDERS:
+            case self::LIST_PROVIDERS:
                 return 'query listProviders {
                     messagingListProviders {
                         total
@@ -2526,7 +2526,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_PROVIDER:
+            case self::GET_PROVIDER:
                 return 'query getProvider($providerId: String!) {
                     messagingGetProvider(providerId: $providerId) {
                         _id
@@ -2536,7 +2536,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_MAILGUN_PROVIDER:
+            case self::UPDATE_MAILGUN_PROVIDER:
                 return 'mutation updateMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $isEuRegion: Boolean, $enabled: Boolean, $fromName: String, $fromEmail: String) {
                     messagingUpdateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, isEuRegion: $isEuRegion, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail) {
                         _id
@@ -2546,7 +2546,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_SENDGRID_PROVIDER:
+            case self::UPDATE_SENDGRID_PROVIDER:
                 return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!, $enabled: Boolean, $fromName: String, $fromEmail: String) {
                     messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail) {
                         _id
@@ -2556,7 +2556,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_SMTP_PROVIDER:
+            case self::UPDATE_SMTP_PROVIDER:
                 return 'mutation updateSmtpProvider($providerId: String!, $name: String!, $host: String!, $port: Int!, $username: String!, $password: String!, $encryption: String!, $autoTLS: Boolean!, $fromName: String, $fromEmail: String, $enabled: Boolean) {
                     messagingUpdateSmtpProvider(providerId: $providerId, name: $name, host: $host, port: $port, username: $username, password: $password, encryption: $encryption, autoTLS: $autoTLS, fromName: $fromName, fromEmail: $fromEmail, enabled: $enabled) {
                         _id
@@ -2566,7 +2566,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_TWILIO_PROVIDER:
+            case self::UPDATE_TWILIO_PROVIDER:
                 return 'mutation updateTwilioProvider($providerId: String!, $name: String!, $accountSid: String!, $authToken: String!) {
                     messagingUpdateTwilioProvider(providerId: $providerId, name: $name, accountSid: $accountSid, authToken: $authToken) {
                         _id
@@ -2576,7 +2576,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_TELESIGN_PROVIDER:
+            case self::UPDATE_TELESIGN_PROVIDER:
                 return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $customerId: String!, $apiKey: String!) {
                     messagingUpdateTelesignProvider(providerId: $providerId, name: $name, customerId: $customerId, apiKey: $apiKey) {
                         _id
@@ -2586,7 +2586,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_TEXTMAGIC_PROVIDER:
+            case self::UPDATE_TEXTMAGIC_PROVIDER:
                 return 'mutation updateTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
                     messagingUpdateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
                         _id
@@ -2596,7 +2596,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_MSG91_PROVIDER:
+            case self::UPDATE_MSG91_PROVIDER:
                 return 'mutation updateMsg91Provider($providerId: String!, $name: String!, $templateId: String!, $senderId: String!, $authKey: String!) {
                     messagingUpdateMsg91Provider(providerId: $providerId, name: $name, templateId: $templateId, senderId: $senderId, authKey: $authKey) {
                         _id
@@ -2606,7 +2606,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_VONAGE_PROVIDER:
+            case self::UPDATE_VONAGE_PROVIDER:
                 return 'mutation updateVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
                     messagingUpdateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
                         _id
@@ -2616,7 +2616,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_FCM_PROVIDER:
+            case self::UPDATE_FCM_PROVIDER:
                 return 'mutation updateFcmProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
                     messagingUpdateFcmProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
                         _id
@@ -2626,7 +2626,7 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$UPDATE_APNS_PROVIDER:
+            case self::UPDATE_APNS_PROVIDER:
                 return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
                     messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
@@ -2636,13 +2636,13 @@ trait Base
                         enabled
                     }
                 }';
-            case self::$DELETE_PROVIDER:
+            case self::DELETE_PROVIDER:
                 return 'mutation deleteProvider($providerId: String!) {
                     messagingDeleteProvider(providerId: $providerId) {
                         status
                     }
                 }';
-            case self::$CREATE_TOPIC:
+            case self::CREATE_TOPIC:
                 return 'mutation createTopic($topicId: String!, $name: String!) {
                     messagingCreateTopic(topicId: $topicId, name: $name) {
                         _id
@@ -2652,7 +2652,7 @@ trait Base
                         pushTotal
                     }
                 }';
-            case self::$LIST_TOPICS:
+            case self::LIST_TOPICS:
                 return 'query listTopics {
                     messagingListTopics {
                         total
@@ -2665,7 +2665,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_TOPIC:
+            case self::GET_TOPIC:
                 return 'query getTopic($topicId: String!) {
                     messagingGetTopic(topicId: $topicId) {
                         _id
@@ -2675,7 +2675,7 @@ trait Base
                         pushTotal
                     }
                 }';
-            case self::$UPDATE_TOPIC:
+            case self::UPDATE_TOPIC:
                 return 'mutation updateTopic($topicId: String!, $name: String!) {
                     messagingUpdateTopic(topicId: $topicId, name: $name) {
                         _id
@@ -2685,13 +2685,13 @@ trait Base
                         pushTotal
                     }
                 }';
-            case self::$DELETE_TOPIC:
+            case self::DELETE_TOPIC:
                 return 'mutation deleteTopic($topicId: String!) {
                     messagingDeleteTopic(topicId: $topicId) {
                         status
                     }
                 }';
-            case self::$CREATE_SUBSCRIBER:
+            case self::CREATE_SUBSCRIBER:
                 return 'mutation createSubscriber($subscriberId: String!, $targetId: String!, $topicId: String!) {
                     messagingCreateSubscriber(subscriberId: $subscriberId, targetId: $targetId, topicId: $topicId) {
                         _id
@@ -2707,7 +2707,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$LIST_SUBSCRIBERS:
+            case self::LIST_SUBSCRIBERS:
                 return 'query listSubscribers($topicId: String!) {
                     messagingListSubscribers(topicId: $topicId) {
                         total
@@ -2726,7 +2726,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_SUBSCRIBER:
+            case self::GET_SUBSCRIBER:
                 return 'query getSubscriber($topicId: String!, $subscriberId: String!) {
                     messagingGetSubscriber(topicId: $topicId, subscriberId: $subscriberId) {
                         _id
@@ -2742,13 +2742,13 @@ trait Base
                         }
                     }
                 }';
-            case self::$DELETE_SUBSCRIBER:
+            case self::DELETE_SUBSCRIBER:
                 return 'mutation deleteSubscriber($topicId: String!, $subscriberId: String!) {
                     messagingDeleteSubscriber(topicId: $topicId, subscriberId: $subscriberId) {
                         status
                     }
             }';
-            case self::$CREATE_EMAIL:
+            case self::CREATE_EMAIL:
                 return 'mutation createEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String!, $content: String!, $status: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
                     messagingCreateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
                         _id
@@ -2762,7 +2762,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$CREATE_SMS:
+            case self::CREATE_SMS:
                 return 'mutation createSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String!, $status: String, $scheduledAt: String) {
                     messagingCreateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, scheduledAt: $scheduledAt) {
                         _id
@@ -2776,7 +2776,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$CREATE_PUSH_NOTIFICATION:
+            case self::CREATE_PUSH_NOTIFICATION:
                 return 'mutation createPushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $scheduledAt: String) {
                     messagingCreatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, scheduledAt: $scheduledAt) {
                         _id
@@ -2790,7 +2790,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$LIST_MESSAGES:
+            case self::LIST_MESSAGES:
                 return 'query listMessages {
                     messagingListMessages {
                         total
@@ -2808,7 +2808,7 @@ trait Base
                         }
                     }
                 }';
-            case self::$GET_MESSAGE:
+            case self::GET_MESSAGE:
                 return 'query getMessage($messageId: String!) {
                     messagingGetMessage(messageId: $messageId) {
                         _id
@@ -2823,8 +2823,8 @@ trait Base
                         status
                     }
                 }';
-            case self::$UPDATE_EMAIL:
-                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, , $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
+            case self::UPDATE_EMAIL:
+                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
                     messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
                         _id
                         topics
@@ -2837,7 +2837,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$UPDATE_SMS:
+            case self::UPDATE_SMS:
                 return 'mutation updateSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String, $status: String, $scheduledAt: String) {
                     messagingUpdateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, scheduledAt: $scheduledAt) {
                         _id
@@ -2851,7 +2851,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$UPDATE_PUSH_NOTIFICATION:
+            case self::UPDATE_PUSH_NOTIFICATION:
                 return 'mutation updatePushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String, $body: String, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $scheduledAt: String) {
                     messagingUpdatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, scheduledAt: $scheduledAt) {
                         _id
@@ -2865,7 +2865,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$COMPLEX_QUERY_COLLECTION:
+            case self::COMPLEX_QUERY_COLLECTION:
                 return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $documentSecurity: Boolean!, $collectionPermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
                         _id
@@ -3107,14 +3107,14 @@ trait Base
                             data
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
-            case self::$COMPLEX_QUERY_TABLE:
+                }' . PHP_EOL . self::FRAGMENT_ATTRIBUTES;
+            case self::COMPLEX_QUERY_TABLE:
                 return 'mutation complex($databaseId: String!, $databaseName: String!, $tableId: String!, $tableName: String!, $rowSecurity: Boolean!, $tablePermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
                         _id
                         name
                     }
-                    gridsCreate(databaseId: $databaseId, tableId: $tableId, name: $tableName, rowSecurity: $rowSecurity, permissions: $tablePermissions) {
+                    tablesDbCreate(databaseId: $databaseId, tableId: $tableId, name: $tableName, rowSecurity: $rowSecurity, permissions: $tablePermissions) {
                         _id
                         _createdAt
                         _updatedAt
@@ -3131,7 +3131,7 @@ trait Base
                             status
                         }
                     }
-                    gridsCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: "name", size: 255, required: true) {
+                    tablesDbCreateStringColumn(databaseId: $databaseId, tableId: $tableId, key: "name", size: 255, required: true) {
                         key
                         type
                         status
@@ -3140,7 +3140,7 @@ trait Base
                         default
                         array
                     }
-                    gridsCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: "age", min: 0, max: 150, required: true) {
+                    tablesDbCreateIntegerColumn(databaseId: $databaseId, tableId: $tableId, key: "age", min: 0, max: 150, required: true) {
                         key
                         type
                         status
@@ -3150,7 +3150,7 @@ trait Base
                         default
                         array
                     }
-                    gridsCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: "alive", required: false, default: true) {
+                    tablesDbCreateBooleanColumn(databaseId: $databaseId, tableId: $tableId, key: "alive", required: false, default: true) {
                         key
                         type
                         status
@@ -3350,7 +3350,7 @@ trait Base
                             data
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
+                }' . PHP_EOL . self::FRAGMENT_COLUMNS;
         }
 
         throw new \InvalidArgumentException('Invalid query type');

@@ -67,7 +67,7 @@ class Update extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.updateRows',
+                    replaceWith: 'tablesDb.updateRows',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -152,7 +152,7 @@ class Update extends Action
 
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage

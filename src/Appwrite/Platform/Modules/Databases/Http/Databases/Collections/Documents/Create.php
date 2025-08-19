@@ -85,7 +85,7 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRow',
+                        replaceWith: 'tablesDb.createRow',
                     ),
                 ),
                 new Method(
@@ -109,7 +109,7 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRows',
+                        replaceWith: 'tablesDb.createRows',
                     ),
                 )
             ])
@@ -318,8 +318,7 @@ class Create extends Action
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $relation->removeAttribute('$collectionId');
-                            $relation->removeAttribute('$databaseId');
+                            $this->removeReadonlyAttributes($relation);
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }

@@ -71,7 +71,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.upsertRow',
+                        replaceWith: 'tablesDb.upsertRow',
                     ),
                 ),
             ])
@@ -213,8 +213,7 @@ class Upsert extends Action
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
-                        $relation->removeAttribute('$collectionId');
-                        $relation->removeAttribute('$databaseId');
+                        $this->removeReadonlyAttributes($relation);
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',

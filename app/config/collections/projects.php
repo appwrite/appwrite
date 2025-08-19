@@ -56,7 +56,7 @@ return [
                 'type' => Database::VAR_STRING,
                 'size' => 128,
                 'required' => false,
-                'default' => 'grids',
+                'default' => 'tablesdb',
                 'signed' => true,
                 'array' => false,
                 'filters' => [],

@@ -60,7 +60,7 @@ class Create extends Action
                 ],
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.createStringColumn',
+                    replaceWith: 'tablesDb.createStringColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

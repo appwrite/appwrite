@@ -80,13 +80,6 @@ class Row extends Any
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
 
-        $collectionId = $document->getAttribute('$collectionId', '');
-        if (!empty($collectionId)) {
-            $document
-                ->removeAttribute('$collectionId')
-                ->setAttribute('$tableId', $collectionId);
-        }
-
         foreach ($document->getAttributes() as $column) {
             if (\is_array($column)) {
                 foreach ($column as $subAttribute) {

@@ -60,28 +60,14 @@ class Create extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createDatabase',
+                        replaceWith: 'tablesDb.createDatabase',
                     )
-                ),
-                new Method(
-                    namespace: 'grids',
-                    group: 'grids',
-                    name: 'createDatabase',
-                    description: '/docs/references/grids/create-database.md',
-                    auth: [AuthType::KEY],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_CREATED,
-                            model: UtopiaResponse::MODEL_DATABASE,
-                        )
-                    ],
-                    contentType: ContentType::JSON
                 )
             ])
             ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
-            ->param('type', 'grids', new WhiteList(['grids','legacy']), 'Database type.', true)
+            ->param('type', 'tablesdb', new WhiteList(['tablesdb','legacy']), 'Database type.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -103,8 +89,6 @@ class Create extends Action
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         } catch (StructureException $e) {
-            // TODO: @Jake, how do we handle this document/row?
-            // there's no context awareness at this level on what the api is.
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         }
 

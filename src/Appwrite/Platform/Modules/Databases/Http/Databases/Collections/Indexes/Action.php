@@ -19,10 +19,9 @@ abstract class Action extends UtopiaAction
 
     public function setHttpPath(string $path): UtopiaAction
     {
-        if (str_contains($path, '/:databaseId/grids/tables')) {
+        if (\str_contains($path, '/tablesdb')) {
             $this->context = COLUMN_INDEX;
         }
-
         return parent::setHttpPath($path);
     }
 
@@ -63,7 +62,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'databases' : 'grids';
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDb';
     }
 
     /**

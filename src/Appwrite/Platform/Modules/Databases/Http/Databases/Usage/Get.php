@@ -39,7 +39,7 @@ class Get extends Action
                 new Method(
                     namespace: 'databases',
                     group: null,
-                    name: self::getName(),
+                    name: 'getUsage',
                     description: '/docs/references/databases/get-database-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [
@@ -51,24 +51,9 @@ class Get extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.' . self::getName(),
+                        replaceWith: 'tablesDb.getUsage'
                     )
-                ),
-                new Method(
-                    namespace: 'grids',
-                    group: null,
-                    name: self::getName(),
-                    description: '/docs/references/grids/get-database-usage.md',
-                    auth: [AuthType::ADMIN],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_USAGE_DATABASE,
-                        )
-                    ],
-                    contentType: ContentType::JSON,
-                ),
-
+                )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)

@@ -26,6 +26,14 @@ class Action extends UtopiaAction
     ];
 
     /**
+     * Attributes to remove from relationship path documents per API
+     * Default is empty - APIs should set their specific attributes
+     *
+     * @var array
+     */
+    protected array $removableAttributes = [];
+
+    /**
      * Foreach Document
      * Call provided callback for each document in the collection
      *
