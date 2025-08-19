@@ -1,5 +1,13 @@
 # Change Log
 
+## 17.1.1
+
+* Bump `device_info_plus` from `^10.1.2` to `^11.5.0`
+* Refactor to remove unused `_notifyDone`
+* Refactor to update deprecated approach of accessing local storage
+* Add support for new `Query` methods (`notContains`, `notSearch`, `notBetween`, `notStartsWith`, `notEndsWith`, `createdBefore`, `createdAfter`, `updatedBefore`, `updatedAfter`)
+* Fix tests
+
 ## 17.1.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
