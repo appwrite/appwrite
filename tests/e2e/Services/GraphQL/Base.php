@@ -541,16 +541,16 @@ trait Base
                         status
                     }
                 }';
-            case self::$GRIDS_CREATE_DATABASE:
-                return 'mutation gridsCreateDatabase($databaseId: String!, $name: String!) {
-                    gridsCreateDatabase(databaseId: $databaseId, name: $name) {
+            case self::TABLESDB_CREATE_DATABASE:
+                return 'mutation tablesdbCreate($databaseId: String!, $name: String!) {
+                    tablesdbCreate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
-            case self::$GRIDS_GET_DATABASES:
-                return 'query gridsListDatabases {
-                    gridsListDatabases {
+            case self::TABLESDB_GET_DATABASES:
+                return 'query tablesdbList {
+                    tablesdbList {
                         total
                         databases {
                             _id
@@ -558,23 +558,23 @@ trait Base
                         }
                     }
                 }';
-            case self::$GRIDS_GET_DATABASE:
-                return 'query gridsGetDatabase($databaseId: String!) {
-                    gridsGetDatabase(databaseId: $databaseId) {
+            case self::TABLESDB_GET_DATABASE:
+                return 'query tablesdbGet($databaseId: String!) {
+                    tablesdbGet(databaseId: $databaseId) {
                         _id
                         name
                     }
                 }';
-            case self::$GRIDS_UPDATE_DATABASE:
-                return 'mutation gridsUpdateDatabase($databaseId: String!, $name: String!) {
-                    gridsUpdateDatabase(databaseId: $databaseId, name: $name) {
+            case self::TABLESDB_UPDATE_DATABASE:
+                return 'mutation tablesdbUpdate($databaseId: String!, $name: String!) {
+                    tablesdbUpdate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
-            case self::$GRIDS_DELETE_DATABASE:
-                return 'mutation gridsDeleteDatabase($databaseId: String!) {
-                    gridsDeleteDatabase(databaseId: $databaseId) {
+            case self::TABLESDB_DELETE_DATABASE:
+                return 'mutation tablesdbDelete($databaseId: String!) {
+                    tablesdbDelete(databaseId: $databaseId) {
                         status
                     }
                 }';
