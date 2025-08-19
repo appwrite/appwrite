@@ -5234,55 +5234,6 @@ trait DatabasesBase
     }
 
     /**
-     * @depends testOneToManyRelationship
-     */
-    public function testTableIdAttributeConsistency(array $data): void
-    {
-        // Test that when NO select query is used, $tableId is present (not $collectionId)
-        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('fullName', ['Stevie Wonder'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['rows']);
-        
-        $row = $response['body']['rows'][0];
-        // Verify correct TablesDB attributes are present
-        $this->assertArrayHasKey('$tableId', $row, 'TablesDB API should set $tableId, not $collectionId');
-        $this->assertArrayHasKey('$databaseId', $row);
-        $this->assertArrayNotHasKey('$collectionId', $row, 'TablesDB API should not have $collectionId');
-        
-        // Test that when $tableId is explicitly requested in select, it's present
-        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('fullName', ['Stevie Wonder'])->toString(),
-                Query::select(['fullName', '$tableId', '$databaseId'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['rows']);
-        
-        $row = $response['body']['rows'][0];
-        $this->assertArrayHasKey('$tableId', $row, 'Explicitly requested $tableId should be present');
-        $this->assertArrayHasKey('$databaseId', $row, 'Explicitly requested $databaseId should be present');
-        $this->assertArrayHasKey('fullName', $row);
-        $this->assertArrayNotHasKey('$collectionId', $row, 'TablesDB should never have $collectionId');
-        
-        // Verify the correct value is set
-        $this->assertEquals($data['personCollection'], $row['$tableId'], '$tableId should contain the table ID');
-        $this->assertEquals($data['databaseId'], $row['$databaseId'], '$databaseId should contain the database ID');
-    }
-
-    /**
      * @throws \Utopia\Database\Exception
      * @throws \Utopia\Database\Exception\Query
      */

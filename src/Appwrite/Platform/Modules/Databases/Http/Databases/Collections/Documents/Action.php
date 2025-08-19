@@ -25,10 +25,12 @@ abstract class Action extends AppwriteAction
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
-            $this->removableAttributes = ['$databaseId', '$tableId'];
-        } else {
-            $this->removableAttributes = ['$databaseId', '$collectionId'];
         }
+        
+        // Use the same helper method to ensure consistency
+        $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
+        $this->removableAttributes = ['$databaseId', $contextId];
+        
         return parent::setHttpPath($path);
     }
 

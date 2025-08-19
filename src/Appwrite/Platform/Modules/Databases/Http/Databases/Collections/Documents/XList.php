@@ -73,16 +73,15 @@ class XList extends Action
 
     public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
         }
@@ -120,16 +119,14 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $selectQueries = [];
-
         try {
             $selectQueries = Query::groupByType($queries)['selections'] ?? [];
 
             if (! empty($selectQueries)) {
-                // has selects, allow relationship on documents!
+                // has selects, allow relationship on documents
                 $documents = $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
             } else {
-                // has no selects, disable relationship looping on documents!
+                // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
                 $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
             }
@@ -160,12 +157,6 @@ class XList extends Action
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
-
-        $response->addHeader('X-Debug-Operations', $operations);
-
-        $select = \array_reduce($queries, function ($result, $query) {
-            return $result || ($query->getMethod() === Query::TYPE_SELECT);
-        }, false);
 
         // Check if the SELECT query includes the removable attributes
         $hasWildcard = false;

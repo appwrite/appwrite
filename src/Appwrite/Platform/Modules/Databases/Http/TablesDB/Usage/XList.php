@@ -15,7 +15,7 @@ class XList extends DatabaseUsageXList
 {
     public static function getName(): string
     {
-        return 'listUsage';
+        return 'listTablesDBUsage';
     }
 
     public function __construct()

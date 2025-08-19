@@ -16,7 +16,7 @@ class Get extends DatabaseUsageGet
 {
     public static function getName(): string
     {
-        return 'getUsage';
+        return 'getTablesDBUsage';
     }
 
     public function __construct()
