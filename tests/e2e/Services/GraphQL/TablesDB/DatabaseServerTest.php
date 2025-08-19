@@ -39,7 +39,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($database['body']['data']);
         $this->assertArrayNotHasKey('errors', $database['body']);
-        $database = $database['body']['data']['tablesdbCreate'];
+        $database = $database['body']['data']['tablesDbCreate'];
         $this->assertEquals('Actors', $database['name']);
 
         return $database;
@@ -75,7 +75,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table['body']['data']);
         $this->assertArrayNotHasKey('errors', $table['body']);
-        $table = $table['body']['data']['tablesdbCreateTable'];
+        $table = $table['body']['data']['tablesDbCreateTable'];
         $this->assertEquals('Actors', $table['name']);
 
         $gqlPayload = [
@@ -101,7 +101,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertIsArray($table2['body']['data']);
         $this->assertArrayNotHasKey('errors', $table2['body']);
-        $table2 = $table2['body']['data']['tablesdbCreateTable'];
+        $table2 = $table2['body']['data']['tablesDbCreateTable'];
         $this->assertEquals('Movies', $table2['name']);
 
         return [
@@ -138,7 +138,7 @@ class DatabaseServerTest extends Scope
         // TODO: @itznotabug - check for `encrypt` attribute in string column's response body as well!
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateStringColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateStringColumn']);
 
         return $data;
     }
@@ -171,9 +171,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateStringColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateStringColumn']['required']);
-        $this->assertEquals('Default Value', $column['body']['data']['tablesdbUpdateStringColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateStringColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateStringColumn']['required']);
+        $this->assertEquals('Default Value', $column['body']['data']['tablesDbUpdateStringColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -206,7 +206,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateIntegerColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateIntegerColumn']);
 
         return $data;
     }
@@ -241,11 +241,11 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateIntegerColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateIntegerColumn']['required']);
-        $this->assertEquals(12, $column['body']['data']['tablesdbUpdateIntegerColumn']['min']);
-        $this->assertEquals(160, $column['body']['data']['tablesdbUpdateIntegerColumn']['max']);
-        $this->assertEquals(50, $column['body']['data']['tablesdbUpdateIntegerColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateIntegerColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateIntegerColumn']['required']);
+        $this->assertEquals(12, $column['body']['data']['tablesDbUpdateIntegerColumn']['min']);
+        $this->assertEquals(160, $column['body']['data']['tablesDbUpdateIntegerColumn']['max']);
+        $this->assertEquals(50, $column['body']['data']['tablesDbUpdateIntegerColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -276,7 +276,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateBooleanColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateBooleanColumn']);
 
         return $data;
     }
@@ -309,9 +309,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateBooleanColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateBooleanColumn']['required']);
-        $this->assertTrue($column['body']['data']['tablesdbUpdateBooleanColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateBooleanColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateBooleanColumn']['required']);
+        $this->assertTrue($column['body']['data']['tablesDbUpdateBooleanColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -345,7 +345,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateFloatColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateFloatColumn']);
 
         return $data;
     }
@@ -380,11 +380,11 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateFloatColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateFloatColumn']['required']);
-        $this->assertEquals(100.0, $column['body']['data']['tablesdbUpdateFloatColumn']['min']);
-        $this->assertEquals(1000000.0, $column['body']['data']['tablesdbUpdateFloatColumn']['max']);
-        $this->assertEquals(2500.0, $column['body']['data']['tablesdbUpdateFloatColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateFloatColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateFloatColumn']['required']);
+        $this->assertEquals(100.0, $column['body']['data']['tablesDbUpdateFloatColumn']['min']);
+        $this->assertEquals(1000000.0, $column['body']['data']['tablesDbUpdateFloatColumn']['max']);
+        $this->assertEquals(2500.0, $column['body']['data']['tablesDbUpdateFloatColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -415,7 +415,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateEmailColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateEmailColumn']);
 
         return $data;
     }
@@ -448,9 +448,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateEmailColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateEmailColumn']['required']);
-        $this->assertEquals('torsten@appwrite.io', $column['body']['data']['tablesdbUpdateEmailColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateEmailColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateEmailColumn']['required']);
+        $this->assertEquals('torsten@appwrite.io', $column['body']['data']['tablesDbUpdateEmailColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -486,7 +486,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateEnumColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateEnumColumn']);
 
         return $data;
     }
@@ -525,11 +525,11 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateEnumColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateEnumColumn']['required']);
-        $this->assertEquals('tech', $column['body']['data']['tablesdbUpdateEnumColumn']['default']);
-        $this->assertContains('tech', $column['body']['data']['tablesdbUpdateEnumColumn']['elements']);
-        $this->assertNotContains('guest', $column['body']['data']['tablesdbUpdateEnumColumn']['elements']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateEnumColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateEnumColumn']['required']);
+        $this->assertEquals('tech', $column['body']['data']['tablesDbUpdateEnumColumn']['default']);
+        $this->assertContains('tech', $column['body']['data']['tablesDbUpdateEnumColumn']['elements']);
+        $this->assertNotContains('guest', $column['body']['data']['tablesDbUpdateEnumColumn']['elements']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -560,7 +560,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateDatetimeColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateDatetimeColumn']);
 
         return $data;
     }
@@ -593,9 +593,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateDatetimeColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateDatetimeColumn']['required']);
-        $this->assertEquals('2000-01-01T00:00:00Z', $column['body']['data']['tablesdbUpdateDatetimeColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateDatetimeColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateDatetimeColumn']['required']);
+        $this->assertEquals('2000-01-01T00:00:00Z', $column['body']['data']['tablesDbUpdateDatetimeColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -628,7 +628,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateRelationshipColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateRelationshipColumn']);
 
         return $data;
     }
@@ -659,7 +659,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateRelationshipColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateRelationshipColumn']);
 
         return $data;
     }
@@ -690,7 +690,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateIpColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateIpColumn']);
 
         return $data;
     }
@@ -723,9 +723,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateIpColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateIpColumn']['required']);
-        $this->assertEquals('127.0.0.1', $column['body']['data']['tablesdbUpdateIpColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateIpColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateIpColumn']['required']);
+        $this->assertEquals('127.0.0.1', $column['body']['data']['tablesDbUpdateIpColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
 
         return $data;
@@ -757,7 +757,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbCreateUrlColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbCreateUrlColumn']);
 
         return $data;
     }
@@ -790,9 +790,9 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbUpdateUrlColumn']);
-        $this->assertFalse($column['body']['data']['tablesdbUpdateUrlColumn']['required']);
-        $this->assertEquals('https://cloud.appwrite.io', $column['body']['data']['tablesdbUpdateUrlColumn']['default']);
+        $this->assertIsArray($column['body']['data']['tablesDbUpdateUrlColumn']);
+        $this->assertFalse($column['body']['data']['tablesDbUpdateUrlColumn']['required']);
+        $this->assertEquals('https://cloud.appwrite.io', $column['body']['data']['tablesDbUpdateUrlColumn']['default']);
         $this->assertEquals(200, $column['headers']['status-code']);
     }
 
@@ -826,12 +826,12 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
-        $this->assertIsArray($index['body']['data']['tablesdbCreateIndex']);
+        $this->assertIsArray($index['body']['data']['tablesDbCreateIndex']);
 
         return [
             'database' => $data['database'],
             'table' => $data['table'],
-            'index' => $index['body']['data']['tablesdbCreateIndex'],
+            'index' => $index['body']['data']['tablesDbCreateIndex'],
         ];
     }
 
@@ -877,7 +877,7 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
 
-        $row = $row['body']['data']['tablesdbCreateRow'];
+        $row = $row['body']['data']['tablesDbCreateRow'];
         $this->assertIsArray($row);
 
         return [
@@ -942,7 +942,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $databases['body']);
         $this->assertIsArray($databases['body']['data']);
-        $this->assertIsArray($databases['body']['data']['tablesdbList']);
+        $this->assertIsArray($databases['body']['data']['tablesDbList']);
     }
 
     /**
@@ -967,7 +967,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $database['body']);
         $this->assertIsArray($database['body']['data']);
-        $this->assertIsArray($database['body']['data']['tablesdbGet']);
+        $this->assertIsArray($database['body']['data']['tablesDbGet']);
     }
 
     /**
@@ -994,7 +994,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $tables['body']);
         $this->assertIsArray($tables['body']['data']);
-        $this->assertIsArray($tables['body']['data']['tablesdbListTables']);
+        $this->assertIsArray($tables['body']['data']['tablesDbListTables']);
     }
 
     /**
@@ -1020,7 +1020,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['tablesdbGetTable']);
+        $this->assertIsArray($table['body']['data']['tablesDbGetTable']);
     }
 
     /**
@@ -1047,7 +1047,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $columns['body']);
         $this->assertIsArray($columns['body']['data']);
-        $this->assertIsArray($columns['body']['data']['tablesdbListColumns']);
+        $this->assertIsArray($columns['body']['data']['tablesDbListColumns']);
     }
 
     /**
@@ -1074,7 +1074,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesdbGetColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDbGetColumn']);
     }
 
     /**
@@ -1100,7 +1100,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $indices['body']);
         $this->assertIsArray($indices['body']['data']);
-        $this->assertIsArray($indices['body']['data']['tablesdbListIndexes']);
+        $this->assertIsArray($indices['body']['data']['tablesDbListIndexes']);
     }
 
     /**
@@ -1127,7 +1127,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
-        $this->assertIsArray($index['body']['data']['tablesdbGetIndex']);
+        $this->assertIsArray($index['body']['data']['tablesDbGetIndex']);
     }
 
     /**
@@ -1153,7 +1153,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $rows['body']);
         $this->assertIsArray($rows['body']['data']);
-        $this->assertIsArray($rows['body']['data']['tablesdbListRows']);
+        $this->assertIsArray($rows['body']['data']['tablesDbListRows']);
     }
 
     /**
@@ -1180,7 +1180,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $this->assertIsArray($row['body']['data']['tablesdbGetRow']);
+        $this->assertIsArray($row['body']['data']['tablesDbGetRow']);
     }
 
     //    /**
@@ -1253,7 +1253,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $database['body']);
         $this->assertIsArray($database['body']['data']);
-        $this->assertIsArray($database['body']['data']['tablesdbUpdate']);
+        $this->assertIsArray($database['body']['data']['tablesDbUpdate']);
     }
 
     /**
@@ -1281,7 +1281,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $table['body']);
         $this->assertIsArray($table['body']['data']);
-        $this->assertIsArray($table['body']['data']['tablesdbUpdateTable']);
+        $this->assertIsArray($table['body']['data']['tablesDbUpdateTable']);
     }
 
     /**
@@ -1311,7 +1311,7 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $row = $row['body']['data']['tablesdbUpdateRow'];
+        $row = $row['body']['data']['tablesDbUpdateRow'];
         $this->assertIsArray($row);
         $this->assertStringContainsString('New Row Name', $row['data']);
     }
@@ -1493,7 +1493,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $databaseId = $res['body']['data']['tablesdbCreate']['_id'];
+        $databaseId = $res['body']['data']['tablesDbCreate']['_id'];
 
         // Step 2: Create table
         $query = $this->getQuery(self::CREATE_TABLE);
@@ -1512,7 +1512,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $tableId = $res['body']['data']['tablesdbCreateTable']['_id'];
+        $tableId = $res['body']['data']['tablesDbCreateTable']['_id'];
 
         // Step 3: Create column
         $query = $this->getQuery(self::CREATE_STRING_COLUMN);
@@ -1545,7 +1545,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['tablesdbCreateRows']['rows']);
+        $this->assertCount(10, $res['body']['data']['tablesDbCreateRows']['rows']);
 
         return compact('databaseId', 'tableId', 'projectId');
     }
@@ -1583,7 +1583,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['tablesdbUpdateRows']['rows']);
+        $this->assertCount(10, $res['body']['data']['tablesDbUpdateRows']['rows']);
 
         // Step 2: Fetch and validate updated rows
         $query = $this->getQuery(self::GET_ROWS);
@@ -1599,7 +1599,7 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertEquals(200, $res['headers']['status-code']);
 
-        $fetched = $res['body']['data']['tablesdbListRows'];
+        $fetched = $res['body']['data']['tablesDbListRows'];
         $this->assertEquals(10, $fetched['total']);
 
         foreach ($fetched['rows'] as $row) {
@@ -1651,7 +1651,7 @@ class DatabaseServerTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $upsertPayload);
         $this->assertArrayNotHasKey('errors', $response['body']);
 
-        $rows = $response['body']['data']['tablesdbUpsertRows']['rows'];
+        $rows = $response['body']['data']['tablesDbUpsertRows']['rows'];
         $this->assertCount(2, $rows);
 
         $rowMap = [];
@@ -1676,7 +1676,7 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $fetchPayload);
         $this->assertEquals(200, $res['headers']['status-code']);
 
-        $fetched = $res['body']['data']['tablesdbListRows'];
+        $fetched = $res['body']['data']['tablesDbListRows'];
         $this->assertEquals(11, $fetched['total']);
 
         // Step 3: Upsert row with new permissions using `tablesUpsertRow`
@@ -1695,7 +1695,7 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
 
-        $updated = $res['body']['data']['tablesdbUpsertRow'];
+        $updated = $res['body']['data']['tablesDbUpsertRow'];
         $this->assertEquals('Row #10 Patched', json_decode($updated['data'], true)['name']);
         $this->assertEquals($data['databaseId'], $updated['_databaseId']);
         $this->assertEquals($data['tableId'], $updated['_tableId']);
@@ -1726,7 +1726,7 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
 
-        $deleted = $res['body']['data']['tablesdbDeleteRows']['rows'];
+        $deleted = $res['body']['data']['tablesDbDeleteRows']['rows'];
         $this->assertIsArray($deleted);
         $this->assertCount(11, $deleted);
 
@@ -1742,7 +1742,7 @@ class DatabaseServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertEquals(200, $res['headers']['status-code']);
-        $this->assertEquals(0, $res['body']['data']['tablesdbListRows']['total']);
+        $this->assertEquals(0, $res['body']['data']['tablesDbListRows']['total']);
 
         return $data;
     }

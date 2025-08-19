@@ -155,7 +155,7 @@ class AbuseTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $tableId = $response['body']['data']['tablesdbCreateTable']['_id'];
+        $tableId = $response['body']['data']['tablesDbCreateTable']['_id'];
 
         $query = $this->getQuery(self::CREATE_STRING_COLUMN);
         $gqlPayload = [
