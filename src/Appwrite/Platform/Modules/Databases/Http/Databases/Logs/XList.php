@@ -58,22 +58,8 @@ class XList extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tablesdb.listDatabaseLogs',
+                        replaceWith: 'tablesDb.listDatabaseLogs',
                     )
-                ),
-                new Method(
-                    namespace: 'tablesdb',
-                    group: 'logs',
-                    name: 'listDatabaseLogs',
-                    description: '/docs/references/tablesdb/list-database-logs.md',
-                    auth: [AuthType::ADMIN],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_LOG_LIST,
-                        )
-                    ],
-                    contentType: ContentType::JSON
                 ),
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')

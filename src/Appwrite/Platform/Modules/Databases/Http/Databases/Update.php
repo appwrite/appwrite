@@ -52,7 +52,7 @@ class Update extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tablesdb.update',
+                        replaceWith: 'tablesDb.update',
                     )
                 ),
             ])

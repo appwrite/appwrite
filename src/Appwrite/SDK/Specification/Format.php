@@ -207,7 +207,7 @@ abstract class Format
                         }
                 }
                 break;
-            case 'tablesdb':
+            case 'tablesDb':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
@@ -487,7 +487,7 @@ abstract class Format
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
-            case 'tablesdb':
+            case 'tablesDb':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':

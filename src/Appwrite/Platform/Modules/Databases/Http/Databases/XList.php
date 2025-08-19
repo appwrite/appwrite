@@ -52,7 +52,7 @@ class XList extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tablesdb.list',
+                        replaceWith: 'tablesDb.list',
                     )
                 ),
             ])
