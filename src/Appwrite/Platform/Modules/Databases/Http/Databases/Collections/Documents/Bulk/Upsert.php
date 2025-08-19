@@ -129,7 +129,7 @@ class Upsert extends Action
 
         foreach ($upserted as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage
