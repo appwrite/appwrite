@@ -496,7 +496,7 @@ switch ($type) {
         </div>
 
         <?php if ($development) : ?>
-            <div id="views-trace" class="error-trace">
+            <div id="views-trace" style="display: none;" class="error-trace">
                 <button class="back-button" onclick="openErrorView()">
                     Back
                 </button>
@@ -530,13 +530,13 @@ switch ($type) {
 
     <script>
         function openErrorView() {
-            document.getElementById('views-trace')?.style.display = 'none';
-            document.getElementById('views-error')?.style.display = 'block';
+            document.getElementById('views-trace').style.display = 'none';
+            document.getElementById('views-error').style.display = 'block';
         }
 
         function openTraceView() {
-            document.getElementById('views-trace')?.style.display = 'block';
-            document.getElementById('views-error')?.style.display = 'none';
+            document.getElementById('views-trace').style.display = 'block';
+            document.getElementById('views-error').style.display = 'none';
         }
     </script>
 </body>
