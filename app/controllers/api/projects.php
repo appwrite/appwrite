@@ -12,6 +12,7 @@ use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
@@ -619,19 +620,38 @@ App::patch('/v1/projects/:projectId/api')
     ->desc('Update API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'updateApiStatus',
-        description: '/docs/references/projects/update-api-status.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateApiStatus',
+            description: '/docs/references/projects/update-api-status.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'updateAPIStatus',
+            ),
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateAPIStatus',
+            description: '/docs/references/projects/update-api-status.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('api', '', new WhiteList(array_keys(Config::getParam('apis')), true), 'API name.')
     ->param('status', null, new Boolean(), 'API status.')
@@ -657,19 +677,38 @@ App::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'updateApiStatusAll',
-        description: '/docs/references/projects/update-api-status-all.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateApiStatusAll',
+            description: '/docs/references/projects/update-api-status-all.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'updateAPIStatusAll',
+            ),
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateAPIStatusAll',
+            description: '/docs/references/projects/update-api-status-all.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('status', null, new Boolean(), 'API status.')
     ->inject('response')
@@ -2018,19 +2057,38 @@ App::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'updateSmtp',
-        description: '/docs/references/projects/update-smtp.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSmtp',
+            description: '/docs/references/projects/update-smtp.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'updateSMTP',
+            ),
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSMTP',
+            description: '/docs/references/projects/update-smtp.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
     ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
@@ -2115,19 +2173,38 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'createSmtpTest',
-        description: '/docs/references/projects/create-smtp-test.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'createSmtpTest',
+            description: '/docs/references/projects/create-smtp-test.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'createSMTPTest',
+            ),
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'createSMTPTest',
+            description: '/docs/references/projects/create-smtp-test.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
     ->param('senderName', System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
@@ -2190,19 +2267,38 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'getSmsTemplate',
-        description: '/docs/references/projects/get-sms-template.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SMS_TEMPLATE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'getSmsTemplate',
+            description: '/docs/references/projects/get-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'getSMSTemplate',
+            ),
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'getSMSTemplate',
+            description: '/docs/references/projects/get-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2337,19 +2433,38 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Update custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'updateSmsTemplate',
-        description: '/docs/references/projects/update-sms-template.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SMS_TEMPLATE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSmsTemplate',
+            description: '/docs/references/projects/update-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'updateSMSTemplate',
+            ),
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSMSTemplate',
+            description: '/docs/references/projects/update-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2441,20 +2556,40 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'deleteSmsTemplate',
-        description: '/docs/references/projects/delete-sms-template.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SMS_TEMPLATE,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'deleteSmsTemplate',
+            description: '/docs/references/projects/delete-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'deleteSMSTemplate',
+            ),
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'deleteSMSTemplate',
+            description: '/docs/references/projects/delete-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
