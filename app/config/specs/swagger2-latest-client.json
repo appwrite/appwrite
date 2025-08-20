@@ -5129,6 +5129,230 @@
                 ]
             }
         },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
+            "patch": {
+                "summary": "Decrement document attribute",
+                "operationId": "databasesDecrementDocumentAttribute",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Decrement a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "schema": {
+                            "$ref": "#\/definitions\/document"
+                        }
+                    }
+                },
+                "deprecated": true,
+                "x-appwrite": {
+                    "method": "decrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 343,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/decrement-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tablesDb.decrementRowColumn"
+                    },
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "min": {
+                                    "type": "number",
+                                    "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
+            "patch": {
+                "summary": "Increment document attribute",
+                "operationId": "databasesIncrementDocumentAttribute",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Increment a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "schema": {
+                            "$ref": "#\/definitions\/document"
+                        }
+                    }
+                },
+                "deprecated": true,
+                "x-appwrite": {
+                    "method": "incrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 342,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/increment-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tablesDb.incrementRowColumn"
+                    },
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "max": {
+                                    "type": "number",
+                                    "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
         "\/functions\/{functionId}\/executions": {
             "get": {
                 "summary": "List executions",
@@ -7465,6 +7689,222 @@
                         "type": "string",
                         "x-example": "<ROW_ID>",
                         "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/decrement": {
+            "patch": {
+                "summary": "Decrement row column",
+                "operationId": "tablesDbDecrementRowColumn",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Decrement a specific column of a row by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "decrementRowColumn",
+                    "group": "rows",
+                    "weight": 423,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/decrement-row-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "column",
+                        "description": "Column key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the column by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "min": {
+                                    "type": "number",
+                                    "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/increment": {
+            "patch": {
+                "summary": "Increment row column",
+                "operationId": "tablesDbIncrementRowColumn",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDb"
+                ],
+                "description": "Increment a specific column of a row by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "incrementRowColumn",
+                    "group": "rows",
+                    "weight": 422,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-db\/increment-row-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "column",
+                        "description": "Column key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the column by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "max": {
+                                    "type": "number",
+                                    "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
                     }
                 ]
             }

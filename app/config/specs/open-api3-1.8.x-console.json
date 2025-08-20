@@ -9360,6 +9360,8 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "client",
+                        "server",
                         "console",
                         "server"
                     ],
@@ -9375,6 +9377,7 @@
                 "security": [
                     {
                         "Project": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],
@@ -9476,6 +9479,8 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "client",
+                        "server",
                         "console",
                         "server"
                     ],
@@ -9491,6 +9496,7 @@
                 "security": [
                     {
                         "Project": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],
@@ -35424,6 +35430,8 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "rows.write",
                     "platforms": [
+                        "client",
+                        "server",
                         "console",
                         "server"
                     ],
@@ -35435,6 +35443,7 @@
                 "security": [
                     {
                         "Project": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],
@@ -35536,6 +35545,8 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "rows.write",
                     "platforms": [
+                        "client",
+                        "server",
                         "console",
                         "server"
                     ],
@@ -35547,6 +35558,7 @@
                 "security": [
                     {
                         "Project": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],

@@ -8817,8 +8817,9 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
-                        "console",
-                        "server"
+                        "client",
+                        "server",
+                        "console"
                     ],
                     "packaging": false,
                     "deprecated": {
@@ -8827,12 +8828,14 @@
                     },
                     "auth": {
                         "Project": [],
-                        "Key": []
+                        "Session": []
                     }
                 },
                 "security": [
                     {
                         "Project": [],
+                        "Session": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],
@@ -8928,8 +8931,9 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
-                        "console",
-                        "server"
+                        "client",
+                        "server",
+                        "console"
                     ],
                     "packaging": false,
                     "deprecated": {
@@ -8938,12 +8942,14 @@
                     },
                     "auth": {
                         "Project": [],
-                        "Key": []
+                        "Session": []
                     }
                 },
                 "security": [
                     {
                         "Project": [],
+                        "Session": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],
@@ -26295,18 +26301,21 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "rows.write",
                     "platforms": [
-                        "console",
-                        "server"
+                        "client",
+                        "server",
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
                         "Project": [],
-                        "Key": []
+                        "Session": []
                     }
                 },
                 "security": [
                     {
                         "Project": [],
+                        "Session": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],
@@ -26402,18 +26411,21 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "rows.write",
                     "platforms": [
-                        "console",
-                        "server"
+                        "client",
+                        "server",
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
                         "Project": [],
-                        "Key": []
+                        "Session": []
                     }
                 },
                 "security": [
                     {
                         "Project": [],
+                        "Session": [],
+                        "JWT": [],
                         "Key": []
                     }
                 ],
