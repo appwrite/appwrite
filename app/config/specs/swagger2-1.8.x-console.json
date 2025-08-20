@@ -4834,8 +4834,7 @@
                             "parameters": [
                                 "databaseId",
                                 "name",
-                                "enabled",
-                                "type"
+                                "enabled"
                             ],
                             "required": [
                                 "databaseId",
@@ -4889,18 +4888,6 @@
                                     "description": "Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
                                     "default": true,
                                     "x-example": false
-                                },
-                                "type": {
-                                    "type": "string",
-                                    "description": "Database type.",
-                                    "default": "tablesdb",
-                                    "x-example": "tablesdb",
-                                    "enum": [
-                                        "tablesdb",
-                                        "legacy"
-                                    ],
-                                    "x-enum-name": null,
-                                    "x-enum-keys": []
                                 }
                             },
                             "required": [
@@ -4923,7 +4910,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections\/tables, documents\/rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageDatabases",
@@ -4971,7 +4958,7 @@
                                     "model": "#\/definitions\/usageDatabases"
                                 }
                             ],
-                            "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections\/tables, documents\/rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                            "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                             "demo": "databases\/list-usage.md",
                             "deprecated": {
                                 "since": "1.8.0",
@@ -30823,18 +30810,6 @@
                                     "description": "Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
                                     "default": true,
                                     "x-example": false
-                                },
-                                "type": {
-                                    "type": "string",
-                                    "description": "Database type.",
-                                    "default": "tablesdb",
-                                    "x-example": "tablesdb",
-                                    "enum": [
-                                        "tablesdb",
-                                        "legacy"
-                                    ],
-                                    "x-enum-name": null,
-                                    "x-enum-keys": []
                                 }
                             },
                             "required": [
@@ -34068,7 +34043,7 @@
                 "tags": [
                     "tablesDb"
                 ],
-                "description": "List indexes in the collection.",
+                "description": "List indexes on the table.",
                 "responses": {
                     "200": {
                         "description": "Column Indexes List",
@@ -34147,7 +34122,7 @@
                 "tags": [
                     "tablesDb"
                 ],
-                "description": "Creates an index on the columns listed. Your index should include all the columns you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
+                "description": "Creates an index on the columns listed. Your index should include all the columns you will query in a single request.\nType can be `key`, `fulltext`, or `unique`.",
                 "responses": {
                     "202": {
                         "description": "Index",
@@ -35813,7 +35788,7 @@
                 "tags": [
                     "tablesDb"
                 ],
-                "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                "description": "Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageDatabase",
@@ -35860,7 +35835,7 @@
                                     "model": "#\/definitions\/usageDatabase"
                                 }
                             ],
-                            "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                            "description": "Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                             "demo": "tables-db\/get-usage.md"
                         }
                     ],

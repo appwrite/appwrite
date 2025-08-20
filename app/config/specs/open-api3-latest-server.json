@@ -4196,8 +4196,7 @@
                             "parameters": [
                                 "databaseId",
                                 "name",
-                                "enabled",
-                                "type"
+                                "enabled"
                             ],
                             "required": [
                                 "databaseId",
@@ -4248,17 +4247,6 @@
                                         "type": "boolean",
                                         "description": "Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
                                         "x-example": false
-                                    },
-                                    "type": {
-                                        "type": "string",
-                                        "description": "Database type.",
-                                        "x-example": "tablesdb",
-                                        "enum": [
-                                            "tablesdb",
-                                            "legacy"
-                                        ],
-                                        "x-enum-name": null,
-                                        "x-enum-keys": []
                                     }
                                 },
                                 "required": [
@@ -21564,17 +21552,6 @@
                                         "type": "boolean",
                                         "description": "Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
                                         "x-example": false
-                                    },
-                                    "type": {
-                                        "type": "string",
-                                        "description": "Database type.",
-                                        "x-example": "tablesdb",
-                                        "enum": [
-                                            "tablesdb",
-                                            "legacy"
-                                        ],
-                                        "x-enum-name": null,
-                                        "x-enum-keys": []
                                     }
                                 },
                                 "required": [
@@ -24779,7 +24756,7 @@
                 "tags": [
                     "tablesDb"
                 ],
-                "description": "List indexes in the collection.",
+                "description": "List indexes on the table.",
                 "responses": {
                     "200": {
                         "description": "Column Indexes List",
@@ -24862,7 +24839,7 @@
                 "tags": [
                     "tablesDb"
                 ],
-                "description": "Creates an index on the columns listed. Your index should include all the columns you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
+                "description": "Creates an index on the columns listed. Your index should include all the columns you will query in a single request.\nType can be `key`, `fulltext`, or `unique`.",
                 "responses": {
                     "202": {
                         "description": "Index",
