@@ -3,23 +3,23 @@
 ## 17.0.0
 
 * Support for Appwrite 1.8
-* Add TablesDB service
-* Add new query types:
-  * `notContains`
-  * `notSearch`
-  * `notBetween`
-  * `notStartsWith`
-  * `notEndsWith`
-  * `createdBefore`
-  * `createdAfter`
-  * `updatedBefore`
-  * `updatedAfter`
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
 * Deprecated `updateMagicURLSession`
 * Deprecated `updatePhoneSession`
 * Deprecated Databases service
-> The TablesDB service is the new recommended way to work with databases. 
-> Existing databases/collections can be managed using the TablesDB service. 
-> Existing Databases service will continue to work, but new features will only be added to the TablesDB service.
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
   
 
 ## 16.2.0
