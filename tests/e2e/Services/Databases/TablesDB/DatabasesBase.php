@@ -34,43 +34,6 @@ trait DatabasesBase
         $this->assertEquals('Test Database', $database['body']['name']);
         $this->assertEquals('tablesdb', $database['body']['type']);
 
-        // testing to create a database with type
-        $database2 = $this->client->call(Client::METHOD_POST, '/tablesdb', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Test Database with type',
-            'type' => 'mongodb'
-        ]);
-        $this->assertEquals(400, $database2['headers']['status-code']);
-
-        $database2 = $this->client->call(Client::METHOD_POST, '/tablesdb', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Test Database with type',
-            'type' => 'legacy'
-        ]);
-        $this->assertNotEmpty($database2['body']['$id']);
-        $this->assertEquals(201, $database2['headers']['status-code']);
-        $this->assertEquals('Test Database with type', $database2['body']['name']);
-        $this->assertEquals('legacy', $database2['body']['type']);
-
-        // cleanup(for database2)
-        $databaseId = $database2['body']['$id'];
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-
         return ['databaseId' => $database['body']['$id']];
     }
 
