@@ -45,7 +45,7 @@ class Decrement extends DecrementDocumentAttribute
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/decrement-row-column.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
