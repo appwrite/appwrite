@@ -221,6 +221,8 @@ class Create extends Base
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -228,6 +230,7 @@ class Create extends Base
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $headers['x-appwrite-client-ip'] = $request->getIP();
 
         $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
@@ -249,7 +252,7 @@ class Create extends Base
             }
         }
 
-        $executionId = ID::unique();
+
 
         $status = $async ? 'waiting' : 'processing';
 
