@@ -8,9 +8,9 @@ $client = (new Client())
     ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setSession(''); // The user session to authenticate with
 
-$tablesDb = new TablesDb($client);
+$tablesDB = new TablesDb($client);
 
-$result = $tablesDb->getRow(
+$result = $tablesDB->getRow(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',

@@ -1,4 +1,4 @@
-appwrite tablesDb createIpColumn \
+appwrite tablesDB createIpColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

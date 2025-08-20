@@ -7,9 +7,9 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
-TablesDb tablesDb = new TablesDb(client);
+TablesDb tablesDB = new TablesDb(client);
 
-Table result = await tablesDb.UpdateTable(
+Table result = await tablesDB.UpdateTable(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     name: "<NAME>",

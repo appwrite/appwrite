@@ -1,5 +1,5 @@
 mutation {
-    tablesDbDeleteRows(
+    tablesDBDeleteRows(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         queries: []

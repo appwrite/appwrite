@@ -1,2 +1,2 @@
-appwrite tablesDb listUsage \
+appwrite tablesDB listUsage \
 

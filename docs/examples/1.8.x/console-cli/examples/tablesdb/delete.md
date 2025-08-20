@@ -1,2 +1,2 @@
-appwrite tablesDb delete \
+appwrite tablesDB delete \
         --databaseId <DATABASE_ID>

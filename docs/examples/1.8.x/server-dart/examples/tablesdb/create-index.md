@@ -5,9 +5,9 @@ Client client = Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-TablesDb tablesDb = TablesDb(client);
+TablesDb tablesDB = TablesDb(client);
 
-ColumnIndex result = await tablesDb.createIndex(
+ColumnIndex result = await tablesDB.createIndex(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: '',

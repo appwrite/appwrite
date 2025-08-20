@@ -1,4 +1,4 @@
-appwrite tablesDb createStringColumn \
+appwrite tablesDB createStringColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

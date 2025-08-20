@@ -5,9 +5,9 @@ const client = new Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setSession(''); // The user session to authenticate with
 
-const tablesDb = new TablesDb(client);
+const tablesDB = new TablesDb(client);
 
-const response = await tablesDb.listRows({
+const response = await tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     queries: []

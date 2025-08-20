@@ -1,5 +1,5 @@
 mutation {
-    tablesDbUpdateIntegerColumn(
+    tablesDBUpdateIntegerColumn(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         key: "",

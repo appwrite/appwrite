@@ -7,9 +7,9 @@ Client client = new Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>"); // Your secret API key
 
-TablesDb tablesDb = new TablesDb(client);
+TablesDb tablesDB = new TablesDb(client);
 
-tablesDb.delete(
+tablesDB.delete(
     "<DATABASE_ID>", // databaseId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

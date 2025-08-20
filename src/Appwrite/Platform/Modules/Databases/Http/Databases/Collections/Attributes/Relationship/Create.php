@@ -58,7 +58,7 @@ class Create extends Action
                 ],
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'tablesDb.createRelationshipColumn',
+                    replaceWith: 'tablesDB.createRelationshipColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

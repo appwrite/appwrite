@@ -1,5 +1,5 @@
 mutation {
-    tablesDbCreateBooleanColumn(
+    tablesDBCreateBooleanColumn(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         key: "",

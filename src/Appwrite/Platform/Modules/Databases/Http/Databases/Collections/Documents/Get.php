@@ -56,7 +56,7 @@ class Get extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'tablesDb.getRow',
+                    replaceWith: 'tablesDB.getRow',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

@@ -1,5 +1,5 @@
 mutation {
-    tablesDbCreate(
+    tablesDBCreate(
         databaseId: "<DATABASE_ID>",
         name: "<NAME>",
         enabled: false

@@ -7,9 +7,9 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
-TablesDb tablesDb = new TablesDb(client);
+TablesDb tablesDB = new TablesDb(client);
 
-RowList result = await tablesDb.UpsertRows(
+RowList result = await tablesDB.UpsertRows(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     rows: new List<object>()

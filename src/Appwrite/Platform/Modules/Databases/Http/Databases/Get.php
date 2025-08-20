@@ -46,7 +46,7 @@ class Get extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'tablesDb.get',
+                        replaceWith: 'tablesDB.get',
                     )
                 ),
             ])
