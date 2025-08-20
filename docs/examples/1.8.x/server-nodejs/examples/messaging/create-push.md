@@ -7,24 +7,24 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.createPush(
-    '<MESSAGE_ID>', // messageId
-    '<TITLE>', // title (optional)
-    '<BODY>', // body (optional)
-    [], // topics (optional)
-    [], // users (optional)
-    [], // targets (optional)
-    {}, // data (optional)
-    '<ACTION>', // action (optional)
-    '[ID1:ID2]', // image (optional)
-    '<ICON>', // icon (optional)
-    '<SOUND>', // sound (optional)
-    '<COLOR>', // color (optional)
-    '<TAG>', // tag (optional)
-    null, // badge (optional)
-    false, // draft (optional)
-    '', // scheduledAt (optional)
-    false, // contentAvailable (optional)
-    false, // critical (optional)
-    sdk.MessagePriority.Normal // priority (optional)
-);
+const result = await messaging.createPush({
+    messageId: '<MESSAGE_ID>',
+    title: '<TITLE>',
+    body: '<BODY>',
+    topics: [],
+    users: [],
+    targets: [],
+    data: {},
+    action: '<ACTION>',
+    image: '[ID1:ID2]',
+    icon: '<ICON>',
+    sound: '<SOUND>',
+    color: '<COLOR>',
+    tag: '<TAG>',
+    badge: null,
+    draft: false,
+    scheduledAt: '',
+    contentAvailable: false,
+    critical: false,
+    priority: sdk.MessagePriority.Normal
+});

@@ -6,11 +6,11 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.listTemplates(
-    [], // frameworks (optional)
-    [], // useCases (optional)
-    1, // limit (optional)
-    0 // offset (optional)
-);
+const result = await sites.listTemplates({
+    frameworks: [],
+    useCases: [],
+    limit: 1,
+    offset: 0
+});
 
 console.log(result);

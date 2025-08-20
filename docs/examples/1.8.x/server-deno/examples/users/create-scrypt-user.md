@@ -7,14 +7,14 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.createScryptUser(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    'password', // password
-    '<PASSWORD_SALT>', // passwordSalt
-    null, // passwordCpu
-    null, // passwordMemory
-    null, // passwordParallel
-    null, // passwordLength
-    '<NAME>' // name (optional)
-);
+const response = await users.createScryptUser({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: 'password',
+    passwordSalt: '<PASSWORD_SALT>',
+    passwordCpu: null,
+    passwordMemory: null,
+    passwordParallel: null,
+    passwordLength: null,
+    name: '<NAME>'
+});

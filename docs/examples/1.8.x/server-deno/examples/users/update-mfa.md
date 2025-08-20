@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.updateMfa(
-    '<USER_ID>', // userId
-    false // mfa
-);
+const response = await users.updateMfa({
+    userId: '<USER_ID>',
+    mfa: false
+});

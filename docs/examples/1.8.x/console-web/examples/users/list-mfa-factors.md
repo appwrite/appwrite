@@ -6,8 +6,8 @@ const client = new Client()
 
 const users = new Users(client);
 
-const result = await users.listMfaFactors(
-    '<USER_ID>' // userId
-);
+const result = await users.listMfaFactors({
+    userId: '<USER_ID>'
+});
 
 console.log(result);

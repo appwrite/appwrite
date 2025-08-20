@@ -7,9 +7,9 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.createArgon2User(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    'password', // password
-    '<NAME>' // name (optional)
-);
+const response = await users.createArgon2User({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: 'password',
+    name: '<NAME>'
+});

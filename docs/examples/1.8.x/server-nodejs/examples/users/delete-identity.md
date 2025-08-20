@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.deleteIdentity(
-    '<IDENTITY_ID>' // identityId
-);
+const result = await users.deleteIdentity({
+    identityId: '<IDENTITY_ID>'
+});

@@ -7,7 +7,7 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.list(
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const response = await functions.list({
+    queries: [],
+    search: '<SEARCH>'
+});

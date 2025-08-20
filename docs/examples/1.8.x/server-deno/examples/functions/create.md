@@ -7,23 +7,23 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.create(
-    '<FUNCTION_ID>', // functionId
-    '<NAME>', // name
-    .Node145, // runtime
-    ["any"], // execute (optional)
-    [], // events (optional)
-    '', // schedule (optional)
-    1, // timeout (optional)
-    false, // enabled (optional)
-    false, // logging (optional)
-    '<ENTRYPOINT>', // entrypoint (optional)
-    '<COMMANDS>', // commands (optional)
-    [], // scopes (optional)
-    '<INSTALLATION_ID>', // installationId (optional)
-    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId (optional)
-    '<PROVIDER_BRANCH>', // providerBranch (optional)
-    false, // providerSilentMode (optional)
-    '<PROVIDER_ROOT_DIRECTORY>', // providerRootDirectory (optional)
-    '' // specification (optional)
-);
+const response = await functions.create({
+    functionId: '<FUNCTION_ID>',
+    name: '<NAME>',
+    runtime: .Node145,
+    execute: ["any"],
+    events: [],
+    schedule: '',
+    timeout: 1,
+    enabled: false,
+    logging: false,
+    entrypoint: '<ENTRYPOINT>',
+    commands: '<COMMANDS>',
+    scopes: [],
+    installationId: '<INSTALLATION_ID>',
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>',
+    providerBranch: '<PROVIDER_BRANCH>',
+    providerSilentMode: false,
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>',
+    specification: ''
+});

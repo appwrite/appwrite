@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const result = await teams.deleteMembership(
-    '<TEAM_ID>', // teamId
-    '<MEMBERSHIP_ID>' // membershipId
-);
+const result = await teams.deleteMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>'
+});

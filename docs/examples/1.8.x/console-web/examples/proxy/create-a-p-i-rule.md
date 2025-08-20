@@ -6,8 +6,8 @@ const client = new Client()
 
 const proxy = new Proxy(client);
 
-const result = await proxy.createAPIRule(
-    '' // domain
-);
+const result = await proxy.createAPIRule({
+    domain: ''
+});
 
 console.log(result);

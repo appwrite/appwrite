@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.createIpAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    '', // default (optional)
-    false // array (optional)
-);
+const result = await databases.createIpAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: '',
+    array: false
+});

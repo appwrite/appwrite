@@ -6,10 +6,10 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.createTopic(
-    '<TOPIC_ID>', // topicId
-    '<NAME>', // name
-    ["any"] // subscribe (optional)
-);
+const result = await messaging.createTopic({
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>',
+    subscribe: ["any"]
+});
 
 console.log(result);

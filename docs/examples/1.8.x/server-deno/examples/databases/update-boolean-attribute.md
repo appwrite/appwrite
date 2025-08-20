@@ -7,11 +7,11 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.updateBooleanAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    false, // default
-    '' // newKey (optional)
-);
+const response = await databases.updateBooleanAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: false,
+    newKey: ''
+});

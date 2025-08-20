@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.listLogs(
-    '<SITE_ID>', // siteId
-    [] // queries (optional)
-);
+const result = await sites.listLogs({
+    siteId: '<SITE_ID>',
+    queries: []
+});

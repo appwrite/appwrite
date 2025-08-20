@@ -7,8 +7,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.update(
-    '<DATABASE_ID>', // databaseId
-    '<NAME>', // name
-    false // enabled (optional)
-);
+const response = await databases.update({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+    enabled: false
+});

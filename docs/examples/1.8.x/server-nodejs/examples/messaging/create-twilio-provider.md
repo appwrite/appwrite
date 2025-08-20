@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.createTwilioProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '+12065550100', // from (optional)
-    '<ACCOUNT_SID>', // accountSid (optional)
-    '<AUTH_TOKEN>', // authToken (optional)
-    false // enabled (optional)
-);
+const result = await messaging.createTwilioProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    from: '+12065550100',
+    accountSid: '<ACCOUNT_SID>',
+    authToken: '<AUTH_TOKEN>',
+    enabled: false
+});

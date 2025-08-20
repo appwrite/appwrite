@@ -6,10 +6,10 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.update(
-    '<DATABASE_ID>', // databaseId
-    '<NAME>', // name
-    false // enabled (optional)
-);
+const result = await databases.update({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+    enabled: false
+});
 
 console.log(result);

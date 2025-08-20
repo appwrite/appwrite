@@ -6,10 +6,10 @@ const client = new Client()
 
 const vcs = new Vcs(client);
 
-const result = await vcs.listRepositories(
-    '<INSTALLATION_ID>', // installationId
-    VCSDetectionType.Runtime, // type
-    '<SEARCH>' // search (optional)
-);
+const result = await vcs.listRepositories({
+    installationId: '<INSTALLATION_ID>',
+    type: VCSDetectionType.Runtime,
+    search: '<SEARCH>'
+});
 
 console.log(result);

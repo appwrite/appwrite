@@ -6,9 +6,9 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.createOAuth2Token(
-    sdk.OAuthProvider.Amazon, // provider
-    'https://example.com', // success (optional)
-    'https://example.com', // failure (optional)
-    [] // scopes (optional)
-);
+const result = await account.createOAuth2Token({
+    provider: sdk.OAuthProvider.Amazon,
+    success: 'https://example.com',
+    failure: 'https://example.com',
+    scopes: []
+});

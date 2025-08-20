@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.createFcmProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    {}, // serviceAccountJSON (optional)
-    false // enabled (optional)
-);
+const result = await messaging.createFcmProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    serviceAccountJSON: {},
+    enabled: false
+});

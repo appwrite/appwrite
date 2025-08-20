@@ -7,13 +7,13 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.createStringAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    1, // size
-    false, // required
-    '<DEFAULT>', // default (optional)
-    false, // array (optional)
-    false // encrypt (optional)
-);
+const result = await databases.createStringAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    size: 1,
+    required: false,
+    default: '<DEFAULT>',
+    array: false,
+    encrypt: false
+});

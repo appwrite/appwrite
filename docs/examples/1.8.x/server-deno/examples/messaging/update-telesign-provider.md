@@ -7,11 +7,11 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.updateTelesignProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name (optional)
-    false, // enabled (optional)
-    '<CUSTOMER_ID>', // customerId (optional)
-    '<API_KEY>', // apiKey (optional)
-    '<FROM>' // from (optional)
-);
+const response = await messaging.updateTelesignProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    customerId: '<CUSTOMER_ID>',
+    apiKey: '<API_KEY>',
+    from: '<FROM>'
+});

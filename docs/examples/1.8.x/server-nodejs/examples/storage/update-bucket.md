@@ -7,15 +7,15 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const result = await storage.updateBucket(
-    '<BUCKET_ID>', // bucketId
-    '<NAME>', // name
-    ["read("any")"], // permissions (optional)
-    false, // fileSecurity (optional)
-    false, // enabled (optional)
-    1, // maximumFileSize (optional)
-    [], // allowedFileExtensions (optional)
-    sdk..None, // compression (optional)
-    false, // encryption (optional)
-    false // antivirus (optional)
-);
+const result = await storage.updateBucket({
+    bucketId: '<BUCKET_ID>',
+    name: '<NAME>',
+    permissions: ["read("any")"],
+    fileSecurity: false,
+    enabled: false,
+    maximumFileSize: 1,
+    allowedFileExtensions: [],
+    compression: sdk..None,
+    encryption: false,
+    antivirus: false
+});

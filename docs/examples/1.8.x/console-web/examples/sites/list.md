@@ -6,9 +6,9 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.list(
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const result = await sites.list({
+    queries: [],
+    search: '<SEARCH>'
+});
 
 console.log(result);

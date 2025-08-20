@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.updateName(
-    '<USER_ID>', // userId
-    '<NAME>' // name
-);
+const response = await users.updateName({
+    userId: '<USER_ID>',
+    name: '<NAME>'
+});

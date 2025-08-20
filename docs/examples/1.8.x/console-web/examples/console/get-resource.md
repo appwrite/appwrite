@@ -6,9 +6,9 @@ const client = new Client()
 
 const console = new Console(client);
 
-const result = await console.getResource(
-    '<VALUE>', // value
-    ConsoleResourceType.Rules // type
-);
+const result = await console.getResource({
+    value: '<VALUE>',
+    type: ConsoleResourceType.Rules
+});
 
 console.log(result);

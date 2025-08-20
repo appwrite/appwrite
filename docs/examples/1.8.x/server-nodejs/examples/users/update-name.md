@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updateName(
-    '<USER_ID>', // userId
-    '<NAME>' // name
-);
+const result = await users.updateName({
+    userId: '<USER_ID>',
+    name: '<NAME>'
+});

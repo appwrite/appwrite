@@ -6,11 +6,11 @@ const client = new Client()
 
 const users = new Users(client);
 
-const result = await users.createBcryptUser(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    'password', // password
-    '<NAME>' // name (optional)
-);
+const result = await users.createBcryptUser({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: 'password',
+    name: '<NAME>'
+});
 
 console.log(result);

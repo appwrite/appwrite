@@ -7,6 +7,6 @@ const client = new Client()
 
 const health = new Health(client);
 
-const response = await health.getQueueMigrations(
-    null // threshold (optional)
-);
+const response = await health.getQueueMigrations({
+    threshold: null
+});

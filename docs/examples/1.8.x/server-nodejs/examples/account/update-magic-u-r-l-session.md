@@ -6,7 +6,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.updateMagicURLSession(
-    '<USER_ID>', // userId
-    '<SECRET>' // secret
-);
+const result = await account.updateMagicURLSession({
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});

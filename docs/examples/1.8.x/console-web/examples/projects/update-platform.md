@@ -6,13 +6,13 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updatePlatform(
-    '<PROJECT_ID>', // projectId
-    '<PLATFORM_ID>', // platformId
-    '<NAME>', // name
-    '<KEY>', // key (optional)
-    '<STORE>', // store (optional)
-    '' // hostname (optional)
-);
+const result = await projects.updatePlatform({
+    projectId: '<PROJECT_ID>',
+    platformId: '<PLATFORM_ID>',
+    name: '<NAME>',
+    key: '<KEY>',
+    store: '<STORE>',
+    hostname: ''
+});
 
 console.log(result);

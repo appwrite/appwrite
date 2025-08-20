@@ -7,23 +7,23 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.create(
-    '<SITE_ID>', // siteId
-    '<NAME>', // name
-    .Analog, // framework
-    .Node145, // buildRuntime
-    false, // enabled (optional)
-    false, // logging (optional)
-    1, // timeout (optional)
-    '<INSTALL_COMMAND>', // installCommand (optional)
-    '<BUILD_COMMAND>', // buildCommand (optional)
-    '<OUTPUT_DIRECTORY>', // outputDirectory (optional)
-    .Static, // adapter (optional)
-    '<INSTALLATION_ID>', // installationId (optional)
-    '<FALLBACK_FILE>', // fallbackFile (optional)
-    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId (optional)
-    '<PROVIDER_BRANCH>', // providerBranch (optional)
-    false, // providerSilentMode (optional)
-    '<PROVIDER_ROOT_DIRECTORY>', // providerRootDirectory (optional)
-    '' // specification (optional)
-);
+const response = await sites.create({
+    siteId: '<SITE_ID>',
+    name: '<NAME>',
+    framework: .Analog,
+    buildRuntime: .Node145,
+    enabled: false,
+    logging: false,
+    timeout: 1,
+    installCommand: '<INSTALL_COMMAND>',
+    buildCommand: '<BUILD_COMMAND>',
+    outputDirectory: '<OUTPUT_DIRECTORY>',
+    adapter: .Static,
+    installationId: '<INSTALLATION_ID>',
+    fallbackFile: '<FALLBACK_FILE>',
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>',
+    providerBranch: '<PROVIDER_BRANCH>',
+    providerSilentMode: false,
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>',
+    specification: ''
+});

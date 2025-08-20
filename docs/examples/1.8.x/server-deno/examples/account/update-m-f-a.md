@@ -7,6 +7,6 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updateMFA(
-    false // mfa
-);
+const response = await account.updateMFA({
+    mfa: false
+});

@@ -7,6 +7,6 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.listVariables(
-    '<SITE_ID>' // siteId
-);
+const response = await sites.listVariables({
+    siteId: '<SITE_ID>'
+});

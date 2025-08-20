@@ -7,8 +7,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.getIndex(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '' // key
-);
+const response = await databases.getIndex({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: ''
+});

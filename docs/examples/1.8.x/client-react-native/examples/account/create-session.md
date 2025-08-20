@@ -6,9 +6,9 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.createSession(
-    '<USER_ID>', // userId
-    '<SECRET>' // secret
-);
+const result = await account.createSession({
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});
 
 console.log(result);

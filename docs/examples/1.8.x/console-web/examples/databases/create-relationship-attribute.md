@@ -6,15 +6,15 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.createRelationshipAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<RELATED_COLLECTION_ID>', // relatedCollectionId
-    RelationshipType.OneToOne, // type
-    false, // twoWay (optional)
-    '', // key (optional)
-    '', // twoWayKey (optional)
-    RelationMutate.Cascade // onDelete (optional)
-);
+const result = await databases.createRelationshipAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    relatedCollectionId: '<RELATED_COLLECTION_ID>',
+    type: RelationshipType.OneToOne,
+    twoWay: false,
+    key: '',
+    twoWayKey: '',
+    onDelete: RelationMutate.Cascade
+});
 
 console.log(result);

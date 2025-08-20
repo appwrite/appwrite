@@ -6,9 +6,9 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = await functions.getVariable(
-    '<FUNCTION_ID>', // functionId
-    '<VARIABLE_ID>' // variableId
-);
+const result = await functions.getVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+});
 
 console.log(result);

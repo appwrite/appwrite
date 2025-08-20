@@ -6,8 +6,8 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const result = await storage.deleteBucket(
-    '<BUCKET_ID>' // bucketId
-);
+const result = await storage.deleteBucket({
+    bucketId: '<BUCKET_ID>'
+});
 
 console.log(result);

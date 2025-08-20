@@ -7,11 +7,11 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.createCollection(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<NAME>', // name
-    ["read("any")"], // permissions (optional)
-    false, // documentSecurity (optional)
-    false // enabled (optional)
-);
+const response = await databases.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: '<NAME>',
+    permissions: ["read("any")"],
+    documentSecurity: false,
+    enabled: false
+});

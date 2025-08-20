@@ -1,4 +1,4 @@
-import { Client, Databases, DatabaseUsageRange } from "@appwrite.io/console";
+import { Client, Databases, UsageRange } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -6,8 +6,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.listUsage(
-    DatabaseUsageRange.TwentyFourHours // range (optional)
-);
+const result = await databases.listUsage({
+    range: UsageRange.TwentyFourHours
+});
 
 console.log(result);

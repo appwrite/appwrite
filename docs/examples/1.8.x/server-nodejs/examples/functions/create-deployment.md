@@ -8,10 +8,10 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const result = await functions.createDeployment(
-    '<FUNCTION_ID>', // functionId
-    InputFile.fromPath('/path/to/file', 'filename'), // code
-    false, // activate
-    '<ENTRYPOINT>', // entrypoint (optional)
-    '<COMMANDS>' // commands (optional)
-);
+const result = await functions.createDeployment({
+    functionId: '<FUNCTION_ID>',
+    code: InputFile.fromPath('/path/to/file', 'filename'),
+    activate: false,
+    entrypoint: '<ENTRYPOINT>',
+    commands: '<COMMANDS>'
+});

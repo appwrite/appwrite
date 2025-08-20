@@ -7,8 +7,8 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = functions.getDeploymentDownload(
-    '<FUNCTION_ID>', // functionId
-    '<DEPLOYMENT_ID>', // deploymentId
-    DeploymentDownloadType.Source // type (optional)
-);
+const result = functions.getDeploymentDownload({
+    functionId: '<FUNCTION_ID>',
+    deploymentId: '<DEPLOYMENT_ID>',
+    type: DeploymentDownloadType.Source
+});

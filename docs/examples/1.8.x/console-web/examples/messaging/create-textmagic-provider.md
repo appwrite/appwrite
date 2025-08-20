@@ -6,13 +6,13 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.createTextmagicProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '+12065550100', // from (optional)
-    '<USERNAME>', // username (optional)
-    '<API_KEY>', // apiKey (optional)
-    false // enabled (optional)
-);
+const result = await messaging.createTextmagicProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    from: '+12065550100',
+    username: '<USERNAME>',
+    apiKey: '<API_KEY>',
+    enabled: false
+});
 
 console.log(result);

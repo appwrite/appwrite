@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const health = new sdk.Health(client);
 
-const result = await health.getQueueStatsResources(
-    null // threshold (optional)
-);
+const result = await health.getQueueStatsResources({
+    threshold: null
+});

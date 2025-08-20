@@ -6,10 +6,10 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.createJWT(
-    '<PROJECT_ID>', // projectId
-    [], // scopes
-    0 // duration (optional)
-);
+const result = await projects.createJWT({
+    projectId: '<PROJECT_ID>',
+    scopes: [],
+    duration: 0
+});
 
 console.log(result);

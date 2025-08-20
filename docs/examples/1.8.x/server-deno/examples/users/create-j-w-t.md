@@ -7,8 +7,8 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.createJWT(
-    '<USER_ID>', // userId
-    '<SESSION_ID>', // sessionId (optional)
-    0 // duration (optional)
-);
+const response = await users.createJWT({
+    userId: '<USER_ID>',
+    sessionId: '<SESSION_ID>',
+    duration: 0
+});

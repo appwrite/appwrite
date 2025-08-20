@@ -6,20 +6,20 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.create(
-    '', // projectId
-    '<NAME>', // name
-    '<TEAM_ID>', // teamId
-    .Default, // region (optional)
-    '<DESCRIPTION>', // description (optional)
-    '<LOGO>', // logo (optional)
-    'https://example.com', // url (optional)
-    '<LEGAL_NAME>', // legalName (optional)
-    '<LEGAL_COUNTRY>', // legalCountry (optional)
-    '<LEGAL_STATE>', // legalState (optional)
-    '<LEGAL_CITY>', // legalCity (optional)
-    '<LEGAL_ADDRESS>', // legalAddress (optional)
-    '<LEGAL_TAX_ID>' // legalTaxId (optional)
-);
+const result = await projects.create({
+    projectId: '',
+    name: '<NAME>',
+    teamId: '<TEAM_ID>',
+    region: .Default,
+    description: '<DESCRIPTION>',
+    logo: '<LOGO>',
+    url: 'https://example.com',
+    legalName: '<LEGAL_NAME>',
+    legalCountry: '<LEGAL_COUNTRY>',
+    legalState: '<LEGAL_STATE>',
+    legalCity: '<LEGAL_CITY>',
+    legalAddress: '<LEGAL_ADDRESS>',
+    legalTaxId: '<LEGAL_TAX_ID>'
+});
 
 console.log(result);

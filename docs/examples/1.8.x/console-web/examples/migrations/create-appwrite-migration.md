@@ -6,11 +6,11 @@ const client = new Client()
 
 const migrations = new Migrations(client);
 
-const result = await migrations.createAppwriteMigration(
-    [], // resources
-    'https://example.com', // endpoint
-    '<PROJECT_ID>', // projectId
-    '<API_KEY>' // apiKey
-);
+const result = await migrations.createAppwriteMigration({
+    resources: [],
+    endpoint: 'https://example.com',
+    projectId: '<PROJECT_ID>',
+    apiKey: '<API_KEY>'
+});
 
 console.log(result);

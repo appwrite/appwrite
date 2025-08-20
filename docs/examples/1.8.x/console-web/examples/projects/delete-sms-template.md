@@ -6,10 +6,10 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.deleteSmsTemplate(
-    '<PROJECT_ID>', // projectId
-    SmsTemplateType.Verification, // type
-    SmsTemplateLocale.Af // locale
-);
+const result = await projects.deleteSmsTemplate({
+    projectId: '<PROJECT_ID>',
+    type: SmsTemplateType.Verification,
+    locale: SmsTemplateLocale.Af
+});
 
 console.log(result);

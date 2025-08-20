@@ -7,11 +7,11 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.createDeployment(
-    '<SITE_ID>', // siteId
-    InputFile.fromPath('/path/to/file.png', 'file.png'), // code
-    false, // activate
-    '<INSTALL_COMMAND>', // installCommand (optional)
-    '<BUILD_COMMAND>', // buildCommand (optional)
-    '<OUTPUT_DIRECTORY>' // outputDirectory (optional)
-);
+const response = await sites.createDeployment({
+    siteId: '<SITE_ID>',
+    code: InputFile.fromPath('/path/to/file.png', 'file.png'),
+    activate: false,
+    installCommand: '<INSTALL_COMMAND>',
+    buildCommand: '<BUILD_COMMAND>',
+    outputDirectory: '<OUTPUT_DIRECTORY>'
+});

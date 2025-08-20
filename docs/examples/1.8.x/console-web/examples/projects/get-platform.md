@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.getPlatform(
-    '<PROJECT_ID>', // projectId
-    '<PLATFORM_ID>' // platformId
-);
+const result = await projects.getPlatform({
+    projectId: '<PROJECT_ID>',
+    platformId: '<PLATFORM_ID>'
+});
 
 console.log(result);

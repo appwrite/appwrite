@@ -7,12 +7,12 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.createExecution(
-    '<FUNCTION_ID>', // functionId
-    '<BODY>', // body (optional)
-    false, // async (optional)
-    '<PATH>', // path (optional)
-    ExecutionMethod.GET, // method (optional)
-    {}, // headers (optional)
-    '<SCHEDULED_AT>' // scheduledAt (optional)
-);
+const response = await functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',
+    async: false,
+    path: '<PATH>',
+    method: ExecutionMethod.GET,
+    headers: {},
+    scheduledAt: '<SCHEDULED_AT>'
+});

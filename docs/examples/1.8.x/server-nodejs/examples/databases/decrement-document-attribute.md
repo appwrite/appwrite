@@ -3,15 +3,15 @@ const sdk = require('node-appwrite');
 const client = new sdk.Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
-    .setKey('<YOUR_API_KEY>'); // Your secret API key
+    .setSession(''); // The user session to authenticate with
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.decrementDocumentAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<DOCUMENT_ID>', // documentId
-    '', // attribute
-    null, // value (optional)
-    null // min (optional)
-);
+const result = await databases.decrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: '',
+    value: null,
+    min: null
+});

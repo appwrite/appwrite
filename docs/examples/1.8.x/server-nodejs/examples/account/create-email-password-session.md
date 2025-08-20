@@ -6,7 +6,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.createEmailPasswordSession(
-    'email@example.com', // email
-    'password' // password
-);
+const result = await account.createEmailPasswordSession({
+    email: 'email@example.com',
+    password: 'password'
+});

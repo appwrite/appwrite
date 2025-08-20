@@ -6,16 +6,16 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateWebhook(
-    '<PROJECT_ID>', // projectId
-    '<WEBHOOK_ID>', // webhookId
-    '<NAME>', // name
-    [], // events
-    '', // url
-    false, // security
-    false, // enabled (optional)
-    '<HTTP_USER>', // httpUser (optional)
-    '<HTTP_PASS>' // httpPass (optional)
-);
+const result = await projects.updateWebhook({
+    projectId: '<PROJECT_ID>',
+    webhookId: '<WEBHOOK_ID>',
+    name: '<NAME>',
+    events: [],
+    url: '',
+    security: false,
+    enabled: false,
+    httpUser: '<HTTP_USER>',
+    httpPass: '<HTTP_PASS>'
+});
 
 console.log(result);

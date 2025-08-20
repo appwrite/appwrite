@@ -7,9 +7,9 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const response = await storage.createFile(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    InputFile.fromPath('/path/to/file.png', 'file.png'), // file
-    ["read("any")"] // permissions (optional)
-);
+const response = await storage.createFile({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    file: InputFile.fromPath('/path/to/file.png', 'file.png'),
+    permissions: ["read("any")"]
+});

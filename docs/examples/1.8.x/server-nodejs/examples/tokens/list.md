@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const tokens = new sdk.Tokens(client);
 
-const result = await tokens.list(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    [] // queries (optional)
-);
+const result = await tokens.list({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    queries: []
+});

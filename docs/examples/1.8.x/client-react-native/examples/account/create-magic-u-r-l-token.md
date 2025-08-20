@@ -6,11 +6,11 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.createMagicURLToken(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    'https://example.com', // url (optional)
-    false // phrase (optional)
-);
+const result = await account.createMagicURLToken({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    url: 'https://example.com',
+    phrase: false
+});
 
 console.log(result);

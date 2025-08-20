@@ -7,6 +7,6 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.createMfaAuthenticator(
-    AuthenticatorType.Totp // type
-);
+const response = await account.createMfaAuthenticator({
+    type: AuthenticatorType.Totp
+});

@@ -7,9 +7,9 @@ const client = new Client()
 
 const avatars = new Avatars(client);
 
-const result = avatars.getCreditCard(
-    CreditCard.AmericanExpress, // code
-    0, // width (optional)
-    0, // height (optional)
-    -1 // quality (optional)
-);
+const result = avatars.getCreditCard({
+    code: CreditCard.AmericanExpress,
+    width: 0,
+    height: 0,
+    quality: -1
+});

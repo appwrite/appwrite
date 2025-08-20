@@ -7,13 +7,13 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.createRelationshipAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<RELATED_COLLECTION_ID>', // relatedCollectionId
-    sdk.RelationshipType.OneToOne, // type
-    false, // twoWay (optional)
-    '', // key (optional)
-    '', // twoWayKey (optional)
-    sdk.RelationMutate.Cascade // onDelete (optional)
-);
+const result = await databases.createRelationshipAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    relatedCollectionId: '<RELATED_COLLECTION_ID>',
+    type: sdk.RelationshipType.OneToOne,
+    twoWay: false,
+    key: '',
+    twoWayKey: '',
+    onDelete: sdk.RelationMutate.Cascade
+});

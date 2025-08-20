@@ -6,13 +6,13 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.createMsg91Provider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '<TEMPLATE_ID>', // templateId (optional)
-    '<SENDER_ID>', // senderId (optional)
-    '<AUTH_KEY>', // authKey (optional)
-    false // enabled (optional)
-);
+const result = await messaging.createMsg91Provider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    templateId: '<TEMPLATE_ID>',
+    senderId: '<SENDER_ID>',
+    authKey: '<AUTH_KEY>',
+    enabled: false
+});
 
 console.log(result);

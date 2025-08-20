@@ -7,19 +7,19 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const result = await storage.getFilePreview(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    0, // width (optional)
-    0, // height (optional)
-    sdk.ImageGravity.Center, // gravity (optional)
-    -1, // quality (optional)
-    0, // borderWidth (optional)
-    '', // borderColor (optional)
-    0, // borderRadius (optional)
-    0, // opacity (optional)
-    -360, // rotation (optional)
-    '', // background (optional)
-    sdk.ImageFormat.Jpg, // output (optional)
-    '<TOKEN>' // token (optional)
-);
+const result = await storage.getFilePreview({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    width: 0,
+    height: 0,
+    gravity: sdk.ImageGravity.Center,
+    quality: -1,
+    borderWidth: 0,
+    borderColor: '',
+    borderRadius: 0,
+    opacity: 0,
+    rotation: -360,
+    background: '',
+    output: sdk.ImageFormat.Jpg,
+    token: '<TOKEN>'
+});

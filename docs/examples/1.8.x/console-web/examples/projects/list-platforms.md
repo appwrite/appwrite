@@ -6,8 +6,8 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.listPlatforms(
-    '<PROJECT_ID>' // projectId
-);
+const result = await projects.listPlatforms({
+    projectId: '<PROJECT_ID>'
+});
 
 console.log(result);

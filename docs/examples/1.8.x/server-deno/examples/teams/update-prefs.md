@@ -7,7 +7,7 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const response = await teams.updatePrefs(
-    '<TEAM_ID>', // teamId
-    {} // prefs
-);
+const response = await teams.updatePrefs({
+    teamId: '<TEAM_ID>',
+    prefs: {}
+});

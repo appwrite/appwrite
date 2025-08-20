@@ -6,9 +6,9 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.deleteLog(
-    '<SITE_ID>', // siteId
-    '<LOG_ID>' // logId
-);
+const result = await sites.deleteLog({
+    siteId: '<SITE_ID>',
+    logId: '<LOG_ID>'
+});
 
 console.log(result);

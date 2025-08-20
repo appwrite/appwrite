@@ -6,8 +6,8 @@ const client = new Client()
 
 const health = new Health(client);
 
-const result = await health.getQueueDeletes(
-    null // threshold (optional)
-);
+const result = await health.getQueueDeletes({
+    threshold: null
+});
 
 console.log(result);

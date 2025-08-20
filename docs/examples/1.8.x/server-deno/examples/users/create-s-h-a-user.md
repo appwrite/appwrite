@@ -7,10 +7,10 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.createSHAUser(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    'password', // password
-    PasswordHash.Sha1, // passwordVersion (optional)
-    '<NAME>' // name (optional)
-);
+const response = await users.createSHAUser({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: 'password',
+    passwordVersion: PasswordHash.Sha1,
+    name: '<NAME>'
+});

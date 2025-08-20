@@ -6,11 +6,11 @@ const client = new Client()
 
 const vcs = new Vcs(client);
 
-const result = await vcs.getRepositoryContents(
-    '<INSTALLATION_ID>', // installationId
-    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId
-    '<PROVIDER_ROOT_DIRECTORY>', // providerRootDirectory (optional)
-    '<PROVIDER_REFERENCE>' // providerReference (optional)
-);
+const result = await vcs.getRepositoryContents({
+    installationId: '<INSTALLATION_ID>',
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>',
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>',
+    providerReference: '<PROVIDER_REFERENCE>'
+});
 
 console.log(result);

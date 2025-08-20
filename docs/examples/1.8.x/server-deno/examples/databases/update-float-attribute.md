@@ -7,13 +7,13 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.updateFloatAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    null, // default
-    null, // min (optional)
-    null, // max (optional)
-    '' // newKey (optional)
-);
+const response = await databases.updateFloatAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: null,
+    min: null,
+    max: null,
+    newKey: ''
+});

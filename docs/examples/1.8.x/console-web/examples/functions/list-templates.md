@@ -6,11 +6,11 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = await functions.listTemplates(
-    [], // runtimes (optional)
-    [], // useCases (optional)
-    1, // limit (optional)
-    0 // offset (optional)
-);
+const result = await functions.listTemplates({
+    runtimes: [],
+    useCases: [],
+    limit: 1,
+    offset: 0
+});
 
 console.log(result);

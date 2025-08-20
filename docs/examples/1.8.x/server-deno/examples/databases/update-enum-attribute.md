@@ -7,12 +7,12 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.updateEnumAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    [], // elements
-    false, // required
-    '<DEFAULT>', // default
-    '' // newKey (optional)
-);
+const response = await databases.updateEnumAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    elements: [],
+    required: false,
+    default: '<DEFAULT>',
+    newKey: ''
+});

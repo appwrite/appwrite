@@ -6,10 +6,10 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = await functions.createDuplicateDeployment(
-    '<FUNCTION_ID>', // functionId
-    '<DEPLOYMENT_ID>', // deploymentId
-    '<BUILD_ID>' // buildId (optional)
-);
+const result = await functions.createDuplicateDeployment({
+    functionId: '<FUNCTION_ID>',
+    deploymentId: '<DEPLOYMENT_ID>',
+    buildId: '<BUILD_ID>'
+});
 
 console.log(result);

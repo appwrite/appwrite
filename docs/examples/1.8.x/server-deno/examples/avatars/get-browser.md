@@ -7,9 +7,9 @@ const client = new Client()
 
 const avatars = new Avatars(client);
 
-const result = avatars.getBrowser(
-    Browser.AvantBrowser, // code
-    0, // width (optional)
-    0, // height (optional)
-    -1 // quality (optional)
-);
+const result = avatars.getBrowser({
+    code: Browser.AvantBrowser,
+    width: 0,
+    height: 0,
+    quality: -1
+});

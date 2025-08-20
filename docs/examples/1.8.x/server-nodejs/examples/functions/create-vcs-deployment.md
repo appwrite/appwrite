@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const result = await functions.createVcsDeployment(
-    '<FUNCTION_ID>', // functionId
-    sdk.VCSDeploymentType.Branch, // type
-    '<REFERENCE>', // reference
-    false // activate (optional)
-);
+const result = await functions.createVcsDeployment({
+    functionId: '<FUNCTION_ID>',
+    type: sdk.VCSDeploymentType.Branch,
+    reference: '<REFERENCE>',
+    activate: false
+});

@@ -6,11 +6,11 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateSmsTemplate(
-    '<PROJECT_ID>', // projectId
-    SmsTemplateType.Verification, // type
-    SmsTemplateLocale.Af, // locale
-    '<MESSAGE>' // message
-);
+const result = await projects.updateSmsTemplate({
+    projectId: '<PROJECT_ID>',
+    type: SmsTemplateType.Verification,
+    locale: SmsTemplateLocale.Af,
+    message: '<MESSAGE>'
+});
 
 console.log(result);

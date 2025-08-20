@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const avatars = new sdk.Avatars(client);
 
-const result = await avatars.getFlag(
-    sdk.Flag.Afghanistan, // code
-    0, // width (optional)
-    0, // height (optional)
-    -1 // quality (optional)
-);
+const result = await avatars.getFlag({
+    code: sdk.Flag.Afghanistan,
+    width: 0,
+    height: 0,
+    quality: -1
+});

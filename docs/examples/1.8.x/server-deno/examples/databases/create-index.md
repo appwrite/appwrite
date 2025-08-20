@@ -7,12 +7,12 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.createIndex(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    IndexType.Key, // type
-    [], // attributes
-    [], // orders (optional)
-    [] // lengths (optional)
-);
+const response = await databases.createIndex({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    type: IndexType.Key,
+    attributes: [],
+    orders: [],
+    lengths: []
+});

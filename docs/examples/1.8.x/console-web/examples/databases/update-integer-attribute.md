@@ -6,15 +6,15 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.updateIntegerAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    null, // default
-    null, // min (optional)
-    null, // max (optional)
-    '' // newKey (optional)
-);
+const result = await databases.updateIntegerAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: null,
+    min: null,
+    max: null,
+    newKey: ''
+});
 
 console.log(result);

@@ -7,7 +7,7 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updateMfaAuthenticator(
-    AuthenticatorType.Totp, // type
-    '<OTP>' // otp
-);
+const response = await account.updateMfaAuthenticator({
+    type: AuthenticatorType.Totp,
+    otp: '<OTP>'
+});

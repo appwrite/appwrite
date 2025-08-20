@@ -6,10 +6,10 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateApiStatus(
-    '<PROJECT_ID>', // projectId
-    .Rest, // api
-    false // status
-);
+const result = await projects.updateApiStatus({
+    projectId: '<PROJECT_ID>',
+    api: .Rest,
+    status: false
+});
 
 console.log(result);

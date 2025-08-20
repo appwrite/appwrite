@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.listIdentities(
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const response = await users.listIdentities({
+    queries: [],
+    search: '<SEARCH>'
+});

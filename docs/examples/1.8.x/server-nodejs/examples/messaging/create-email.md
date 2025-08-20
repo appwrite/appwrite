@@ -7,17 +7,17 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.createEmail(
-    '<MESSAGE_ID>', // messageId
-    '<SUBJECT>', // subject
-    '<CONTENT>', // content
-    [], // topics (optional)
-    [], // users (optional)
-    [], // targets (optional)
-    [], // cc (optional)
-    [], // bcc (optional)
-    [], // attachments (optional)
-    false, // draft (optional)
-    false, // html (optional)
-    '' // scheduledAt (optional)
-);
+const result = await messaging.createEmail({
+    messageId: '<MESSAGE_ID>',
+    subject: '<SUBJECT>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    cc: [],
+    bcc: [],
+    attachments: [],
+    draft: false,
+    html: false,
+    scheduledAt: ''
+});

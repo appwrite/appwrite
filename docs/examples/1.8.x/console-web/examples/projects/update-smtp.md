@@ -6,17 +6,17 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateSmtp(
-    '<PROJECT_ID>', // projectId
-    false, // enabled
-    '<SENDER_NAME>', // senderName (optional)
-    'email@example.com', // senderEmail (optional)
-    'email@example.com', // replyTo (optional)
-    '', // host (optional)
-    null, // port (optional)
-    '<USERNAME>', // username (optional)
-    '<PASSWORD>', // password (optional)
-    SMTPSecure.Tls // secure (optional)
-);
+const result = await projects.updateSmtp({
+    projectId: '<PROJECT_ID>',
+    enabled: false,
+    senderName: '<SENDER_NAME>',
+    senderEmail: 'email@example.com',
+    replyTo: 'email@example.com',
+    host: '',
+    port: null,
+    username: '<USERNAME>',
+    password: '<PASSWORD>',
+    secure: SMTPSecure.Tls
+});
 
 console.log(result);

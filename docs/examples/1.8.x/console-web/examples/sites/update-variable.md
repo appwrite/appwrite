@@ -6,12 +6,12 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.updateVariable(
-    '<SITE_ID>', // siteId
-    '<VARIABLE_ID>', // variableId
-    '<KEY>', // key
-    '<VALUE>', // value (optional)
-    false // secret (optional)
-);
+const result = await sites.updateVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false
+});
 
 console.log(result);

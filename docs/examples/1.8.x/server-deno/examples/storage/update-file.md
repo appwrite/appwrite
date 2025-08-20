@@ -7,9 +7,9 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const response = await storage.updateFile(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    '<NAME>', // name (optional)
-    ["read("any")"] // permissions (optional)
-);
+const response = await storage.updateFile({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    name: '<NAME>',
+    permissions: ["read("any")"]
+});

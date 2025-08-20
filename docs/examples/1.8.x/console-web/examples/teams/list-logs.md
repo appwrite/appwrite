@@ -6,9 +6,9 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const result = await teams.listLogs(
-    '<TEAM_ID>', // teamId
-    [] // queries (optional)
-);
+const result = await teams.listLogs({
+    teamId: '<TEAM_ID>',
+    queries: []
+});
 
 console.log(result);

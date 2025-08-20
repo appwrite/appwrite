@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.listSubscribers(
-    '<TOPIC_ID>', // topicId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const result = await messaging.listSubscribers({
+    topicId: '<TOPIC_ID>',
+    queries: [],
+    search: '<SEARCH>'
+});

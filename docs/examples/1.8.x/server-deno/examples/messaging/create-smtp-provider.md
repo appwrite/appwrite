@@ -7,19 +7,19 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.createSmtpProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '<HOST>', // host
-    1, // port (optional)
-    '<USERNAME>', // username (optional)
-    '<PASSWORD>', // password (optional)
-    SmtpEncryption.None, // encryption (optional)
-    false, // autoTLS (optional)
-    '<MAILER>', // mailer (optional)
-    '<FROM_NAME>', // fromName (optional)
-    'email@example.com', // fromEmail (optional)
-    '<REPLY_TO_NAME>', // replyToName (optional)
-    'email@example.com', // replyToEmail (optional)
-    false // enabled (optional)
-);
+const response = await messaging.createSmtpProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    host: '<HOST>',
+    port: 1,
+    username: '<USERNAME>',
+    password: '<PASSWORD>',
+    encryption: SmtpEncryption.None,
+    autoTLS: false,
+    mailer: '<MAILER>',
+    fromName: '<FROM_NAME>',
+    fromEmail: 'email@example.com',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: 'email@example.com',
+    enabled: false
+});

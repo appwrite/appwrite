@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateSessionInvalidation(
-    '<PROJECT_ID>', // projectId
-    false // enabled
-);
+const result = await projects.updateSessionInvalidation({
+    projectId: '<PROJECT_ID>',
+    enabled: false
+});
 
 console.log(result);

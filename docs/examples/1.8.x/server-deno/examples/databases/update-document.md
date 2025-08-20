@@ -7,10 +7,10 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.updateDocument(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<DOCUMENT_ID>', // documentId
-    {}, // data (optional)
-    ["read("any")"] // permissions (optional)
-);
+const response = await databases.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: {},
+    permissions: ["read("any")"]
+});

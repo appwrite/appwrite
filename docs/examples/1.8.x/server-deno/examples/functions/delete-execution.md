@@ -7,7 +7,7 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.deleteExecution(
-    '<FUNCTION_ID>', // functionId
-    '<EXECUTION_ID>' // executionId
-);
+const response = await functions.deleteExecution({
+    functionId: '<FUNCTION_ID>',
+    executionId: '<EXECUTION_ID>'
+});

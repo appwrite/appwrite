@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.listTargets(
-    '<USER_ID>', // userId
-    [] // queries (optional)
-);
+const response = await users.listTargets({
+    userId: '<USER_ID>',
+    queries: []
+});

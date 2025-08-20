@@ -6,10 +6,10 @@ const client = new Client()
 
 const project = new Project(client);
 
-const result = await project.createVariable(
-    '<KEY>', // key
-    '<VALUE>', // value
-    false // secret (optional)
-);
+const result = await project.createVariable({
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false
+});
 
 console.log(result);

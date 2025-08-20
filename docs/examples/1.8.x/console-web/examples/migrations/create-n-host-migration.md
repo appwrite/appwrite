@@ -6,15 +6,15 @@ const client = new Client()
 
 const migrations = new Migrations(client);
 
-const result = await migrations.createNHostMigration(
-    [], // resources
-    '<SUBDOMAIN>', // subdomain
-    '<REGION>', // region
-    '<ADMIN_SECRET>', // adminSecret
-    '<DATABASE>', // database
-    '<USERNAME>', // username
-    '<PASSWORD>', // password
-    null // port (optional)
-);
+const result = await migrations.createNHostMigration({
+    resources: [],
+    subdomain: '<SUBDOMAIN>',
+    region: '<REGION>',
+    adminSecret: '<ADMIN_SECRET>',
+    database: '<DATABASE>',
+    username: '<USERNAME>',
+    password: '<PASSWORD>',
+    port: null
+});
 
 console.log(result);

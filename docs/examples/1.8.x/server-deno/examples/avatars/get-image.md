@@ -7,8 +7,8 @@ const client = new Client()
 
 const avatars = new Avatars(client);
 
-const result = avatars.getImage(
-    'https://example.com', // url
-    0, // width (optional)
-    0 // height (optional)
-);
+const result = avatars.getImage({
+    url: 'https://example.com',
+    width: 0,
+    height: 0
+});

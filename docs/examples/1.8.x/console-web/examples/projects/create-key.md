@@ -6,11 +6,11 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.createKey(
-    '<PROJECT_ID>', // projectId
-    '<NAME>', // name
-    [], // scopes
-    '' // expire (optional)
-);
+const result = await projects.createKey({
+    projectId: '<PROJECT_ID>',
+    name: '<NAME>',
+    scopes: [],
+    expire: ''
+});
 
 console.log(result);

@@ -6,10 +6,10 @@ const client = new Client()
 
 const proxy = new Proxy(client);
 
-const result = await proxy.createSiteRule(
-    '', // domain
-    '<SITE_ID>', // siteId
-    '<BRANCH>' // branch (optional)
-);
+const result = await proxy.createSiteRule({
+    domain: '',
+    siteId: '<SITE_ID>',
+    branch: '<BRANCH>'
+});
 
 console.log(result);

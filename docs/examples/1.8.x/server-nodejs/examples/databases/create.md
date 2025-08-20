@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.create(
-    '<DATABASE_ID>', // databaseId
-    '<NAME>', // name
-    false // enabled (optional)
-);
+const result = await databases.create({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+    enabled: false
+});

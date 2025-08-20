@@ -7,19 +7,19 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const result = storage.getFilePreview(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    0, // width (optional)
-    0, // height (optional)
-    ImageGravity.Center, // gravity (optional)
-    -1, // quality (optional)
-    0, // borderWidth (optional)
-    '', // borderColor (optional)
-    0, // borderRadius (optional)
-    0, // opacity (optional)
-    -360, // rotation (optional)
-    '', // background (optional)
-    ImageFormat.Jpg, // output (optional)
-    '<TOKEN>' // token (optional)
-);
+const result = storage.getFilePreview({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    width: 0,
+    height: 0,
+    gravity: ImageGravity.Center,
+    quality: -1,
+    borderWidth: 0,
+    borderColor: '',
+    borderRadius: 0,
+    opacity: 0,
+    rotation: -360,
+    background: '',
+    output: ImageFormat.Jpg,
+    token: '<TOKEN>'
+});

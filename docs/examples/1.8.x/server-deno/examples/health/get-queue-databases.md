@@ -7,7 +7,7 @@ const client = new Client()
 
 const health = new Health(client);
 
-const response = await health.getQueueDatabases(
-    '<NAME>', // name (optional)
-    null // threshold (optional)
-);
+const response = await health.getQueueDatabases({
+    name: '<NAME>',
+    threshold: null
+});

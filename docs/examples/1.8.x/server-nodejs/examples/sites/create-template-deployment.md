@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.createTemplateDeployment(
-    '<SITE_ID>', // siteId
-    '<REPOSITORY>', // repository
-    '<OWNER>', // owner
-    '<ROOT_DIRECTORY>', // rootDirectory
-    '<VERSION>', // version
-    false // activate (optional)
-);
+const result = await sites.createTemplateDeployment({
+    siteId: '<SITE_ID>',
+    repository: '<REPOSITORY>',
+    owner: '<OWNER>',
+    rootDirectory: '<ROOT_DIRECTORY>',
+    version: '<VERSION>',
+    activate: false
+});

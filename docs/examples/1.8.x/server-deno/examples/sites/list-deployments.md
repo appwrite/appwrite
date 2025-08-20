@@ -7,8 +7,8 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.listDeployments(
-    '<SITE_ID>', // siteId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const response = await sites.listDeployments({
+    siteId: '<SITE_ID>',
+    queries: [],
+    search: '<SEARCH>'
+});

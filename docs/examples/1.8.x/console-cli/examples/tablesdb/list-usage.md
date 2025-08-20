@@ -1,0 +1,2 @@
+appwrite tablesDb listUsage \
+

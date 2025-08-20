@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.listLogs(
-    '<USER_ID>', // userId
-    [] // queries (optional)
-);
+const response = await users.listLogs({
+    userId: '<USER_ID>',
+    queries: []
+});

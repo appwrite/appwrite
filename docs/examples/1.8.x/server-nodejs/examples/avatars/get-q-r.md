@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const avatars = new sdk.Avatars(client);
 
-const result = await avatars.getQR(
-    '<TEXT>', // text
-    1, // size (optional)
-    0, // margin (optional)
-    false // download (optional)
-);
+const result = await avatars.getQR({
+    text: '<TEXT>',
+    size: 1,
+    margin: 0,
+    download: false
+});

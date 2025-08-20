@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.deleteSubscriber(
-    '<TOPIC_ID>', // topicId
-    '<SUBSCRIBER_ID>' // subscriberId
-);
+const result = await messaging.deleteSubscriber({
+    topicId: '<TOPIC_ID>',
+    subscriberId: '<SUBSCRIBER_ID>'
+});

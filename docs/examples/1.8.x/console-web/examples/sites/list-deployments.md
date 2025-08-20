@@ -6,10 +6,10 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.listDeployments(
-    '<SITE_ID>', // siteId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const result = await sites.listDeployments({
+    siteId: '<SITE_ID>',
+    queries: [],
+    search: '<SEARCH>'
+});
 
 console.log(result);

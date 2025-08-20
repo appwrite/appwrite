@@ -6,19 +6,19 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.updateEmail(
-    '<MESSAGE_ID>', // messageId
-    [], // topics (optional)
-    [], // users (optional)
-    [], // targets (optional)
-    '<SUBJECT>', // subject (optional)
-    '<CONTENT>', // content (optional)
-    false, // draft (optional)
-    false, // html (optional)
-    [], // cc (optional)
-    [], // bcc (optional)
-    '', // scheduledAt (optional)
-    [] // attachments (optional)
-);
+const result = await messaging.updateEmail({
+    messageId: '<MESSAGE_ID>',
+    topics: [],
+    users: [],
+    targets: [],
+    subject: '<SUBJECT>',
+    content: '<CONTENT>',
+    draft: false,
+    html: false,
+    cc: [],
+    bcc: [],
+    scheduledAt: '',
+    attachments: []
+});
 
 console.log(result);

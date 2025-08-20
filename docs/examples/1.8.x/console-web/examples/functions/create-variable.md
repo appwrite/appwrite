@@ -6,11 +6,11 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = await functions.createVariable(
-    '<FUNCTION_ID>', // functionId
-    '<KEY>', // key
-    '<VALUE>', // value
-    false // secret (optional)
-);
+const result = await functions.createVariable({
+    functionId: '<FUNCTION_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false
+});
 
 console.log(result);

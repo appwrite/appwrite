@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const result = await functions.createDuplicateDeployment(
-    '<FUNCTION_ID>', // functionId
-    '<DEPLOYMENT_ID>', // deploymentId
-    '<BUILD_ID>' // buildId (optional)
-);
+const result = await functions.createDuplicateDeployment({
+    functionId: '<FUNCTION_ID>',
+    deploymentId: '<DEPLOYMENT_ID>',
+    buildId: '<BUILD_ID>'
+});

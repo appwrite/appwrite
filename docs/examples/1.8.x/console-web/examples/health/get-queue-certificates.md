@@ -6,8 +6,8 @@ const client = new Client()
 
 const health = new Health(client);
 
-const result = await health.getQueueCertificates(
-    null // threshold (optional)
-);
+const result = await health.getQueueCertificates({
+    threshold: null
+});
 
 console.log(result);

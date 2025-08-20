@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.listDevKeys(
-    '<PROJECT_ID>', // projectId
-    [] // queries (optional)
-);
+const result = await projects.listDevKeys({
+    projectId: '<PROJECT_ID>',
+    queries: []
+});
 
 console.log(result);

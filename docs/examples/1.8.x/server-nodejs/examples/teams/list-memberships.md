@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const result = await teams.listMemberships(
-    '<TEAM_ID>', // teamId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const result = await teams.listMemberships({
+    teamId: '<TEAM_ID>',
+    queries: [],
+    search: '<SEARCH>'
+});

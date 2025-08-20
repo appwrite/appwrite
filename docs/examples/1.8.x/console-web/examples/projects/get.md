@@ -6,8 +6,8 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.get(
-    '<PROJECT_ID>' // projectId
-);
+const result = await projects.get({
+    projectId: '<PROJECT_ID>'
+});
 
 console.log(result);

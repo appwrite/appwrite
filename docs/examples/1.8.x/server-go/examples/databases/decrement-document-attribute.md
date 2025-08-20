@@ -10,7 +10,7 @@ func main() {
     client := client.New(
         client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
         client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithKey("<YOUR_API_KEY>") // Your secret API key
+        client.WithSession("") // The user session to authenticate with
     )
 
     service := databases.New(client)

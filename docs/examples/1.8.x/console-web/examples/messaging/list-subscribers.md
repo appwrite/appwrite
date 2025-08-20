@@ -6,10 +6,10 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.listSubscribers(
-    '<TOPIC_ID>', // topicId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const result = await messaging.listSubscribers({
+    topicId: '<TOPIC_ID>',
+    queries: [],
+    search: '<SEARCH>'
+});
 
 console.log(result);

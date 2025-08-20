@@ -6,11 +6,11 @@ const client = new Client()
 
 const vcs = new Vcs(client);
 
-const result = await vcs.createRepositoryDetection(
-    '<INSTALLATION_ID>', // installationId
-    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId
-    VCSDetectionType.Runtime, // type
-    '<PROVIDER_ROOT_DIRECTORY>' // providerRootDirectory (optional)
-);
+const result = await vcs.createRepositoryDetection({
+    installationId: '<INSTALLATION_ID>',
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>',
+    type: VCSDetectionType.Runtime,
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>'
+});
 
 console.log(result);

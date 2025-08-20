@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.createMD5User(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    'password', // password
-    '<NAME>' // name (optional)
-);
+const result = await users.createMD5User({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: 'password',
+    name: '<NAME>'
+});

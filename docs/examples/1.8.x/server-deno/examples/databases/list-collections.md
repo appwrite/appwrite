@@ -7,8 +7,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.listCollections(
-    '<DATABASE_ID>', // databaseId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const response = await databases.listCollections({
+    databaseId: '<DATABASE_ID>',
+    queries: [],
+    search: '<SEARCH>'
+});

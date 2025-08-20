@@ -7,12 +7,12 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const result = await teams.createMembership(
-    '<TEAM_ID>', // teamId
-    [], // roles
-    'email@example.com', // email (optional)
-    '<USER_ID>', // userId (optional)
-    '+12065550100', // phone (optional)
-    'https://example.com', // url (optional)
-    '<NAME>' // name (optional)
-);
+const result = await teams.createMembership({
+    teamId: '<TEAM_ID>',
+    roles: [],
+    email: 'email@example.com',
+    userId: '<USER_ID>',
+    phone: '+12065550100',
+    url: 'https://example.com',
+    name: '<NAME>'
+});

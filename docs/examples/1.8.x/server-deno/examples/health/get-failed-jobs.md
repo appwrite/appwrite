@@ -7,7 +7,7 @@ const client = new Client()
 
 const health = new Health(client);
 
-const response = await health.getFailedJobs(
-    .V1Database, // name
-    null // threshold (optional)
-);
+const response = await health.getFailedJobs({
+    name: .V1Database,
+    threshold: null
+});

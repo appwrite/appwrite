@@ -6,9 +6,9 @@ const client = new Client()
 
 const account = new Account(client);
 
-account.createOAuth2Token(
-    OAuthProvider.Amazon, // provider
-    'https://example.com', // success (optional)
-    'https://example.com', // failure (optional)
-    [] // scopes (optional)
-);
+account.createOAuth2Token({
+    provider: OAuthProvider.Amazon,
+    success: 'https://example.com',
+    failure: 'https://example.com',
+    scopes: []
+});

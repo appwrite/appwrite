@@ -7,12 +7,12 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.updateStringAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    '<DEFAULT>', // default
-    1, // size (optional)
-    '' // newKey (optional)
-);
+const response = await databases.updateStringAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: '<DEFAULT>',
+    size: 1,
+    newKey: ''
+});

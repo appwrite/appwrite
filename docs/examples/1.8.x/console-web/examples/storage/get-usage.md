@@ -1,4 +1,4 @@
-import { Client, Storage, StorageUsageRange } from "@appwrite.io/console";
+import { Client, Storage, UsageRange } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -6,8 +6,8 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const result = await storage.getUsage(
-    StorageUsageRange.TwentyFourHours // range (optional)
-);
+const result = await storage.getUsage({
+    range: UsageRange.TwentyFourHours
+});
 
 console.log(result);

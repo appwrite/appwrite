@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.updateLabels(
-    '<USER_ID>', // userId
-    [] // labels
-);
+const response = await users.updateLabels({
+    userId: '<USER_ID>',
+    labels: []
+});

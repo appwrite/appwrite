@@ -6,14 +6,14 @@ const client = new Client()
 
 const users = new Users(client);
 
-const result = await users.createScryptModifiedUser(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    'password', // password
-    '<PASSWORD_SALT>', // passwordSalt
-    '<PASSWORD_SALT_SEPARATOR>', // passwordSaltSeparator
-    '<PASSWORD_SIGNER_KEY>', // passwordSignerKey
-    '<NAME>' // name (optional)
-);
+const result = await users.createScryptModifiedUser({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: 'password',
+    passwordSalt: '<PASSWORD_SALT>',
+    passwordSaltSeparator: '<PASSWORD_SALT_SEPARATOR>',
+    passwordSignerKey: '<PASSWORD_SIGNER_KEY>',
+    name: '<NAME>'
+});
 
 console.log(result);

@@ -7,15 +7,15 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const response = await storage.createBucket(
-    '<BUCKET_ID>', // bucketId
-    '<NAME>', // name
-    ["read("any")"], // permissions (optional)
-    false, // fileSecurity (optional)
-    false, // enabled (optional)
-    1, // maximumFileSize (optional)
-    [], // allowedFileExtensions (optional)
-    .None, // compression (optional)
-    false, // encryption (optional)
-    false // antivirus (optional)
-);
+const response = await storage.createBucket({
+    bucketId: '<BUCKET_ID>',
+    name: '<NAME>',
+    permissions: ["read("any")"],
+    fileSecurity: false,
+    enabled: false,
+    maximumFileSize: 1,
+    allowedFileExtensions: [],
+    compression: .None,
+    encryption: false,
+    antivirus: false
+});
