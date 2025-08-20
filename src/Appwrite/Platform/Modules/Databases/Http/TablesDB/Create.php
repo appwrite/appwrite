@@ -12,7 +12,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 class Create extends DatabaseCreate
 {
