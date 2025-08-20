@@ -135,8 +135,6 @@ class TokensConsoleClientTest extends Scope
         return $data;
     }
 
-
-
     /**
      * @depends testCreateToken
      */
