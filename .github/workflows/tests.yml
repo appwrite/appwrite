@@ -216,7 +216,7 @@ jobs:
             Avatars,
             Console,
             Databases/Legacy,
-            Databases/Grids,
+            Databases/TablesDB,
             Functions,
             FunctionsSchedule,
             GraphQL,
