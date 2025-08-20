@@ -1,1 +1,1 @@
-List indexes in the collection.
+List indexes on the table.
