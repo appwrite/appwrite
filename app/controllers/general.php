@@ -615,13 +615,15 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 }
             }
 
-            $maxLogLength = 100000;
+            // Truncate logs if they exceed the limit
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
             $logs = $executionResponse['logs'] ?? '';
-            $logsTruncated = false;
 
             if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
-                $logs = \substr($logs, 0, $maxLogLength) . "\n[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.";
-                $logsTruncated = true;
+                $warningMessage = "\n[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxLogLength - $warningLength;
+                $logs = \substr($logs, 0, $maxContentLength) . $warningMessage;
             }
 
             /** Update execution status */
