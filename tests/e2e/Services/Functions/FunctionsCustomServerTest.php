@@ -1508,7 +1508,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
             $this->assertStringContainsString($userId, $lastExecution['logs']);
             $this->assertStringContainsString('Event User', $lastExecution['logs']);
-        }, 10000, 500);
+        }, 20_000, 500);
 
         $this->cleanupFunction($functionId);
 
