@@ -551,11 +551,21 @@ class Functions extends Action
             }
 
             /** Update execution status */
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
+            $logs = $executionResponse['logs'] ?? '';
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $warningMessage = "\n[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxLogLength - $warningLength;
+                $logs = \substr($logs, 0, $maxContentLength) . $warningMessage;
+            }
+
             $execution
                 ->setAttribute('status', $status)
                 ->setAttribute('responseStatusCode', $executionResponse['statusCode'])
                 ->setAttribute('responseHeaders', $headersFiltered)
-                ->setAttribute('logs', $executionResponse['logs'])
+                ->setAttribute('logs', $logs)
                 ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {

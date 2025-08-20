@@ -618,7 +618,19 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
-            $execution->setAttribute('logs', $executionResponse['logs']);
+
+            // Truncate logs if they exceed the limit
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
+            $logs = $executionResponse['logs'] ?? '';
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $warningMessage = "\n[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxLogLength - $warningLength;
+                $logs = \substr($logs, 0, $maxContentLength) . $warningMessage;
+            }
+
+            $execution->setAttribute('logs', $logs);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
