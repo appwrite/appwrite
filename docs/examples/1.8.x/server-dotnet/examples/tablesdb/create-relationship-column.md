@@ -8,9 +8,9 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
-TablesDb tablesDb = new TablesDb(client);
+TablesDb tablesDB = new TablesDb(client);
 
-ColumnRelationship result = await tablesDb.CreateRelationshipColumn(
+ColumnRelationship result = await tablesDB.CreateRelationshipColumn(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     relatedTableId: "<RELATED_TABLE_ID>",

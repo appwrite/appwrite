@@ -1,5 +1,5 @@
 mutation {
-    tablesDbCreateEmailColumn(
+    tablesDBCreateEmailColumn(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         key: "",

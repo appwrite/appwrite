@@ -1,5 +1,5 @@
 mutation {
-    tablesDbDelete(
+    tablesDBDelete(
         databaseId: "<DATABASE_ID>"
     ) {
         status

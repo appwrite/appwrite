@@ -1,5 +1,5 @@
 mutation {
-    tablesDbUpdate(
+    tablesDBUpdate(
         databaseId: "<DATABASE_ID>",
         name: "<NAME>",
         enabled: false

@@ -6,9 +6,9 @@ Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>"); // Your project ID
 
-TablesDb tablesDb = new TablesDb(client);
+TablesDb tablesDB = new TablesDb(client);
 
-tablesDb.listRows(
+tablesDB.listRows(
     "<DATABASE_ID>", // databaseId 
     "<TABLE_ID>", // tableId 
     listOf(), // queries (optional)

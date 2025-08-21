@@ -30,7 +30,7 @@ class Get extends DatabaseUsageGet
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
-                    namespace: 'tablesDb',
+                    namespace: 'tablesDB',
                     group: null,
                     name: 'getUsage',
                     description: '/docs/references/tablesdb/get-database-usage.md',

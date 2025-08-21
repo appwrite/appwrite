@@ -7,9 +7,9 @@ Client client = new Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setSession(""); // The user session to authenticate with
 
-TablesDb tablesDb = new TablesDb(client);
+TablesDb tablesDB = new TablesDb(client);
 
-tablesDb.decrementRowColumn(
+tablesDB.decrementRowColumn(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "<ROW_ID>", // rowId

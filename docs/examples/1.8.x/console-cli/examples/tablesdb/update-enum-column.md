@@ -1,4 +1,4 @@
-appwrite tablesDb updateEnumColumn \
+appwrite tablesDB updateEnumColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

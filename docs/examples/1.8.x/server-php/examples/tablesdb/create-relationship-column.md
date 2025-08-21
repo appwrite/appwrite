@@ -9,9 +9,9 @@ $client = (new Client())
     ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setKey('<YOUR_API_KEY>'); // Your secret API key
 
-$tablesDb = new TablesDb($client);
+$tablesDB = new TablesDb($client);
 
-$result = $tablesDb->createRelationshipColumn(
+$result = $tablesDB->createRelationshipColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     relatedTableId: '<RELATED_TABLE_ID>',

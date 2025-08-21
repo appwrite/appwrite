@@ -1,5 +1,5 @@
 mutation {
-    tablesDbCreateFloatColumn(
+    tablesDBCreateFloatColumn(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         key: "",

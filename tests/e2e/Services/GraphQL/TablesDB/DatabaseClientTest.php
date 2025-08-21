@@ -38,7 +38,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertIsArray($database['body']['data']);
         $this->assertArrayNotHasKey('errors', $database['body']);
-        $database = $database['body']['data']['tablesDbCreate'];
+        $database = $database['body']['data']['tablesDBCreate'];
         $this->assertEquals('Actors', $database['name']);
 
         return $database;
@@ -75,7 +75,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertIsArray($table['body']['data']);
         $this->assertArrayNotHasKey('errors', $table['body']);
-        $table = $table['body']['data']['tablesDbCreateTable'];
+        $table = $table['body']['data']['tablesDBCreateTable'];
         $this->assertEquals('Actors', $table['name']);
 
         return [
@@ -110,7 +110,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesDbCreateStringColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDBCreateStringColumn']);
 
         return $data;
     }
@@ -142,7 +142,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $column['body']);
         $this->assertIsArray($column['body']['data']);
-        $this->assertIsArray($column['body']['data']['tablesDbCreateIntegerColumn']);
+        $this->assertIsArray($column['body']['data']['tablesDBCreateIntegerColumn']);
 
         return $data;
     }
@@ -183,7 +183,7 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
 
-        $row = $row['body']['data']['tablesDbCreateRow'];
+        $row = $row['body']['data']['tablesDBCreateRow'];
         $this->assertIsArray($row);
 
         return [
@@ -216,7 +216,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $rows['body']);
         $this->assertIsArray($rows['body']['data']);
-        $this->assertIsArray($rows['body']['data']['tablesDbListRows']);
+        $this->assertIsArray($rows['body']['data']['tablesDBListRows']);
     }
 
     /**
@@ -243,7 +243,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $this->assertIsArray($row['body']['data']['tablesDbGetRow']);
+        $this->assertIsArray($row['body']['data']['tablesDBGetRow']);
     }
 
     /**
@@ -273,7 +273,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
-        $row = $row['body']['data']['tablesDbUpdateRow'];
+        $row = $row['body']['data']['tablesDBUpdateRow'];
         $this->assertIsArray($row);
 
         $this->assertStringContainsString('New Row Name', $row['data']);
@@ -330,7 +330,7 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $databaseId = $res['body']['data']['tablesDbCreate']['_id'];
+        $databaseId = $res['body']['data']['tablesDBCreate']['_id'];
 
         // Step 2: Create table
         $query = $this->getQuery(self::CREATE_TABLE);
@@ -349,7 +349,7 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $tableId = $res['body']['data']['tablesDbCreateTable']['_id'];
+        $tableId = $res['body']['data']['tablesDBCreateTable']['_id'];
 
         // Step 3: Create column
         $query = $this->getQuery(self::CREATE_STRING_COLUMN);
@@ -382,7 +382,7 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['tablesDbCreateRows']['rows']);
+        $this->assertCount(10, $res['body']['data']['tablesDBCreateRows']['rows']);
 
         return compact('databaseId', 'tableId', 'projectId');
     }
@@ -421,7 +421,7 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['tablesDbUpdateRows']['rows']);
+        $this->assertCount(10, $res['body']['data']['tablesDBUpdateRows']['rows']);
 
         // Step 2: Fetch and validate updated rows
         $query = $this->getQuery(self::GET_ROWS);
@@ -437,7 +437,7 @@ class DatabaseClientTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertEquals(200, $res['headers']['status-code']);
 
-        $fetched = $res['body']['data']['tablesDbListRows'];
+        $fetched = $res['body']['data']['tablesDBListRows'];
         $this->assertEquals(10, $fetched['total']);
 
         foreach ($fetched['rows'] as $row) {
@@ -490,7 +490,7 @@ class DatabaseClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $upsertPayload);
         $this->assertArrayNotHasKey('errors', $response['body']);
 
-        $rows = $response['body']['data']['tablesDbUpsertRows']['rows'];
+        $rows = $response['body']['data']['tablesDBUpsertRows']['rows'];
         $this->assertCount(2, $rows);
 
         $rowMap = [];
@@ -515,7 +515,7 @@ class DatabaseClientTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $fetchPayload);
         $this->assertEquals(200, $res['headers']['status-code']);
 
-        $fetched = $res['body']['data']['tablesDbListRows'];
+        $fetched = $res['body']['data']['tablesDBListRows'];
         $this->assertEquals(11, $fetched['total']);
 
         // Step 3: Upsert row with new permissions using `tablesUpsertRow`
@@ -534,7 +534,7 @@ class DatabaseClientTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
 
-        $updated = $res['body']['data']['tablesDbUpsertRow'];
+        $updated = $res['body']['data']['tablesDBUpsertRow'];
         $this->assertEquals('Row #10 Patched', json_decode($updated['data'], true)['name']);
         $this->assertEquals($data['databaseId'], $updated['_databaseId']);
         $this->assertEquals($data['tableId'], $updated['_tableId']);
@@ -566,7 +566,7 @@ class DatabaseClientTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
 
-        $deleted = $res['body']['data']['tablesDbDeleteRows']['rows'];
+        $deleted = $res['body']['data']['tablesDBDeleteRows']['rows'];
         $this->assertIsArray($deleted);
         $this->assertCount(11, $deleted);
 
@@ -582,7 +582,7 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertEquals(200, $res['headers']['status-code']);
-        $this->assertEquals(0, $res['body']['data']['tablesDbListRows']['total']);
+        $this->assertEquals(0, $res['body']['data']['tablesDBListRows']['total']);
 
         return $data;
     }

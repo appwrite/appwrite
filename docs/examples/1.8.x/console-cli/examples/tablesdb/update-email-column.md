@@ -1,4 +1,4 @@
-appwrite tablesDb updateEmailColumn \
+appwrite tablesDB updateEmailColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

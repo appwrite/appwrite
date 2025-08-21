@@ -31,8 +31,7 @@ class BaseList extends Model
         string $model,
         bool $paging = true,
         bool $public = true
-    )
-    {
+    ) {
         $this->name = $name;
         $this->type = $type;
         $this->public = $public;

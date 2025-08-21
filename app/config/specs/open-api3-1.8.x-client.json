@@ -561,7 +561,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
@@ -579,6 +579,60 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaType"
+                                }
+                            ],
+                            "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
+                            "demo": "account\/create-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "createMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaType"
+                                }
+                            ],
+                            "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
+                            "demo": "account\/create-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -627,7 +681,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
@@ -645,6 +699,64 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type",
+                                "otp"
+                            ],
+                            "required": [
+                                "type",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/user"
+                                }
+                            ],
+                            "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
+                            "demo": "account\/update-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "updateMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type",
+                                "otp"
+                            ],
+                            "required": [
+                                "type",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/user"
+                                }
+                            ],
+                            "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
+                            "demo": "account\/update-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -705,7 +817,7 @@
                         "description": "No content"
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
@@ -723,6 +835,58 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "deleteMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "deleteMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator for a user by ID.",
+                            "demo": "account\/delete-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "deleteMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "deleteMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator for a user by ID.",
+                            "demo": "account\/delete-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -773,7 +937,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
@@ -791,6 +955,60 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createMFAChallenge"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "factor"
+                            ],
+                            "required": [
+                                "factor"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaChallenge"
+                                }
+                            ],
+                            "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
+                            "demo": "account\/create-mfa-challenge.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createMFAChallenge"
+                            }
+                        },
+                        {
+                            "name": "createMFAChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "factor"
+                            ],
+                            "required": [
+                                "factor"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaChallenge"
+                                }
+                            ],
+                            "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
+                            "demo": "account\/create-m-f-a-challenge.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -847,7 +1065,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
@@ -865,6 +1083,64 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFAChallenge"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "required": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/session"
+                                }
+                            ],
+                            "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/update-mfa-challenge.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFAChallenge"
+                            }
+                        },
+                        {
+                            "name": "updateMFAChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "required": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/session"
+                                }
+                            ],
+                            "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/update-m-f-a-challenge.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -923,7 +1199,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
@@ -941,6 +1217,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "listMFAFactors"
+                    },
+                    "methods": [
+                        {
+                            "name": "listMfaFactors",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "account\/list-mfa-factors.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "listMFAFactors"
+                            }
+                        },
+                        {
+                            "name": "listMFAFactors",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "account\/list-m-f-a-factors.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -974,7 +1296,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
@@ -992,6 +1314,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "getMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "getMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
+                            "demo": "account\/get-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "getMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "getMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
+                            "demo": "account\/get-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -1023,7 +1391,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
@@ -1041,6 +1409,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/create-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "createMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/create-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -1072,7 +1486,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
@@ -1090,6 +1504,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
+                            "demo": "account\/update-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "updateMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
+                            "demo": "account\/update-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -4379,7 +4839,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.listRows"
+                        "replaceWith": "tablesDB.listRows"
                     },
                     "auth": {
                         "Project": []
@@ -4468,7 +4928,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createRow"
+                        "replaceWith": "tablesDB.createRow"
                     },
                     "methods": [
                         {
@@ -4501,7 +4961,7 @@
                             "demo": "databases\/create-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.createRow"
+                                "replaceWith": "tablesDB.createRow"
                             }
                         }
                     ],
@@ -4618,7 +5078,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.getRow"
+                        "replaceWith": "tablesDB.getRow"
                     },
                     "auth": {
                         "Project": []
@@ -4717,7 +5177,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.upsertRow"
+                        "replaceWith": "tablesDB.upsertRow"
                     },
                     "methods": [
                         {
@@ -4750,7 +5210,7 @@
                             "demo": "databases\/upsert-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.upsertRow"
+                                "replaceWith": "tablesDB.upsertRow"
                             }
                         }
                     ],
@@ -4865,7 +5325,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateRow"
+                        "replaceWith": "tablesDB.updateRow"
                     },
                     "auth": {
                         "Project": []
@@ -4968,7 +5428,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.deleteRow"
+                        "replaceWith": "tablesDB.deleteRow"
                     },
                     "auth": {
                         "Project": []
@@ -5057,7 +5517,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.decrementRowColumn"
+                        "replaceWith": "tablesDB.decrementRowColumn"
                     },
                     "auth": {
                         "Project": []
@@ -5176,7 +5636,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.incrementRowColumn"
+                        "replaceWith": "tablesDB.incrementRowColumn"
                     },
                     "auth": {
                         "Project": []
@@ -7001,9 +7461,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows": {
             "get": {
                 "summary": "List rows",
-                "operationId": "tablesDbListRows",
+                "operationId": "tablesDBListRows",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
                 "responses": {
@@ -7025,7 +7485,7 @@
                     "weight": 420,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/list-rows.md",
+                    "demo": "tables-d-b\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7061,7 +7521,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdbdb#tablesdbCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -7086,11 +7546,11 @@
             },
             "post": {
                 "summary": "Create row",
-                "operationId": "tablesDbCreateRow",
+                "operationId": "tablesDBCreateRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
-                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -7110,7 +7570,7 @@
                     "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-row.md",
+                    "demo": "tables-d-b\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7125,7 +7585,7 @@
                     "methods": [
                         {
                             "name": "createRow",
-                            "namespace": "tablesDb",
+                            "namespace": "tablesDB",
                             "desc": "Create row",
                             "auth": {
                                 "Project": []
@@ -7149,8 +7609,8 @@
                                     "model": "#\/components\/schemas\/row"
                                 }
                             ],
-                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/create-row.md"
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "demo": "tables-d-b\/create-row.md"
                         }
                     ],
                     "auth": {
@@ -7177,7 +7637,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate). Make sure to define columns before creating rows.",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate). Make sure to define columns before creating rows.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -7228,9 +7688,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}": {
             "get": {
                 "summary": "Get row",
-                "operationId": "tablesDbGetRow",
+                "operationId": "tablesDBGetRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
                 "responses": {
@@ -7252,7 +7712,7 @@
                     "weight": 413,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/get-row.md",
+                    "demo": "tables-d-b\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7288,7 +7748,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -7323,11 +7783,11 @@
             },
             "put": {
                 "summary": "Create or update a row",
-                "operationId": "tablesDbUpsertRow",
+                "operationId": "tablesDBUpsertRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
-                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -7347,7 +7807,7 @@
                     "weight": 416,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/upsert-row.md",
+                    "demo": "tables-d-b\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7362,7 +7822,7 @@
                     "methods": [
                         {
                             "name": "upsertRow",
-                            "namespace": "tablesDb",
+                            "namespace": "tablesDB",
                             "desc": "",
                             "auth": {
                                 "Project": []
@@ -7385,8 +7845,8 @@
                                     "model": "#\/components\/schemas\/row"
                                 }
                             ],
-                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/upsert-row.md"
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "demo": "tables-d-b\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -7459,9 +7919,9 @@
             },
             "patch": {
                 "summary": "Update row",
-                "operationId": "tablesDbUpdateRow",
+                "operationId": "tablesDBUpdateRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
                 "responses": {
@@ -7483,7 +7943,7 @@
                     "weight": 414,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-row.md",
+                    "demo": "tables-d-b\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7565,9 +8025,9 @@
             },
             "delete": {
                 "summary": "Delete row",
-                "operationId": "tablesDbDeleteRow",
+                "operationId": "tablesDBDeleteRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Delete a row by its unique ID.",
                 "responses": {
@@ -7582,7 +8042,7 @@
                     "weight": 418,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/delete-row.md",
+                    "demo": "tables-d-b\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -7618,7 +8078,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -7642,9 +8102,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/decrement": {
             "patch": {
                 "summary": "Decrement row column",
-                "operationId": "tablesDbDecrementRowColumn",
+                "operationId": "tablesDBDecrementRowColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Decrement a specific column of a row by a given value.",
                 "responses": {
@@ -7666,7 +8126,7 @@
                     "weight": 423,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/decrement-row-column.md",
+                    "demo": "tables-d-b\/decrement-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7757,9 +8217,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/increment": {
             "patch": {
                 "summary": "Increment row column",
-                "operationId": "tablesDbIncrementRowColumn",
+                "operationId": "tablesDBIncrementRowColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Increment a specific column of a row by a given value.",
                 "responses": {
@@ -7781,7 +8241,7 @@
                     "weight": 422,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/increment-row-column.md",
+                    "demo": "tables-d-b\/increment-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -9028,7 +9488,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of rows rows that matched your query.",
+                        "description": "Total number of rows that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9056,7 +9516,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of documents rows that matched your query.",
+                        "description": "Total number of documents that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9084,7 +9544,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of sessions rows that matched your query.",
+                        "description": "Total number of sessions that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9112,7 +9572,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of identities rows that matched your query.",
+                        "description": "Total number of identities that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9140,7 +9600,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of logs rows that matched your query.",
+                        "description": "Total number of logs that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9168,7 +9628,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of files rows that matched your query.",
+                        "description": "Total number of files that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9196,7 +9656,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of teams rows that matched your query.",
+                        "description": "Total number of teams that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9224,7 +9684,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of memberships rows that matched your query.",
+                        "description": "Total number of memberships that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9252,7 +9712,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of executions rows that matched your query.",
+                        "description": "Total number of executions that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9280,7 +9740,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of countries rows that matched your query.",
+                        "description": "Total number of countries that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9308,7 +9768,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of continents rows that matched your query.",
+                        "description": "Total number of continents that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9336,7 +9796,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of languages rows that matched your query.",
+                        "description": "Total number of languages that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9364,7 +9824,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of currencies rows that matched your query.",
+                        "description": "Total number of currencies that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9392,7 +9852,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of phones rows that matched your query.",
+                        "description": "Total number of phones that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -9420,7 +9880,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of localeCodes rows that matched your query.",
+                        "description": "Total number of localeCodes that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },

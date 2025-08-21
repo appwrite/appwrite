@@ -1,4 +1,4 @@
-appwrite tablesDb createBooleanColumn \
+appwrite tablesDB createBooleanColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

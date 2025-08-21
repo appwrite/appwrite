@@ -5,9 +5,9 @@ Client client = Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-TablesDb tablesDb = TablesDb(client);
+TablesDb tablesDB = TablesDb(client);
 
-RowList result = await tablesDb.upsertRows(
+RowList result = await tablesDB.upsertRows(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rows: [],

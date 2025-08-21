@@ -5,9 +5,9 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const tablesDb = new sdk.TablesDb(client);
+const tablesDB = new sdk.TablesDb(client);
 
-const result = await tablesDb.create({
+const result = await tablesDB.create({
     databaseId: '<DATABASE_ID>',
     name: '<NAME>',
     enabled: false

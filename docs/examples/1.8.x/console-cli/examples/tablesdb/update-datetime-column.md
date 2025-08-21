@@ -1,4 +1,4 @@
-appwrite tablesDb updateDatetimeColumn \
+appwrite tablesDB updateDatetimeColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

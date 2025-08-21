@@ -1,5 +1,5 @@
 mutation {
-    tablesDbDeleteColumn(
+    tablesDBDeleteColumn(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         key: ""

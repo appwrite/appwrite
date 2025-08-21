@@ -8,8 +8,8 @@ $client = (new Client())
     ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setKey('<YOUR_API_KEY>'); // Your secret API key
 
-$tablesDb = new TablesDb($client);
+$tablesDB = new TablesDb($client);
 
-$result = $tablesDb->get(
+$result = $tablesDB->get(
     databaseId: '<DATABASE_ID>'
 );

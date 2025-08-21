@@ -7,9 +7,9 @@ val client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
-val tablesDb = TablesDb(client)
+val tablesDB = TablesDb(client)
 
-val response = tablesDb.list(
+val response = tablesDB.list(
     queries = listOf(), // optional
     search = "<SEARCH>" // optional
 )

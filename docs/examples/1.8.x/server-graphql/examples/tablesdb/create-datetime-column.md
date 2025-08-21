@@ -1,5 +1,5 @@
 mutation {
-    tablesDbCreateDatetimeColumn(
+    tablesDBCreateDatetimeColumn(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         key: "",

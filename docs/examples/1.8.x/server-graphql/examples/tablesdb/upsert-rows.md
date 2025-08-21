@@ -1,5 +1,5 @@
 mutation {
-    tablesDbUpsertRows(
+    tablesDBUpsertRows(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         rows: []

@@ -1,4 +1,4 @@
-appwrite tablesDb createRow \
+appwrite tablesDB createRow \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --rowId <ROW_ID> \

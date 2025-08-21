@@ -1,4 +1,4 @@
-appwrite tablesDb createIndex \
+appwrite tablesDB createIndex \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

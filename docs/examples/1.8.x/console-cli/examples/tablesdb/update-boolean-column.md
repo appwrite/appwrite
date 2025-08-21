@@ -1,4 +1,4 @@
-appwrite tablesDb updateBooleanColumn \
+appwrite tablesDB updateBooleanColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \
