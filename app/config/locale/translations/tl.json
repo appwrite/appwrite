@@ -12,8 +12,6 @@
     "emails.verification.signature": "Pangkat ng {{project}}",
     "emails.magicSession.subject": "Mag log in",
     "emails.magicSession.hello": "Kamusta ,",
-    "emails.magicSession.body": "Sundin ang link na ito upang mag-login.",
-    "emails.magicSession.footer": "Kung hindi mo hiningi na mag-login gamit ang email na ito, maaari mong balewalain ang mensahe na ito.",
     "emails.magicSession.thanks": "Salamat,",
     "emails.magicSession.signature": "Pangkat ng {{project}}",
     "emails.recovery.subject": "I-reset ang password",

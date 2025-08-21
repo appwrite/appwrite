@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} జట్",
     "emails.magicSession.subject": "లాగిన్",
     "emails.magicSession.hello": "నమస్కారము,",
-    "emails.magicSession.body": "లాగిన్ చేయడానికి ఈ లింక్ ని అనుసరించండి",
-    "emails.magicSession.footer": "మీరు ఈ ఇమెయిల్ ని ఉపయోగించి లాగిన్ చేయమని అడగకపోతే, మీరు ఈ సందేశాన్ని విస్మరించవచ్చు",
     "emails.magicSession.thanks": "ధన్యవాదాలు,",
     "emails.magicSession.signature": "{{project}} జట్",
     "emails.recovery.subject": "పాస్వర్డ్ రీసెట్",

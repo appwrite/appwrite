@@ -22,6 +22,12 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('rowsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated  number of rows.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('databasesTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of databases.',

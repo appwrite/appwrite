@@ -93,7 +93,7 @@ App::post('/v1/storage/buckets')
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
         // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions);
+        $permissions = Permission::aggregate($permissions) ?? [];
         $compression ??= Compression::NONE;
         $encryption ??= true;
         try {
@@ -146,7 +146,7 @@ App::post('/v1/storage/buckets')
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-            $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions ?? [], documentSecurity: $fileSecurity);
+            $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: $fileSecurity);
         } catch (DuplicateException) {
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }

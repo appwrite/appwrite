@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} টীম",
     "emails.magicSession.subject": "লগ ইন",
     "emails.magicSession.hello": "নমস্কার,",
-    "emails.magicSession.body": "এই লিঙ্কের মাধ্যমে লগ ইন করুন।",
-    "emails.magicSession.footer": "আপনি যদি এই ইমেলটি ব্যবহার করে লগইন করতে না বলেন, তাহলে আপনি এই বার্তাটি উপেক্ষা করতে পারেন।",
     "emails.magicSession.thanks": "ধন্যবাদ,",
     "emails.magicSession.signature": "{{project}} টীম",
     "emails.recovery.subject": "পাসওয়ার্ড রিসেট",

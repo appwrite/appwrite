@@ -19,6 +19,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -643,15 +644,20 @@ App::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-        try {
-            $users = $dbForProject->find('users', $queries);
-            $total = $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT);
-        } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
+        $users = [];
+        $total = 0;
+
+        $dbForProject->skipFilters(function () use ($dbForProject, $queries, &$users, &$total) {
+            try {
+                $users = $dbForProject->find('users', $queries);
+                $total = $dbForProject->count('users', $queries, APP_LIMIT_COUNT);
+            } catch (OrderException $e) {
+                throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
+        }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
+
         $response->dynamic(new Document([
             'users' => $users,
             'total' => $total,
@@ -1353,6 +1359,17 @@ App::patch('/v1/users/:userId/password')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
+        $sessions = $user->getAttribute('sessions', []);
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
         $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1740,19 +1757,38 @@ App::patch('/v1/users/:userId/mfa')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'users',
-        name: 'updateMfa',
-        description: '/docs/references/users/update-user-mfa.md',
-        auth: [AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USER,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'users',
+            group: 'users',
+            name: 'updateMfa',
+            description: '/docs/references/users/update-user-mfa.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_USER,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'updateMFA',
+            ),
+        ),
+        new Method(
+            namespace: 'users',
+            group: 'users',
+            name: 'updateMFA',
+            description: '/docs/references/users/update-user-mfa.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_USER,
+                )
+            ]
+        )
+    ])
     ->param('userId', '', new UID(), 'User ID.')
     ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
     ->inject('response')
@@ -1780,19 +1816,38 @@ App::get('/v1/users/:userId/mfa/factors')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'mfa',
-        name: 'listMfaFactors',
-        description: '/docs/references/users/list-mfa-factors.md',
-        auth: [AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_FACTORS,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'listMfaFactors',
+            description: '/docs/references/users/list-mfa-factors.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_FACTORS,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'listMFAFactors',
+            ),
+        ),
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'listMFAFactors',
+            description: '/docs/references/users/list-mfa-factors.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_FACTORS,
+                )
+            ]
+        )
+    ])
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1819,19 +1874,38 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'mfa',
-        name: 'getMfaRecoveryCodes',
-        description: '/docs/references/users/get-mfa-recovery-codes.md',
-        auth: [AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'getMfaRecoveryCodes',
+            description: '/docs/references/users/get-mfa-recovery-codes.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'getMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'getMFARecoveryCodes',
+            description: '/docs/references/users/get-mfa-recovery-codes.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ]
+        )
+    ])
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1864,19 +1938,38 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'mfa',
-        name: 'createMfaRecoveryCodes',
-        description: '/docs/references/users/create-mfa-recovery-codes.md',
-        auth: [AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'createMfaRecoveryCodes',
+            description: '/docs/references/users/create-mfa-recovery-codes.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'createMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'createMFARecoveryCodes',
+            description: '/docs/references/users/create-mfa-recovery-codes.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ]
+        )
+    ])
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1916,19 +2009,38 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'mfa',
-        name: 'updateMfaRecoveryCodes',
-        description: '/docs/references/users/update-mfa-recovery-codes.md',
-        auth: [AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'updateMfaRecoveryCodes',
+            description: '/docs/references/users/update-mfa-recovery-codes.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'updateMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'updateMFARecoveryCodes',
+            description: '/docs/references/users/update-mfa-recovery-codes.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ]
+        )
+    ])
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1967,20 +2079,40 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'mfa',
-        name: 'deleteMfaAuthenticator',
-        description: '/docs/references/users/delete-mfa-authenticator.md',
-        auth: [AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::NONE
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'deleteMfaAuthenticator',
+            description: '/docs/references/users/delete-mfa-authenticator.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            contentType: ContentType::NONE,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'deleteMFAAuthenticator',
+            ),
+        ),
+        new Method(
+            namespace: 'users',
+            group: 'mfa',
+            name: 'deleteMFAAuthenticator',
+            description: '/docs/references/users/delete-mfa-authenticator.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            contentType: ContentType::NONE
+        )
+    ])
     ->param('userId', '', new UID(), 'User ID.')
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')

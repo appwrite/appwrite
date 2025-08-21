@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} komanda",
     "emails.magicSession.subject": "Ieiet",
     "emails.magicSession.hello": "Sveicināti,",
-    "emails.magicSession.body": "Sekojiet saitei, lai ieietu.",
-    "emails.magicSession.footer": "Ja Jūs nepieprasījāt ieiet ar šo e-pasta adresi, lūdzu, ignorējiet šo ziņu.",
     "emails.magicSession.thanks": "Paldies,",
     "emails.magicSession.signature": "{{project}} komanda",
     "emails.recovery.subject": "Paroles atjaunināšana",

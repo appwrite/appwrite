@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} टीम",
     "emails.magicSession.subject": "लॉग इन करीं|",
     "emails.magicSession.hello": "प्रणाम,",
-    "emails.magicSession.body": "लॉग इन करें लेल दिहल गइल लिंक फॉलो करें|",
-    "emails.magicSession.footer": "अगर लॉग इन करे के लिए ना कहाले, तो आप ई संदेश क अनदेखा कर सकत अछि।",
     "emails.magicSession.thanks": "धन्यवाद,",
     "emails.magicSession.signature": "{{project}} टीम",
     "emails.recovery.subject": "पासवर्ड बदल क लेल|",

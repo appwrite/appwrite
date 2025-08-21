@@ -134,6 +134,14 @@ jobs:
       - name: Run General Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/General --debug
 
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
   e2e_service_test:
     name: E2E Service Test
     runs-on: ubuntu-latest
@@ -145,7 +153,8 @@ jobs:
           Account,
           Avatars,
           Console,
-          Databases,
+          Databases/Legacy,
+          Databases/TablesDB,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -201,6 +210,14 @@ jobs:
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group devKeys,screenshots
 
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
   e2e_shared_mode_test:
     name: E2E Shared Mode Service Test
     runs-on: ubuntu-latest
@@ -214,7 +231,8 @@ jobs:
             Account,
             Avatars,
             Console,
-            Databases,
+            Databases/Legacy,
+            Databases/TablesDB,
             Functions,
             FunctionsSchedule,
             GraphQL,
@@ -280,6 +298,14 @@ jobs:
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group devKeys,screenshots
 
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
   e2e_dev_keys:
     name: E2E Service Test (Dev Keys)
     runs-on: ubuntu-latest
@@ -312,6 +338,14 @@ jobs:
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=devKeys
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
 
   e2e_dev_keys_shared_mode:
     name: E2E Shared Mode Service Test (Dev Keys)
@@ -360,6 +394,14 @@ jobs:
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=devKeys
 
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
   e2e_screenshots_keys:
     name: E2E Service Test (Site Screenshots)
     runs-on: ubuntu-latest
@@ -393,6 +435,14 @@ jobs:
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
 
   e2e_screenshots_shared_mode:
     name: E2E Shared Mode Service Test (Site Screenshots)
@@ -441,3 +491,11 @@ jobs:
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
