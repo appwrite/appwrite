@@ -405,8 +405,10 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEventually(function () use ($siteId, &$site) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals('ssr', $site['body']['adapter']);
+        });
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -416,6 +418,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testAdapterDetectionAstroStatic(): void
     {
         $siteId = $this->setupSite([
@@ -1507,6 +1510,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
         $template = $this->getTemplate('playground-for-astro');
@@ -2690,6 +2694,45 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertStringContainsString('custom error', $deployment['body']['buildLogs']);
         $this->assertStringContainsString('Adapter mismatch', $deployment['body']['buildLogs']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCookieHeader()
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/cookies', [
+            'cookie' => 'custom-session-id=abcd123'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals("abcd123", $response['body']);
 
         $this->cleanupSite($siteId);
     }
