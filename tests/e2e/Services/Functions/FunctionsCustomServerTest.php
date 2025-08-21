@@ -2283,7 +2283,7 @@ class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    public function testLogTruncation(): void
+    public function testLogAndErrorTruncation(): void
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
@@ -2294,7 +2294,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('log-truncation'),
+            'code' => $this->packageFunction('log-error-truncation'),
             'activate' => true
         ]);
 
@@ -2312,31 +2312,6 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertStringNotContainsString('z', $logs);
         $this->assertStringContainsString('a', $logs);
-
-        $this->cleanupFunction($functionId);
-    }
-
-    public function testErrorTruncation(): void
-    {
-        $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test Error Truncation',
-            'runtime' => 'node-22',
-            'entrypoint' => 'index.js',
-            'timeout' => 15,
-        ]);
-
-        $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('error-truncation'),
-            'activate' => true
-        ]);
-
-        $execution = $this->createExecution($functionId, [
-            'async' => 'false'
-        ]);
-
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals(500, $execution['body']['responseStatusCode']);
 
         // Verify errors are truncated and warning message is present at the beginning
         $errors = $execution['body']['errors'];

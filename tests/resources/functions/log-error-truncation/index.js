@@ -3,6 +3,7 @@ module.exports = async(context) => {
     const longString = 'z' + 'a'.repeat(1000000);
   
     context.log(longString);
+    context.error(longString);
   
     return context.res.json({
       motto: 'Build like a team of hundreds_',
