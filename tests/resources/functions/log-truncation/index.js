@@ -1,6 +1,6 @@
 module.exports = async(context) => {
     // Create a string that is 1000001 characters long (exceeds the 1000000 limit)
-    const longString = 'a'.repeat(1000001);
+    const longString = 'z' + 'a'.repeat(1000000);
   
     context.log(longString);
   

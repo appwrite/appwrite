@@ -2305,10 +2305,46 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
 
-        // Verify logs are truncated and warning message is present
+        // Verify logs are truncated and warning message is present at the beginning
         $logs = $execution['body']['logs'];
         $this->assertLessThanOrEqual(APP_FUNCTION_LOG_LENGTH_LIMIT, strlen($logs));
-        $this->assertStringContainsString('[WARNING] Logs truncated', $logs);
+        $this->assertStringStartsWith('[WARNING] Logs truncated', $logs);
+
+        $this->assertStringNotContainsString('z', $logs);
+        $this->assertStringContainsString('a', $logs);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testErrorTruncation(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Error Truncation',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('error-truncation'),
+            'activate' => true
+        ]);
+
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false'
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(500, $execution['body']['responseStatusCode']);
+
+        // Verify errors are truncated and warning message is present at the beginning
+        $errors = $execution['body']['errors'];
+        $this->assertLessThanOrEqual(APP_FUNCTION_ERROR_LENGTH_LIMIT, strlen($errors));
+        $this->assertStringStartsWith('[WARNING] Errors truncated', $errors);
+
+        $this->assertStringNotContainsString('z', $errors);
+        $this->assertStringContainsString('a', $errors);
 
         $this->cleanupFunction($functionId);
     }
