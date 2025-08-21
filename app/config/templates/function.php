@@ -2077,6 +2077,61 @@ return [
                 'type' => 'text'
             ]
         ],
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+    ],
+    [
+        'icon' => 'icon-apple',
+        'id' => 'sign-in-with-apple',
+        'name' => 'Sign in with Apple',
+        'score' => 6,
+        'tagline' => 'Use native Apple sign-in APIs on Apple devices with Appwrite Auth',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => ['auth'],
+        'runtimes' => [
+            ...getRuntimes($templateRuntimes['DART'], 'dart pub get', 'lib/main.dart', 'dart/sign_in_with_apple')
+        ],
+        'instructions' => 'For documentation and instructions, check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/dart/sign_in_with_apple">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [
+            [
+                'name' => 'BUNDLE_ID',
+                'description' => 'Bundle ID of the app. <a class="u-bold" target="_blank" href="https://developer.apple.com/documentation/xcode/preparing-your-app-for-distribution/#Set-the-bundle-ID">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'com.companyname.appname',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'TEAM_ID',
+                'description' => 'Team ID of the Apple Developer account.',
+                'value' => '',
+                'placeholder' => '6K3...5PH',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'KEY_ID',
+                'description' => 'Key ID required to communicate with Apple Developer services. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/get-a-key-identifier/">Learn more</a>.',
+                'value' => '',
+                'placeholder' => '9G8...6YF',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'KEY_CONTENTS_ENCODED',
+                'description' => 'Contents of Key required to communicated with Apple Developer services, encoded in Base64. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/revoke-edit-and-download-keys">Learn more</a>.',
+                'value' => '',
+                'placeholder' => '7x8aA...Ab7c',
+                'required' => true,
+                'type' => 'password'
+            ]
+        ],
         'scopes' => ['users.read', 'users.write']
     ]
 ];
