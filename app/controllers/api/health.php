@@ -23,10 +23,12 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/health')
@@ -397,7 +399,7 @@ App::get('/v1/health/certificate')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
+    ->param('domain', null, new Multiple([new AnyOf([new URL(), new Domain()]), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
         if (filter_var($domain, FILTER_VALIDATE_URL)) {

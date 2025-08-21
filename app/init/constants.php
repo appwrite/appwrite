@@ -143,6 +143,8 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+const APP_FUNCTION_LOG_LENGTH_LIMIT = 1000000;
+const APP_FUNCTION_ERROR_LENGTH_LIMIT = 1000000;
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
