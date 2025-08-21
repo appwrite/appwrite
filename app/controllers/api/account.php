@@ -1739,9 +1739,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $session->setAttribute('expire', $expire);
 
-            if (!Config::getParam('domainVerification')) {
-                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
-            }
+            // Always set fallback cookies for OAuth2 sessions to ensure compatibility with React Router v7
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
 
             $queueForEvents
                 ->setParam('userId', $user->getId())
@@ -1757,9 +1756,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $query['secret'] = Auth::encodeSession($user->getId(), $secret);
             }
 
+            // Determine appropriate SameSite setting for OAuth2 redirects
+            $sameSite = Config::getParam('cookieSamesite');
+            
+            // For OAuth2 redirects, use 'Lax' instead of 'None' to ensure compatibility with modern browsers and SPA routing
+            if ($sameSite === 'None') {
+                $sameSite = 'Lax';
+            }
+
             $response
                 ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, $sameSite);
         }
 
         if (isset($sessionUpgrade) && $sessionUpgrade) {

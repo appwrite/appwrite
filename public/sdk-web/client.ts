@@ -374,6 +374,14 @@ class Client {
             headers['X-Fallback-Cookies'] = window.localStorage.getItem('cookieFallback') ?? '';
         }
 
+        // For OAuth2 flows, ensure we always try to get the session from localStorage if cookies fail
+        if (typeof window !== 'undefined' && window.localStorage && method === 'GET' && url.pathname.includes('/account')) {
+            const fallbackCookies = window.localStorage.getItem('cookieFallback');
+            if (fallbackCookies && !headers['X-Fallback-Cookies']) {
+                headers['X-Fallback-Cookies'] = fallbackCookies;
+            }
+        }
+
         if (method === 'GET') {
             for (const [key, value] of Object.entries(Service.flatten(params))) {
                 url.searchParams.append(key, value);
