@@ -1,4 +1,4 @@
-appwrite tablesDb create \
+appwrite tablesDB create \
         --databaseId <DATABASE_ID> \
         --name <NAME> \
 

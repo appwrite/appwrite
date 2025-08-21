@@ -5,9 +5,9 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
-let tablesDb = TablesDb(client)
+let tablesDB = TablesDb(client)
 
-let tableList = try await tablesDb.listTables(
+let tableList = try await tablesDB.listTables(
     databaseId: "<DATABASE_ID>",
     queries: [], // optional
     search: "<SEARCH>" // optional

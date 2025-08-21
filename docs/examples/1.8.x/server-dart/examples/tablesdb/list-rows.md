@@ -5,9 +5,9 @@ Client client = Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setSession(''); // The user session to authenticate with
 
-TablesDb tablesDb = TablesDb(client);
+TablesDb tablesDB = TablesDb(client);
 
-RowList result = await tablesDb.listRows(
+RowList result = await tablesDB.listRows(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     queries: [], // (optional)

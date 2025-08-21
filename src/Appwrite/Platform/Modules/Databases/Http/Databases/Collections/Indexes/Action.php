@@ -62,7 +62,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'databases' : 'tablesDb';
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
 
     /**

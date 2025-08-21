@@ -1,4 +1,4 @@
-appwrite tablesDb createEnumColumn \
+appwrite tablesDB createEnumColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

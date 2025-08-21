@@ -7,9 +7,9 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetSession(""); // The user session to authenticate with
 
-TablesDb tablesDb = new TablesDb(client);
+TablesDb tablesDB = new TablesDb(client);
 
-Row result = await tablesDb.GetRow(
+Row result = await tablesDB.GetRow(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",

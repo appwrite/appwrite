@@ -77,7 +77,7 @@ abstract class Action extends AppwriteAction
      */
     protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'databases' : 'tablesDb';
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
 
     /**

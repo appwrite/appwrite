@@ -33,7 +33,7 @@ class Create extends DatabaseCreate
             ->label('audits.event', 'database.create')
             ->label('audits.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'tablesDb',
+                namespace: 'tablesDB',
                 group: 'tablesdb',
                 name: 'create',
                 description: '/docs/references/tablesdb/create.md',

@@ -65,7 +65,7 @@ class Delete extends Action
                 contentType: ContentType::NONE,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'tablesDb.deleteRow',
+                    replaceWith: 'tablesDB.deleteRow',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

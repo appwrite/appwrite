@@ -1,5 +1,5 @@
 mutation {
-    tablesDbCreateUrlColumn(
+    tablesDBCreateUrlColumn(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         key: "",

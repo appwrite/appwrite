@@ -5,9 +5,9 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setSession("") // The user session to authenticate with
 
-let tablesDb = TablesDb(client)
+let tablesDB = TablesDb(client)
 
-let rowList = try await tablesDb.listRows(
+let rowList = try await tablesDB.listRows(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     queries: [] // optional

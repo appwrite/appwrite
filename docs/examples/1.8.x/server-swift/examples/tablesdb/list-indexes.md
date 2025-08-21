@@ -5,9 +5,9 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
-let tablesDb = TablesDb(client)
+let tablesDB = TablesDb(client)
 
-let columnIndexList = try await tablesDb.listIndexes(
+let columnIndexList = try await tablesDB.listIndexes(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     queries: [] // optional

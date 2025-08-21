@@ -1,4 +1,4 @@
-appwrite tablesDb updateStringColumn \
+appwrite tablesDB updateStringColumn \
         --databaseId <DATABASE_ID> \
         --tableId <TABLE_ID> \
         --key '' \

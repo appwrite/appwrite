@@ -1,3 +1,3 @@
-appwrite tablesDb getUsage \
+appwrite tablesDB getUsage \
         --databaseId <DATABASE_ID> \
 

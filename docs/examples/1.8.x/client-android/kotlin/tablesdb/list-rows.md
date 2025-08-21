@@ -6,9 +6,9 @@ val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
 
-val tablesDb = TablesDb(client)
+val tablesDB = TablesDb(client)
 
-val result = tablesDb.listRows(
+val result = tablesDB.listRows(
     databaseId = "<DATABASE_ID>", 
     tableId = "<TABLE_ID>", 
     queries = listOf(), // (optional)

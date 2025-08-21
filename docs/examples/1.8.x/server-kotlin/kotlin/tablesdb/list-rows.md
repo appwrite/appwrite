@@ -7,9 +7,9 @@ val client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setSession("") // The user session to authenticate with
 
-val tablesDb = TablesDb(client)
+val tablesDB = TablesDb(client)
 
-val response = tablesDb.listRows(
+val response = tablesDB.listRows(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
     queries = listOf() // optional

@@ -1,5 +1,5 @@
 mutation {
-    tablesDbCreateRows(
+    tablesDBCreateRows(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         rows: []

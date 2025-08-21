@@ -8,9 +8,9 @@ $client = (new Client())
     ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setKey('<YOUR_API_KEY>'); // Your secret API key
 
-$tablesDb = new TablesDb($client);
+$tablesDB = new TablesDb($client);
 
-$result = $tablesDb->updateIntegerColumn(
+$result = $tablesDB->updateIntegerColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: '',

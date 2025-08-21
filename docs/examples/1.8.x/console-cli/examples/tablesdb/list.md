@@ -1,3 +1,3 @@
-appwrite tablesDb list \
+appwrite tablesDB list \
 
 

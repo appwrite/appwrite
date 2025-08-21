@@ -567,7 +567,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
@@ -585,6 +585,62 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaType"
+                                }
+                            ],
+                            "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
+                            "demo": "account\/create-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "createMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaType"
+                                }
+                            ],
+                            "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
+                            "demo": "account\/create-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -634,7 +690,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
@@ -652,6 +708,66 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "type",
+                                "otp"
+                            ],
+                            "required": [
+                                "type",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/user"
+                                }
+                            ],
+                            "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
+                            "demo": "account\/update-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "updateMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "type",
+                                "otp"
+                            ],
+                            "required": [
+                                "type",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/user"
+                                }
+                            ],
+                            "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
+                            "demo": "account\/update-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -713,7 +829,7 @@
                         "description": "No content"
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
@@ -731,6 +847,60 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "deleteMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "deleteMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator for a user by ID.",
+                            "demo": "account\/delete-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "deleteMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "deleteMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator for a user by ID.",
+                            "demo": "account\/delete-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -782,7 +952,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
@@ -800,6 +970,60 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createMFAChallenge"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "factor"
+                            ],
+                            "required": [
+                                "factor"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaChallenge"
+                                }
+                            ],
+                            "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
+                            "demo": "account\/create-mfa-challenge.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createMFAChallenge"
+                            }
+                        },
+                        {
+                            "name": "createMFAChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "factor"
+                            ],
+                            "required": [
+                                "factor"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaChallenge"
+                                }
+                            ],
+                            "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
+                            "demo": "account\/create-m-f-a-challenge.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -856,7 +1080,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
@@ -874,6 +1098,66 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFAChallenge"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "required": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/session"
+                                }
+                            ],
+                            "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/update-mfa-challenge.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFAChallenge"
+                            }
+                        },
+                        {
+                            "name": "updateMFAChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "required": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/session"
+                                }
+                            ],
+                            "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/update-m-f-a-challenge.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -933,7 +1217,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
@@ -951,6 +1235,54 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "listMFAFactors"
+                    },
+                    "methods": [
+                        {
+                            "name": "listMfaFactors",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "account\/list-mfa-factors.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "listMFAFactors"
+                            }
+                        },
+                        {
+                            "name": "listMFAFactors",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "account\/list-m-f-a-factors.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -985,7 +1317,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
@@ -1003,6 +1335,54 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "getMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "getMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
+                            "demo": "account\/get-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "getMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "getMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
+                            "demo": "account\/get-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1035,7 +1415,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
@@ -1053,6 +1433,54 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/create-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "createMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/create-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1085,7 +1513,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
@@ -1103,6 +1531,54 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
+                            "demo": "account\/update-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "updateMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
+                            "demo": "account\/update-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -4076,7 +4552,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.list"
+                        "replaceWith": "tablesDB.list"
                     },
                     "methods": [
                         {
@@ -4102,7 +4578,7 @@
                             "demo": "databases\/list.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.list"
+                                "replaceWith": "tablesDB.list"
                             }
                         }
                     ],
@@ -4182,7 +4658,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createDatabase"
+                        "replaceWith": "tablesDB.createDatabase"
                     },
                     "methods": [
                         {
@@ -4212,7 +4688,7 @@
                             "demo": "databases\/create.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.createDatabase"
+                                "replaceWith": "tablesDB.createDatabase"
                             }
                         }
                     ],
@@ -4298,7 +4774,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.get"
+                        "replaceWith": "tablesDB.get"
                     },
                     "methods": [
                         {
@@ -4325,7 +4801,7 @@
                             "demo": "databases\/get.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.get"
+                                "replaceWith": "tablesDB.get"
                             }
                         }
                     ],
@@ -4391,7 +4867,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.update"
+                        "replaceWith": "tablesDB.update"
                     },
                     "methods": [
                         {
@@ -4421,7 +4897,7 @@
                             "demo": "databases\/update.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.update"
+                                "replaceWith": "tablesDB.update"
                             }
                         }
                     ],
@@ -4504,7 +4980,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.delete"
+                        "replaceWith": "tablesDB.delete"
                     },
                     "methods": [
                         {
@@ -4530,7 +5006,7 @@
                             "demo": "databases\/delete.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.delete"
+                                "replaceWith": "tablesDB.delete"
                             }
                         }
                     ],
@@ -4598,7 +5074,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.listTables"
+                        "replaceWith": "tablesDB.listTables"
                     },
                     "auth": {
                         "Project": [],
@@ -4686,7 +5162,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createTable"
+                        "replaceWith": "tablesDB.createTable"
                     },
                     "auth": {
                         "Project": [],
@@ -4795,7 +5271,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.getTable"
+                        "replaceWith": "tablesDB.getTable"
                     },
                     "auth": {
                         "Project": [],
@@ -4869,7 +5345,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateTable"
+                        "replaceWith": "tablesDB.updateTable"
                     },
                     "auth": {
                         "Project": [],
@@ -4973,7 +5449,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.deleteTable"
+                        "replaceWith": "tablesDB.deleteTable"
                     },
                     "auth": {
                         "Project": [],
@@ -5049,7 +5525,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.listColumns"
+                        "replaceWith": "tablesDB.listColumns"
                     },
                     "auth": {
                         "Project": [],
@@ -5138,7 +5614,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createBooleanColumn"
+                        "replaceWith": "tablesDB.createBooleanColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5249,7 +5725,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateBooleanColumn"
+                        "replaceWith": "tablesDB.updateBooleanColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5365,7 +5841,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createDatetimeColumn"
+                        "replaceWith": "tablesDB.createDatetimeColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5476,7 +5952,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateDatetimeColumn"
+                        "replaceWith": "tablesDB.updateDatetimeColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5592,7 +6068,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createEmailColumn"
+                        "replaceWith": "tablesDB.createEmailColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5703,7 +6179,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateEmailColumn"
+                        "replaceWith": "tablesDB.updateEmailColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5819,7 +6295,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createEnumColumn"
+                        "replaceWith": "tablesDB.createEnumColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -5939,7 +6415,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateEnumColumn"
+                        "replaceWith": "tablesDB.updateEnumColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6064,7 +6540,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createFloatColumn"
+                        "replaceWith": "tablesDB.createFloatColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6185,7 +6661,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateFloatColumn"
+                        "replaceWith": "tablesDB.updateFloatColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6311,7 +6787,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createIntegerColumn"
+                        "replaceWith": "tablesDB.createIntegerColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6432,7 +6908,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateIntegerColumn"
+                        "replaceWith": "tablesDB.updateIntegerColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6558,7 +7034,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createIpColumn"
+                        "replaceWith": "tablesDB.createIpColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6669,7 +7145,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateIpColumn"
+                        "replaceWith": "tablesDB.updateIpColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6785,7 +7261,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createRelationshipColumn"
+                        "replaceWith": "tablesDB.createRelationshipColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -6921,7 +7397,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createStringColumn"
+                        "replaceWith": "tablesDB.createStringColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7043,7 +7519,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateStringColumn"
+                        "replaceWith": "tablesDB.updateStringColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7164,7 +7640,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createUrlColumn"
+                        "replaceWith": "tablesDB.createUrlColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7275,7 +7751,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateUrlColumn"
+                        "replaceWith": "tablesDB.updateUrlColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7422,7 +7898,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.getColumn"
+                        "replaceWith": "tablesDB.getColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7498,7 +7974,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.deleteColumn"
+                        "replaceWith": "tablesDB.deleteColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7583,7 +8059,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateRelationshipColumn"
+                        "replaceWith": "tablesDB.updateRelationshipColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -7698,7 +8174,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.listRows"
+                        "replaceWith": "tablesDB.listRows"
                     },
                     "auth": {
                         "Project": [],
@@ -7789,7 +8265,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createRow"
+                        "replaceWith": "tablesDB.createRow"
                     },
                     "methods": [
                         {
@@ -7823,7 +8299,7 @@
                             "demo": "databases\/create-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.createRow"
+                                "replaceWith": "tablesDB.createRow"
                             }
                         },
                         {
@@ -7854,7 +8330,7 @@
                             "demo": "databases\/create-documents.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.createRows"
+                                "replaceWith": "tablesDB.createRows"
                             }
                         }
                     ],
@@ -7970,7 +8446,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.upsertRows"
+                        "replaceWith": "tablesDB.upsertRows"
                     },
                     "methods": [
                         {
@@ -8001,7 +8477,7 @@
                             "demo": "databases\/upsert-documents.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.upsertRows"
+                                "replaceWith": "tablesDB.upsertRows"
                             }
                         }
                     ],
@@ -8100,7 +8576,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateRows"
+                        "replaceWith": "tablesDB.updateRows"
                     },
                     "auth": {
                         "Project": [],
@@ -8199,7 +8675,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.deleteRows"
+                        "replaceWith": "tablesDB.deleteRows"
                     },
                     "auth": {
                         "Project": [],
@@ -8296,7 +8772,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.getRow"
+                        "replaceWith": "tablesDB.getRow"
                     },
                     "auth": {
                         "Project": [],
@@ -8397,7 +8873,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.upsertRow"
+                        "replaceWith": "tablesDB.upsertRow"
                     },
                     "methods": [
                         {
@@ -8431,7 +8907,7 @@
                             "demo": "databases\/upsert-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDb.upsertRow"
+                                "replaceWith": "tablesDB.upsertRow"
                             }
                         }
                     ],
@@ -8548,7 +9024,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.updateRow"
+                        "replaceWith": "tablesDB.updateRow"
                     },
                     "auth": {
                         "Project": [],
@@ -8653,7 +9129,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.deleteRow"
+                        "replaceWith": "tablesDB.deleteRow"
                     },
                     "auth": {
                         "Project": [],
@@ -8744,7 +9220,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.decrementRowColumn"
+                        "replaceWith": "tablesDB.decrementRowColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -8865,7 +9341,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.incrementRowColumn"
+                        "replaceWith": "tablesDB.incrementRowColumn"
                     },
                     "auth": {
                         "Project": [],
@@ -8983,7 +9459,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.listIndexes"
+                        "replaceWith": "tablesDB.listIndexes"
                     },
                     "auth": {
                         "Project": [],
@@ -9070,7 +9546,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.createIndex"
+                        "replaceWith": "tablesDB.createIndex"
                     },
                     "auth": {
                         "Project": [],
@@ -9203,7 +9679,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.getIndex"
+                        "replaceWith": "tablesDB.getIndex"
                     },
                     "auth": {
                         "Project": [],
@@ -9279,7 +9755,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDb.deleteIndex"
+                        "replaceWith": "tablesDB.deleteIndex"
                     },
                     "auth": {
                         "Project": [],
@@ -14247,7 +14723,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createSms",
                     "group": "messages",
@@ -14265,6 +14741,76 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createSMS"
+                    },
+                    "methods": [
+                        {
+                            "name": "createSms",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "messageId",
+                                "content",
+                                "topics",
+                                "users",
+                                "targets",
+                                "draft",
+                                "scheduledAt"
+                            ],
+                            "required": [
+                                "messageId",
+                                "content"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/message"
+                                }
+                            ],
+                            "description": "Create a new SMS message.",
+                            "demo": "messaging\/create-sms.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createSMS"
+                            }
+                        },
+                        {
+                            "name": "createSMS",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "messageId",
+                                "content",
+                                "topics",
+                                "users",
+                                "targets",
+                                "draft",
+                                "scheduledAt"
+                            ],
+                            "required": [
+                                "messageId",
+                                "content"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/message"
+                                }
+                            ],
+                            "description": "Create a new SMS message.",
+                            "demo": "messaging\/create-s-m-s.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14357,7 +14903,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateSms",
                     "group": "messages",
@@ -14375,6 +14921,74 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateSMS"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateSms",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "messageId",
+                                "topics",
+                                "users",
+                                "targets",
+                                "content",
+                                "draft",
+                                "scheduledAt"
+                            ],
+                            "required": [
+                                "messageId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/message"
+                                }
+                            ],
+                            "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
+                            "demo": "messaging\/update-sms.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateSMS"
+                            }
+                        },
+                        {
+                            "name": "updateSMS",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "messageId",
+                                "topics",
+                                "users",
+                                "targets",
+                                "content",
+                                "draft",
+                                "scheduledAt"
+                            ],
+                            "required": [
+                                "messageId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/message"
+                                }
+                            ],
+                            "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
+                            "demo": "messaging\/update-s-m-s.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14816,7 +15430,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createApnsProvider",
                     "group": "providers",
@@ -14834,6 +15448,78 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createAPNSProvider"
+                    },
+                    "methods": [
+                        {
+                            "name": "createApnsProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "authKey",
+                                "authKeyId",
+                                "teamId",
+                                "bundleId",
+                                "sandbox",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId",
+                                "name"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Create a new Apple Push Notification service provider.",
+                            "demo": "messaging\/create-apns-provider.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createAPNSProvider"
+                            }
+                        },
+                        {
+                            "name": "createAPNSProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "authKey",
+                                "authKeyId",
+                                "teamId",
+                                "bundleId",
+                                "sandbox",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId",
+                                "name"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Create a new Apple Push Notification service provider.",
+                            "demo": "messaging\/create-a-p-n-s-provider.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14922,7 +15608,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateApnsProvider",
                     "group": "providers",
@@ -14940,6 +15626,76 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateAPNSProvider"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateApnsProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "enabled",
+                                "authKey",
+                                "authKeyId",
+                                "teamId",
+                                "bundleId",
+                                "sandbox"
+                            ],
+                            "required": [
+                                "providerId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Update a Apple Push Notification service provider by its unique ID.",
+                            "demo": "messaging\/update-apns-provider.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateAPNSProvider"
+                            }
+                        },
+                        {
+                            "name": "updateAPNSProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "enabled",
+                                "authKey",
+                                "authKeyId",
+                                "teamId",
+                                "bundleId",
+                                "sandbox"
+                            ],
+                            "required": [
+                                "providerId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Update a Apple Push Notification service provider by its unique ID.",
+                            "demo": "messaging\/update-a-p-n-s-provider.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15031,7 +15787,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createFcmProvider",
                     "group": "providers",
@@ -15049,6 +15805,70 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createFCMProvider"
+                    },
+                    "methods": [
+                        {
+                            "name": "createFcmProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "serviceAccountJSON",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId",
+                                "name"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Create a new Firebase Cloud Messaging provider.",
+                            "demo": "messaging\/create-fcm-provider.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createFCMProvider"
+                            }
+                        },
+                        {
+                            "name": "createFCMProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "serviceAccountJSON",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId",
+                                "name"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Create a new Firebase Cloud Messaging provider.",
+                            "demo": "messaging\/create-f-c-m-provider.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15117,7 +15937,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateFcmProvider",
                     "group": "providers",
@@ -15135,6 +15955,68 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateFCMProvider"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateFcmProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "enabled",
+                                "serviceAccountJSON"
+                            ],
+                            "required": [
+                                "providerId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Update a Firebase Cloud Messaging provider by its unique ID.",
+                            "demo": "messaging\/update-fcm-provider.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateFCMProvider"
+                            }
+                        },
+                        {
+                            "name": "updateFCMProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "enabled",
+                                "serviceAccountJSON"
+                            ],
+                            "required": [
+                                "providerId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Update a Firebase Cloud Messaging provider by its unique ID.",
+                            "demo": "messaging\/update-f-c-m-provider.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15851,7 +16733,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createSmtpProvider",
                     "group": "providers",
@@ -15869,6 +16751,92 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createSMTPProvider"
+                    },
+                    "methods": [
+                        {
+                            "name": "createSmtpProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "host",
+                                "port",
+                                "username",
+                                "password",
+                                "encryption",
+                                "autoTLS",
+                                "mailer",
+                                "fromName",
+                                "fromEmail",
+                                "replyToName",
+                                "replyToEmail",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId",
+                                "name",
+                                "host"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Create a new SMTP provider.",
+                            "demo": "messaging\/create-smtp-provider.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createSMTPProvider"
+                            }
+                        },
+                        {
+                            "name": "createSMTPProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "host",
+                                "port",
+                                "username",
+                                "password",
+                                "encryption",
+                                "autoTLS",
+                                "mailer",
+                                "fromName",
+                                "fromEmail",
+                                "replyToName",
+                                "replyToEmail",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId",
+                                "name",
+                                "host"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Create a new SMTP provider.",
+                            "demo": "messaging\/create-s-m-t-p-provider.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15995,7 +16963,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
                     "group": "providers",
@@ -16013,6 +16981,88 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateSMTPProvider"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateSmtpProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "host",
+                                "port",
+                                "username",
+                                "password",
+                                "encryption",
+                                "autoTLS",
+                                "mailer",
+                                "fromName",
+                                "fromEmail",
+                                "replyToName",
+                                "replyToEmail",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Update a SMTP provider by its unique ID.",
+                            "demo": "messaging\/update-smtp-provider.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateSMTPProvider"
+                            }
+                        },
+                        {
+                            "name": "updateSMTPProvider",
+                            "namespace": "messaging",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "providerId",
+                                "name",
+                                "host",
+                                "port",
+                                "username",
+                                "password",
+                                "encryption",
+                                "autoTLS",
+                                "mailer",
+                                "fromName",
+                                "fromEmail",
+                                "replyToName",
+                                "replyToEmail",
+                                "enabled"
+                            ],
+                            "required": [
+                                "providerId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/provider"
+                                }
+                            ],
+                            "description": "Update a SMTP provider by its unique ID.",
+                            "demo": "messaging\/update-s-m-t-p-provider.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21421,9 +22471,9 @@
         "\/tablesdb": {
             "get": {
                 "summary": "List databases",
-                "operationId": "tablesDbList",
+                "operationId": "tablesDBList",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.",
                 "responses": {
@@ -21445,7 +22495,7 @@
                     "weight": 375,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/list.md",
+                    "demo": "tables-d-b\/list.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21495,9 +22545,9 @@
             },
             "post": {
                 "summary": "Create database",
-                "operationId": "tablesDbCreate",
+                "operationId": "tablesDBCreate",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create a new Database.\n",
                 "responses": {
@@ -21519,7 +22569,7 @@
                     "weight": 371,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create.md",
+                    "demo": "tables-d-b\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21575,9 +22625,9 @@
         "\/tablesdb\/{databaseId}": {
             "get": {
                 "summary": "Get database",
-                "operationId": "tablesDbGet",
+                "operationId": "tablesDBGet",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata.",
                 "responses": {
@@ -21599,7 +22649,7 @@
                     "weight": 372,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/get.md",
+                    "demo": "tables-d-b\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21635,9 +22685,9 @@
             },
             "put": {
                 "summary": "Update database",
-                "operationId": "tablesDbUpdate",
+                "operationId": "tablesDBUpdate",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a database by its unique ID.",
                 "responses": {
@@ -21659,7 +22709,7 @@
                     "weight": 373,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update.md",
+                    "demo": "tables-d-b\/update.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21719,9 +22769,9 @@
             },
             "delete": {
                 "summary": "Delete database",
-                "operationId": "tablesDbDelete",
+                "operationId": "tablesDBDelete",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database.",
                 "responses": {
@@ -21736,7 +22786,7 @@
                     "weight": 374,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/delete.md",
+                    "demo": "tables-d-b\/delete.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21774,9 +22824,9 @@
         "\/tablesdb\/{databaseId}\/tables": {
             "get": {
                 "summary": "List tables",
-                "operationId": "tablesDbListTables",
+                "operationId": "tablesDBListTables",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a list of all tables that belong to the provided databaseId. You can use the search parameter to filter your results.",
                 "responses": {
@@ -21798,7 +22848,7 @@
                     "weight": 382,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/list-tables.md",
+                    "demo": "tables-d-b\/list-tables.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-tables.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21858,11 +22908,11 @@
             },
             "post": {
                 "summary": "Create table",
-                "operationId": "tablesDbCreateTable",
+                "operationId": "tablesDBCreateTable",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
-                "description": "Create a new Table. Before using this route, you should create a new database resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "description": "Create a new Table. Before using this route, you should create a new database resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Table",
@@ -21882,7 +22932,7 @@
                     "weight": 378,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-table.md",
+                    "demo": "tables-d-b\/create-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -21963,9 +23013,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}": {
             "get": {
                 "summary": "Get table",
-                "operationId": "tablesDbGetTable",
+                "operationId": "tablesDBGetTable",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a table by its unique ID. This endpoint response returns a JSON object with the table metadata.",
                 "responses": {
@@ -21987,7 +23037,7 @@
                     "weight": 379,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/get-table.md",
+                    "demo": "tables-d-b\/get-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22033,9 +23083,9 @@
             },
             "put": {
                 "summary": "Update table",
-                "operationId": "tablesDbUpdateTable",
+                "operationId": "tablesDBUpdateTable",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a table by its unique ID.",
                 "responses": {
@@ -22057,7 +23107,7 @@
                     "weight": 380,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-table.md",
+                    "demo": "tables-d-b\/update-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22140,9 +23190,9 @@
             },
             "delete": {
                 "summary": "Delete table",
-                "operationId": "tablesDbDeleteTable",
+                "operationId": "tablesDBDeleteTable",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Delete a table by its unique ID. Only users with write permissions have access to delete this resource.",
                 "responses": {
@@ -22157,7 +23207,7 @@
                     "weight": 381,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/delete-table.md",
+                    "demo": "tables-d-b\/delete-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22205,9 +23255,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns": {
             "get": {
                 "summary": "List columns",
-                "operationId": "tablesDbListColumns",
+                "operationId": "tablesDBListColumns",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "List columns in the table.",
                 "responses": {
@@ -22229,7 +23279,7 @@
                     "weight": 387,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/list-columns.md",
+                    "demo": "tables-d-b\/list-columns.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-columns.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22290,9 +23340,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/boolean": {
             "post": {
                 "summary": "Create boolean column",
-                "operationId": "tablesDbCreateBooleanColumn",
+                "operationId": "tablesDBCreateBooleanColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create a boolean column.\n",
                 "responses": {
@@ -22314,7 +23364,7 @@
                     "weight": 388,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-boolean-column.md",
+                    "demo": "tables-d-b\/create-boolean-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22348,7 +23398,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -22397,9 +23447,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/boolean\/{key}": {
             "patch": {
                 "summary": "Update boolean column",
-                "operationId": "tablesDbUpdateBooleanColumn",
+                "operationId": "tablesDBUpdateBooleanColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a boolean column. Changing the `default` value will not update already existing rows.",
                 "responses": {
@@ -22421,7 +23471,7 @@
                     "weight": 389,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-boolean-column.md",
+                    "demo": "tables-d-b\/update-boolean-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22455,7 +23505,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -22509,9 +23559,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/datetime": {
             "post": {
                 "summary": "Create datetime column",
-                "operationId": "tablesDbCreateDatetimeColumn",
+                "operationId": "tablesDBCreateDatetimeColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create a date time column according to the ISO 8601 standard.",
                 "responses": {
@@ -22533,7 +23583,7 @@
                     "weight": 390,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-datetime-column.md",
+                    "demo": "tables-d-b\/create-datetime-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22616,9 +23666,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/datetime\/{key}": {
             "patch": {
                 "summary": "Update dateTime column",
-                "operationId": "tablesDbUpdateDatetimeColumn",
+                "operationId": "tablesDBUpdateDatetimeColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a date time column. Changing the `default` value will not update already existing rows.",
                 "responses": {
@@ -22640,7 +23690,7 @@
                     "weight": 391,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-datetime-column.md",
+                    "demo": "tables-d-b\/update-datetime-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22728,9 +23778,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/email": {
             "post": {
                 "summary": "Create email column",
-                "operationId": "tablesDbCreateEmailColumn",
+                "operationId": "tablesDBCreateEmailColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create an email column.\n",
                 "responses": {
@@ -22752,7 +23802,7 @@
                     "weight": 392,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-email-column.md",
+                    "demo": "tables-d-b\/create-email-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22835,9 +23885,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/email\/{key}": {
             "patch": {
                 "summary": "Update email column",
-                "operationId": "tablesDbUpdateEmailColumn",
+                "operationId": "tablesDBUpdateEmailColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update an email column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -22859,7 +23909,7 @@
                     "weight": 393,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-email-column.md",
+                    "demo": "tables-d-b\/update-email-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22947,9 +23997,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/enum": {
             "post": {
                 "summary": "Create enum column",
-                "operationId": "tablesDbCreateEnumColumn",
+                "operationId": "tablesDBCreateEnumColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create an enumeration column. The `elements` param acts as a white-list of accepted values for this column.",
                 "responses": {
@@ -22971,7 +24021,7 @@
                     "weight": 394,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-enum-column.md",
+                    "demo": "tables-d-b\/create-enum-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23063,9 +24113,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/enum\/{key}": {
             "patch": {
                 "summary": "Update enum column",
-                "operationId": "tablesDbUpdateEnumColumn",
+                "operationId": "tablesDBUpdateEnumColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update an enum column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -23087,7 +24137,7 @@
                     "weight": 395,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-enum-column.md",
+                    "demo": "tables-d-b\/update-enum-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23184,9 +24234,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/float": {
             "post": {
                 "summary": "Create float column",
-                "operationId": "tablesDbCreateFloatColumn",
+                "operationId": "tablesDBCreateFloatColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create a float column. Optionally, minimum and maximum values can be provided.\n",
                 "responses": {
@@ -23208,7 +24258,7 @@
                     "weight": 396,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-float-column.md",
+                    "demo": "tables-d-b\/create-float-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23301,9 +24351,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/float\/{key}": {
             "patch": {
                 "summary": "Update float column",
-                "operationId": "tablesDbUpdateFloatColumn",
+                "operationId": "tablesDBUpdateFloatColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a float column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -23325,7 +24375,7 @@
                     "weight": 397,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-float-column.md",
+                    "demo": "tables-d-b\/update-float-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23423,9 +24473,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/integer": {
             "post": {
                 "summary": "Create integer column",
-                "operationId": "tablesDbCreateIntegerColumn",
+                "operationId": "tablesDBCreateIntegerColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create an integer column. Optionally, minimum and maximum values can be provided.\n",
                 "responses": {
@@ -23447,7 +24497,7 @@
                     "weight": 398,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-integer-column.md",
+                    "demo": "tables-d-b\/create-integer-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23540,9 +24590,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/integer\/{key}": {
             "patch": {
                 "summary": "Update integer column",
-                "operationId": "tablesDbUpdateIntegerColumn",
+                "operationId": "tablesDBUpdateIntegerColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update an integer column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -23564,7 +24614,7 @@
                     "weight": 399,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-integer-column.md",
+                    "demo": "tables-d-b\/update-integer-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23662,9 +24712,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/ip": {
             "post": {
                 "summary": "Create IP address column",
-                "operationId": "tablesDbCreateIpColumn",
+                "operationId": "tablesDBCreateIpColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create IP address column.\n",
                 "responses": {
@@ -23686,7 +24736,7 @@
                     "weight": 400,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-ip-column.md",
+                    "demo": "tables-d-b\/create-ip-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23769,9 +24819,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/ip\/{key}": {
             "patch": {
                 "summary": "Update IP address column",
-                "operationId": "tablesDbUpdateIpColumn",
+                "operationId": "tablesDBUpdateIpColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update an ip column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -23793,7 +24843,7 @@
                     "weight": 401,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-ip-column.md",
+                    "demo": "tables-d-b\/update-ip-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23881,9 +24931,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/relationship": {
             "post": {
                 "summary": "Create relationship column",
-                "operationId": "tablesDbCreateRelationshipColumn",
+                "operationId": "tablesDBCreateRelationshipColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create relationship column. [Learn more about relationship columns](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-columns).\n",
                 "responses": {
@@ -23905,7 +24955,7 @@
                     "weight": 402,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-relationship-column.md",
+                    "demo": "tables-d-b\/create-relationship-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24013,9 +25063,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/string": {
             "post": {
                 "summary": "Create string column",
-                "operationId": "tablesDbCreateStringColumn",
+                "operationId": "tablesDBCreateStringColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create a string column.\n",
                 "responses": {
@@ -24037,7 +25087,7 @@
                     "weight": 404,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-string-column.md",
+                    "demo": "tables-d-b\/create-string-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24071,7 +25121,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -24131,9 +25181,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/string\/{key}": {
             "patch": {
                 "summary": "Update string column",
-                "operationId": "tablesDbUpdateStringColumn",
+                "operationId": "tablesDBUpdateStringColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a string column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -24155,7 +25205,7 @@
                     "weight": 405,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-string-column.md",
+                    "demo": "tables-d-b\/update-string-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24189,7 +25239,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -24248,9 +25298,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/url": {
             "post": {
                 "summary": "Create URL column",
-                "operationId": "tablesDbCreateUrlColumn",
+                "operationId": "tablesDBCreateUrlColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Create a URL column.\n",
                 "responses": {
@@ -24272,7 +25322,7 @@
                     "weight": 406,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-url-column.md",
+                    "demo": "tables-d-b\/create-url-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24355,9 +25405,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/url\/{key}": {
             "patch": {
                 "summary": "Update URL column",
-                "operationId": "tablesDbUpdateUrlColumn",
+                "operationId": "tablesDBUpdateUrlColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update an url column. Changing the `default` value will not update already existing rows.\n",
                 "responses": {
@@ -24379,7 +25429,7 @@
                     "weight": 407,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-url-column.md",
+                    "demo": "tables-d-b\/update-url-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24467,9 +25517,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/{key}": {
             "get": {
                 "summary": "Get column",
-                "operationId": "tablesDbGetColumn",
+                "operationId": "tablesDBGetColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get column by ID.",
                 "responses": {
@@ -24522,7 +25572,7 @@
                     "weight": 385,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/get-column.md",
+                    "demo": "tables-d-b\/get-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24577,9 +25627,9 @@
             },
             "delete": {
                 "summary": "Delete column",
-                "operationId": "tablesDbDeleteColumn",
+                "operationId": "tablesDBDeleteColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Deletes a column.",
                 "responses": {
@@ -24594,7 +25644,7 @@
                     "weight": 386,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/delete-column.md",
+                    "demo": "tables-d-b\/delete-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24651,9 +25701,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/{key}\/relationship": {
             "patch": {
                 "summary": "Update relationship column",
-                "operationId": "tablesDbUpdateRelationshipColumn",
+                "operationId": "tablesDBUpdateRelationshipColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update relationship column. [Learn more about relationship columns](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-columns).\n",
                 "responses": {
@@ -24675,7 +25725,7 @@
                     "weight": 403,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-relationship-column.md",
+                    "demo": "tables-d-b\/update-relationship-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24760,9 +25810,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/indexes": {
             "get": {
                 "summary": "List indexes",
-                "operationId": "tablesDbListIndexes",
+                "operationId": "tablesDBListIndexes",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "List indexes on the table.",
                 "responses": {
@@ -24784,7 +25834,7 @@
                     "weight": 411,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/list-indexes.md",
+                    "demo": "tables-d-b\/list-indexes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-indexes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24818,7 +25868,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -24843,9 +25893,9 @@
             },
             "post": {
                 "summary": "Create index",
-                "operationId": "tablesDbCreateIndex",
+                "operationId": "tablesDBCreateIndex",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Creates an index on the columns listed. Your index should include all the columns you will query in a single request.\nType can be `key`, `fulltext`, or `unique`.",
                 "responses": {
@@ -24867,7 +25917,7 @@
                     "weight": 408,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-index.md",
+                    "demo": "tables-d-b\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24901,7 +25951,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -24972,9 +26022,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/indexes\/{key}": {
             "get": {
                 "summary": "Get index",
-                "operationId": "tablesDbGetIndex",
+                "operationId": "tablesDBGetIndex",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get index by ID.",
                 "responses": {
@@ -24996,7 +26046,7 @@
                     "weight": 409,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/get-index.md",
+                    "demo": "tables-d-b\/get-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25030,7 +26080,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -25051,9 +26101,9 @@
             },
             "delete": {
                 "summary": "Delete index",
-                "operationId": "tablesDbDeleteIndex",
+                "operationId": "tablesDBDeleteIndex",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Delete an index.",
                 "responses": {
@@ -25068,7 +26118,7 @@
                     "weight": 410,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/delete-index.md",
+                    "demo": "tables-d-b\/delete-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25102,7 +26152,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -25125,9 +26175,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows": {
             "get": {
                 "summary": "List rows",
-                "operationId": "tablesDbListRows",
+                "operationId": "tablesDBListRows",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
                 "responses": {
@@ -25149,7 +26199,7 @@
                     "weight": 420,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/list-rows.md",
+                    "demo": "tables-d-b\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25187,7 +26237,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdbdb#tablesdbCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -25212,11 +26262,11 @@
             },
             "post": {
                 "summary": "Create row",
-                "operationId": "tablesDbCreateRow",
+                "operationId": "tablesDBCreateRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
-                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -25236,7 +26286,7 @@
                     "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/create-row.md",
+                    "demo": "tables-d-b\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -25251,7 +26301,7 @@
                     "methods": [
                         {
                             "name": "createRow",
-                            "namespace": "tablesDb",
+                            "namespace": "tablesDB",
                             "desc": "Create row",
                             "auth": {
                                 "Project": [],
@@ -25276,12 +26326,12 @@
                                     "model": "#\/components\/schemas\/row"
                                 }
                             ],
-                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/create-row.md"
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "demo": "tables-d-b\/create-row.md"
                         },
                         {
                             "name": "createRows",
-                            "namespace": "tablesDb",
+                            "namespace": "tablesDB",
                             "desc": "Create rows",
                             "auth": {
                                 "Project": [],
@@ -25303,8 +26353,8 @@
                                     "model": "#\/components\/schemas\/rowList"
                                 }
                             ],
-                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/create-rows.md"
+                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "demo": "tables-d-b\/create-rows.md"
                         }
                     ],
                     "auth": {
@@ -25333,7 +26383,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate). Make sure to define columns before creating rows.",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate). Make sure to define columns before creating rows.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -25382,11 +26432,11 @@
             },
             "put": {
                 "summary": "Create or update rows",
-                "operationId": "tablesDbUpsertRows",
+                "operationId": "tablesDBUpsertRows",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
-                "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.\n",
+                "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Rows List",
@@ -25406,7 +26456,7 @@
                     "weight": 417,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/upsert-rows.md",
+                    "demo": "tables-d-b\/upsert-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -25420,7 +26470,7 @@
                     "methods": [
                         {
                             "name": "upsertRows",
-                            "namespace": "tablesDb",
+                            "namespace": "tablesDB",
                             "desc": "",
                             "auth": {
                                 "Project": [],
@@ -25442,8 +26492,8 @@
                                     "model": "#\/components\/schemas\/rowList"
                                 }
                             ],
-                            "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.\n",
-                            "demo": "tables-db\/upsert-rows.md"
+                            "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.\n",
+                            "demo": "tables-d-b\/upsert-rows.md"
                         }
                     ],
                     "auth": {
@@ -25504,9 +26554,9 @@
             },
             "patch": {
                 "summary": "Update rows",
-                "operationId": "tablesDbUpdateRows",
+                "operationId": "tablesDBUpdateRows",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update all rows that match your queries, if no queries are submitted then all rows are updated. You can pass only specific fields to be updated.",
                 "responses": {
@@ -25528,7 +26578,7 @@
                     "weight": 415,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-rows.md",
+                    "demo": "tables-d-b\/update-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -25599,9 +26649,9 @@
             },
             "delete": {
                 "summary": "Delete rows",
-                "operationId": "tablesDbDeleteRows",
+                "operationId": "tablesDBDeleteRows",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Bulk delete rows using queries, if no queries are passed then all rows are deleted.",
                 "responses": {
@@ -25623,7 +26673,7 @@
                     "weight": 419,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/delete-rows.md",
+                    "demo": "tables-d-b\/delete-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-rows.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -25658,7 +26708,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -25691,9 +26741,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}": {
             "get": {
                 "summary": "Get row",
-                "operationId": "tablesDbGetRow",
+                "operationId": "tablesDBGetRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
                 "responses": {
@@ -25715,7 +26765,7 @@
                     "weight": 413,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/get-row.md",
+                    "demo": "tables-d-b\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25753,7 +26803,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -25788,11 +26838,11 @@
             },
             "put": {
                 "summary": "Create or update a row",
-                "operationId": "tablesDbUpsertRow",
+                "operationId": "tablesDBUpsertRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
-                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -25812,7 +26862,7 @@
                     "weight": 416,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/upsert-row.md",
+                    "demo": "tables-d-b\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -25827,7 +26877,7 @@
                     "methods": [
                         {
                             "name": "upsertRow",
-                            "namespace": "tablesDb",
+                            "namespace": "tablesDB",
                             "desc": "",
                             "auth": {
                                 "Project": [],
@@ -25851,8 +26901,8 @@
                                     "model": "#\/components\/schemas\/row"
                                 }
                             ],
-                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/upsert-row.md"
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "demo": "tables-d-b\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -25927,9 +26977,9 @@
             },
             "patch": {
                 "summary": "Update row",
-                "operationId": "tablesDbUpdateRow",
+                "operationId": "tablesDBUpdateRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
                 "responses": {
@@ -25951,7 +27001,7 @@
                     "weight": 414,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/update-row.md",
+                    "demo": "tables-d-b\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -26035,9 +27085,9 @@
             },
             "delete": {
                 "summary": "Delete row",
-                "operationId": "tablesDbDeleteRow",
+                "operationId": "tablesDBDeleteRow",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Delete a row by its unique ID.",
                 "responses": {
@@ -26052,7 +27102,7 @@
                     "weight": 418,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/delete-row.md",
+                    "demo": "tables-d-b\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -26090,7 +27140,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -26114,9 +27164,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/decrement": {
             "patch": {
                 "summary": "Decrement row column",
-                "operationId": "tablesDbDecrementRowColumn",
+                "operationId": "tablesDBDecrementRowColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Decrement a specific column of a row by a given value.",
                 "responses": {
@@ -26138,7 +27188,7 @@
                     "weight": 423,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/decrement-row-column.md",
+                    "demo": "tables-d-b\/decrement-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -26231,9 +27281,9 @@
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/increment": {
             "patch": {
                 "summary": "Increment row column",
-                "operationId": "tablesDbIncrementRowColumn",
+                "operationId": "tablesDBIncrementRowColumn",
                 "tags": [
-                    "tablesDb"
+                    "tablesDB"
                 ],
                 "description": "Increment a specific column of a row by a given value.",
                 "responses": {
@@ -26255,7 +27305,7 @@
                     "weight": 422,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-db\/increment-row-column.md",
+                    "demo": "tables-d-b\/increment-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -29274,7 +30324,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfa",
                     "group": "users",
@@ -29291,6 +30341,66 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFA"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfa",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "mfa"
+                            ],
+                            "required": [
+                                "userId",
+                                "mfa"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/user"
+                                }
+                            ],
+                            "description": "Enable or disable MFA on a user account.",
+                            "demo": "users\/update-mfa.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFA"
+                            }
+                        },
+                        {
+                            "name": "updateMFA",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "mfa"
+                            ],
+                            "required": [
+                                "userId",
+                                "mfa"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/user"
+                                }
+                            ],
+                            "description": "Enable or disable MFA on a user account.",
+                            "demo": "users\/update-m-f-a.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -29348,7 +30458,7 @@
                         "description": "No content"
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
@@ -29365,6 +30475,64 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "deleteMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "deleteMfaAuthenticator",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "type"
+                            ],
+                            "required": [
+                                "userId",
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator app.",
+                            "demo": "users\/delete-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "deleteMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "deleteMFAAuthenticator",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "type"
+                            ],
+                            "required": [
+                                "userId",
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator app.",
+                            "demo": "users\/delete-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -29425,7 +30593,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
@@ -29442,6 +30610,62 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "listMFAFactors"
+                    },
+                    "methods": [
+                        {
+                            "name": "listMfaFactors",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "users\/list-mfa-factors.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "listMFAFactors"
+                            }
+                        },
+                        {
+                            "name": "listMFAFactors",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "users\/list-m-f-a-factors.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -29487,7 +30711,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
@@ -29504,6 +30728,62 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "getMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "getMfaRecoveryCodes",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow by User ID. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
+                            "demo": "users\/get-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "getMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "getMFARecoveryCodes",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow by User ID. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
+                            "demo": "users\/get-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -29547,7 +30827,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
@@ -29564,6 +30844,62 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "updateMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaRecoveryCodes",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow by User ID. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
+                            "demo": "users\/update-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "updateMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "updateMFARecoveryCodes",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow by User ID. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
+                            "demo": "users\/update-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -29607,7 +30943,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
@@ -29624,6 +30960,62 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "createMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaRecoveryCodes",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes used as backup for MFA flow for User ID. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method by client SDK.",
+                            "demo": "users\/create-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "createMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "createMFARecoveryCodes",
+                            "namespace": "users",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "userId"
+                            ],
+                            "required": [
+                                "userId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes used as backup for MFA flow for User ID. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method by client SDK.",
+                            "demo": "users\/create-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -31145,7 +32537,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of rows rows that matched your query.",
+                        "description": "Total number of rows that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31173,7 +32565,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of documents rows that matched your query.",
+                        "description": "Total number of documents that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31201,7 +32593,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of tables rows that matched your query.",
+                        "description": "Total number of tables that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31229,7 +32621,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of collections rows that matched your query.",
+                        "description": "Total number of collections that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31257,7 +32649,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of databases rows that matched your query.",
+                        "description": "Total number of databases that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31285,7 +32677,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of indexes rows that matched your query.",
+                        "description": "Total number of indexes that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31313,7 +32705,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of indexes rows that matched your query.",
+                        "description": "Total number of indexes that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31341,7 +32733,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of users rows that matched your query.",
+                        "description": "Total number of users that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31369,7 +32761,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of sessions rows that matched your query.",
+                        "description": "Total number of sessions that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31397,7 +32789,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of identities rows that matched your query.",
+                        "description": "Total number of identities that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31425,7 +32817,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of logs rows that matched your query.",
+                        "description": "Total number of logs that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31453,7 +32845,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of files rows that matched your query.",
+                        "description": "Total number of files that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31481,7 +32873,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of buckets rows that matched your query.",
+                        "description": "Total number of buckets that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31509,7 +32901,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of tokens rows that matched your query.",
+                        "description": "Total number of tokens that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31537,7 +32929,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of teams rows that matched your query.",
+                        "description": "Total number of teams that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31565,7 +32957,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of memberships rows that matched your query.",
+                        "description": "Total number of memberships that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31593,7 +32985,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of sites rows that matched your query.",
+                        "description": "Total number of sites that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31621,7 +33013,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of functions rows that matched your query.",
+                        "description": "Total number of functions that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31649,7 +33041,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of frameworks rows that matched your query.",
+                        "description": "Total number of frameworks that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31677,7 +33069,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of runtimes rows that matched your query.",
+                        "description": "Total number of runtimes that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31705,7 +33097,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of deployments rows that matched your query.",
+                        "description": "Total number of deployments that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31733,7 +33125,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of executions rows that matched your query.",
+                        "description": "Total number of executions that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31761,7 +33153,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of countries rows that matched your query.",
+                        "description": "Total number of countries that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31789,7 +33181,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of continents rows that matched your query.",
+                        "description": "Total number of continents that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31817,7 +33209,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of languages rows that matched your query.",
+                        "description": "Total number of languages that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31845,7 +33237,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of currencies rows that matched your query.",
+                        "description": "Total number of currencies that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31873,7 +33265,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of phones rows that matched your query.",
+                        "description": "Total number of phones that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31901,7 +33293,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of variables rows that matched your query.",
+                        "description": "Total number of variables that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31929,7 +33321,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of localeCodes rows that matched your query.",
+                        "description": "Total number of localeCodes that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31957,7 +33349,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of providers rows that matched your query.",
+                        "description": "Total number of providers that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -31985,7 +33377,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of messages rows that matched your query.",
+                        "description": "Total number of messages that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -32013,7 +33405,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of topics rows that matched your query.",
+                        "description": "Total number of topics that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -32041,7 +33433,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of subscribers rows that matched your query.",
+                        "description": "Total number of subscribers that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -32069,7 +33461,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of targets rows that matched your query.",
+                        "description": "Total number of targets that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
@@ -32097,7 +33489,7 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of specifications rows that matched your query.",
+                        "description": "Total number of specifications that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },

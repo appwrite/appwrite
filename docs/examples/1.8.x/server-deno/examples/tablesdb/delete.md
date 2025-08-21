@@ -5,8 +5,8 @@ const client = new Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const tablesDb = new TablesDb(client);
+const tablesDB = new TablesDb(client);
 
-const response = await tablesDb.delete({
+const response = await tablesDB.delete({
     databaseId: '<DATABASE_ID>'
 });

@@ -1,5 +1,5 @@
 mutation {
-    tablesDbUpdateRows(
+    tablesDBUpdateRows(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         data: "{}",
