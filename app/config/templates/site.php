@@ -1006,7 +1006,7 @@ return [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './',
                 'installCommand' => 'pnpm install',
-                'buildCommand' => 'npm run build',
+                'buildCommand' => 'pnpm build',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -1015,7 +1015,7 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => [
             [
-                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_PROJECT_ID',
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
                 'description' => 'Endpoint of Appwrite server',
                 'value' => '{apiEndpoint}',
                 'placeholder' => '{apiEndpoint}',
@@ -1023,7 +1023,7 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_PROJECT_ID',
                 'description' => 'Your Appwrite project ID',
                 'value' => '{projectId}',
                 'placeholder' => '{projectId}',
