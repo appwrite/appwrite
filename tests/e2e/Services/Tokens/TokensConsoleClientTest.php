@@ -72,7 +72,7 @@ class TokensConsoleClientTest extends Scope
         $this->assertEquals('files', $token['body']['resourceType']);
         $this->assertNotEmpty($token['body']['$id']);
         $this->assertNotEmpty($token['body']['secret']);
-        
+
         // Verify the generated token JWT contains correct resource information
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
         try {
@@ -82,11 +82,11 @@ class TokensConsoleClientTest extends Scope
             $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
             $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');
             $this->assertArrayHasKey('resourceInternalId', $payload, 'JWT payload should contain resourceInternalId');
-            
+
             $this->assertEquals($token['body']['$id'], $payload['tokenId'], 'JWT tokenId should match token ID');
-            $this->assertEquals($fileId, $payload['resourceId'], 'JWT resourceId should match file ID');
+            $this->assertEquals($bucketId . ':' . $fileId, $payload['resourceId'], 'JWT resourceId should match bucketId:fileId format');
             $this->assertEquals('files', $payload['resourceType'], 'JWT resourceType should be files');
-            
+
             // For newly created tokens without expiry, should not have exp field
             $this->assertArrayNotHasKey('exp', $payload, 'JWT payload should not contain exp field for tokens without expiry');
         } catch (JWTException $e) {
@@ -121,7 +121,7 @@ class TokensConsoleClientTest extends Scope
 
         // Verify JWT contains correct expiration using native JWT decode
         $this->assertNotEmpty($token['body']['secret']);
-        
+
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
         try {
             $payload = $jwt->decode($token['body']['secret']);
@@ -175,7 +175,7 @@ class TokensConsoleClientTest extends Scope
         $this->assertArrayHasKey('tokens', $res['body']);
         $this->assertIsArray($res['body']['tokens']);
         $this->assertGreaterThan(0, count($res['body']['tokens']), 'Should have at least one token');
-        
+
         // Verify each token in the list
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
         foreach ($res['body']['tokens'] as $token) {
@@ -183,10 +183,10 @@ class TokensConsoleClientTest extends Scope
             $this->assertArrayHasKey('secret', $token, 'Token should have a secret');
             $this->assertArrayHasKey('resourceType', $token, 'Token should have resourceType');
             $this->assertArrayHasKey('resourceId', $token, 'Token should have resourceId');
-            
+
             $this->assertEquals('files', $token['resourceType'], 'Token resourceType should be files');
-            $this->assertEquals($data['fileId'], $token['resourceId'], 'Token resourceId should match file ID');
-            
+            $this->assertEquals($data['bucketId'] . ':' . $data['fileId'], $token['resourceId'], 'Token resourceId should match bucketId:fileId format');
+
             // Verify the JWT token is valid and contains correct information
             try {
                 $payload = $jwt->decode($token['secret']);
@@ -195,15 +195,15 @@ class TokensConsoleClientTest extends Scope
                 $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
                 $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');
                 $this->assertArrayHasKey('resourceInternalId', $payload, 'JWT payload should contain resourceInternalId');
-                
+
                 $this->assertEquals($token['$id'], $payload['tokenId'], 'JWT tokenId should match token ID');
-                $this->assertEquals($data['fileId'], $payload['resourceId'], 'JWT resourceId should match file ID');
+                $this->assertEquals($data['bucketId'] . ':' . $data['fileId'], $payload['resourceId'], 'JWT resourceId should match bucketId:fileId format');
                 $this->assertEquals('files', $payload['resourceType'], 'JWT resourceType should be files');
             } catch (JWTException $e) {
                 $this->fail('Failed to decode JWT for token ' . $token['$id'] . ': ' . $e->getMessage());
             }
         }
-        
+
         return $data;
     }
 
