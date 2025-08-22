@@ -62,7 +62,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 };
 
 /**
- * This single-event based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
+ * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
  *
  * Accounts can be created in many ways beyond `createAccount`
  * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
