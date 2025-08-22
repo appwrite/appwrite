@@ -38,11 +38,18 @@ class Execution extends Model
                 'example' => [Role::any()->toString()],
                 'array' => true,
             ])
+            // TODO: Sites listLogs will not have this, and will need siteId instead
             ->addRule('functionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function ID.',
                 'default' => '',
                 'example' => '5e5ea6g16897e',
+            ])
+            ->addRule('deploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function\'s deployment ID used to create the execution.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
