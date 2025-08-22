@@ -293,7 +293,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 App::post('/v1/account')
     ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'sessions.write')
     ->label('auth.type', 'email-password')
     ->label('audits.event', 'user.create')
@@ -324,8 +323,7 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks, Event $queueForEvents) {
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -434,8 +432,6 @@ App::post('/v1/account')
         Authorization::unsetRole(Role::guests()->toString());
         Authorization::setRole(Role::user($user->getId())->toString());
         Authorization::setRole(Role::users()->toString());
-
-        $queueForEvents->setParam('userId', $user->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

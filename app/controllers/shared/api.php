@@ -29,6 +29,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -58,6 +59,44 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         }
     }
     return $label;
+};
+
+/**
+ * This single-event based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
+ *
+ * Accounts can be created in many ways beyond `createAccount`
+ * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
+ */
+$eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+    // Only trigger events for user creation with the database listener.
+    if ($document->getCollection() !== 'users') {
+        return;
+    }
+
+    $queueForEvents
+        ->setEvent('users.[userId].create')
+        ->setParam('userId', $document->getId())
+        ->setPayload($response->output($document, Response::MODEL_USER));
+
+    // Trigger functions, webhooks, and realtime events
+    $queueForFunctions
+        ->from($queueForEvents)
+        ->trigger();
+
+
+    /** Trigger webhooks events only if a project has them enabled */
+    if (!empty($project->getAttribute('webhooks'))) {
+        $queueForWebhooks
+            ->from($queueForEvents)
+            ->trigger();
+    }
+
+    /** Trigger realtime events only for non console events */
+    if ($queueForEvents->getProject()->getId() !== 'console') {
+        $queueForRealtime
+            ->from($queueForEvents)
+            ->trigger();
+    }
 };
 
 $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
@@ -376,6 +415,7 @@ App::init()
     ->inject('project')
     ->inject('user')
     ->inject('publisher')
+    ->inject('publisherFunctions')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -391,7 +431,7 @@ App::init()
     ->inject('plan')
     ->inject('devKey')
     ->inject('telemetry')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, BrokerPool $publisherFunctions, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -500,12 +540,28 @@ App::init()
         $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
 
+        // Clone the queues, to prevent events triggered by the database listener
+        // from overwriting the events that are supposed to be triggered in the shutdown hook.
+        $queueForEventsClone = new Event($publisher);
+        $queueForFunctions = new Func($publisherFunctions);
+        $queueForWebhooks = new Webhook($publisher);
+        $queueForRealtime = new Realtime();
+
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage));
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $project,
+                $document,
+                $response,
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
+            ));
 
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
