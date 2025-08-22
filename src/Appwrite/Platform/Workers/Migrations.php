@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Realtime;
-use Appwrite\Migration\CSV as DestinationCSV;
+use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;

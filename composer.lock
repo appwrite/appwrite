@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0da713ee5642eba1d30bc51c1a04a723",
+    "content-hash": "954529a36566209d6687df9f41a0f2e6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4109,16 +4109,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.0.0",
+            "version": "dev-feat-csv-export",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "0e4499d9dd2c90c2be188cc5fb7a32d9a892b569"
+                "reference": "8435f1db0db4854ca27cb4c9cf275b905fcb3b41"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0e4499d9dd2c90c2be188cc5fb7a32d9a892b569",
-                "reference": "0e4499d9dd2c90c2be188cc5fb7a32d9a892b569",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8435f1db0db4854ca27cb4c9cf275b905fcb3b41",
+                "reference": "8435f1db0db4854ca27cb4c9cf275b905fcb3b41",
                 "shasum": ""
             },
             "require": {
@@ -4159,9 +4159,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.0.0"
+                "source": "https://github.com/utopia-php/migration/tree/feat-csv-export"
             },
-            "time": "2025-08-13T09:15:53+00:00"
+            "time": "2025-08-21T12:56:18+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -8425,9 +8425,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-csv-export",
+            "alias": "1.0.0",
+            "alias_normalized": "1.0.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
