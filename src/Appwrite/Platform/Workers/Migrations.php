@@ -18,6 +18,7 @@ use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
+use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
@@ -113,9 +114,17 @@ class Migrations extends Action
     protected function processSource(Document $migration): Source
     {
         $source = $migration->getAttribute('source');
+        $destination = $migration->getAttribute('destination');
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
+        $dataSource = Appwrite::SOURCE_API;
+        $database = null;
+
+        if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
+            $dataSource = Appwrite::SOURCE_DATABASE;
+            $database = $this->dbForProject;
+        }
 
         $migrationSource = match ($source) {
             Firebase::getName() => new Firebase(
@@ -143,6 +152,8 @@ class Migrations extends Action
                 $credentials['projectId'],
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
+                $dataSource,
+                $database
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -251,7 +262,9 @@ class Migrations extends Action
                 'functions.write',
                 'databases.read',
                 'collections.read',
+                'collections.write',
                 'tables.read',
+                'tables.write',
                 'documents.read',
                 'documents.write',
                 'rows.read',
