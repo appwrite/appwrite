@@ -1887,6 +1887,7 @@ class SitesCustomServerTest extends Scope
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
         $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
@@ -1895,6 +1896,24 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
+        
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+            Query::equal('deploymentId', [$deploymentId])->toString()
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals(1, $logs['body']['total']);
+        $this->assertCount(1, $logs['body']['executions']);
+        
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+            Query::equal('deploymentId', ['some-random-id'])->toString()
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals(0, $logs['body']['total']);
+        $this->assertCount(0, $logs['body']['executions']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1905,6 +1924,7 @@ class SitesCustomServerTest extends Scope
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
         $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
