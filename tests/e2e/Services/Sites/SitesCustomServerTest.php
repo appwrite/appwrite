@@ -1896,7 +1896,7 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
-        
+
         $logs = $this->listLogs($siteId, [
             Query::orderDesc('$createdAt')->toString(),
             Query::limit(1)->toString(),
@@ -1905,7 +1905,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertEquals(1, $logs['body']['total']);
         $this->assertCount(1, $logs['body']['executions']);
-        
+
         $logs = $this->listLogs($siteId, [
             Query::orderDesc('$createdAt')->toString(),
             Query::limit(1)->toString(),
