@@ -41,3 +41,15 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_FLOAT);
 }, Database::VAR_FLOAT);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_POINT, function () {
+    return new \Utopia\Validator\Text(0, 0);
+}, Database::VAR_POINT);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_LINE, function () {
+    return new \Utopia\Validator\Text(0, 0);
+}, Database::VAR_LINESTRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_POLYGON, function () {
+    return new \Utopia\Validator\Text(0, 0);
+}, Database::VAR_POLYGON);
