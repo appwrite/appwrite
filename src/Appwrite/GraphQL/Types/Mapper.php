@@ -456,6 +456,9 @@ class Mapper
             'boolean' => static::model("{$prefix}Boolean"),
             'datetime' => static::model("{$prefix}Datetime"),
             'relationship' => static::model("{$prefix}Relationship"),
+            'point' => static::model("{$prefix}Point"),
+            'linestring' => static::model("{$prefix}Line"),
+            'polygon' => static::model("{$prefix}Polygon"),
             default => throw new Exception('Unknown ' . strtolower($prefix) . ' implementation'),
         };
     }

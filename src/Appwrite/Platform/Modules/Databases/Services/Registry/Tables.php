@@ -21,6 +21,9 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Integer\Cre
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Integer\Update as UpdateInteger;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\IP\Create as CreateIP;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\IP\Update as UpdateIP;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Line\Create as CreateLine;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Point\Create as CreatePoint;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Polygon\Create as CreatePolygon;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Relationship\Create as CreateRelationship;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Relationship\Update as UpdateRelationship;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\String\Create as CreateString;
@@ -133,6 +136,15 @@ class Tables extends Base
         // Column: IP
         $service->addAction(CreateIP::getName(), new CreateIP());
         $service->addAction(UpdateIP::getName(), new UpdateIP());
+
+        // Column: Line
+        $service->addAction(CreateLine::getName(), new CreateLine());
+
+        // Column: Point
+        $service->addAction(CreatePoint::getName(), new CreatePoint());
+
+        // Column: Polygon
+        $service->addAction(CreatePolygon::getName(), new CreatePolygon());
 
         // Column: Relationship
         $service->addAction(CreateRelationship::getName(), new CreateRelationship());
