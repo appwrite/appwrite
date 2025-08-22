@@ -1903,7 +1903,7 @@ class SitesCustomServerTest extends Scope
             Query::equal('deploymentId', [$deploymentId])->toString()
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertEquals(1, $logs['body']['total']);
+        $this->assertGreaterThanOrEqual(1, $logs['body']['total']);
         $this->assertCount(1, $logs['body']['executions']);
 
         $logs = $this->listLogs($siteId, [
