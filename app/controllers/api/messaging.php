@@ -254,7 +254,7 @@ App::post('/v1/messaging/providers/smtp')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createSMTPProvider',
+                replaceWith: 'messaging.createSMTPProvider',
             ),
         ),
         new Method(
@@ -787,7 +787,7 @@ App::post('/v1/messaging/providers/fcm')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createFCMProvider',
+                replaceWith: 'messaging.createFCMProvider',
             ),
         ),
         new Method(
@@ -876,7 +876,7 @@ App::post('/v1/messaging/providers/apns')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createAPNSProvider',
+                replaceWith: 'messaging.createAPNSProvider',
             ),
         ),
         new Method(
@@ -1395,7 +1395,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateSMTPProvider',
+                replaceWith: 'messaging.updateSMTPProvider',
             ),
         ),
         new Method(
@@ -1986,7 +1986,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateFCMProvider',
+                replaceWith: 'messaging.updateFCMProvider',
             ),
         ),
         new Method(
@@ -2081,7 +2081,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateAPNSProvider',
+                replaceWith: 'messaging.updateAPNSProvider',
             ),
         ),
         new Method(
@@ -3154,7 +3154,7 @@ App::post('/v1/messaging/messages/sms')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createSMS',
+                replaceWith: 'messaging.createSMS',
             ),
         ),
         new Method(
@@ -4000,7 +4000,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateSMS',
+                replaceWith: 'messaging.updateSMS',
             ),
         ),
         new Method(
