@@ -2914,7 +2914,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the email address has never been used, a **new account is created** using the provided `userId`. Otherwise, if the email address is already attached to an account, the **user ID is ignored**. Then, the user will receive an email with the one-time password. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2962,7 +2962,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -3049,7 +3049,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -3274,7 +3274,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -38413,6 +38413,11 @@
                     "description": "Function ID.",
                     "x-example": "5e5ea6g16897e"
                 },
+                "deploymentId": {
+                    "type": "string",
+                    "description": "Function's deployment ID used to create the execution.",
+                    "x-example": "5e5ea5c16897e"
+                },
                 "trigger": {
                     "type": "string",
                     "description": "The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.",
@@ -38499,6 +38504,7 @@
                 "$updatedAt",
                 "$permissions",
                 "functionId",
+                "deploymentId",
                 "trigger",
                 "status",
                 "requestMethod",
@@ -38519,6 +38525,7 @@
                     "any"
                 ],
                 "functionId": "5e5ea6g16897e",
+                "deploymentId": "5e5ea5c16897e",
                 "trigger": "http",
                 "status": "processing",
                 "requestMethod": "GET",
