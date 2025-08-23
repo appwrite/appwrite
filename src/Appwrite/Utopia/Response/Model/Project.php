@@ -1,5 +1,4 @@
 <?php
-
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Auth\Auth;
@@ -19,291 +18,297 @@ class Project extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Project ID.',
-                'default' => '',
-                'example' => '5e5ea5c16897e',
+                'default'     => '',
+                'example'     => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_DATETIME,
+                'type'        => self::TYPE_DATETIME,
                 'description' => 'Project creation date in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'default'     => '',
+                'example'     => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_DATETIME,
+                'type'        => self::TYPE_DATETIME,
                 'description' => 'Project update date in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'default'     => '',
+                'example'     => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('name', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Project name.',
-                'default' => '',
-                'example' => 'New Project',
+                'default'     => '',
+                'example'     => 'New Project',
             ])
             ->addRule('description', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Project description.',
-                'default' => '',
-                'example' => 'This is a new project.',
+                'default'     => '',
+                'example'     => 'This is a new project.',
             ])
             ->addRule('teamId', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Project team ID.',
-                'default' => '',
-                'example' => '1592981250',
+                'default'     => '',
+                'example'     => '1592981250',
             ])
             ->addRule('logo', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Project logo file ID.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
+                'default'     => '',
+                'example'     => '5f5c451b403cb',
             ])
             ->addRule('url', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Project website URL.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
+                'default'     => '',
+                'example'     => '5f5c451b403cb',
             ])
             ->addRule('legalName', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Company legal name.',
-                'default' => '',
-                'example' => 'Company LTD.',
+                'default'     => '',
+                'example'     => 'Company LTD.',
             ])
             ->addRule('legalCountry', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Country code in [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1) two-character format.',
-                'default' => '',
-                'example' => 'US',
+                'default'     => '',
+                'example'     => 'US',
             ])
             ->addRule('legalState', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'State name.',
-                'default' => '',
-                'example' => 'New York',
+                'default'     => '',
+                'example'     => 'New York',
             ])
             ->addRule('legalCity', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'City name.',
-                'default' => '',
-                'example' => 'New York City.',
+                'default'     => '',
+                'example'     => 'New York City.',
             ])
             ->addRule('legalAddress', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Company Address.',
-                'default' => '',
-                'example' => '620 Eighth Avenue, New York, NY 10018',
+                'default'     => '',
+                'example'     => '620 Eighth Avenue, New York, NY 10018',
             ])
             ->addRule('legalTaxId', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'Company Tax ID.',
-                'default' => '',
-                'example' => '131102020',
+                'default'     => '',
+                'example'     => '131102020',
             ])
             ->addRule('authDuration', [
-                'type' => self::TYPE_INTEGER,
+                'type'        => self::TYPE_INTEGER,
                 'description' => 'Session duration in seconds.',
-                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
-                'example' => 60,
+                'default'     => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+                'example'     => 60,
             ])
             ->addRule('authLimit', [
-                'type' => self::TYPE_INTEGER,
+                'type'        => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',
-                'default' => 0,
-                'example' => 100,
+                'default'     => 0,
+                'example'     => 100,
             ])
             ->addRule('authSessionsLimit', [
-                'type' => self::TYPE_INTEGER,
+                'type'        => self::TYPE_INTEGER,
                 'description' => 'Max sessions allowed per user. 100 maximum.',
-                'default' => 10,
-                'example' => 10,
+                'default'     => 10,
+                'example'     => 10,
             ])
             ->addRule('authPasswordHistory', [
-                'type' => self::TYPE_INTEGER,
+                'type'        => self::TYPE_INTEGER,
                 'description' => 'Max allowed passwords in the history list per user. Max passwords limit allowed in history is 20. Use 0 for disabling password history.',
-                'default' => 0,
-                'example' => 5,
+                'default'     => 0,
+                'example'     => 5,
             ])
             ->addRule('authPasswordDictionary', [
-                'type' => self::TYPE_BOOLEAN,
+                'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check user\'s password against most commonly used passwords.',
-                'default' => false,
-                'example' => true,
+                'default'     => false,
+                'example'     => true,
+            ])
+            ->addRule('authBlockDisposableEmails', [
+                'type'        => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to block registrations with disposable email domains.',
+                'default'     => false,
+                'example'     => true,
             ])
             ->addRule('authPersonalDataCheck', [
-                'type' => self::TYPE_BOOLEAN,
+                'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
-                'default' => false,
-                'example' => true,
+                'default'     => false,
+                'example'     => true,
             ])
             ->addRule('authMockNumbers', [
-                'type' => Response::MODEL_MOCK_NUMBER,
+                'type'        => Response::MODEL_MOCK_NUMBER,
                 'description' => 'An array of mock numbers and their corresponding verification codes (OTPs).',
-                'default' => [],
-                'array' => true,
-                'example' => [new \stdClass()],
+                'default'     => [],
+                'array'       => true,
+                'example'     => [new \stdClass()],
             ])
             ->addRule('authSessionAlerts', [
-                'type' => self::TYPE_BOOLEAN,
+                'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to send session alert emails to users.',
-                'default' => false,
-                'example' => true,
+                'default'     => false,
+                'example'     => true,
             ])
             ->addRule('authMembershipsUserName', [
-                'type' => self::TYPE_BOOLEAN,
+                'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user names in the teams membership response.',
-                'default' => false,
-                'example' => true,
+                'default'     => false,
+                'example'     => true,
             ])
             ->addRule('authMembershipsUserEmail', [
-                'type' => self::TYPE_BOOLEAN,
+                'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user emails in the teams membership response.',
-                'default' => false,
-                'example' => true,
+                'default'     => false,
+                'example'     => true,
             ])
             ->addRule('authMembershipsMfa', [
-                'type' => self::TYPE_BOOLEAN,
+                'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user MFA status in the teams membership response.',
-                'default' => false,
-                'example' => true,
+                'default'     => false,
+                'example'     => true,
             ])
             ->addRule('oAuthProviders', [
-                'type' => Response::MODEL_AUTH_PROVIDER,
+                'type'        => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
-                'default' => [],
-                'example' => [new \stdClass()],
-                'array' => true,
+                'default'     => [],
+                'example'     => [new \stdClass()],
+                'array'       => true,
             ])
             ->addRule('platforms', [
-                'type' => Response::MODEL_PLATFORM,
+                'type'        => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+                'default'     => [],
+                'example'     => new \stdClass(),
+                'array'       => true,
             ])
             ->addRule('webhooks', [
-                'type' => Response::MODEL_WEBHOOK,
+                'type'        => Response::MODEL_WEBHOOK,
                 'description' => 'List of Webhooks.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+                'default'     => [],
+                'example'     => new \stdClass(),
+                'array'       => true,
             ])
             ->addRule('keys', [
-                'type' => Response::MODEL_KEY,
+                'type'        => Response::MODEL_KEY,
                 'description' => 'List of API Keys.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+                'default'     => [],
+                'example'     => new \stdClass(),
+                'array'       => true,
             ])
             ->addRule('devKeys', [
-                'type' => Response::MODEL_DEV_KEY,
+                'type'        => Response::MODEL_DEV_KEY,
                 'description' => 'List of dev keys.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+                'default'     => [],
+                'example'     => new \stdClass(),
+                'array'       => true,
             ])
             ->addRule('smtpEnabled', [
-                'type' => self::TYPE_BOOLEAN,
+                'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Status for custom SMTP',
-                'default' => false,
-                'example' => false,
-                'array' => false
+                'default'     => false,
+                'example'     => false,
+                'array'       => false,
             ])
             ->addRule('smtpSenderName', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'SMTP sender name',
-                'default' => '',
-                'example' => 'John Appwrite',
+                'default'     => '',
+                'example'     => 'John Appwrite',
             ])
             ->addRule('smtpSenderEmail', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'SMTP sender email',
-                'default' => '',
-                'example' => 'john@appwrite.io',
+                'default'     => '',
+                'example'     => 'john@appwrite.io',
             ])
             ->addRule('smtpReplyTo', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'SMTP reply to email',
-                'default' => '',
-                'example' => 'support@appwrite.io',
+                'default'     => '',
+                'example'     => 'support@appwrite.io',
             ])
             ->addRule('smtpHost', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'SMTP server host name',
-                'default' => '',
-                'example' => 'mail.appwrite.io',
+                'default'     => '',
+                'example'     => 'mail.appwrite.io',
             ])
             ->addRule('smtpPort', [
-                'type' => self::TYPE_INTEGER,
+                'type'        => self::TYPE_INTEGER,
                 'description' => 'SMTP server port',
-                'default' => '',
-                'example' => 25,
+                'default'     => '',
+                'example'     => 25,
             ])
             ->addRule('smtpUsername', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'SMTP server username',
-                'default' => '',
-                'example' => 'emailuser',
+                'default'     => '',
+                'example'     => 'emailuser',
             ])
             ->addRule('smtpPassword', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'SMTP server password',
-                'default' => '',
-                'example' => 'securepassword',
+                'default'     => '',
+                'example'     => 'securepassword',
             ])
             ->addRule('smtpSecure', [
-                'type' => self::TYPE_STRING,
+                'type'        => self::TYPE_STRING,
                 'description' => 'SMTP server secure protocol',
-                'default' => '',
-                'example' => 'tls',
+                'default'     => '',
+                'example'     => 'tls',
             ])
             ->addRule('pingCount', [
-                'type' => self::TYPE_INTEGER,
+                'type'        => self::TYPE_INTEGER,
                 'description' => 'Number of times the ping was received for this project.',
-                'default' => 0,
-                'example' => 1,
+                'default'     => 0,
+                'example'     => 1,
             ])
             ->addRule('pingedAt', [
-                'type' => self::TYPE_DATETIME,
+                'type'        => self::TYPE_DATETIME,
                 'description' => 'Last ping datetime in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'default'     => '',
+                'example'     => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
 
         $services = Config::getParam('services', []);
-        $auth = Config::getParam('auth', []);
+        $auth     = Config::getParam('auth', []);
 
         foreach ($auth as $index => $method) {
             $name = $method['name'] ?? '';
-            $key = $method['key'] ?? '';
+            $key  = $method['key'] ?? '';
 
             $this
                 ->addRule('auth' . ucfirst($key), [
-                    'type' => self::TYPE_BOOLEAN,
+                    'type'        => self::TYPE_BOOLEAN,
                     'description' => $name . ' auth method status',
-                    'example' => true,
-                    'default' => true,
+                    'example'     => true,
+                    'default'     => true,
                 ])
             ;
         }
 
         foreach ($services as $service) {
-            if (!$service['optional']) {
+            if (! $service['optional']) {
                 continue;
             }
 
             $name = $service['name'] ?? '';
-            $key = $service['key'] ?? '';
+            $key  = $service['key'] ?? '';
 
             $this
                 ->addRule('serviceStatusFor' . ucfirst($key), [
-                    'type' => self::TYPE_BOOLEAN,
+                    'type'        => self::TYPE_BOOLEAN,
                     'description' => $name . ' service status',
-                    'example' => true,
-                    'default' => true,
+                    'example'     => true,
+                    'default'     => true,
                 ])
             ;
         }
@@ -349,27 +354,28 @@ class Project extends Model
         $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
 
         // Services
-        $values = $document->getAttribute('services', []);
+        $values   = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
         foreach ($services as $service) {
-            if (!$service['optional']) {
+            if (! $service['optional']) {
                 continue;
             }
-            $key = $service['key'] ?? '';
+            $key   = $service['key'] ?? '';
             $value = $values[$key] ?? true;
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
         }
 
         // Auth
         $authValues = $document->getAttribute('auths', []);
-        $auth = Config::getParam('auth', []);
+        $auth       = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
         $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
+        $document->setAttribute('authBlockDisposableEmails', $authValues['blockDisposableEmails'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
@@ -378,27 +384,32 @@ class Project extends Model
         $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
 
         foreach ($auth as $index => $method) {
-            $key = $method['key'];
+            $key   = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
 
+        // Backward compatibility: ensure undefined defaults are present for new fields
+        if (! $document->isAttributeSet('authBlockDisposableEmails')) {
+            $document->setAttribute('authBlockDisposableEmails', false);
+        }
+
         // OAuth Providers
-        $providers = Config::getParam('oAuthProviders', []);
-        $providerValues = $document->getAttribute('oAuthProviders', []);
+        $providers        = Config::getParam('oAuthProviders', []);
+        $providerValues   = $document->getAttribute('oAuthProviders', []);
         $projectProviders = [];
 
         foreach ($providers as $key => $provider) {
-            if (!$provider['enabled']) {
+            if (! $provider['enabled']) {
                 // Disabled by Appwrite configuration, exclude from response
                 continue;
             }
 
             $projectProviders[] = new Document([
-                'key' => $key,
-                'name' => $provider['name'] ?? '',
-                'appId' => $providerValues[$key . 'Appid'] ?? '',
-                'secret' => $providerValues[$key . 'Secret'] ?? '',
+                'key'     => $key,
+                'name'    => $provider['name'] ?? '',
+                'appId'   => $providerValues[$key . 'Appid'] ?? '',
+                'secret'  => $providerValues[$key . 'Secret'] ?? '',
                 'enabled' => $providerValues[$key . 'Enabled'] ?? false,
             ]);
         }

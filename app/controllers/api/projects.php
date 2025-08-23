@@ -69,7 +69,7 @@ App::post('/v1/projects')
     ->label('audits.resource', 'project/{response.$id}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'create',
         description: '/docs/references/projects/create.md',
@@ -78,13 +78,13 @@ App::post('/v1/projects')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
+    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => ! $config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -110,23 +110,23 @@ App::post('/v1/projects')
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
-        if (!empty($allowList) && !\in_array($region, $allowList)) {
+        if (! empty($allowList) && ! \in_array($region, $allowList)) {
             throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
         }
 
-        $auth = Config::getParam('auth', []);
+        $auth  = Config::getParam('auth', []);
         $auths = [
-            'limit' => 0,
-            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
-            'passwordHistory' => 0,
-            'passwordDictionary' => false,
-            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
-            'personalDataCheck' => false,
-            'mockNumbers' => [],
-            'sessionAlerts' => false,
-            'membershipsUserName' => false,
+            'limit'                => 0,
+            'maxSessions'          => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'passwordHistory'      => 0,
+            'passwordDictionary'   => false,
+            'duration'             => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+            'personalDataCheck'    => false,
+            'mockNumbers'          => [],
+            'sessionAlerts'        => false,
+            'membershipsUserName'  => false,
             'membershipsUserEmail' => false,
-            'membershipsMfa' => false,
+            'membershipsMfa'       => false,
         ];
 
         foreach ($auth as $method) {
@@ -143,14 +143,14 @@ App::post('/v1/projects')
 
         if ($region !== 'default') {
             $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-            $keys = explode(',', $databaseKeys);
-            $databases = array_filter($keys, function ($value) use ($region) {
+            $keys         = explode(',', $databaseKeys);
+            $databases    = array_filter($keys, function ($value) use ($region) {
                 return str_contains($value, $region);
             });
         }
 
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
-        $index = \array_search($databaseOverride, $databases);
+        $index            = \array_search($databaseOverride, $databases);
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
@@ -161,49 +161,49 @@ App::post('/v1/projects')
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn, $sharedTables)) {
-            $schema = 'appwrite';
-            $database = 'appwrite';
+            $schema    = 'appwrite';
+            $database  = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . $dsn . '?database=' . $database;
+            $dsn       = $schema . '://' . $dsn . '?database=' . $database;
 
-            if (!empty($namespace)) {
+            if (! empty($namespace)) {
                 $dsn .= '&namespace=' . $namespace;
             }
         }
 
         try {
             $project = $dbForPlatform->createDocument('projects', new Document([
-                '$id' => $projectId,
-                '$permissions' => [
+                '$id'            => $projectId,
+                '$permissions'   => [
                     Permission::read(Role::team(ID::custom($teamId))),
                     Permission::update(Role::team(ID::custom($teamId), 'owner')),
                     Permission::update(Role::team(ID::custom($teamId), 'developer')),
                     Permission::delete(Role::team(ID::custom($teamId), 'owner')),
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
-                'name' => $name,
+                'name'           => $name,
                 'teamInternalId' => $team->getSequence(),
-                'teamId' => $team->getId(),
-                'region' => $region,
-                'description' => $description,
-                'logo' => $logo,
-                'url' => $url,
-                'version' => APP_VERSION_STABLE,
-                'legalName' => $legalName,
-                'legalCountry' => $legalCountry,
-                'legalState' => $legalState,
-                'legalCity' => $legalCity,
-                'legalAddress' => $legalAddress,
-                'legalTaxId' => ID::custom($legalTaxId),
-                'services' => new stdClass(),
-                'platforms' => null,
+                'teamId'         => $team->getId(),
+                'region'         => $region,
+                'description'    => $description,
+                'logo'           => $logo,
+                'url'            => $url,
+                'version'        => APP_VERSION_STABLE,
+                'legalName'      => $legalName,
+                'legalCountry'   => $legalCountry,
+                'legalState'     => $legalState,
+                'legalCity'      => $legalCity,
+                'legalAddress'   => $legalAddress,
+                'legalTaxId'     => ID::custom($legalTaxId),
+                'services'       => new stdClass(),
+                'platforms'      => null,
                 'oAuthProviders' => [],
-                'webhooks' => null,
-                'keys' => null,
-                'auths' => $auths,
-                'accessedAt' => DateTime::now(),
-                'search' => implode(' ', [$projectId, $name]),
-                'database' => $dsn,
+                'webhooks'       => null,
+                'keys'           => null,
+                'auths'          => $auths,
+                'accessedAt'     => DateTime::now(),
+                'search'         => implode(' ', [$projectId, $name]),
+                'database'       => $dsn,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
@@ -216,21 +216,21 @@ App::post('/v1/projects')
             $dsn = new DSN('mysql://' . $dsn);
         }
 
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTables   = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+        $projectTables  = ! \in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
+        $sharedTablesV2 = ! $projectTables && ! $sharedTablesV1;
+        $sharedTables   = $sharedTablesV1 || $sharedTablesV2;
 
-        if (!$sharedTablesV2) {
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
+        if (! $sharedTablesV2) {
+            $adapter      = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
 
             if ($sharedTables) {
                 $dbForProject
                     ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? (int)$project->getSequence() : null)
+                    ->setTenant($sharedTablesV1 ? (int) $project->getSequence() : null)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $dbForProject
@@ -252,16 +252,16 @@ App::post('/v1/projects')
                 $audit->setup();
             }
 
-            if (!$create && $sharedTablesV1) {
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+            if (! $create && $sharedTablesV1) {
+                $attributes = \array_map(fn($attribute) => new Document($attribute), Audit::ATTRIBUTES);
+                $indexes    = \array_map(fn(array $index) => new Document($index), Audit::INDEXES);
                 $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('audit'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'audit',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
+                    '$id'              => ID::custom('audit'),
+                    '$permissions'     => [Permission::create(Role::any())],
+                    'name'             => 'audit',
+                    'attributes'       => $attributes,
+                    'indexes'          => $indexes,
+                    'documentSecurity' => true,
                 ]));
             }
 
@@ -274,19 +274,19 @@ App::post('/v1/projects')
                         continue;
                     }
 
-                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                    $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                    $attributes = \array_map(fn($attribute) => new Document($attribute), $collection['attributes']);
+                    $indexes    = \array_map(fn(array $index) => new Document($index), $collection['indexes']);
 
                     try {
                         $dbForProject->createCollection($key, $attributes, $indexes);
                     } catch (Duplicate) {
                         $dbForProject->createDocument(Database::METADATA, new Document([
-                            '$id' => ID::custom($key),
-                            '$permissions' => [Permission::create(Role::any())],
-                            'name' => $key,
-                            'attributes' => $attributes,
-                            'indexes' => $indexes,
-                            'documentSecurity' => true
+                            '$id'              => ID::custom($key),
+                            '$permissions'     => [Permission::create(Role::any())],
+                            'name'             => $key,
+                            'attributes'       => $attributes,
+                            'indexes'          => $indexes,
+                            'documentSecurity' => true,
                         ]));
                     }
                 }
@@ -295,7 +295,7 @@ App::post('/v1/projects')
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
-        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
+        $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -307,7 +307,7 @@ App::get('/v1/projects')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'list',
         description: '/docs/references/projects/list.md',
@@ -316,7 +316,7 @@ App::get('/v1/projects')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT_LIST,
-            )
+            ),
         ]
     ))
     ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
@@ -331,13 +331,13 @@ App::get('/v1/projects')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
         /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
+     * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+     */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -346,11 +346,11 @@ App::get('/v1/projects')
             /** @var Query $cursor */
 
             $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $projectId = $cursor->getValue();
+            $projectId      = $cursor->getValue();
             $cursorDocument = $dbForPlatform->getDocument('projects', $projectId);
 
             if ($cursorDocument->isEmpty()) {
@@ -363,13 +363,13 @@ App::get('/v1/projects')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $projects = $dbForPlatform->find('projects', $queries);
-            $total = $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT);
+            $total    = $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
         $response->dynamic(new Document([
             'projects' => $projects,
-            'total' => $total,
+            'total'    => $total,
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -378,7 +378,7 @@ App::get('/v1/projects/:projectId')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'get',
         description: '/docs/references/projects/get.md',
@@ -387,7 +387,7 @@ App::get('/v1/projects/:projectId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -411,7 +411,7 @@ App::patch('/v1/projects/:projectId')
     ->label('audits.event', 'projects.update')
     ->label('audits.resource', 'project/{request.projectId}')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'update',
         description: '/docs/references/projects/update.md',
@@ -420,7 +420,7 @@ App::patch('/v1/projects/:projectId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -445,17 +445,17 @@ App::patch('/v1/projects/:projectId')
         }
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('name', $name)
-            ->setAttribute('description', $description)
-            ->setAttribute('logo', $logo)
-            ->setAttribute('url', $url)
-            ->setAttribute('legalName', $legalName)
-            ->setAttribute('legalCountry', $legalCountry)
-            ->setAttribute('legalState', $legalState)
-            ->setAttribute('legalCity', $legalCity)
-            ->setAttribute('legalAddress', $legalAddress)
-            ->setAttribute('legalTaxId', $legalTaxId)
-            ->setAttribute('search', implode(' ', [$projectId, $name])));
+                ->setAttribute('name', $name)
+                ->setAttribute('description', $description)
+                ->setAttribute('logo', $logo)
+                ->setAttribute('url', $url)
+                ->setAttribute('legalName', $legalName)
+                ->setAttribute('legalCountry', $legalCountry)
+                ->setAttribute('legalState', $legalState)
+                ->setAttribute('legalCity', $legalCity)
+                ->setAttribute('legalAddress', $legalAddress)
+                ->setAttribute('legalTaxId', $legalTaxId)
+                ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -465,7 +465,7 @@ App::patch('/v1/projects/:projectId/team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'updateTeam',
         description: '/docs/references/projects/update-team.md',
@@ -474,7 +474,7 @@ App::patch('/v1/projects/:projectId/team')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -484,7 +484,7 @@ App::patch('/v1/projects/:projectId/team')
     ->action(function (string $projectId, string $teamId, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
-        $team = $dbForPlatform->getDocument('teams', $teamId);
+        $team    = $dbForPlatform->getDocument('teams', $teamId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -540,7 +540,7 @@ App::patch('/v1/projects/:projectId/service')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'updateServiceStatus',
         description: '/docs/references/projects/update-service-status.md',
@@ -549,11 +549,11 @@ App::patch('/v1/projects/:projectId/service')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -565,7 +565,7 @@ App::patch('/v1/projects/:projectId/service')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $services = $project->getAttribute('services', []);
+        $services           = $project->getAttribute('services', []);
         $services[$service] = $status;
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
@@ -578,7 +578,7 @@ App::patch('/v1/projects/:projectId/service/all')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'updateServiceStatusAll',
         description: '/docs/references/projects/update-service-status-all.md',
@@ -587,7 +587,7 @@ App::patch('/v1/projects/:projectId/service/all')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -602,7 +602,7 @@ App::patch('/v1/projects/:projectId/service/all')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $allServices = array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']));
+        $allServices = array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional']));
 
         $services = [];
         foreach ($allServices as $service) {
@@ -619,7 +619,7 @@ App::patch('/v1/projects/:projectId/api')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'updateApiStatus',
         description: '/docs/references/projects/update-api-status.md',
@@ -628,7 +628,7 @@ App::patch('/v1/projects/:projectId/api')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -644,7 +644,7 @@ App::patch('/v1/projects/:projectId/api')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $apis = $project->getAttribute('apis', []);
+        $apis       = $project->getAttribute('apis', []);
         $apis[$api] = $status;
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('apis', $apis));
@@ -657,7 +657,7 @@ App::patch('/v1/projects/:projectId/api/all')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'updateApiStatusAll',
         description: '/docs/references/projects/update-api-status-all.md',
@@ -666,7 +666,7 @@ App::patch('/v1/projects/:projectId/api/all')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -698,7 +698,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateOAuth2',
         description: '/docs/references/projects/update-oauth2.md',
@@ -707,7 +707,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -749,7 +749,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateSessionAlerts',
         description: '/docs/references/projects/update-session-alerts.md',
@@ -758,7 +758,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -773,11 +773,11 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths                  = $project->getAttribute('auths', []);
         $auths['sessionAlerts'] = $alerts;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -787,7 +787,7 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateMembershipsPrivacy',
         description: '/docs/references/projects/update-memberships-privacy.md',
@@ -796,7 +796,7 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -814,12 +814,12 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
 
         $auths = $project->getAttribute('auths', []);
 
-        $auths['membershipsUserName'] = $userName;
+        $auths['membershipsUserName']  = $userName;
         $auths['membershipsUserEmail'] = $userEmail;
-        $auths['membershipsMfa'] = $mfa;
+        $auths['membershipsMfa']       = $mfa;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -829,7 +829,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateAuthLimit',
         description: '/docs/references/projects/update-auth-limit.md',
@@ -838,7 +838,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -853,11 +853,11 @@ App::patch('/v1/projects/:projectId/auth/limit')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths          = $project->getAttribute('auths', []);
         $auths['limit'] = $limit;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -867,7 +867,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateAuthDuration',
         description: '/docs/references/projects/update-auth-duration.md',
@@ -876,7 +876,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -891,11 +891,11 @@ App::patch('/v1/projects/:projectId/auth/duration')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths             = $project->getAttribute('auths', []);
         $auths['duration'] = $duration;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -905,7 +905,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateAuthStatus',
         description: '/docs/references/projects/update-auth-status.md',
@@ -914,7 +914,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -925,15 +925,15 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
-        $auth = Config::getParam('auth')[$method] ?? [];
+        $auth    = Config::getParam('auth')[$method] ?? [];
         $authKey = $auth['key'] ?? '';
-        $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
+        $status  = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths           = $project->getAttribute('auths', []);
         $auths[$authKey] = $status;
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
@@ -946,7 +946,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateAuthPasswordHistory',
         description: '/docs/references/projects/update-auth-password-history.md',
@@ -955,7 +955,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -970,11 +970,11 @@ App::patch('/v1/projects/:projectId/auth/password-history')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths                    = $project->getAttribute('auths', []);
         $auths['passwordHistory'] = $limit;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -984,7 +984,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateAuthPasswordDictionary',
         description: '/docs/references/projects/update-auth-password-dictionary.md',
@@ -993,7 +993,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1008,11 +1008,49 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths                       = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/block-disposable-emails')
+    ->desc('Update authentication disposable email blocklist status. Use this endpoint to enable or disable blocking registrations with disposable email domains.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace :'projects',
+        group: 'auth',
+        name: 'updateAuthBlockDisposableEmails',
+        description: '/docs/references/projects/update-auth-block-disposable-emails.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            ),
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('enabled', false, new Boolean(false), 'Set whether or not to block registrations with disposable email domains. Default is false.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths                          = $project->getAttribute('auths', []);
+        $auths['blockDisposableEmails'] = $enabled;
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -1022,7 +1060,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updatePersonalDataCheck',
         description: '/docs/references/projects/update-personal-data-check.md',
@@ -1031,7 +1069,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1046,11 +1084,11 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths                      = $project->getAttribute('auths', []);
         $auths['personalDataCheck'] = $enabled;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -1060,7 +1098,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateAuthSessionsLimit',
         description: '/docs/references/projects/update-auth-sessions-limit.md',
@@ -1069,7 +1107,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1084,11 +1122,11 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $auths = $project->getAttribute('auths', []);
+        $auths                = $project->getAttribute('auths', []);
         $auths['maxSessions'] = $limit;
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+                ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -1098,7 +1136,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'updateMockNumbers',
         description: '/docs/references/projects/update-mock-numbers.md',
@@ -1107,7 +1145,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1146,7 +1184,7 @@ App::delete('/v1/projects/:projectId')
     ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'projects',
         name: 'delete',
         description: '/docs/references/projects/delete.md',
@@ -1155,7 +1193,7 @@ App::delete('/v1/projects/:projectId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -1176,7 +1214,7 @@ App::delete('/v1/projects/:projectId')
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
-        if (!$dbForPlatform->deleteDocument('projects', $projectId)) {
+        if (! $dbForPlatform->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
         }
 
@@ -1190,7 +1228,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'webhooks',
         name: 'createWebhook',
         description: '/docs/references/projects/create-webhook.md',
@@ -1199,14 +1237,14 @@ App::post('/v1/projects/:projectId/webhooks')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_WEBHOOK,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
+    ->param('url', '', fn($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
@@ -1223,22 +1261,22 @@ App::post('/v1/projects/:projectId/webhooks')
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
+            '$id'               => ID::unique(),
+            '$permissions'      => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
-            'name' => $name,
-            'events' => $events,
-            'url' => $url,
-            'security' => $security,
-            'httpUser' => $httpUser,
-            'httpPass' => $httpPass,
-            'signatureKey' => \bin2hex(\random_bytes(64)),
-            'enabled' => $enabled,
+            'projectId'         => $project->getId(),
+            'name'              => $name,
+            'events'            => $events,
+            'url'               => $url,
+            'security'          => $security,
+            'httpUser'          => $httpUser,
+            'httpPass'          => $httpPass,
+            'signatureKey'      => \bin2hex(\random_bytes(64)),
+            'enabled'           => $enabled,
         ]);
 
         $webhook = $dbForPlatform->createDocument('webhooks', $webhook);
@@ -1255,7 +1293,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'webhooks',
         name: 'listWebhooks',
         description: '/docs/references/projects/list-webhooks.md',
@@ -1264,7 +1302,7 @@ App::get('/v1/projects/:projectId/webhooks')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_WEBHOOK_LIST,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1285,7 +1323,7 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
-            'total' => count($webhooks),
+            'total'    => count($webhooks),
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -1294,7 +1332,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'webhooks',
         name: 'getWebhook',
         description: '/docs/references/projects/get-webhook.md',
@@ -1303,7 +1341,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_WEBHOOK,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1335,7 +1373,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'webhooks',
         name: 'updateWebhook',
         description: '/docs/references/projects/update-webhook.md',
@@ -1344,7 +1382,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_WEBHOOK,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1352,7 +1390,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
+    ->param('url', '', fn($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
@@ -1401,7 +1439,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'webhooks',
         name: 'updateWebhookSignature',
         description: '/docs/references/projects/update-webhook-signature.md',
@@ -1410,7 +1448,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_WEBHOOK,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1447,7 +1485,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'webhooks',
         name: 'deleteWebhook',
         description: '/docs/references/projects/delete-webhook.md',
@@ -1456,7 +1494,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -1495,7 +1533,7 @@ App::post('/v1/projects/:projectId/keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'keys',
         name: 'createKey',
         description: '/docs/references/projects/create-key.md',
@@ -1504,7 +1542,7 @@ App::post('/v1/projects/:projectId/keys')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_KEY,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1522,20 +1560,20 @@ App::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
+            '$id'               => ID::unique(),
+            '$permissions'      => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
-            'name' => $name,
-            'scopes' => $scopes,
-            'expire' => $expire,
-            'sdks' => [],
-            'accessedAt' => null,
-            'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
+            'projectId'         => $project->getId(),
+            'name'              => $name,
+            'scopes'            => $scopes,
+            'expire'            => $expire,
+            'sdks'              => [],
+            'accessedAt'        => null,
+            'secret'            => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
         ]);
 
         $key = $dbForPlatform->createDocument('keys', $key);
@@ -1552,7 +1590,7 @@ App::get('/v1/projects/:projectId/keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'keys',
         name: 'listKeys',
         description: '/docs/references/projects/list-keys.md',
@@ -1561,7 +1599,7 @@ App::get('/v1/projects/:projectId/keys')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_KEY_LIST,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1581,7 +1619,7 @@ App::get('/v1/projects/:projectId/keys')
         ]);
 
         $response->dynamic(new Document([
-            'keys' => $keys,
+            'keys'  => $keys,
             'total' => count($keys),
         ]), Response::MODEL_KEY_LIST);
     });
@@ -1591,7 +1629,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'keys',
         name: 'getKey',
         description: '/docs/references/projects/get-key.md',
@@ -1600,7 +1638,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_KEY,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1632,7 +1670,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'keys',
         name: 'updateKey',
         description: '/docs/references/projects/update-key.md',
@@ -1641,7 +1679,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_KEY,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1685,7 +1723,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'keys',
         name: 'deleteKey',
         description: '/docs/references/projects/delete-key.md',
@@ -1694,7 +1732,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -1733,7 +1771,7 @@ App::post('/v1/projects/:projectId/jwts')
     ->desc('Create JWT')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'auth',
         name: 'createJWT',
         description: '/docs/references/projects/create-jwt.md',
@@ -1742,7 +1780,7 @@ App::post('/v1/projects/:projectId/jwts')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_JWT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1764,7 +1802,7 @@ App::post('/v1/projects/:projectId/jwts')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => API_KEY_DYNAMIC . '_' . $jwt->encode([
                 'projectId' => $project->getId(),
-                'scopes' => $scopes
+                'scopes'    => $scopes,
             ])]), Response::MODEL_JWT);
     });
 
@@ -1777,7 +1815,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'platforms',
         name: 'createPlatform',
         description: '/docs/references/projects/create-platform.md',
@@ -1786,11 +1824,11 @@ App::post('/v1/projects/:projectId/platforms')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PLATFORM,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Platform::TYPE_WEB, Platform::TYPE_FLUTTER_WEB, Platform::TYPE_FLUTTER_IOS, Platform::TYPE_FLUTTER_ANDROID, Platform::TYPE_FLUTTER_LINUX, Platform::TYPE_FLUTTER_MACOS, Platform::TYPE_FLUTTER_WINDOWS, Platform::TYPE_APPLE_IOS, Platform::TYPE_APPLE_MACOS,  Platform::TYPE_APPLE_WATCHOS, Platform::TYPE_APPLE_TVOS, Platform::TYPE_ANDROID, Platform::TYPE_UNITY, Platform::TYPE_REACT_NATIVE_IOS, Platform::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Platform::TYPE_WEB, Platform::TYPE_FLUTTER_WEB, Platform::TYPE_FLUTTER_IOS, Platform::TYPE_FLUTTER_ANDROID, Platform::TYPE_FLUTTER_LINUX, Platform::TYPE_FLUTTER_MACOS, Platform::TYPE_FLUTTER_WINDOWS, Platform::TYPE_APPLE_IOS, Platform::TYPE_APPLE_MACOS, Platform::TYPE_APPLE_WATCHOS, Platform::TYPE_APPLE_TVOS, Platform::TYPE_ANDROID, Platform::TYPE_UNITY, Platform::TYPE_REACT_NATIVE_IOS, Platform::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1805,19 +1843,19 @@ App::post('/v1/projects/:projectId/platforms')
         }
 
         $platform = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
+            '$id'               => ID::unique(),
+            '$permissions'      => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
-            'type' => $type,
-            'name' => $name,
-            'key' => $key,
-            'store' => $store,
-            'hostname' => $hostname
+            'projectId'         => $project->getId(),
+            'type'              => $type,
+            'name'              => $name,
+            'key'               => $key,
+            'store'             => $store,
+            'hostname'          => $hostname,
         ]);
 
         $platform = $dbForPlatform->createDocument('platforms', $platform);
@@ -1834,7 +1872,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'platforms',
         name: 'listPlatforms',
         description: '/docs/references/projects/list-platforms.md',
@@ -1843,7 +1881,7 @@ App::get('/v1/projects/:projectId/platforms')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PLATFORM_LIST,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1864,7 +1902,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
-            'total' => count($platforms),
+            'total'     => count($platforms),
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
@@ -1873,7 +1911,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'platforms',
         name: 'getPlatform',
         description: '/docs/references/projects/get-platform.md',
@@ -1882,7 +1920,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PLATFORM,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1914,7 +1952,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'platforms',
         name: 'updatePlatform',
         description: '/docs/references/projects/update-platform.md',
@@ -1923,7 +1961,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PLATFORM,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -1970,7 +2008,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('audits.resource', 'project/{request.projectId}/platform/${request.platformId}')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'platforms',
         name: 'deletePlatform',
         description: '/docs/references/projects/delete-platform.md',
@@ -1979,7 +2017,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2011,14 +2049,13 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         $response->noContent();
     });
 
-
 // CUSTOM SMTP and Templates
 App::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'updateSmtp',
         description: '/docs/references/projects/update-smtp.md',
@@ -2027,7 +2064,7 @@ App::patch('/v1/projects/:projectId/smtp')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROJECT,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -2067,18 +2104,18 @@ App::patch('/v1/projects/:projectId/smtp')
         if ($enabled) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
-            $mail->Username = $username;
-            $mail->Password = $password;
-            $mail->Host = $host;
-            $mail->Port = $port;
-            $mail->SMTPSecure = $secure;
+            $mail->Username    = $username;
+            $mail->Password    = $password;
+            $mail->Host        = $host;
+            $mail->Port        = $port;
+            $mail->SMTPSecure  = $secure;
             $mail->SMTPAutoTLS = false;
-            $mail->Timeout = 5;
+            $mail->Timeout     = 5;
 
             try {
                 $valid = $mail->SmtpConnect();
 
-                if (!$valid) {
+                if (! $valid) {
                     throw new Exception('Connection is not valid.');
                 }
             } catch (Throwable $error) {
@@ -2089,19 +2126,19 @@ App::patch('/v1/projects/:projectId/smtp')
         // Save SMTP settings
         if ($enabled) {
             $smtp = [
-                'enabled' => $enabled,
-                'senderName' => $senderName,
+                'enabled'     => $enabled,
+                'senderName'  => $senderName,
                 'senderEmail' => $senderEmail,
-                'replyTo' => $replyTo,
-                'host' => $host,
-                'port' => $port,
-                'username' => $username,
-                'password' => $password,
-                'secure' => $secure,
+                'replyTo'     => $replyTo,
+                'host'        => $host,
+                'port'        => $port,
+                'username'    => $username,
+                'password'    => $password,
+                'secure'      => $secure,
             ];
         } else {
             $smtp = [
-                'enabled' => false
+                'enabled' => false,
             ];
         }
 
@@ -2115,7 +2152,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'createSmtpTest',
         description: '/docs/references/projects/create-smtp-test.md',
@@ -2124,7 +2161,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -2148,9 +2185,9 @@ App::post('/v1/projects/:projectId/smtp/tests')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $replyToEmail = !empty($replyTo) ? $replyTo : $senderEmail;
+        $replyToEmail = ! empty($replyTo) ? $replyTo : $senderEmail;
 
-        $subject = 'Custom SMTP email sample';
+        $subject  = 'Custom SMTP email sample';
         $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
@@ -2190,7 +2227,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'getSmsTemplate',
         description: '/docs/references/projects/get-sms-template.md',
@@ -2199,12 +2236,12 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SMS_TEMPLATE,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
@@ -2226,19 +2263,18 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
             ];
         }
 
-        $template['type'] = $type;
+        $template['type']   = $type;
         $template['locale'] = $locale;
 
         $response->dynamic(new Document($template), Response::MODEL_SMS_TEMPLATE);
     });
-
 
 App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'getEmailTemplate',
         description: '/docs/references/projects/get-email-template.md',
@@ -2247,12 +2283,12 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_EMAIL_TEMPLATE,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
@@ -2280,14 +2316,14 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message = $message->render();
 
             $template = [
-                'message' => $message,
-                'subject' => $localeObj->getText('emails.' . $type . '.subject'),
+                'message'     => $message,
+                'subject'     => $localeObj->getText('emails.' . $type . '.subject'),
                 'senderEmail' => '',
-                'senderName' => ''
+                'senderName'  => '',
             ];
         }
 
-        $template['type'] = $type;
+        $template['type']   = $type;
         $template['locale'] = $locale;
 
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
@@ -2298,7 +2334,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'updateSmsTemplate',
         description: '/docs/references/projects/update-sms-template.md',
@@ -2307,12 +2343,12 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SMS_TEMPLATE,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('message', '', new Text(0), 'Template message')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -2326,17 +2362,17 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $templates = $project->getAttribute('templates', []);
+        $templates                                 = $project->getAttribute('templates', []);
         $templates['sms.' . $type . '-' . $locale] = [
-            'message' => $message
+            'message' => $message,
         ];
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
         $response->dynamic(new Document([
             'message' => $message,
-            'type' => $type,
-            'locale' => $locale,
+            'type'    => $type,
+            'locale'  => $locale,
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
@@ -2345,7 +2381,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'updateEmailTemplate',
         description: '/docs/references/projects/update-email-template.md',
@@ -2354,12 +2390,12 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_EMAIL_TEMPLATE,
-            )
+            ),
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('subject', '', new Text(255), 'Email Subject')
     ->param('message', '', new Text(0), 'Template message')
     ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
@@ -2375,25 +2411,25 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $templates = $project->getAttribute('templates', []);
+        $templates                                   = $project->getAttribute('templates', []);
         $templates['email.' . $type . '-' . $locale] = [
-            'senderName' => $senderName,
+            'senderName'  => $senderName,
             'senderEmail' => $senderEmail,
-            'subject' => $subject,
-            'replyTo' => $replyTo,
-            'message' => $message
+            'subject'     => $subject,
+            'replyTo'     => $replyTo,
+            'message'     => $message,
         ];
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
         $response->dynamic(new Document([
-            'type' => $type,
-            'locale' => $locale,
-            'senderName' => $senderName,
+            'type'        => $type,
+            'locale'      => $locale,
+            'senderName'  => $senderName,
             'senderEmail' => $senderEmail,
-            'subject' => $subject,
-            'replyTo' => $replyTo,
-            'message' => $message
+            'subject'     => $subject,
+            'replyTo'     => $replyTo,
+            'message'     => $message,
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
@@ -2402,7 +2438,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'deleteSmsTemplate',
         description: '/docs/references/projects/delete-sms-template.md',
@@ -2411,13 +2447,13 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SMS_TEMPLATE,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
@@ -2442,9 +2478,9 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
         $response->dynamic(new Document([
-            'type' => $type,
-            'locale' => $locale,
-            'message' => $template['message']
+            'type'    => $type,
+            'locale'  => $locale,
+            'message' => $template['message'],
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
@@ -2453,7 +2489,7 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
-        namespace: 'projects',
+        namespace :'projects',
         group: 'templates',
         name: 'deleteEmailTemplate',
         description: '/docs/references/projects/delete-email-template.md',
@@ -2462,13 +2498,13 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_EMAIL_TEMPLATE,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
@@ -2491,12 +2527,12 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
         $response->dynamic(new Document([
-            'type' => $type,
-            'locale' => $locale,
-            'senderName' => $template['senderName'],
+            'type'        => $type,
+            'locale'      => $locale,
+            'senderName'  => $template['senderName'],
             'senderEmail' => $template['senderEmail'],
-            'subject' => $template['subject'],
-            'replyTo' => $template['replyTo'],
-            'message' => $template['message']
+            'subject'     => $template['subject'],
+            'replyTo'     => $template['replyTo'],
+            'message'     => $template['message'],
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });

@@ -1,5 +1,4 @@
 <?php
-
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator;
@@ -14,10 +13,17 @@ use Utopia\Validator;
 class Email extends Validator
 {
     protected bool $allowEmpty;
+    /**
+     * @var array<string, bool>
+     */
+    protected array $disposableDomains = [];
+    protected bool $blockDisposable    = false;
 
-    public function __construct(bool $allowEmpty = false)
+    public function __construct(bool $allowEmpty = false, array $disposableDomains = [], bool $blockDisposable = false)
     {
-        $this->allowEmpty = $allowEmpty;
+        $this->allowEmpty        = $allowEmpty;
+        $this->disposableDomains = $disposableDomains;
+        $this->blockDisposable   = $blockDisposable;
     }
 
     /**
@@ -46,8 +52,26 @@ class Email extends Validator
             return true;
         }
 
-        if (!\filter_var($value, FILTER_VALIDATE_EMAIL)) {
+        if (! \filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return false;
+        }
+
+        if ($this->blockDisposable && ! empty($this->disposableDomains)) {
+            $atPos = \strrpos($value, '@');
+            if ($atPos !== false) {
+                $domain = \strtolower(\substr($value, $atPos + 1));
+                // Skip IP literal domains like [123.123.123.123]
+                if ($domain !== '' && $domain[0] !== '[') {
+                    // Check domain and its parent suffixes
+                    $parts = \explode('.', $domain);
+                    for ($i = 0; $i < \count($parts); $i++) {
+                        $suffix = \implode('.', \array_slice($parts, $i));
+                        if (isset($this->disposableDomains[$suffix])) {
+                            return false;
+                        }
+                    }
+                }
+            }
         }
 
         return true;
