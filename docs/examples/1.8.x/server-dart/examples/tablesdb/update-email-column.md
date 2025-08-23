@@ -5,7 +5,7 @@ Client client = Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-TablesDb tablesDB = TablesDb(client);
+TablesDB tablesDB = TablesDB(client);
 
 ColumnEmail result = await tablesDB.updateEmailColumn(
     databaseId: '<DATABASE_ID>',

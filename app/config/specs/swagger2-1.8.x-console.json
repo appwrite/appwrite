@@ -687,7 +687,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAAuthenticator"
+                        "replaceWith": "account.createMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -713,7 +713,7 @@
                             "demo": "account\/create-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAAuthenticator"
+                                "replaceWith": "account.createMFAAuthenticator"
                             }
                         },
                         {
@@ -806,7 +806,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAAuthenticator"
+                        "replaceWith": "account.updateMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -834,7 +834,7 @@
                             "demo": "account\/update-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAAuthenticator"
+                                "replaceWith": "account.updateMFAAuthenticator"
                             }
                         },
                         {
@@ -942,7 +942,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "deleteMFAAuthenticator"
+                        "replaceWith": "account.deleteMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -967,7 +967,7 @@
                             "demo": "account\/delete-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "deleteMFAAuthenticator"
+                                "replaceWith": "account.deleteMFAAuthenticator"
                             }
                         },
                         {
@@ -1061,7 +1061,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAChallenge"
+                        "replaceWith": "account.createMFAChallenge"
                     },
                     "methods": [
                         {
@@ -1087,7 +1087,7 @@
                             "demo": "account\/create-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAChallenge"
+                                "replaceWith": "account.createMFAChallenge"
                             }
                         },
                         {
@@ -1192,7 +1192,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAChallenge"
+                        "replaceWith": "account.updateMFAChallenge"
                     },
                     "methods": [
                         {
@@ -1220,7 +1220,7 @@
                             "demo": "account\/update-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAChallenge"
+                                "replaceWith": "account.updateMFAChallenge"
                             }
                         },
                         {
@@ -1327,7 +1327,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "listMFAFactors"
+                        "replaceWith": "account.listMFAFactors"
                     },
                     "methods": [
                         {
@@ -1349,7 +1349,7 @@
                             "demo": "account\/list-mfa-factors.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "listMFAFactors"
+                                "replaceWith": "account.listMFAFactors"
                             }
                         },
                         {
@@ -1423,7 +1423,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "getMFARecoveryCodes"
+                        "replaceWith": "account.getMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1445,7 +1445,7 @@
                             "demo": "account\/get-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "getMFARecoveryCodes"
+                                "replaceWith": "account.getMFARecoveryCodes"
                             }
                         },
                         {
@@ -1519,7 +1519,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFARecoveryCodes"
+                        "replaceWith": "account.createMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1541,7 +1541,7 @@
                             "demo": "account\/create-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFARecoveryCodes"
+                                "replaceWith": "account.createMFARecoveryCodes"
                             }
                         },
                         {
@@ -1615,7 +1615,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFARecoveryCodes"
+                        "replaceWith": "account.updateMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1637,7 +1637,7 @@
                             "demo": "account\/update-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFARecoveryCodes"
+                                "replaceWith": "account.updateMFARecoveryCodes"
                             }
                         },
                         {
@@ -16078,7 +16078,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createSMS"
+                        "replaceWith": "messaging.createSMS"
                     },
                     "methods": [
                         {
@@ -16111,7 +16111,7 @@
                             "demo": "messaging\/create-sms.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createSMS"
+                                "replaceWith": "messaging.createSMS"
                             }
                         },
                         {
@@ -16264,7 +16264,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateSMS"
+                        "replaceWith": "messaging.updateSMS"
                     },
                     "methods": [
                         {
@@ -16296,7 +16296,7 @@
                             "demo": "messaging\/update-sms.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateSMS"
+                                "replaceWith": "messaging.updateSMS"
                             }
                         },
                         {
@@ -16778,7 +16778,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createAPNSProvider"
+                        "replaceWith": "messaging.createAPNSProvider"
                     },
                     "methods": [
                         {
@@ -16812,7 +16812,7 @@
                             "demo": "messaging\/create-apns-provider.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createAPNSProvider"
+                                "replaceWith": "messaging.createAPNSProvider"
                             }
                         },
                         {
@@ -16963,7 +16963,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateAPNSProvider"
+                        "replaceWith": "messaging.updateAPNSProvider"
                     },
                     "methods": [
                         {
@@ -16996,7 +16996,7 @@
                             "demo": "messaging\/update-apns-provider.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateAPNSProvider"
+                                "replaceWith": "messaging.updateAPNSProvider"
                             }
                         },
                         {
@@ -17144,7 +17144,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createFCMProvider"
+                        "replaceWith": "messaging.createFCMProvider"
                     },
                     "methods": [
                         {
@@ -17174,7 +17174,7 @@
                             "demo": "messaging\/create-fcm-provider.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createFCMProvider"
+                                "replaceWith": "messaging.createFCMProvider"
                             }
                         },
                         {
@@ -17297,7 +17297,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateFCMProvider"
+                        "replaceWith": "messaging.updateFCMProvider"
                     },
                     "methods": [
                         {
@@ -17326,7 +17326,7 @@
                             "demo": "messaging\/update-fcm-provider.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateFCMProvider"
+                                "replaceWith": "messaging.updateFCMProvider"
                             }
                         },
                         {
@@ -18130,7 +18130,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createSMTPProvider"
+                        "replaceWith": "messaging.createSMTPProvider"
                     },
                     "methods": [
                         {
@@ -18171,7 +18171,7 @@
                             "demo": "messaging\/create-smtp-provider.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createSMTPProvider"
+                                "replaceWith": "messaging.createSMTPProvider"
                             }
                         },
                         {
@@ -18373,7 +18373,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateSMTPProvider"
+                        "replaceWith": "messaging.updateSMTPProvider"
                     },
                     "methods": [
                         {
@@ -18412,7 +18412,7 @@
                             "demo": "messaging\/update-smtp-provider.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateSMTPProvider"
+                                "replaceWith": "messaging.updateSMTPProvider"
                             }
                         },
                         {
@@ -22408,7 +22408,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateAPIStatus"
+                        "replaceWith": "projects.updateAPIStatus"
                     },
                     "methods": [
                         {
@@ -22438,7 +22438,7 @@
                             "demo": "projects\/update-api-status.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateAPIStatus"
+                                "replaceWith": "projects.updateAPIStatus"
                             }
                         },
                         {
@@ -22562,7 +22562,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateAPIStatusAll"
+                        "replaceWith": "projects.updateAPIStatusAll"
                     },
                     "methods": [
                         {
@@ -22590,7 +22590,7 @@
                             "demo": "projects\/update-api-status-all.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateAPIStatusAll"
+                                "replaceWith": "projects.updateAPIStatusAll"
                             }
                         },
                         {
@@ -25154,7 +25154,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateSMTP"
+                        "replaceWith": "projects.updateSMTP"
                     },
                     "methods": [
                         {
@@ -25190,7 +25190,7 @@
                             "demo": "projects\/update-smtp.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateSMTP"
+                                "replaceWith": "projects.updateSMTP"
                             }
                         },
                         {
@@ -25357,7 +25357,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createSMTPTest"
+                        "replaceWith": "projects.createSMTPTest"
                     },
                     "methods": [
                         {
@@ -25395,7 +25395,7 @@
                             "demo": "projects\/create-smtp-test.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createSMTPTest"
+                                "replaceWith": "projects.createSMTPTest"
                             }
                         },
                         {
@@ -26352,7 +26352,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "getSMSTemplate"
+                        "replaceWith": "projects.getSMSTemplate"
                     },
                     "methods": [
                         {
@@ -26382,7 +26382,7 @@
                             "demo": "projects\/get-sms-template.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "getSMSTemplate"
+                                "replaceWith": "projects.getSMSTemplate"
                             }
                         },
                         {
@@ -26631,7 +26631,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateSMSTemplate"
+                        "replaceWith": "projects.updateSMSTemplate"
                     },
                     "methods": [
                         {
@@ -26663,7 +26663,7 @@
                             "demo": "projects\/update-sms-template.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateSMSTemplate"
+                                "replaceWith": "projects.updateSMSTemplate"
                             }
                         },
                         {
@@ -26932,7 +26932,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "deleteSMSTemplate"
+                        "replaceWith": "projects.deleteSMSTemplate"
                     },
                     "methods": [
                         {
@@ -26962,7 +26962,7 @@
                             "demo": "projects\/delete-sms-template.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "deleteSMSTemplate"
+                                "replaceWith": "projects.deleteSMSTemplate"
                             }
                         },
                         {
@@ -32201,7 +32201,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following columns: name",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -32651,7 +32651,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, rowSecurity",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following columns: name, enabled, rowSecurity",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -33079,7 +33079,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: key, type, size, required, array, status, error",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following columns: key, type, size, required, array, status, error",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -34871,7 +34871,7 @@
                                 },
                                 "size": {
                                     "type": "integer",
-                                    "description": "Attribute size for text attributes, in number of characters.",
+                                    "description": "Column size for text columns, in number of characters.",
                                     "default": null,
                                     "x-example": 1
                                 },
@@ -35582,7 +35582,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: key, type, status, attributes, error",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following columns: key, type, status, attributes, error",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -40427,7 +40427,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFA"
+                        "replaceWith": "users.updateMFA"
                     },
                     "methods": [
                         {
@@ -40455,7 +40455,7 @@
                             "demo": "users\/update-mfa.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFA"
+                                "replaceWith": "users.updateMFA"
                             }
                         },
                         {
@@ -40559,7 +40559,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "deleteMFAAuthenticator"
+                        "replaceWith": "users.deleteMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -40586,7 +40586,7 @@
                             "demo": "users\/delete-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "deleteMFAAuthenticator"
+                                "replaceWith": "users.deleteMFAAuthenticator"
                             }
                         },
                         {
@@ -40687,7 +40687,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "listMFAFactors"
+                        "replaceWith": "users.listMFAFactors"
                     },
                     "methods": [
                         {
@@ -40713,7 +40713,7 @@
                             "demo": "users\/list-mfa-factors.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "listMFAFactors"
+                                "replaceWith": "users.listMFAFactors"
                             }
                         },
                         {
@@ -40800,7 +40800,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "getMFARecoveryCodes"
+                        "replaceWith": "users.getMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -40826,7 +40826,7 @@
                             "demo": "users\/get-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "getMFARecoveryCodes"
+                                "replaceWith": "users.getMFARecoveryCodes"
                             }
                         },
                         {
@@ -40913,7 +40913,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFARecoveryCodes"
+                        "replaceWith": "users.updateMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -40939,7 +40939,7 @@
                             "demo": "users\/update-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFARecoveryCodes"
+                                "replaceWith": "users.updateMFARecoveryCodes"
                             }
                         },
                         {
@@ -41026,7 +41026,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFARecoveryCodes"
+                        "replaceWith": "users.createMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -41052,7 +41052,7 @@
                             "demo": "users\/create-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFARecoveryCodes"
+                                "replaceWith": "users.createMFARecoveryCodes"
                             }
                         },
                         {
@@ -46110,7 +46110,7 @@
                 },
                 "default": {
                     "type": "integer",
-                    "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                    "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": 10,
                     "format": "int32",
                     "x-nullable": true
@@ -46200,7 +46200,7 @@
                 },
                 "default": {
                     "type": "number",
-                    "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                    "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": 2.5,
                     "format": "double",
                     "x-nullable": true
@@ -46276,7 +46276,7 @@
                 },
                 "default": {
                     "type": "boolean",
-                    "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                    "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": false,
                     "x-nullable": true
                 }
@@ -46354,7 +46354,7 @@
                 },
                 "default": {
                     "type": "string",
-                    "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                    "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": "default@example.com",
                     "x-nullable": true
                 }
@@ -46442,7 +46442,7 @@
                 },
                 "default": {
                     "type": "string",
-                    "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                    "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": "element",
                     "x-nullable": true
                 }
@@ -46524,7 +46524,7 @@
                 },
                 "default": {
                     "type": "string",
-                    "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                    "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": "192.0.2.0",
                     "x-nullable": true
                 }
@@ -46684,7 +46684,7 @@
                 },
                 "default": {
                     "type": "string",
-                    "description": "Default value for attribute when not provided. Only null is optional",
+                    "description": "Default value for column when not provided. Only null is optional",
                     "x-example": "2020-10-15T06:38:00.000+00:00",
                     "x-nullable": true
                 }
@@ -50224,7 +50224,7 @@
                 },
                 "$updatedAt": {
                     "type": "string",
-                    "description": "Execution upate date in ISO 8601 format.",
+                    "description": "Execution update date in ISO 8601 format.",
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "$permissions": {

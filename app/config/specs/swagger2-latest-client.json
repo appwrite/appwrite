@@ -644,7 +644,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAAuthenticator"
+                        "replaceWith": "account.createMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -670,7 +670,7 @@
                             "demo": "account\/create-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAAuthenticator"
+                                "replaceWith": "account.createMFAAuthenticator"
                             }
                         },
                         {
@@ -764,7 +764,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAAuthenticator"
+                        "replaceWith": "account.updateMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -792,7 +792,7 @@
                             "demo": "account\/update-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAAuthenticator"
+                                "replaceWith": "account.updateMFAAuthenticator"
                             }
                         },
                         {
@@ -901,7 +901,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "deleteMFAAuthenticator"
+                        "replaceWith": "account.deleteMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -926,7 +926,7 @@
                             "demo": "account\/delete-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "deleteMFAAuthenticator"
+                                "replaceWith": "account.deleteMFAAuthenticator"
                             }
                         },
                         {
@@ -1021,7 +1021,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAChallenge"
+                        "replaceWith": "account.createMFAChallenge"
                     },
                     "methods": [
                         {
@@ -1047,7 +1047,7 @@
                             "demo": "account\/create-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAChallenge"
+                                "replaceWith": "account.createMFAChallenge"
                             }
                         },
                         {
@@ -1152,7 +1152,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAChallenge"
+                        "replaceWith": "account.updateMFAChallenge"
                     },
                     "methods": [
                         {
@@ -1180,7 +1180,7 @@
                             "demo": "account\/update-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAChallenge"
+                                "replaceWith": "account.updateMFAChallenge"
                             }
                         },
                         {
@@ -1288,7 +1288,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "listMFAFactors"
+                        "replaceWith": "account.listMFAFactors"
                     },
                     "methods": [
                         {
@@ -1310,7 +1310,7 @@
                             "demo": "account\/list-mfa-factors.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "listMFAFactors"
+                                "replaceWith": "account.listMFAFactors"
                             }
                         },
                         {
@@ -1385,7 +1385,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "getMFARecoveryCodes"
+                        "replaceWith": "account.getMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1407,7 +1407,7 @@
                             "demo": "account\/get-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "getMFARecoveryCodes"
+                                "replaceWith": "account.getMFARecoveryCodes"
                             }
                         },
                         {
@@ -1482,7 +1482,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFARecoveryCodes"
+                        "replaceWith": "account.createMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1504,7 +1504,7 @@
                             "demo": "account\/create-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFARecoveryCodes"
+                                "replaceWith": "account.createMFARecoveryCodes"
                             }
                         },
                         {
@@ -1579,7 +1579,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFARecoveryCodes"
+                        "replaceWith": "account.updateMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1601,7 +1601,7 @@
                             "demo": "account\/update-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFARecoveryCodes"
+                                "replaceWith": "account.updateMFARecoveryCodes"
                             }
                         },
                         {
@@ -11330,7 +11330,7 @@
                 },
                 "$updatedAt": {
                     "type": "string",
-                    "description": "Execution upate date in ISO 8601 format.",
+                    "description": "Execution update date in ISO 8601 format.",
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "$permissions": {

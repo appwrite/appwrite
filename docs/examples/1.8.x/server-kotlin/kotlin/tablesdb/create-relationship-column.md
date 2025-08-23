@@ -1,6 +1,6 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
-import io.appwrite.services.TablesDb
+import io.appwrite.services.TablesDB
 import io.appwrite.enums.RelationshipType
 
 val client = Client()
@@ -8,7 +8,7 @@ val client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
-val tablesDB = TablesDb(client)
+val tablesDB = TablesDB(client)
 
 val response = tablesDB.createRelationshipColumn(
     databaseId = "<DATABASE_ID>",
