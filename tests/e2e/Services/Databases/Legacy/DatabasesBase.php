@@ -1735,7 +1735,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'data' => [[
+            'data' => [
                 'title' => 'Thor: Ragnarok',
                 'releaseYear' => 2000,
                 'integers' => [],
@@ -1745,7 +1745,7 @@ trait DatabasesBase
                 'actors' => [],
                 'tagline' => '',
                 'description' => '',
-            ]],
+            ],
             'permissions' => [
                 Permission::read(Role::users()),
                 Permission::update(Role::users()),
