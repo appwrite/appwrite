@@ -1761,8 +1761,6 @@ trait DatabasesBase
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
         $this->assertCount(3, $document['body']['$permissions']);
-        $this->assertEquals(999, 222);
-
 
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
