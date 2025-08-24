@@ -97,6 +97,13 @@ class Upsert extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
+//        if (!empty($data) && \array_is_list($data)) {
+//            throw new Exception('shmuel');
+//        }
+
+        var_dump(array_is_list($data));
+        var_dump($data);
+
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -265,7 +272,13 @@ class Upsert extends Action
         }
 
         $collectionsCache = [];
+
+        if (empty($upserted[0])) {
+            $upserted[0] = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+        }
+
         $document = $upserted[0];
+
         $this->processDocument(
             database: $database,
             collection: $collection,

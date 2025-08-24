@@ -1693,6 +1693,35 @@ trait DatabasesBase
 
         $this->assertEquals('Thor: Ragnarok', $row['body']['title']);
 
+        /**
+         * Resubmit same document, nothing to update
+         */
+        $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+                'releaseYear' => 2000,
+                'integers' => [],
+                'birthDay' => null,
+                'duration' => null,
+                'starringActors' => [],
+                'actors' => [],
+                'tagline' => '',
+                'description' => '',
+            ],
+            'permissions' => [
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
+        ]);
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $row['body']['title']);
+        $this->assertCount(3, $row['body']['$permissions']);
+
         $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
