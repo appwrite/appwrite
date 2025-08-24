@@ -49,10 +49,10 @@ if (empty($domains)) {
 // Last-resort minimal seeds
 if (empty($domains)) {
     $domains = [
-        'hunterio.tk'      => true,
-        'mailinator.com'   => true,
-        'temp-mail.org'    => true,
-        'yopmail.com'      => true,
+        'hunterio.tk' => true,
+        'mailinator.com' => true,
+        'temp-mail.org' => true,
+        'yopmail.com' => true,
         '10minutemail.com' => true,
     ];
 }

@@ -33,7 +33,7 @@ $register = new Registry();
 
 App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
-if (! App::isProduction()) {
+if (!App::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher-sms']);
@@ -41,7 +41,7 @@ if (! App::isProduction()) {
 }
 $register->set('logger', function () {
     // Register error logger
-    $providerName   = System::getEnv('_APP_LOGGING_PROVIDER', '');
+    $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
     if (empty($providerConfig)) {
@@ -51,11 +51,11 @@ $register->set('logger', function () {
     try {
         $loggingProvider = new DSN($providerConfig ?? '');
 
-        $providerName   = $loggingProvider->getScheme();
+        $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
             'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
-            'logowl'    => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
-            default     => ['key' => $loggingProvider->getHost()],
+            'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            default => ['key' => $loggingProvider->getHost()],
         };
     } catch (Throwable $th) {
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
@@ -63,9 +63,9 @@ $register->set('logger', function () {
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
-            'sentry'    => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => ''],
-            'logowl'    => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
-            default     => ['key' => $providerConfig],
+            'sentry' => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => ''],
+            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            default => ['key' => $providerConfig],
         };
     }
 
@@ -73,17 +73,17 @@ $register->set('logger', function () {
         return;
     }
 
-    if (! Logger::hasProvider($providerName)) {
+    if (!Logger::hasProvider($providerName)) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
     try {
         $adapter = match ($providerName) {
-            'sentry'    => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-            'logowl'    => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-            'raygun'    => new Raygun($providerConfig['key']),
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
             'appsignal' => new AppSignal($providerConfig['key']),
-            default     => null
+            default => null
         };
     } catch (Throwable $th) {
         $adapter = null;
@@ -101,67 +101,67 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
-        'host'   => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port'   => System::getEnv('_APP_DB_PORT', '3306'),
-        'user'   => System::getEnv('_APP_DB_USER', ''),
-        'pass'   => System::getEnv('_APP_DB_PASS', ''),
-        'path'   => System::getEnv('_APP_DB_SCHEMA', ''),
-    ]);
+            'scheme' => 'mariadb',
+            'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
+            'port' => System::getEnv('_APP_DB_PORT', '3306'),
+            'user' => System::getEnv('_APP_DB_USER', ''),
+            'pass' => System::getEnv('_APP_DB_PASS', ''),
+            'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+        ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
-        'scheme' => 'redis',
-        'host'   => System::getEnv('_APP_REDIS_HOST', 'redis'),
-        'port'   => System::getEnv('_APP_REDIS_PORT', '6379'),
-        'user'   => System::getEnv('_APP_REDIS_USER', ''),
-        'pass'   => System::getEnv('_APP_REDIS_PASS', ''),
-    ]);
+            'scheme' => 'redis',
+            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+            'user' => System::getEnv('_APP_REDIS_USER', ''),
+            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+        ]);
 
     $connections = [
-        'console'   => [
-            'type'     => 'database',
-            'dsns'     => $fallbackForDB,
+        'console' => [
+            'type' => 'database',
+            'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes'  => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql'],
         ],
-        'database'  => [
-            'type'     => 'database',
-            'dsns'     => $fallbackForDB,
+        'database' => [
+            'type' => 'database',
+            'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes'  => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql'],
         ],
-        'logs'      => [
-            'type'     => 'database',
-            'dsns'     => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
+        'logs' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes'  => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql'],
         ],
         'publisher' => [
-            'type'     => 'publisher',
-            'dsns'     => $fallbackForRedis,
+            'type' => 'publisher',
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
-            'schemes'  => ['redis'],
+            'schemes' => ['redis'],
         ],
-        'consumer'  => [
-            'type'     => 'consumer',
-            'dsns'     => $fallbackForRedis,
+        'consumer' => [
+            'type' => 'consumer',
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
-            'schemes'  => ['redis'],
+            'schemes' => ['redis'],
         ],
-        'pubsub'    => [
-            'type'     => 'pubsub',
-            'dsns'     => $fallbackForRedis,
+        'pubsub' => [
+            'type' => 'pubsub',
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
-            'schemes'  => ['redis'],
+            'schemes' => ['redis'],
         ],
-        'cache'     => [
-            'type'     => 'cache',
-            'dsns'     => $fallbackForRedis,
+        'cache' => [
+            'type' => 'cache',
+            'dsns' => $fallbackForRedis,
             'multiple' => true,
-            'schemes'  => ['redis'],
+            'schemes' => ['redis'],
         ],
     ];
 
-    $maxConnections      = System::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $maxConnections = System::getEnv('_APP_CONNECTIONS_MAX', 151);
     $instanceConnections = $maxConnections / System::getEnv('_APP_POOL_CLIENTS', 14);
 
     $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
@@ -176,33 +176,33 @@ $register->set('pools', function () {
         throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
-    $poolSize = (int) ($instanceConnections / $workerCount);
+    $poolSize = (int)($instanceConnections / $workerCount);
 
     foreach ($connections as $key => $connection) {
-        $type     = $connection['type'] ?? '';
+        $type = $connection['type'] ?? '';
         $multiple = $connection['multiple'] ?? false;
-        $schemes  = $connection['schemes'] ?? [];
-        $config   = [];
-        $dsns     = explode(',', $connection['dsns'] ?? '');
+        $schemes = $connection['schemes'] ?? [];
+        $config = [];
+        $dsns = explode(',', $connection['dsns'] ?? '');
         foreach ($dsns as &$dsn) {
-            $dsn      = explode('=', $dsn);
-            $name     = ($multiple) ? $key . '_' . $dsn[0] : $key;
-            $dsn      = $dsn[1] ?? '';
+            $dsn = explode('=', $dsn);
+            $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
+            $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
 
-            $dsn         = new DSN($dsn);
-            $dsnHost     = $dsn->getHost();
-            $dsnPort     = $dsn->getPort();
-            $dsnUser     = $dsn->getUser();
-            $dsnPass     = $dsn->getPassword();
-            $dsnScheme   = $dsn->getScheme();
+            $dsn = new DSN($dsn);
+            $dsnHost = $dsn->getHost();
+            $dsnPort = $dsn->getPort();
+            $dsnUser = $dsn->getUser();
+            $dsnPass = $dsn->getPassword();
+            $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getPath();
 
-            if (! in_array($dsnScheme, $schemes)) {
+            if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
@@ -218,17 +218,17 @@ $register->set('pools', function () {
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                            \PDO::ATTR_TIMEOUT            => 3, // Seconds
-                            \PDO::ATTR_PERSISTENT         => false,
+                            \PDO::ATTR_TIMEOUT => 3, // Seconds
+                            \PDO::ATTR_PERSISTENT => false,
                             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                            \PDO::ATTR_EMULATE_PREPARES   => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES  => true,
+                            \PDO::ATTR_EMULATE_PREPARES => true,
+                            \PDO::ATTR_STRINGIFY_FETCHES => true,
                         ]);
                     });
                 },
-                'redis'   => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
-                    @$redis->pconnect($dsnHost, (int) $dsnPort);
+                    @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
                     }
@@ -236,7 +236,7 @@ $register->set('pools', function () {
 
                     return $redis;
                 },
-                default   => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
+                default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
@@ -283,10 +283,10 @@ $register->set('pools', function () {
 
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope
-    $dbHost   = System::getEnv('_APP_DB_HOST', '');
-    $dbPort   = System::getEnv('_APP_DB_PORT', '');
-    $dbUser   = System::getEnv('_APP_DB_USER', '');
-    $dbPass   = System::getEnv('_APP_DB_PASS', '');
+    $dbHost = System::getEnv('_APP_DB_HOST', '');
+    $dbPort = System::getEnv('_APP_DB_PORT', '');
+    $dbUser = System::getEnv('_APP_DB_USER', '');
+    $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
 
     return new PDO(
@@ -305,17 +305,17 @@ $register->set('smtp', function () {
     $username = System::getEnv('_APP_SMTP_USERNAME');
     $password = System::getEnv('_APP_SMTP_PASSWORD');
 
-    $mail->XMailer     = 'Appwrite Mailer';
-    $mail->Host        = System::getEnv('_APP_SMTP_HOST', 'smtp');
-    $mail->Port        = System::getEnv('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth    = ! empty($username) && ! empty($password);
-    $mail->Username    = $username;
-    $mail->Password    = $password;
-    $mail->SMTPSecure  = System::getEnv('_APP_SMTP_SECURE', '');
+    $mail->XMailer = 'Appwrite Mailer';
+    $mail->Host = System::getEnv('_APP_SMTP_HOST', 'smtp');
+    $mail->Port = System::getEnv('_APP_SMTP_PORT', 25);
+    $mail->SMTPAuth = !empty($username) && !empty($password);
+    $mail->Username = $username;
+    $mail->Password = $password;
+    $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
-    $mail->CharSet     = 'UTF-8';
+    $mail->CharSet = 'UTF-8';
 
-    $from  = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+    $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
     $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);

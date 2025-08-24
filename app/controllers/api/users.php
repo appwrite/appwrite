@@ -63,24 +63,24 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
 {
     $plaintextPassword = $password;
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-    $passwordHistory   = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+    $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
-    if (! empty($email)) {
+    if (!empty($email)) {
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
         ]);
-        if (! $identityWithMatchingEmail->isEmpty()) {
+        if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
     }
 
     try {
         $userId = $userId == 'unique()'
-        ? ID::unique()
-        : ID::custom($userId);
+            ? ID::unique()
+            : ID::custom($userId);
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData(
@@ -91,38 +91,38 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 strict: false,
                 allowEmpty: true
             );
-            if (! $personalDataValidator->isValid($plaintextPassword)) {
+            if (!$personalDataValidator->isValid($plaintextPassword)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
 
-        $password = (! empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
-        $user     = new Document([
-            '$id'               => $userId,
-            '$permissions'      => [
+        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
+        $user = new Document([
+            '$id' => $userId,
+            '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::user($userId)),
                 Permission::delete(Role::user($userId)),
             ],
-            'email'             => $email,
+            'email' => $email,
             'emailVerification' => false,
-            'phone'             => $phone,
+            'phone' => $phone,
             'phoneVerification' => false,
-            'status'            => true,
-            'labels'            => [],
-            'password'          => $password,
-            'passwordHistory'   => is_null($password) || $passwordHistory === 0 ? [] : [$password],
-            'passwordUpdate'    => (! empty($password)) ? DateTime::now() : null,
-            'hash'              => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
-            'hashOptions'       => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
-            'registration'      => DateTime::now(),
-            'reset'             => false,
-            'name'              => $name,
-            'prefs'             => new \stdClass(),
-            'sessions'          => null,
-            'tokens'            => null,
-            'memberships'       => null,
-            'search'            => implode(' ', [$userId, $email, $phone, $name]),
+            'status' => true,
+            'labels' => [],
+            'password' => $password,
+            'passwordHistory' => is_null($password) || $passwordHistory === 0 ? [] : [$password],
+            'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
+            'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
+            'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
+            'registration' => DateTime::now(),
+            'reset' => false,
+            'name' => $name,
+            'prefs' => new \stdClass(),
+            'sessions' => null,
+            'tokens' => null,
+            'memberships' => null,
+            'search' => implode(' ', [$userId, $email, $phone, $name]),
         ]);
 
         if ($hash === 'plaintext') {
@@ -134,22 +134,22 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         if ($email) {
             try {
                 $target = $dbForProject->createDocument('targets', new Document([
-                    '$permissions'   => [
+                    '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
                         Permission::delete(Role::user($user->getId())),
                     ],
-                    'userId'         => $user->getId(),
+                    'userId' => $user->getId(),
                     'userInternalId' => $user->getSequence(),
-                    'providerType'   => 'email',
-                    'identifier'     => $email,
+                    'providerType' => 'email',
+                    'identifier' => $email,
                 ]));
-                $user->setAttribute('targets', [ ...$user->getAttribute('targets', []), $target]);
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
             } catch (Duplicate) {
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if (! $existingTarget->isEmpty()) {
+                if (!$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -158,22 +158,22 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         if ($phone) {
             try {
                 $target = $dbForProject->createDocument('targets', new Document([
-                    '$permissions'   => [
+                    '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
                         Permission::delete(Role::user($user->getId())),
                     ],
-                    'userId'         => $user->getId(),
+                    'userId' => $user->getId(),
                     'userInternalId' => $user->getSequence(),
-                    'providerType'   => 'sms',
-                    'identifier'     => $phone,
+                    'providerType' => 'sms',
+                    'identifier' => $phone,
                 ]));
-                $user->setAttribute('targets', [ ...$user->getAttribute('targets', []), $target]);
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
             } catch (Duplicate) {
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                if (! $existingTarget->isEmpty()) {
+                if (!$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -194,7 +194,7 @@ App::post('/v1/users')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'create',
         description: '/docs/references/users/create-user.md',
@@ -207,9 +207,9 @@ App::post('/v1/users')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', null, fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', true, ['project', 'disposableDomains'])
+    ->param('email', null, fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', true, ['project', 'disposableDomains'])
     ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -229,7 +229,7 @@ App::post('/v1/users/bcrypt')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'createBcryptUser',
         description: '/docs/references/users/create-bcrypt-user.md',
@@ -242,7 +242,7 @@ App::post('/v1/users/bcrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -264,7 +264,7 @@ App::post('/v1/users/md5')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'createMD5User',
         description: '/docs/references/users/create-md5-user.md',
@@ -277,7 +277,7 @@ App::post('/v1/users/md5')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using MD5.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -299,7 +299,7 @@ App::post('/v1/users/argon2')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'createArgon2User',
         description: '/docs/references/users/create-argon2-user.md',
@@ -312,7 +312,7 @@ App::post('/v1/users/argon2')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Argon2.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -334,7 +334,7 @@ App::post('/v1/users/sha')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'createSHAUser',
         description: '/docs/references/users/create-sha-user.md',
@@ -347,7 +347,7 @@ App::post('/v1/users/sha')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using SHA.')
     ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -358,7 +358,7 @@ App::post('/v1/users/sha')
     ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $options = '{}';
 
-        if (! empty($passwordVersion)) {
+        if (!empty($passwordVersion)) {
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
@@ -376,7 +376,7 @@ App::post('/v1/users/phpass')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'createPHPassUser',
         description: '/docs/references/users/create-phpass-user.md',
@@ -389,7 +389,7 @@ App::post('/v1/users/phpass')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using PHPass.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -411,7 +411,7 @@ App::post('/v1/users/scrypt')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'createScryptUser',
         description: '/docs/references/users/create-scrypt-user.md',
@@ -424,7 +424,7 @@ App::post('/v1/users/scrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
     ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
     ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.')
@@ -438,11 +438,11 @@ App::post('/v1/users/scrypt')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $options = [
-            'salt'         => $passwordSalt,
-            'costCpu'      => $passwordCpu,
-            'costMemory'   => $passwordMemory,
+            'salt' => $passwordSalt,
+            'costCpu' => $passwordCpu,
+            'costMemory' => $passwordMemory,
             'costParallel' => $passwordParallel,
-            'length'       => $passwordLength,
+            'length' => $passwordLength,
         ];
 
         $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -459,7 +459,7 @@ App::post('/v1/users/scrypt-modified')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'createScryptModifiedUser',
         description: '/docs/references/users/create-scrypt-modified-user.md',
@@ -472,7 +472,7 @@ App::post('/v1/users/scrypt-modified')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', fn ($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false)), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false)), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Scrypt Modified.')
     ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
     ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
@@ -498,7 +498,7 @@ App::post('/v1/users/:userId/targets')
     ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'targets',
         name: 'createTarget',
         description: '/docs/references/users/create-target.md',
@@ -527,13 +527,13 @@ App::post('/v1/users/:userId/targets')
         switch ($providerType) {
             case 'email':
                 $validator = new Email();
-                if (! $validator->isValid($identifier)) {
+                if (!$validator->isValid($identifier)) {
                     throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                 }
                 break;
             case MESSAGE_TYPE_SMS:
                 $validator = new Phone();
-                if (! $validator->isValid($identifier)) {
+                if (!$validator->isValid($identifier)) {
                     throw new Exception(Exception::GENERAL_INVALID_PHONE);
                 }
                 break;
@@ -551,25 +551,25 @@ App::post('/v1/users/:userId/targets')
 
         $target = $dbForProject->getDocument('targets', $targetId);
 
-        if (! $target->isEmpty()) {
+        if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
         try {
             $target = $dbForProject->createDocument('targets', new Document([
-                '$id'                => $targetId,
-                '$permissions'       => [
+                '$id' => $targetId,
+                '$permissions' => [
                     Permission::read(Role::user($user->getId())),
                     Permission::update(Role::user($user->getId())),
                     Permission::delete(Role::user($user->getId())),
                 ],
-                'providerId'         => empty($provider->getId()) ? null : $provider->getId(),
+                'providerId' => empty($provider->getId()) ? null : $provider->getId(),
                 'providerInternalId' => $provider->isEmpty() ? null : $provider->getSequence(),
-                'providerType'       => $providerType,
-                'userId'             => $userId,
-                'userInternalId'     => $user->getSequence(),
-                'identifier'         => $identifier,
-                'name'               => ($name !== '') ? $name : null,
+                'providerType' => $providerType,
+                'userId' => $userId,
+                'userInternalId' => $user->getSequence(),
+                'identifier' => $identifier,
+                'name' => ($name !== '') ? $name : null,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -590,7 +590,7 @@ App::get('/v1/users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'list',
         description: '/docs/references/users/list-users.md',
@@ -614,13 +614,13 @@ App::get('/v1/users')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (! empty($search)) {
+        if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
         /**
-     * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-     */
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -629,11 +629,11 @@ App::get('/v1/users')
             /** @var Query $cursor */
 
             $validator = new Cursor();
-            if (! $validator->isValid($cursor)) {
+            if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $userId         = $cursor->getValue();
+            $userId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('users', $userId);
 
             if ($cursorDocument->isEmpty()) {
@@ -663,7 +663,7 @@ App::get('/v1/users/:userId')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'get',
         description: '/docs/references/users/get-user.md',
@@ -694,7 +694,7 @@ App::get('/v1/users/:userId/prefs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'getPrefs',
         description: '/docs/references/users/get-user-prefs.md',
@@ -727,7 +727,7 @@ App::get('/v1/users/:userId/targets/:targetId')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'targets',
         name: 'getTarget',
         description: '/docs/references/users/get-user-target.md',
@@ -765,7 +765,7 @@ App::get('/v1/users/:userId/sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'sessions',
         name: 'listSessions',
         description: '/docs/references/users/list-user-sessions.md',
@@ -803,7 +803,7 @@ App::get('/v1/users/:userId/sessions')
 
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'total'    => count($sessions),
+            'total' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -812,7 +812,7 @@ App::get('/v1/users/:userId/memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/users/list-user-memberships.md',
@@ -843,7 +843,7 @@ App::get('/v1/users/:userId/memberships')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (! empty($search)) {
+        if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -863,7 +863,7 @@ App::get('/v1/users/:userId/memberships')
 
         $response->dynamic(new Document([
             'memberships' => $memberships,
-            'total'       => count($memberships),
+            'total' => count($memberships),
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
@@ -872,7 +872,7 @@ App::get('/v1/users/:userId/logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'logs',
         name: 'listLogs',
         description: '/docs/references/users/list-user-logs.md',
@@ -917,34 +917,34 @@ App::get('/v1/users/:userId/logs')
         $output = [];
 
         foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (! empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
-            $os     = $detector->getOS();
+            $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
 
             $output[$i] = new Document([
-                'event'               => $log['event'],
-                'userId'              => ID::custom($log['data']['userId']),
-                'userEmail'           => $log['data']['userEmail'] ?? null,
-                'userName'            => $log['data']['userName'] ?? null,
-                'ip'                  => $log['ip'],
-                'time'                => $log['time'],
-                'osCode'              => $os['osCode'],
-                'osName'              => $os['osName'],
-                'osVersion'           => $os['osVersion'],
-                'clientType'          => $client['clientType'],
-                'clientCode'          => $client['clientCode'],
-                'clientName'          => $client['clientName'],
-                'clientVersion'       => $client['clientVersion'],
-                'clientEngine'        => $client['clientEngine'],
+                'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
                 'clientEngineVersion' => $client['clientEngineVersion'],
-                'deviceName'          => $device['deviceName'],
-                'deviceBrand'         => $device['deviceBrand'],
-                'deviceModel'         => $device['deviceModel'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel'],
             ]);
 
             $record = $geodb->get($log['ip']);
@@ -960,7 +960,7 @@ App::get('/v1/users/:userId/logs')
 
         $response->dynamic(new Document([
             'total' => $audit->countLogsByUser($user->getSequence(), $queries),
-            'logs'  => $output,
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -969,7 +969,7 @@ App::get('/v1/users/:userId/targets')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'targets',
         name: 'listTargets',
         description: '/docs/references/users/list-user-targets.md',
@@ -1001,8 +1001,8 @@ App::get('/v1/users/:userId/targets')
         $queries[] = Query::equal('userId', [$userId]);
 
         /**
-     * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-     */
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -1010,11 +1010,11 @@ App::get('/v1/users/:userId/targets')
 
         if ($cursor) {
             $validator = new Cursor();
-            if (! $validator->isValid($cursor)) {
+            if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $targetId       = $cursor->getValue();
+            $targetId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('targets', $targetId);
 
             if ($cursorDocument->isEmpty()) {
@@ -1025,13 +1025,13 @@ App::get('/v1/users/:userId/targets')
         }
         try {
             $targets = $dbForProject->find('targets', $queries);
-            $total   = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
         $response->dynamic(new Document([
             'targets' => $targets,
-            'total'   => $total,
+            'total' => $total,
         ]), Response::MODEL_TARGET_LIST);
     });
 
@@ -1040,7 +1040,7 @@ App::get('/v1/users/identities')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'identities',
         name: 'listIdentities',
         description: '/docs/references/users/list-identities.md',
@@ -1064,13 +1064,13 @@ App::get('/v1/users/identities')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (! empty($search)) {
+        if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
         /**
-     * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-     */
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -1079,11 +1079,11 @@ App::get('/v1/users/identities')
             /** @var Query $cursor */
 
             $validator = new Cursor();
-            if (! $validator->isValid($cursor)) {
+            if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $identityId     = $cursor->getValue();
+            $identityId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('identities', $identityId);
 
             if ($cursorDocument->isEmpty()) {
@@ -1096,13 +1096,13 @@ App::get('/v1/users/identities')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $identities = $dbForProject->find('identities', $queries);
-            $total      = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
         $response->dynamic(new Document([
             'identities' => $identities,
-            'total'      => $total,
+            'total' => $total,
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
@@ -1115,7 +1115,7 @@ App::patch('/v1/users/:userId/status')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updateStatus',
         description: '/docs/references/users/update-user-status.md',
@@ -1140,7 +1140,7 @@ App::patch('/v1/users/:userId/status')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool)$status));
 
         $queueForEvents
             ->setParam('userId', $user->getId());
@@ -1156,7 +1156,7 @@ App::put('/v1/users/:userId/labels')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updateLabels',
         description: '/docs/references/users/update-user-labels.md',
@@ -1169,7 +1169,7 @@ App::put('/v1/users/:userId/labels')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('labels', [], new ArrayList(new Text(36, allowList: [ ...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_LABELS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_LABELS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
+    ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_LABELS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_LABELS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1181,7 +1181,7 @@ App::put('/v1/users/:userId/labels')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user->setAttribute('labels', (array) \array_values(\array_unique($labels)));
+        $user->setAttribute('labels', (array)\array_values(\array_unique($labels)));
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -1199,7 +1199,7 @@ App::patch('/v1/users/:userId/verification/phone')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updatePhoneVerification',
         description: '/docs/references/users/update-user-phone-verification.md',
@@ -1241,7 +1241,7 @@ App::patch('/v1/users/:userId/name')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updateName',
         description: '/docs/references/users/update-user-name.md',
@@ -1284,7 +1284,7 @@ App::patch('/v1/users/:userId/password')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updatePassword',
         description: '/docs/references/users/update-user-password.md',
@@ -1297,7 +1297,7 @@ App::patch('/v1/users/:userId/password')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1313,7 +1313,7 @@ App::patch('/v1/users/:userId/password')
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
-            if (! $personalDataValidator->isValid($password)) {
+            if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
@@ -1333,15 +1333,15 @@ App::patch('/v1/users/:userId/password')
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
-        $history      = $user->getAttribute('passwordHistory', []);
+        $history = $user->getAttribute('passwordHistory', []);
         if ($historyLimit > 0) {
             $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
-            if (! $validator->isValid($password)) {
+            if (!$validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
             $history[] = $newPassword;
-            $history   = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
         $user
@@ -1367,7 +1367,7 @@ App::patch('/v1/users/:userId/email')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updateEmail',
         description: '/docs/references/users/update-user-email.md',
@@ -1400,7 +1400,7 @@ App::patch('/v1/users/:userId/email')
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
-            if (! $identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
@@ -1408,7 +1408,7 @@ App::patch('/v1/users/:userId/email')
                 Query::equal('identifier', [$email]),
             ]);
 
-            if ($target instanceof Document && ! $target->isEmpty()) {
+            if ($target instanceof Document && !$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1417,17 +1417,16 @@ App::patch('/v1/users/:userId/email')
 
         $user
             ->setAttribute('email', $email)
-            ->setAttribute('emailVerification', false)
-        ;
+            ->setAttribute('emailVerification', false);
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
-         * @var Document $oldTarget
-         */
+             * @var Document $oldTarget
+             */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
-            if ($oldTarget instanceof Document && ! $oldTarget->isEmpty()) {
+            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 if (\strlen($email) !== 0) {
                     $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
                 } else {
@@ -1436,17 +1435,17 @@ App::patch('/v1/users/:userId/email')
             } else {
                 if (\strlen($email) !== 0) {
                     $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions'   => [
+                        '$permissions' => [
                             Permission::read(Role::user($user->getId())),
                             Permission::update(Role::user($user->getId())),
                             Permission::delete(Role::user($user->getId())),
                         ],
-                        'userId'         => $user->getId(),
+                        'userId' => $user->getId(),
                         'userInternalId' => $user->getSequence(),
-                        'providerType'   => 'email',
-                        'identifier'     => $email,
+                        'providerType' => 'email',
+                        'identifier' => $email,
                     ]));
-                    $user->setAttribute('targets', [ ...$user->getAttribute('targets', []), $target]);
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
                 }
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -1467,7 +1466,7 @@ App::patch('/v1/users/:userId/phone')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updatePhone',
         description: '/docs/references/users/update-user-phone.md',
@@ -1496,15 +1495,14 @@ App::patch('/v1/users/:userId/phone')
 
         $user
             ->setAttribute('phone', $number)
-            ->setAttribute('phoneVerification', false)
-        ;
+            ->setAttribute('phoneVerification', false);
 
         if (\strlen($number) !== 0) {
             $target = $dbForProject->findOne('targets', [
                 Query::equal('identifier', [$number]),
             ]);
 
-            if ($target instanceof Document && ! $target->isEmpty()) {
+            if ($target instanceof Document && !$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1512,11 +1510,11 @@ App::patch('/v1/users/:userId/phone')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
-         * @var Document $oldTarget
-         */
+             * @var Document $oldTarget
+             */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
-            if ($oldTarget instanceof Document && ! $oldTarget->isEmpty()) {
+            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 if (\strlen($number) !== 0) {
                     $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
                 } else {
@@ -1525,17 +1523,17 @@ App::patch('/v1/users/:userId/phone')
             } else {
                 if (\strlen($number) !== 0) {
                     $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions'   => [
+                        '$permissions' => [
                             Permission::read(Role::user($user->getId())),
                             Permission::update(Role::user($user->getId())),
                             Permission::delete(Role::user($user->getId())),
                         ],
-                        'userId'         => $user->getId(),
+                        'userId' => $user->getId(),
                         'userInternalId' => $user->getSequence(),
-                        'providerType'   => 'sms',
-                        'identifier'     => $number,
+                        'providerType' => 'sms',
+                        'identifier' => $number,
                     ]));
-                    $user->setAttribute('targets', [ ...$user->getAttribute('targets', []), $target]);
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
                 }
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -1557,7 +1555,7 @@ App::patch('/v1/users/:userId/verification')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updateEmailVerification',
         description: '/docs/references/users/update-user-email-verification.md',
@@ -1595,7 +1593,7 @@ App::patch('/v1/users/:userId/prefs')
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updatePrefs',
         description: '/docs/references/users/update-user-prefs.md',
@@ -1636,7 +1634,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
     ->label('event', 'users.[userId].targets.[targetId].update')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'targets',
         name: 'updateTarget',
         description: '/docs/references/users/update-target.md',
@@ -1679,13 +1677,13 @@ App::patch('/v1/users/:userId/targets/:targetId')
             switch ($providerType) {
                 case 'email':
                     $validator = new Email();
-                    if (! $validator->isValid($identifier)) {
+                    if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                     }
                     break;
                 case MESSAGE_TYPE_SMS:
                     $validator = new Phone();
-                    if (! $validator->isValid($identifier)) {
+                    if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_PHONE);
                     }
                     break;
@@ -1741,7 +1739,7 @@ App::patch('/v1/users/:userId/mfa')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'updateMfa',
         description: '/docs/references/users/update-user-mfa.md',
@@ -1781,7 +1779,7 @@ App::get('/v1/users/:userId/mfa/factors')
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'mfa',
         name: 'listMfaFactors',
         description: '/docs/references/users/list-mfa-factors.md',
@@ -1806,7 +1804,7 @@ App::get('/v1/users/:userId/mfa/factors')
         $totp = TOTP::getAuthenticatorFromUser($user);
 
         $factors = new Document([
-            Type::TOTP  => $totp !== null && $totp->getAttribute('verified', false),
+            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
             Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
         ]);
@@ -1820,7 +1818,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'mfa',
         name: 'getMfaRecoveryCodes',
         description: '/docs/references/users/get-mfa-recovery-codes.md',
@@ -1865,7 +1863,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'mfa',
         name: 'createMfaRecoveryCodes',
         description: '/docs/references/users/create-mfa-recovery-codes.md',
@@ -1890,7 +1888,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
 
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
 
-        if (! empty($mfaRecoveryCodes)) {
+        if (!empty($mfaRecoveryCodes)) {
             throw new Exception(Exception::USER_RECOVERY_CODES_ALREADY_EXISTS);
         }
 
@@ -1917,7 +1915,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'mfa',
         name: 'updateMfaRecoveryCodes',
         description: '/docs/references/users/update-mfa-recovery-codes.md',
@@ -1968,7 +1966,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'mfa',
         name: 'deleteMfaAuthenticator',
         description: '/docs/references/users/delete-mfa-authenticator.md',
@@ -2016,7 +2014,7 @@ App::post('/v1/users/:userId/sessions')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'sessions',
         name: 'createSession',
         description: '/docs/references/users/create-session.md',
@@ -2042,25 +2040,25 @@ App::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret   = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record   = $geodb->get($request->getIP());
+        $record = $geodb->get($request->getIP());
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire   = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
-                '$id'            => ID::unique(),
-                'userId'         => $user->getId(),
+                '$id' => ID::unique(),
+                'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
-                'provider'       => Auth::SESSION_PROVIDER_SERVER,
-                'secret'         => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'userAgent'      => $request->getUserAgent('UNKNOWN'),
-                'factors'        => ['server'],
-                'ip'             => $request->getIP(),
-                'countryCode'    => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire'         => $expire,
+                'provider' => Auth::SESSION_PROVIDER_SERVER,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'factors' => ['server'],
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire,
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -2101,7 +2099,7 @@ App::post('/v1/users/:userId/tokens')
     ->label('audits.event', 'tokens.create')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'sessions',
         name: 'createToken',
         description: '/docs/references/users/create-token.md',
@@ -2131,14 +2129,14 @@ App::post('/v1/users/:userId/tokens')
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
-            '$id'            => ID::unique(),
-            'userId'         => $user->getId(),
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
-            'type'           => Auth::TOKEN_TYPE_GENERIC,
-            'secret'         => Auth::hash($secret),
-            'expire'         => $expire,
-            'userAgent'      => $request->getUserAgent('UNKNOWN'),
-            'ip'             => $request->getIP(),
+            'type' => Auth::TOKEN_TYPE_GENERIC,
+            'secret' => Auth::hash($secret),
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
@@ -2164,7 +2162,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'sessions',
         name: 'deleteSession',
         description: '/docs/references/users/delete-user-session.md',
@@ -2215,7 +2213,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'sessions',
         name: 'deleteSessions',
         description: '/docs/references/users/delete-user-sessions.md',
@@ -2265,7 +2263,7 @@ App::delete('/v1/users/:userId')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'users',
         name: 'delete',
         description: '/docs/references/users/delete.md',
@@ -2317,7 +2315,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'targets',
         name: 'deleteTarget',
         description: '/docs/references/users/delete-target.md',
@@ -2375,7 +2373,7 @@ App::delete('/v1/users/identities/:identityId')
     ->label('audits.event', 'identity.delete')
     ->label('audits.resource', 'identity/{request.$identityId}')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'identities',
         name: 'deleteIdentity',
         description: '/docs/references/users/delete-identity.md',
@@ -2415,7 +2413,7 @@ App::post('/v1/users/:userId/jwts')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: 'sessions',
         name: 'createJWT',
         description: '/docs/references/users/create-user-jwt.md',
@@ -2441,14 +2439,15 @@ App::post('/v1/users/:userId/jwts')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $session  = new Document();
+        $session = new Document();
 
         if ($sessionId === 'recent') {
             // Get most recent
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {
             // Find by ID
-            foreach ($sessions as $loopSession) {/** @var Utopia\Database\Document $loopSession */
+            foreach ($sessions as $loopSession) {
+                /** @var Utopia\Database\Document $loopSession */
                 if ($loopSession->getId() == $sessionId) {
                     $session = $loopSession;
                     break;
@@ -2461,7 +2460,7 @@ App::post('/v1/users/:userId/jwts')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-                'userId'    => $user->getId(),
+                'userId' => $user->getId(),
                 'sessionId' => $session->isEmpty() ? '' : $session->getId(),
             ])]), Response::MODEL_JWT);
     });
@@ -2471,7 +2470,7 @@ App::get('/v1/users/usage')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
-        namespace :'users',
+        namespace: 'users',
         group: null,
         name: 'getUsage',
         description: '/docs/references/users/get-usage.md',
@@ -2490,8 +2489,8 @@ App::get('/v1/users/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $periods = Config::getParam('usage', []);
-        $stats   = $usage   = [];
-        $days    = $periods[$range];
+        $stats = $usage = [];
+        $days = $periods[$range];
         $metrics = [
             METRIC_USERS,
             METRIC_SESSIONS,
@@ -2505,9 +2504,9 @@ App::get('/v1/users/usage')
                 ]);
 
                 $stats[$metric]['total'] = $result['value'] ?? 0;
-                $limit                   = $days['limit'];
-                $period                  = $days['period'];
-                $results                 = $dbForProject->find('stats', [
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -2529,23 +2528,23 @@ App::get('/v1/users/usage')
 
         foreach ($metrics as $metric) {
             $usage[$metric]['total'] = $stats[$metric]['total'];
-            $usage[$metric]['data']  = [];
-            $leap                    = time() - ($days['limit'] * $days['factor']);
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
             while ($leap < time()) {
                 $leap += $days['factor'];
-                $formatDate               = date($format, $leap);
+                $formatDate = date($format, $leap);
                 $usage[$metric]['data'][] = [
                     'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                    'date'  => $formatDate,
+                    'date' => $formatDate,
                 ];
             }
         }
 
         $response->dynamic(new Document([
-            'range'         => $range,
-            'usersTotal'    => $usage[$metrics[0]]['total'],
+            'range' => $range,
+            'usersTotal' => $usage[$metrics[0]]['total'],
             'sessionsTotal' => $usage[$metrics[1]]['total'],
-            'users'         => $usage[$metrics[0]]['data'],
-            'sessions'      => $usage[$metrics[1]]['data'],
+            'users' => $usage[$metrics[0]]['data'],
+            'sessions' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_USERS);
     });
