@@ -97,12 +97,9 @@ class Upsert extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-//        if (!empty($data) && \array_is_list($data)) {
-//            throw new Exception('shmuel');
-//        }
-
-        var_dump(array_is_list($data));
-        var_dump($data);
+        if (\array_is_list($data) && \count($data) > 1) { // Allow 1 associated array
+            throw new Exception($this->getMissingPayloadException());
+        }
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
