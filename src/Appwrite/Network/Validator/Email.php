@@ -18,7 +18,7 @@ class Email extends Validator
      * @var array<string, bool>
      */
     protected array $disposableDomains = [];
-    protected bool $blockDisposable    = false;
+    protected bool $blockDisposable = false;
     /**
      * @var array<string, bool>
      */
@@ -26,9 +26,9 @@ class Email extends Validator
 
     public function __construct(bool $allowEmpty = false, array $disposableDomains = [], bool $blockDisposable = false, array $allowlistedDomains = [])
     {
-        $this->allowEmpty         = $allowEmpty;
-        $this->disposableDomains  = $disposableDomains;
-        $this->blockDisposable    = $blockDisposable;
+        $this->allowEmpty = $allowEmpty;
+        $this->disposableDomains = $disposableDomains;
+        $this->blockDisposable = $blockDisposable;
         $this->allowlistedDomains = $allowlistedDomains;
     }
 
@@ -49,7 +49,7 @@ class Email extends Validator
      *
      * Validation will pass when $value is valid email address.
      *
-     * @param  mixed $value
+     * @param mixed $value
      * @return bool
      */
     public function isValid($value): bool
@@ -58,18 +58,18 @@ class Email extends Validator
             return true;
         }
 
-        if (! \filter_var($value, FILTER_VALIDATE_EMAIL)) {
+        if (!\filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
 
-        if ($this->blockDisposable && ! empty($this->disposableDomains)) {
+        if ($this->blockDisposable && !empty($this->disposableDomains)) {
             $atPos = \strrpos($value, '@');
             if ($atPos !== false) {
                 $domain = \strtolower(\substr($value, $atPos + 1));
                 // Skip IP literal domains like [123.123.123.123]
                 if ($domain !== '' && $domain[0] !== '[') {
                     // If domain or any parent suffix is allowlisted, skip blocking
-                    if (! empty($this->allowlistedDomains)) {
+                    if (!empty($this->allowlistedDomains)) {
                         $parts = \explode('.', $domain);
                         for ($i = 0; $i < \count($parts); $i++) {
                             $suffix = \implode('.', \array_slice($parts, $i));

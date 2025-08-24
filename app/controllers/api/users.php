@@ -203,7 +203,7 @@ App::post('/v1/users')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -238,7 +238,7 @@ App::post('/v1/users/bcrypt')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -273,7 +273,7 @@ App::post('/v1/users/md5')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -308,7 +308,7 @@ App::post('/v1/users/argon2')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -385,7 +385,7 @@ App::post('/v1/users/phpass')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -420,7 +420,7 @@ App::post('/v1/users/scrypt')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -442,7 +442,7 @@ App::post('/v1/users/scrypt')
             'costCpu' => $passwordCpu,
             'costMemory' => $passwordMemory,
             'costParallel' => $passwordParallel,
-            'length' => $passwordLength,
+            'length' => $passwordLength
         ];
 
         $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -468,7 +468,7 @@ App::post('/v1/users/scrypt-modified')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -507,7 +507,7 @@ App::post('/v1/users/:userId/targets')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TARGET,
-            ),
+            )
         ]
     ))
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -565,7 +565,7 @@ App::post('/v1/users/:userId/targets')
                 ],
                 'providerId' => empty($provider->getId()) ? null : $provider->getId(),
                 'providerInternalId' => $provider->isEmpty() ? null : $provider->getSequence(),
-                'providerType' => $providerType,
+                'providerType' =>  $providerType,
                 'userId' => $userId,
                 'userInternalId' => $user->getSequence(),
                 'identifier' => $identifier,
@@ -599,7 +599,7 @@ App::get('/v1/users')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER_LIST,
-            ),
+            )
         ]
     ))
     ->param('queries', [], new Users(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
@@ -672,7 +672,7 @@ App::get('/v1/users/:userId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -703,7 +703,7 @@ App::get('/v1/users/:userId/prefs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PREFERENCES,
-            ),
+            )
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')

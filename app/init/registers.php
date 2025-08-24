@@ -63,7 +63,7 @@ $register->set('logger', function () {
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => ''],
+            'sentry' => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
             'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
             default => ['key' => $providerConfig],
         };
