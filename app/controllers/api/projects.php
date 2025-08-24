@@ -84,7 +84,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => ! $config['disabled']))), 'Project Region.', true)
+    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => ! $config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -253,8 +253,8 @@ App::post('/v1/projects')
             }
 
             if (! $create && $sharedTablesV1) {
-                $attributes = \array_map(fn($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-                $indexes    = \array_map(fn(array $index) => new Document($index), Audit::INDEXES);
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
+                $indexes    = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
                 $dbForProject->createDocument(Database::METADATA, new Document([
                     '$id'              => ID::custom('audit'),
                     '$permissions'     => [Permission::create(Role::any())],
@@ -274,8 +274,8 @@ App::post('/v1/projects')
                         continue;
                     }
 
-                    $attributes = \array_map(fn($attribute) => new Document($attribute), $collection['attributes']);
-                    $indexes    = \array_map(fn(array $index) => new Document($index), $collection['indexes']);
+                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+                    $indexes    = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
                     try {
                         $dbForProject->createCollection($key, $attributes, $indexes);
@@ -553,7 +553,7 @@ App::patch('/v1/projects/:projectId/service')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -602,7 +602,7 @@ App::patch('/v1/projects/:projectId/service/all')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $allServices = array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional']));
+        $allServices = array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']));
 
         $services = [];
         foreach ($allServices as $service) {
@@ -1292,7 +1292,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', '', fn($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
+    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
@@ -1438,7 +1438,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', '', fn($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
+    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
@@ -2289,7 +2289,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
@@ -2336,7 +2336,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
@@ -2396,7 +2396,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('message', '', new Text(0), 'Template message')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -2443,7 +2443,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('subject', '', new Text(255), 'Email Subject')
     ->param('message', '', new Text(0), 'Template message')
     ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
@@ -2501,7 +2501,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
@@ -2552,7 +2552,7 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {

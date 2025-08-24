@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator;
