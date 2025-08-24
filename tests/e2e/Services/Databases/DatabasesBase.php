@@ -1704,6 +1704,7 @@ trait DatabasesBase
     {
         $databaseId = $data['databaseId'];
         $documentId = ID::unique();
+
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1721,12 +1722,47 @@ trait DatabasesBase
 
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertCount(3, $document['body']['$permissions']);
+
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+
+        /**
+         * Resend same document for no change
+         * Had to add all attributes because of partial comparison $old->getAttributes() == $document->getAttributes()
+         * If nothing is upserted there will be a regular call to getDocument
+         */
+
+        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+                'releaseYear' => 2000,
+                'integers' => [],
+                'birthDay' => null,
+                'duration' => null,
+                'starringActors' => [],
+                'actors' => [],
+                'tagline' => '',
+                'description' => '',
+            ],
+            'permissions' => [
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+        $this->assertCount(3, $document['body']['$permissions']);
+        $this->assertEquals(999, 222);
+
 
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
