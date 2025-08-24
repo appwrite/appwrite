@@ -137,6 +137,12 @@ class Project extends Model
                 'default'     => false,
                 'example'     => true,
             ])
+            ->addRule('authDisposableEmailAllowlist', [
+                'type'        => self::TYPE_STRING,
+                'description' => 'Comma-separated list of email domains to allow even if disposable (per project). Applies to domain and subdomains.',
+                'default'     => '',
+                'example'     => 'example.com,allow.test',
+            ])
             ->addRule('authPersonalDataCheck', [
                 'type'        => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
@@ -377,6 +383,7 @@ class Project extends Model
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authBlockDisposableEmails', $authValues['blockDisposableEmails'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authDisposableEmailAllowlist', \is_array($authValues['disposableEmailAllowlist'] ?? null) ? \implode(',', $authValues['disposableEmailAllowlist']) : ($authValues['disposableEmailAllowlist'] ?? ''));
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
         $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);

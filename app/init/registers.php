@@ -335,20 +335,7 @@ $register->set('passwordsDictionary', function () {
     return $content;
 });
 $register->set('disposableDomains', function () {
-    $path = __DIR__ . '/../assets/security/disposable_email_blocklist.conf';
-    if (! \file_exists($path)) {
-        return [];
-    }
-    $lines   = \file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $domains = [];
-    foreach ($lines as $line) {
-        $domain = \trim($line);
-        if ($domain === '' || $domain[0] === '#') {
-            continue;
-        }
-        $domains[\strtolower($domain)] = true;
-    }
-    return $domains;
+    return \Utopia\Config\Config::getParam('disposable-domains', []);
 });
 $register->set('promiseAdapter', function () {
     return new Swoole();

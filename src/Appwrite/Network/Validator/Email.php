@@ -18,12 +18,17 @@ class Email extends Validator
      */
     protected array $disposableDomains = [];
     protected bool $blockDisposable    = false;
+    /**
+     * @var array<string, bool>
+     */
+    protected array $allowlistedDomains = [];
 
-    public function __construct(bool $allowEmpty = false, array $disposableDomains = [], bool $blockDisposable = false)
+    public function __construct(bool $allowEmpty = false, array $disposableDomains = [], bool $blockDisposable = false, array $allowlistedDomains = [])
     {
-        $this->allowEmpty        = $allowEmpty;
-        $this->disposableDomains = $disposableDomains;
-        $this->blockDisposable   = $blockDisposable;
+        $this->allowEmpty         = $allowEmpty;
+        $this->disposableDomains  = $disposableDomains;
+        $this->blockDisposable    = $blockDisposable;
+        $this->allowlistedDomains = $allowlistedDomains;
     }
 
     /**
@@ -62,6 +67,16 @@ class Email extends Validator
                 $domain = \strtolower(\substr($value, $atPos + 1));
                 // Skip IP literal domains like [123.123.123.123]
                 if ($domain !== '' && $domain[0] !== '[') {
+                    // If domain or any parent suffix is allowlisted, skip blocking
+                    if (! empty($this->allowlistedDomains)) {
+                        $parts = \explode('.', $domain);
+                        for ($i = 0; $i < \count($parts); $i++) {
+                            $suffix = \implode('.', \array_slice($parts, $i));
+                            if (isset($this->allowlistedDomains[$suffix])) {
+                                return true;
+                            }
+                        }
+                    }
                     // Check domain and its parent suffixes
                     $parts = \explode('.', $domain);
                     for ($i = 0; $i < \count($parts); $i++) {

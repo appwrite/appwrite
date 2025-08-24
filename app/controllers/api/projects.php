@@ -1017,7 +1017,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/block-disposable-emails')
+App::patch('/v1/projects/:projectId/auth/disposable-emails')
     ->desc('Update authentication disposable email blocklist status. Use this endpoint to enable or disable blocking registrations with disposable email domains.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1048,6 +1048,54 @@ App::patch('/v1/projects/:projectId/auth/block-disposable-emails')
 
         $auths                          = $project->getAttribute('auths', []);
         $auths['blockDisposableEmails'] = $enabled;
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+                ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/disposable-emails/allowlist')
+    ->desc('Update allowlist of disposable email domains for this project. Domains in this list are allowed even if disposable blocking is enabled. Provide a list of domains; subdomains are also allowed.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace :'projects',
+        group: 'auth',
+        name: 'updateAuthDisposableEmailAllowlist',
+        description: '/docs/references/projects/update-auth-disposable-email-allowlist.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            ),
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('domains', [], new ArrayList(new Text(255), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of domain names to allow, even if detected as disposable. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' domains are allowed.', false)
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, array $domains, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        // Normalize and validate basic domain-like input
+        $normalized = [];
+        foreach ($domains as $d) {
+            $d = \strtolower(\trim($d));
+            if ($d === '' || \str_contains($d, ' ')) {
+                continue;
+            }
+            $normalized[$d] = true;
+        }
+
+        $auths                             = $project->getAttribute('auths', []);
+        $auths['disposableEmailAllowlist'] = \array_keys($normalized);
 
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
                 ->setAttribute('auths', $auths));

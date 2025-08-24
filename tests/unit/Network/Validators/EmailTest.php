@@ -49,21 +49,53 @@ class EmailTest extends TestCase
         $this->assertEquals(false, $this->email->isValid(['string', 'string']));
         $this->assertEquals(false, $this->email->isValid(1));
         $this->assertEquals(false, $this->email->isValid(1.2));
-        $this->assertEquals(false, $this->email->isValid('plainaddress')); // Missing @ sign and domain
-        $this->assertEquals(false, $this->email->isValid('@domain.com')); // Missing username
-        $this->assertEquals(false, $this->email->isValid('#@%^%#$@#$@#.com')); // Garbage
+        $this->assertEquals(false, $this->email->isValid('plainaddress'));                 // Missing @ sign and domain
+        $this->assertEquals(false, $this->email->isValid('@domain.com'));                  // Missing username
+        $this->assertEquals(false, $this->email->isValid('#@%^%#$@#$@#.com'));             // Garbage
         $this->assertEquals(false, $this->email->isValid('Joe Smith <email@domain.com>')); // Encoded html within email is invalid
-        $this->assertEquals(false, $this->email->isValid('email.domain.com')); // Missing @
-        $this->assertEquals(false, $this->email->isValid('email@domain@domain.com')); // Two @ sign
-        $this->assertEquals(false, $this->email->isValid('.email@domain.com')); // Leading dot in address is not allowed
-        $this->assertEquals(false, $this->email->isValid('email.@domain.com')); // Trailing dot in address is not allowed
-        $this->assertEquals(false, $this->email->isValid('email..email@domain.com')); // Multiple dots
-        $this->assertEquals(false, $this->email->isValid('あいうえお@domain.com')); // Unicode char as address
+        $this->assertEquals(false, $this->email->isValid('email.domain.com'));             // Missing @
+        $this->assertEquals(false, $this->email->isValid('email@domain@domain.com'));      // Two @ sign
+        $this->assertEquals(false, $this->email->isValid('.email@domain.com'));            // Leading dot in address is not allowed
+        $this->assertEquals(false, $this->email->isValid('email.@domain.com'));            // Trailing dot in address is not allowed
+        $this->assertEquals(false, $this->email->isValid('email..email@domain.com'));      // Multiple dots
+        $this->assertEquals(false, $this->email->isValid('あいうえお@domain.com'));   // Unicode char as address
         $this->assertEquals(false, $this->email->isValid('email@domain.com (Joe Smith)')); // Text followed email is not allowed
-        $this->assertEquals(false, $this->email->isValid('email@domain')); // Missing top level domain (.com/.net/.org/etc)
-        $this->assertEquals(false, $this->email->isValid('email@-domain.com')); // Leading dash in front of domain is invalid
-        $this->assertEquals(false, $this->email->isValid('email@111.222.333.44444')); // Invalid IP format
-        $this->assertEquals(false, $this->email->isValid('email@domain..com')); // Multiple dot in the domain portion is invalid
+        $this->assertEquals(false, $this->email->isValid('email@domain'));                 // Missing top level domain (.com/.net/.org/etc)
+        $this->assertEquals(false, $this->email->isValid('email@-domain.com'));            // Leading dash in front of domain is invalid
+        $this->assertEquals(false, $this->email->isValid('email@111.222.333.44444'));      // Invalid IP format
+        $this->assertEquals(false, $this->email->isValid('email@domain..com'));            // Multiple dot in the domain portion is invalid
         $this->assertEquals($this->email->getType(), 'string');
+    }
+
+    public function testDisposableDomains(): void
+    {
+        $validator = new Email(allowEmpty: false, disposableDomains: [
+            'mailinator.com' => true,
+            'example.test'   => true,
+        ], blockDisposable: true);
+
+        $this->assertEquals(false, $validator->isValid('user@mailinator.com'));
+        $this->assertEquals(false, $validator->isValid('user@sub.example.test'));
+        $this->assertEquals(true, $validator->isValid('user@legit.tld'));
+    }
+
+    public function testDisposableDomainsWithAllowlist(): void
+    {
+        $validator = new Email(
+            allowEmpty: false,
+            disposableDomains: [
+                'mailinator.com' => true,
+                'example.test'   => true,
+            ],
+            blockDisposable: true,
+            allowlistedDomains: [
+                'mailinator.com'   => true,
+                'sub.example.test' => true,
+            ]
+        );
+
+        $this->assertEquals(true, $validator->isValid('user@mailinator.com'));
+        $this->assertEquals(true, $validator->isValid('user@sub.example.test'));
+        $this->assertEquals(false, $validator->isValid('user@another.example.test'));
     }
 }
