@@ -6,30 +6,30 @@
 $domains = [];
 
 // Allow overriding source URL via environment variable
-$url = \getenv('_APP_DISPOSABLE_DOMAINS_URL') ?: 'https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/main/disposable_email_blocklist.conf';
+// $url = \getenv('_APP_DISPOSABLE_DOMAINS_URL') ?: 'https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/main/disposable_email_blocklist.conf';
 
-// Try to fetch from upstream directly
-$context = \stream_context_create([
-    'http'  => [
-        'timeout'       => 3,
-        'ignore_errors' => true,
-    ],
-    'https' => [
-        'timeout'       => 3,
-        'ignore_errors' => true,
-    ],
-]);
+// // Try to fetch from upstream directly
+// $context = \stream_context_create([
+//     'http'  => [
+//         'timeout'       => 3,
+//         'ignore_errors' => true,
+//     ],
+//     'https' => [
+//         'timeout'       => 3,
+//         'ignore_errors' => true,
+//     ],
+// ]);
 
-$raw = @\file_get_contents($url, false, $context);
-if ($raw !== false && \is_string($raw)) {
-    foreach (\explode("\n", $raw) as $line) {
-        $domain = \trim($line);
-        if ($domain === '' || $domain[0] === '#') {
-            continue;
-        }
-        $domains[\strtolower($domain)] = true;
-    }
-}
+// $raw = @\file_get_contents($url, false, $context);
+// if ($raw !== false && \is_string($raw)) {
+//     foreach (\explode("\n", $raw) as $line) {
+//         $domain = \trim($line);
+//         if ($domain === '' || $domain[0] === '#') {
+//             continue;
+//         }
+//         $domains[\strtolower($domain)] = true;
+//     }
+// }
 
 // Fallback to local file if remote failed
 if (empty($domains)) {
