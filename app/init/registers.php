@@ -63,7 +63,7 @@ $register->set('logger', function () {
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
-            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
+            'sentry' => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
             'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
             default => ['key' => $providerConfig],
         };
@@ -101,20 +101,20 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
-        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => System::getEnv('_APP_DB_PORT', '3306'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
-        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
-    ]);
+            'scheme' => 'mariadb',
+            'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
+            'port' => System::getEnv('_APP_DB_PORT', '3306'),
+            'user' => System::getEnv('_APP_DB_USER', ''),
+            'pass' => System::getEnv('_APP_DB_PASS', ''),
+            'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+        ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
-        'scheme' => 'redis',
-        'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
-        'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-        'user' => System::getEnv('_APP_REDIS_USER', ''),
-        'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-    ]);
+            'scheme' => 'redis',
+            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+            'user' => System::getEnv('_APP_REDIS_USER', ''),
+            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+        ]);
 
     $connections = [
         'console' => [
@@ -222,7 +222,7 @@ $register->set('pools', function () {
                             \PDO::ATTR_PERSISTENT => false,
                             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                             \PDO::ATTR_EMULATE_PREPARES => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES => true
+                            \PDO::ATTR_STRINGIFY_FETCHES => true,
                         ]);
                     });
                 },
@@ -333,6 +333,9 @@ $register->set('passwordsDictionary', function () {
     $content = explode("\n", $content);
     $content = array_flip($content);
     return $content;
+});
+$register->set('disposableDomains', function () {
+    return \Utopia\Config\Config::getParam('disposable-domains', []);
 });
 $register->set('promiseAdapter', function () {
     return new Swoole();
