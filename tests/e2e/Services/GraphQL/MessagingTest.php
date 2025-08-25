@@ -225,7 +225,7 @@ class MessagingTest extends Scope
      */
     public function testListProviders(array $providers)
     {
-        $query = $this->getQuery(self::$LIST_PROVIDERS);
+        $query = $this->getQuery(self::LIST_PROVIDERS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -243,7 +243,7 @@ class MessagingTest extends Scope
      */
     public function testGetProvider(array $providers)
     {
-        $query = $this->getQuery(self::$GET_PROVIDER);
+        $query = $this->getQuery(self::GET_PROVIDER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -265,7 +265,7 @@ class MessagingTest extends Scope
     public function testDeleteProvider(array $providers)
     {
         foreach ($providers as $provider) {
-            $query = $this->getQuery(self::$DELETE_PROVIDER);
+            $query = $this->getQuery(self::DELETE_PROVIDER);
             $graphQLPayload = [
                 'query' => $query,
                 'variables' => [
@@ -283,7 +283,7 @@ class MessagingTest extends Scope
 
     public function testCreateTopic()
     {
-        $query = $this->getQuery(self::$CREATE_TOPIC);
+        $query = $this->getQuery(self::CREATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -309,7 +309,7 @@ class MessagingTest extends Scope
     public function testUpdateTopic(array $topic)
     {
         $topicId = $topic['_id'];
-        $query = $this->getQuery(self::$UPDATE_TOPIC);
+        $query = $this->getQuery(self::UPDATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -334,7 +334,7 @@ class MessagingTest extends Scope
      */
     public function testListTopics()
     {
-        $query = $this->getQuery(self::$LIST_TOPICS);
+        $query = $this->getQuery(self::LIST_TOPICS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -353,7 +353,7 @@ class MessagingTest extends Scope
      */
     public function testGetTopic(string $topicId)
     {
-        $query = $this->getQuery(self::$GET_TOPIC);
+        $query = $this->getQuery(self::GET_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -388,7 +388,7 @@ class MessagingTest extends Scope
                 'fromEmail' => 'sender-email@my-domain.com',
             ]
         ];
-        $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);
+        $query = $this->getQuery(self::CREATE_SENDGRID_PROVIDER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => $providerParam['sendgrid'],
@@ -401,7 +401,7 @@ class MessagingTest extends Scope
 
         $providerId = $response['body']['data']['messagingCreateSendgridProvider']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
+        $query = $this->getQuery(self::CREATE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -424,7 +424,7 @@ class MessagingTest extends Scope
 
         $targetId = $response['body']['data']['usersCreateTarget']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
+        $query = $this->getQuery(self::CREATE_SUBSCRIBER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -451,7 +451,7 @@ class MessagingTest extends Scope
      */
     public function testListSubscribers(array $subscriber)
     {
-        $query = $this->getQuery(self::$LIST_SUBSCRIBERS);
+        $query = $this->getQuery(self::LIST_SUBSCRIBERS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -479,7 +479,7 @@ class MessagingTest extends Scope
         $topicId = $subscriber['topicId'];
         $subscriberId = $subscriber['_id'];
 
-        $query = $this->getQuery(self::$GET_SUBSCRIBER);
+        $query = $this->getQuery(self::GET_SUBSCRIBER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -509,7 +509,7 @@ class MessagingTest extends Scope
         $topicId = $subscriber['topicId'];
         $subscriberId = $subscriber['_id'];
 
-        $query = $this->getQuery(self::$DELETE_SUBSCRIBER);
+        $query = $this->getQuery(self::DELETE_SUBSCRIBER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -530,7 +530,7 @@ class MessagingTest extends Scope
      */
     public function testDeleteTopic(string $topicId)
     {
-        $query = $this->getQuery(self::$DELETE_TOPIC);
+        $query = $this->getQuery(self::DELETE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -564,7 +564,7 @@ class MessagingTest extends Scope
             $this->markTestSkipped('Email provider not configured');
         }
 
-        $query = $this->getQuery(self::$CREATE_MAILGUN_PROVIDER);
+        $query = $this->getQuery(self::CREATE_MAILGUN_PROVIDER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -587,7 +587,7 @@ class MessagingTest extends Scope
 
         $providerId = $provider['body']['data']['messagingCreateMailgunProvider']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_TOPIC);
+        $query = $this->getQuery(self::CREATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -603,7 +603,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $topic['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_USER);
+        $query = $this->getQuery(self::CREATE_USER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -621,7 +621,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $user['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
+        $query = $this->getQuery(self::CREATE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -640,7 +640,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $target['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
+        $query = $this->getQuery(self::CREATE_SUBSCRIBER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -656,7 +656,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $subscriber['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_EMAIL);
+        $query = $this->getQuery(self::CREATE_EMAIL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -676,7 +676,7 @@ class MessagingTest extends Scope
 
         \sleep(5);
 
-        $query = $this->getQuery(self::$GET_MESSAGE);
+        $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -701,7 +701,7 @@ class MessagingTest extends Scope
      */
     public function testUpdateEmail(array $email)
     {
-        $query = $this->getQuery(self::$CREATE_EMAIL);
+        $query = $this->getQuery(self::CREATE_EMAIL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -720,7 +720,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $email['headers']['status-code']);
 
-        $query = $this->getQuery(self::$UPDATE_EMAIL);
+        $query = $this->getQuery(self::UPDATE_EMAIL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -738,7 +738,7 @@ class MessagingTest extends Scope
 
         \sleep(5);
 
-        $query = $this->getQuery(self::$GET_MESSAGE);
+        $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -772,7 +772,7 @@ class MessagingTest extends Scope
             $this->markTestSkipped('SMS provider not configured');
         }
 
-        $query = $this->getQuery(self::$CREATE_MSG91_PROVIDER);
+        $query = $this->getQuery(self::CREATE_MSG91_PROVIDER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -793,7 +793,7 @@ class MessagingTest extends Scope
 
         $providerId = $provider['body']['data']['messagingCreateMsg91Provider']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_TOPIC);
+        $query = $this->getQuery(self::CREATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -809,7 +809,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $topic['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_USER);
+        $query = $this->getQuery(self::CREATE_USER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -827,7 +827,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $user['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
+        $query = $this->getQuery(self::CREATE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -846,7 +846,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $target['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
+        $query = $this->getQuery(self::CREATE_SUBSCRIBER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -862,7 +862,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $subscriber['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_SMS);
+        $query = $this->getQuery(self::CREATE_SMS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -881,7 +881,7 @@ class MessagingTest extends Scope
 
         \sleep(5);
 
-        $query = $this->getQuery(self::$GET_MESSAGE);
+        $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -905,7 +905,7 @@ class MessagingTest extends Scope
      */
     public function testUpdateSMS(array $sms)
     {
-        $query = $this->getQuery(self::$CREATE_SMS);
+        $query = $this->getQuery(self::CREATE_SMS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -923,7 +923,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $sms['headers']['status-code']);
 
-        $query = $this->getQuery(self::$UPDATE_SMS);
+        $query = $this->getQuery(self::UPDATE_SMS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -941,7 +941,7 @@ class MessagingTest extends Scope
 
         \sleep(5);
 
-        $query = $this->getQuery(self::$GET_MESSAGE);
+        $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -973,7 +973,7 @@ class MessagingTest extends Scope
             $this->markTestSkipped('Push provider not configured');
         }
 
-        $query = $this->getQuery(self::$CREATE_FCM_PROVIDER);
+        $query = $this->getQuery(self::CREATE_FCM_PROVIDER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -997,7 +997,7 @@ class MessagingTest extends Scope
 
         $providerId = $provider['body']['data']['messagingCreateFcmProvider']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_TOPIC);
+        $query = $this->getQuery(self::CREATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1013,7 +1013,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $topic['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_USER);
+        $query = $this->getQuery(self::CREATE_USER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1031,7 +1031,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $user['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
+        $query = $this->getQuery(self::CREATE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1050,7 +1050,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $target['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
+        $query = $this->getQuery(self::CREATE_SUBSCRIBER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1066,7 +1066,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $subscriber['headers']['status-code']);
 
-        $query = $this->getQuery(self::$CREATE_PUSH_NOTIFICATION);
+        $query = $this->getQuery(self::CREATE_PUSH_NOTIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1086,7 +1086,7 @@ class MessagingTest extends Scope
 
         \sleep(5);
 
-        $query = $this->getQuery(self::$GET_MESSAGE);
+        $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1111,7 +1111,7 @@ class MessagingTest extends Scope
      */
     public function testUpdatePushNotification(array $push)
     {
-        $query = $this->getQuery(self::$CREATE_PUSH_NOTIFICATION);
+        $query = $this->getQuery(self::CREATE_PUSH_NOTIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1130,7 +1130,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $push['headers']['status-code']);
 
-        $query = $this->getQuery(self::$UPDATE_PUSH_NOTIFICATION);
+        $query = $this->getQuery(self::UPDATE_PUSH_NOTIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -1148,7 +1148,7 @@ class MessagingTest extends Scope
 
         \sleep(5);
 
-        $query = $this->getQuery(self::$GET_MESSAGE);
+        $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

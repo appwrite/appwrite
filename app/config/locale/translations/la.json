@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} Team",
     "emails.magicSession.subject": "Log in",
     "emails.magicSession.hello": "Salve ibi,",
-    "emails.magicSession.body": "Hanc nexum cum login",
-    "emails.magicSession.footer": "Si verificationem huius inscriptionis non postulasti, nuntium hunc ignorare potes.",
     "emails.magicSession.thanks": "Gratias,",
     "emails.magicSession.signature": "{{project}} team",
     "emails.recovery.subject": "Recuperet password",

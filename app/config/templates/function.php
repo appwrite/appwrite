@@ -635,7 +635,7 @@ return [
                 'type' => 'url'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write']
     ],
     [
         'icon' => 'icon-algolia',
@@ -717,7 +717,7 @@ return [
                 'type' => 'password'
             ],
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-meilisearch',
@@ -811,7 +811,7 @@ return [
                 'type' => 'text'
             ],
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-vonage',
@@ -1139,7 +1139,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write']
     ],
     [
         'icon' => 'icon-chat',
@@ -1268,7 +1268,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-eye',
@@ -1327,7 +1327,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-text',
@@ -1386,7 +1386,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-chat',
@@ -1395,7 +1395,10 @@ return [
         'score' => 5,
         'tagline' => 'Convert text to speech using the Hugging Face inference API.',
         'permissions' => ['any'],
-        'events' => ['databases.*.collections.*.documents.*.create'],
+        'events' => [
+            'databases.*.tables.*.rows.*.create',
+            'databases.*.collections.*.documents.*.create',
+        ],
         'cron' => '',
         'timeout' => 15,
         'useCases' => ['ai'],
@@ -1666,7 +1669,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-chip',
@@ -1730,7 +1733,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-chat',

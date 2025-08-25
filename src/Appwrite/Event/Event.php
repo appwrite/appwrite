@@ -383,6 +383,8 @@ class Event
     {
         $this->params = [];
         $this->sensitive = [];
+        $this->event = '';
+        $this->payload = [];
 
         return $this;
     }
@@ -569,7 +571,12 @@ class Event
         /**
          * Force a non-assoc array.
          */
-        return \array_values($events);
+        $eventValues = \array_values($events);
+
+        /**
+         * Return a combined list of table, collection events.
+         */
+        return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
     }
 
     /**
@@ -589,5 +596,46 @@ class Event
         $this->params = $event->getParams();
         $this->context = $event->context;
         return $this;
+    }
+
+    /**
+     * Adds `table` events for `collection` events.
+     *
+     * Example:
+     *
+     * `databases.*.collections.*.documents.*.update` →\
+     * `[databases.*.collections.*.documents.*.update, databases.*.tables.*.rows.*.update]`
+     */
+    private static function mirrorCollectionEvents(string $pattern, string $firstEvent, array $events): array
+    {
+        $tableEventMap = [
+            'documents'    => 'rows',
+            'collections'  => 'tables',
+            'attributes'   => 'columns',
+        ];
+
+        if (
+            str_contains($pattern, 'databases.') &&
+            str_contains($firstEvent, 'collections')
+        ) {
+            $pairedEvents = [];
+
+            foreach ($events as $event) {
+                $pairedEvents[] = $event;
+
+                if (str_contains($event, 'collections')) {
+                    $tableSideEvent = str_replace(
+                        array_keys($tableEventMap),
+                        array_values($tableEventMap),
+                        $event
+                    );
+                    $pairedEvents[] = $tableSideEvent;
+                }
+            }
+
+            $events = $pairedEvents;
+        }
+
+        return $events;
     }
 }

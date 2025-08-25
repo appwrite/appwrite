@@ -37,8 +37,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4320;
-const APP_VERSION_STABLE = '1.7.4';
+const APP_CACHE_BUSTER = 4321;
+const APP_VERSION_STABLE = '1.8.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -80,6 +80,8 @@ const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
 const APP_PLATFORM_SERVER = 'server';
 const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
+const APP_VCS_GITHUB_USERNAME = 'Appwrite';
+const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -141,6 +143,8 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+const APP_FUNCTION_LOG_LENGTH_LIMIT = 1000000;
+const APP_FUNCTION_ERROR_LENGTH_LIMIT = 1000000;
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];

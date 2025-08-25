@@ -29,8 +29,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -59,6 +61,12 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
+/**
+ * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
+ *
+ * Accounts can be created in many ways beyond `createAccount`
+ * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
+ */
 $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
     // Only trigger events for user creation with the database listener.
     if ($document->getCollection() !== 'users') {
@@ -407,6 +415,7 @@ App::init()
     ->inject('project')
     ->inject('user')
     ->inject('publisher')
+    ->inject('publisherFunctions')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -421,7 +430,8 @@ App::init()
     ->inject('apiKey')
     ->inject('plan')
     ->inject('devKey')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('telemetry')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, BrokerPool $publisherFunctions, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -533,7 +543,7 @@ App::init()
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
-        $queueForFunctions = new Func($publisher);
+        $queueForFunctions = new Func($publisherFunctions);
         $queueForWebhooks = new Webhook($publisher);
         $queueForRealtime = new Realtime();
 
@@ -554,6 +564,7 @@ App::init()
             ));
 
         $useCache = $route->getLabel('cache', false);
+        $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
@@ -619,10 +630,12 @@ App::init()
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+                $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (!$isImageTransformation || !$isDisabled) {
                     $response->send($data);
                 }
             } else {
+                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
@@ -800,8 +813,8 @@ App::shutdown()
             Console::info("Triggering database event: \n" .  \json_encode([
                 'projectId' => $project->getId(),
                 'databaseId' => $queueForDatabase->getDatabase()?->getId(),
-                'collectionId' => $queueForDatabase->getCollection()?->getId(),
-                'documentId' => $queueForDatabase->getDocument()?->getId(),
+                'tableId' => $queueForDatabase->getTable()?->getId() ?? $queueForDatabase->getCollection()?->getId(),
+                'rowId' => $queueForDatabase->getRow()?->getId() ?? $queueForDatabase->getDocument()?->getId(),
             ]));
             $queueForDatabase->trigger();
         }

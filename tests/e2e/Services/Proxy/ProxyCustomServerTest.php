@@ -109,15 +109,11 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('https://' . $domain);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
-        // Unexpected I would say, but it is the current behaviour
         $rule = $this->createAPIRule('wss://' . $domain);
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
 
-        // Unexpected I would say, but it is the current behaviour
         $rule = $this->createAPIRule($domain . '/some-path');
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
     }
 
     public function testCreateRedirectRule(): void

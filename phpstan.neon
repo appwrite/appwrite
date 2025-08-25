@@ -6,3 +6,4 @@ parameters:
     - vendor/swoole/ide-helper
   excludePaths:
     - tests/resources
+    - app/sdks

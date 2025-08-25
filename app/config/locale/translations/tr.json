@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} takımı",
     "emails.magicSession.subject": "Giriş",
     "emails.magicSession.hello": "Merhaba,",
-    "emails.magicSession.body": "Giriş yapmak için tıklayın.",
-    "emails.magicSession.footer": "Eğer bu eposta adresini kullanarak giriş yapmak istemediyseniz devam etmeyin.",
     "emails.magicSession.thanks": "Teşekkürler,",
     "emails.magicSession.signature": "{{project}} takımı",
     "emails.recovery.subject": "Şifremi Sıfırla",

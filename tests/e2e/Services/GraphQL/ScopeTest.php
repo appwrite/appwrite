@@ -18,7 +18,7 @@ class ScopeTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $apiKey = $this->getNewKey(['databases.read']);
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -42,7 +42,7 @@ class ScopeTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $apiKey = $this->getNewKey(['databases.read', 'databases.write']);
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

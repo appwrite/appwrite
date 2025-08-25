@@ -12,8 +12,6 @@
     "emails.verification.signature": "команда {{project}}",
     "emails.magicSession.subject": "Логин",
     "emails.magicSession.hello": "Здравствуйте,",
-    "emails.magicSession.body": "Перейдите по ссылке, чтобы войти.",
-    "emails.magicSession.footer": "Если вы не просили войти, используя этот адрес электронной почты, проигнорируйте это сообщение.",
     "emails.magicSession.thanks": "Спасибо,",
     "emails.magicSession.signature": "команда {{project}}",
     "emails.recovery.subject": "Сброс пароля",

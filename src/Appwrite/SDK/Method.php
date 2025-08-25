@@ -18,17 +18,19 @@ class Method
      * @param string $namespace
      * @param ?string $group
      * @param string $name
+     * @param string $desc
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
      * @param ContentType $contentType
      * @param MethodType|null $type
-     * @param bool $deprecated
+     * @param bool|Deprecated $deprecated
      * @param array|bool $hide
      * @param bool $packaging
      * @param ContentType $requestType
      * @param array<Parameter> $parameters
      * @param array $additionalParameters
+     * @param string $desc
      */
     public function __construct(
         protected string $namespace,
@@ -39,12 +41,13 @@ class Method
         protected array $responses,
         protected ContentType $contentType = ContentType::JSON,
         protected ?MethodType $type = null,
-        protected bool $deprecated = false,
+        protected bool|Deprecated $deprecated = false,
         protected array|bool $hide = false,
         protected bool $packaging = false,
         protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
-        protected array $additionalParameters = []
+        protected array $additionalParameters = [],
+        protected string $desc = ''
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -137,6 +140,11 @@ class Method
         return $this->name;
     }
 
+    public function getDesc(): string
+    {
+        return $this->desc;
+    }
+
     public function getDescription(): string
     {
         return $this->description;
@@ -176,6 +184,11 @@ class Method
     }
 
     public function isDeprecated(): bool
+    {
+        return $this->deprecated !== false;
+    }
+
+    public function getDeprecated(): bool|Deprecated
     {
         return $this->deprecated;
     }
@@ -220,6 +233,12 @@ class Method
         return $this;
     }
 
+    public function setDesc(string $desc): self
+    {
+        $this->desc = $desc;
+        return $this;
+    }
+
     public function setDescription(string $description): self
     {
         $this->description = $description;
@@ -258,13 +277,13 @@ class Method
         return $this;
     }
 
-    public function setDeprecated(bool $deprecated): self
+    public function setDeprecated(bool|Deprecated $deprecated): self
     {
         $this->deprecated = $deprecated;
         return $this;
     }
 
-    public function setHide(bool|array $hide): self
+    public function setHide(bool|Deprecated $hide): self
     {
         $this->hide = $hide;
         return $this;

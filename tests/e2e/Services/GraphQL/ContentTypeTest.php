@@ -102,7 +102,7 @@ class ContentTypeTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
 
-        $query = $this->getQuery(self::$CREATE_BUCKET);
+        $query = $this->getQuery(self::CREATE_BUCKET);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -124,7 +124,7 @@ class ContentTypeTest extends Scope
 
         $bucket = $bucket['body']['data']['storageCreateBucket'];
 
-        $query = $this->getQuery(self::$CREATE_FILE);
+        $query = $this->getQuery(self::CREATE_FILE);
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,

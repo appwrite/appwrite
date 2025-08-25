@@ -24,23 +24,31 @@ class BaseList extends Model
      * @param bool $paging
      * @param bool $public
      */
-    public function __construct(string $name, string $type, string $key, string $model, bool $paging = true, bool $public = true)
-    {
+    public function __construct(
+        string $name,
+        string $type,
+        string $key,
+        string $model,
+        bool $paging = true,
+        bool $public = true
+    ) {
         $this->name = $name;
         $this->type = $type;
         $this->public = $public;
 
         if ($paging) {
             $namesWithCap = [
-                'documents', 'collections', 'users', 'files', 'buckets', 'functions',
-                'deployments', 'executions', 'projects', 'webhooks', 'keys',
-                'platforms', 'rules', 'memberships', 'teams'
+                'rows', 'tables', // new api
+                'documents', 'collections', // legacy api
+                'users', 'files', 'buckets', 'functions',
+                'deployments', 'executions', 'projects',
+                'webhooks', 'keys', 'platforms', 'rules', 'memberships', 'teams'
             ];
 
             if (\in_array($name, $namesWithCap)) {
-                $description = 'Total number of ' . $key . ' documents that matched your query used as reference for offset pagination. When the `total` number of ' . $key . ' documents available is greater than 5000, total returned will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
+                $description = 'Total number of ' . $key . ' that matched your query used as reference for offset pagination. When the `total` number of ' . $key . ' rows available is greater than 5000, total returned will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
             } else {
-                $description = 'Total number of ' . $key . ' documents that matched your query.';
+                $description = 'Total number of ' . $key . ' that matched your query.';
             }
 
             $this->addRule('total', [

@@ -71,6 +71,9 @@ services:
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Only needed for tests
+      - ./docker-compose.yml:/usr/src/code/docker-compose.yml # Only needed for tests
+      - ./.env:/usr/src/code/.env # Only needed for tests
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -120,6 +123,8 @@ services:
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -214,7 +219,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:6.1.12
+    image: appwrite/console:7.0.0-qa.8
     restart: unless-stopped
     networks:
       - appwrite
@@ -535,6 +540,8 @@ services:
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
       - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
@@ -704,6 +711,8 @@ services:
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_EMAIL_SECURITY
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -738,6 +747,8 @@ services:
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -955,7 +966,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.22
+    image: openruntimes/executor:0.8.1
     restart: unless-stopped
     networks:
       - appwrite

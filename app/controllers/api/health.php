@@ -23,10 +23,12 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/health')
@@ -397,7 +399,7 @@ App::get('/v1/health/certificate')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
+    ->param('domain', null, new Multiple([new AnyOf([new URL(), new Domain()]), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
         if (filter_var($domain, FILTER_VALIDATE_URL)) {
@@ -522,17 +524,11 @@ App::get('/v1/health/queue/databases')
     ))
     ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
-    ->inject('publisherRedis')
+    ->inject('publisherDatabases')
     ->inject('response')
-    ->action(function (string $name, int|string $threshold, Publisher $publisher, ?Publisher $publisherRedis, Response $response) {
+    ->action(function (string $name, int|string $threshold, Publisher $publisherDatabases, Response $response) {
         $threshold = \intval($threshold);
-
-        $isRedisFallback = \str_contains(System::getEnv('_APP_WORKER_REDIS_FALLBACK', ''), 'databases');
-
-        $size = $isRedisFallback
-            ? $publisherRedis->getQueueSize(new Queue($name))
-            : $publisher->getQueueSize(new Queue($name));
+        $size = $publisherDatabases->getQueueSize(new Queue($name));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -659,17 +655,12 @@ App::get('/v1/health/queue/migrations')
         contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
-    ->inject('publisherRedis')
+    ->inject('publisherMigrations')
     ->inject('response')
-    ->action(function (int|string $threshold, Publisher $publisher, ?Publisher $publisherRedis, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisherMigrations, Response $response) {
         $threshold = \intval($threshold);
 
-        $isRedisFallback = \str_contains(System::getEnv('_APP_WORKER_REDIS_FALLBACK', ''), 'migrations');
-
-        $size = $isRedisFallback
-            ? $publisherRedis->getQueueSize(new Queue(Event::MIGRATIONS_QUEUE_NAME))
-            : $publisher->getQueueSize(new Queue(Event::MIGRATIONS_QUEUE_NAME));
+        $size = $publisherMigrations->getQueueSize(new Queue(Event::MIGRATIONS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -697,12 +688,12 @@ App::get('/v1/health/queue/functions')
         contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
+    ->inject('publisherFunctions')
     ->inject('response')
-    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisherFunctions, Response $response) {
         $threshold = \intval($threshold);
 
-        $size = $publisher->getQueueSize(new Queue(Event::FUNCTIONS_QUEUE_NAME));
+        $size = $publisherFunctions->getQueueSize(new Queue(Event::FUNCTIONS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");

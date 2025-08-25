@@ -245,10 +245,16 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        $resourceType = match ($document->getCollection()) {
+            'functions' => ['function'],
+            'sites' => ['site'],
+            default => ['function', 'site']
+        };
+
         return $database
             ->find('variables', [
                 Query::equal('resourceInternalId', [$document->getSequence()]),
-                Query::equal('resourceType', ['function', 'site']),
+                Query::equal('resourceType', $resourceType),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
