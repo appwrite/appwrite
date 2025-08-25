@@ -23,7 +23,10 @@ use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeFloat;
 use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributePoint;
+use Appwrite\Utopia\Response\Model\AttributePolygon;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeURL;
@@ -41,7 +44,10 @@ use Appwrite\Utopia\Response\Model\ColumnFloat;
 use Appwrite\Utopia\Response\Model\ColumnIndex;
 use Appwrite\Utopia\Response\Model\ColumnInteger;
 use Appwrite\Utopia\Response\Model\ColumnIP;
+use Appwrite\Utopia\Response\Model\ColumnLine;
 use Appwrite\Utopia\Response\Model\ColumnList;
+use Appwrite\Utopia\Response\Model\ColumnPoint;
+use Appwrite\Utopia\Response\Model\ColumnPolygon;
 use Appwrite\Utopia\Response\Model\ColumnRelationship;
 use Appwrite\Utopia\Response\Model\ColumnString;
 use Appwrite\Utopia\Response\Model\ColumnURL;
@@ -203,6 +209,9 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
     public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
     public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
+    public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
+    public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
+    public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
 
     // Database Columns
     public const MODEL_COLUMN = 'column';
@@ -217,6 +226,9 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_URL = 'columnUrl';
     public const MODEL_COLUMN_DATETIME = 'columnDatetime';
     public const MODEL_COLUMN_RELATIONSHIP = 'columnRelationship';
+    public const MODEL_COLUMN_POINT = 'columnPoint';
+    public const MODEL_COLUMN_LINE = 'columnLine';
+    public const MODEL_COLUMN_POLYGON = 'columnPolygon';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -482,6 +494,9 @@ class Response extends SwooleResponse
             ->setModel(new AttributeURL())
             ->setModel(new AttributeDatetime())
             ->setModel(new AttributeRelationship())
+            ->setModel(new AttributePoint())
+            ->setModel(new AttributeLine())
+            ->setModel(new AttributePolygon())
             // Table API Models
             ->setModel(new Table())
             ->setModel(new Column())
@@ -496,6 +511,9 @@ class Response extends SwooleResponse
             ->setModel(new ColumnURL())
             ->setModel(new ColumnDatetime())
             ->setModel(new ColumnRelationship())
+            ->setModel(new ColumnPoint())
+            ->setModel(new ColumnLine())
+            ->setModel(new ColumnPolygon())
             ->setModel(new Index())
             ->setModel(new ColumnIndex())
             ->setModel(new Row())

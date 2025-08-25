@@ -245,6 +245,18 @@ abstract class Action extends UtopiaAction
                 ? UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP
                 : UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
 
+            Database::VAR_POINT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_POINT
+                : UtopiaResponse::MODEL_COLUMN_POINT,
+
+            Database::VAR_LINESTRING => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_LINE
+                : UtopiaResponse::MODEL_COLUMN_LINE,
+
+            Database::VAR_POLYGON => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
+                : UtopiaResponse::MODEL_COLUMN_POLYGON,
+
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
                     ? UtopiaResponse::MODEL_ATTRIBUTE_EMAIL

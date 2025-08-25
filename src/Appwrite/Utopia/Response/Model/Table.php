@@ -71,6 +71,9 @@ class Table extends Model
                     Response::MODEL_COLUMN_IP,
                     Response::MODEL_COLUMN_DATETIME,
                     Response::MODEL_COLUMN_RELATIONSHIP,
+                    Response::MODEL_COLUMN_POINT,
+                    Response::MODEL_COLUMN_LINE,
+                    Response::MODEL_COLUMN_POLYGON,
                     Response::MODEL_COLUMN_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'Table columns.',

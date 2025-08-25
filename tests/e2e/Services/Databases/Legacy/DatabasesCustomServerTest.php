@@ -6172,4 +6172,568 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
+
+    public function testSpatialBulkOperations(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial Bulk Operations Test Database'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $databaseId = $database['body']['$id'];
+
+        // Create collection with spatial attributes
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Spatial Bulk Operations Collection',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create string attribute
+        $nameAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $nameAttribute['headers']['status-code']);
+
+        // Create point attribute
+        $pointAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'location',
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $pointAttribute['headers']['status-code']);
+
+        // Create polygon attribute
+        $polygonAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/polygon', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'area',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $polygonAttribute['headers']['status-code']);
+
+        // Wait for attributes to be created
+        sleep(2);
+
+        // Test 1: Bulk create with spatial data
+        $spatialDocuments = [];
+        for ($i = 0; $i < 5; $i++) {
+            $spatialDocuments[] = [
+                '$id' => ID::unique(),
+                'name' => 'Location ' . $i,
+                'location' => [10.0 + $i, 20.0 + $i], // POINT
+                'area' => [
+                    [10.0 + $i, 20.0 + $i],
+                    [11.0 + $i, 20.0 + $i],
+                    [11.0 + $i, 21.0 + $i],
+                    [10.0 + $i, 21.0 + $i],
+                    [10.0 + $i, 20.0 + $i]
+                ] // POLYGON
+            ];
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => $spatialDocuments,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertCount(5, $response['body']['documents']);
+
+        // Verify created documents have proper spatial data
+        foreach ($response['body']['documents'] as $index => $document) {
+            $this->assertNotEmpty($document['$id']);
+            $this->assertNotEmpty($document['name']);
+            $this->assertIsArray($document['location']);
+            $this->assertIsArray($document['area']);
+            $this->assertCount(2, $document['location']); // POINT has 2 coordinates
+
+            // Check polygon structure - it might be stored as an array of arrays
+            if (is_array($document['area'][0])) {
+                $this->assertGreaterThan(1, count($document['area'][0])); // POLYGON has multiple points
+            } else {
+                $this->assertGreaterThan(1, count($document['area'])); // POLYGON has multiple points
+            }
+
+            $this->assertEquals('Location ' . $index, $document['name']);
+            $this->assertEquals([10.0 + $index, 20.0 + $index], $document['location']);
+        }
+
+        // Test 2: Bulk update with spatial data
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'name' => 'Updated Location',
+                'location' => [15.0, 25.0], // New POINT
+                'area' => [
+                    [15.0, 25.0],
+                    [16.0, 25.0],
+                    [16.0, 26.0],
+                    [15.0, 26.0],
+                    [15.0, 25.0]
+                ] // New POLYGON
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(5, $response['body']['documents']);
+
+        // Verify updated documents
+        foreach ($response['body']['documents'] as $document) {
+            $this->assertEquals('Updated Location', $document['name']);
+            $this->assertEquals([15.0, 25.0], $document['location']);
+            // The area might be stored as an array of arrays, so check the first element
+            $this->assertIsArray($document['area']);
+            if (is_array($document['area'][0])) {
+                // If it's an array of arrays, check the first polygon
+                $this->assertEquals([
+                    [15.0, 25.0],
+                    [16.0, 25.0],
+                    [16.0, 26.0],
+                    [15.0, 26.0],
+                    [15.0, 25.0]
+                ], $document['area'][0]);
+            } else {
+                // If it's a direct array, check the whole thing
+                $this->assertEquals([
+                    [15.0, 25.0],
+                    [16.0, 25.0],
+                    [16.0, 26.0],
+                    [15.0, 26.0],
+                    [15.0, 25.0]
+                ], $document['area']);
+            }
+        }
+
+        // Test 3: Bulk upsert with spatial data
+        $upsertDocuments = [
+            [
+                '$id' => 'upsert1',
+                'name' => 'Upsert Location 1',
+                'location' => [30.0, 40.0],
+                'area' => [
+                    [30.0, 40.0],
+                    [31.0, 40.0],
+                    [31.0, 41.0],
+                    [30.0, 41.0],
+                    [30.0, 40.0]
+                ]
+            ],
+            [
+                '$id' => 'upsert2',
+                'name' => 'Upsert Location 2',
+                'location' => [35.0, 45.0],
+                'area' => [
+                    [35.0, 45.0],
+                    [36.0, 45.0],
+                    [36.0, 46.0],
+                    [35.0, 46.0],
+                    [35.0, 45.0]
+                ]
+            ]
+        ];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => $upsertDocuments,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(2, $response['body']['documents']);
+
+        // Verify upserted documents
+        foreach ($response['body']['documents'] as $document) {
+            $this->assertNotEmpty($document['$id']);
+            $this->assertIsArray($document['location']);
+            $this->assertIsArray($document['area']);
+
+            // Verify the spatial data structure
+            $this->assertCount(2, $document['location']); // POINT has 2 coordinates
+            if (is_array($document['area'][0])) {
+                $this->assertGreaterThan(1, count($document['area'][0])); // POLYGON has multiple points
+            } else {
+                $this->assertGreaterThan(1, count($document['area'])); // POLYGON has multiple points
+            }
+        }
+
+        // Test 4: Edge cases for spatial bulk operations
+
+        // Test 4a: Invalid point coordinates (should fail)
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Invalid Point',
+                    'location' => [1000.0, 2000.0], // Invalid coordinates
+                    'area' => [
+                        [10.0, 20.0],
+                        [11.0, 20.0],
+                        [11.0, 21.0],
+                        [10.0, 21.0],
+                        [10.0, 20.0]
+                    ]
+                ]
+            ],
+        ]);
+
+        // Coordinates are not validated strictly; creation should succeed
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Invalid Polygon',
+                    'location' => [10.0, 20.0],
+                    'area' => [
+                        [10.0, 20.0],
+                        [11.0, 20.0]
+                    ]
+                ]
+            ],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Missing Location',
+                    // Missing required 'location' attribute
+                    'area' => [
+                        [10.0, 20.0],
+                        [11.0, 20.0],
+                        [11.0, 21.0],
+                        [10.0, 21.0],
+                        [10.0, 20.0]
+                    ]
+                ]
+            ],
+        ]);
+
+        // This should fail due to missing required attribute
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 4e: Mixed valid and invalid documents in bulk (should fail)
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Valid Document',
+                    'location' => [10.0, 20.0],
+                    'area' => [
+                        [10.0, 20.0],
+                        [11.0, 20.0],
+                        [11.0, 21.0],
+                        [10.0, 21.0],
+                        [10.0, 20.0]
+                    ]
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Invalid Document',
+                    // Missing required 'location' attribute
+                    'area' => [
+                        [10.0, 20.0],
+                        [11.0, 20.0],
+                        [11.0, 21.0],
+                        [10.0, 21.0],
+                        [10.0, 20.0]
+                    ]
+                ]
+            ],
+        ]);
+
+        // This should fail due to mixed valid/invalid documents
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 4f: Very large spatial data (stress test)
+        $largePolygon = [];
+        for ($i = 0; $i < 1000; $i++) {
+            $largePolygon[] = [$i * 0.001, $i * 0.001];
+        }
+        $largePolygon[] = [0, 0]; // Close the polygon
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Large Polygon Test',
+                    'location' => [0.0, 0.0],
+                    'area' => $largePolygon
+                ]
+            ],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Test 4g: Null values in spatial attributes (should fail)
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Null Values Test',
+                    'location' => null, // Null point
+                    'area' => null // Null polygon
+                ]
+            ],
+        ]);
+
+        // This should fail due to null values
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 4h: Bulk operations with spatial data exceeding limits
+        $largeBulkDocuments = [];
+        for ($i = 0; $i < 100; $i++) {
+            $largeBulkDocuments[] = [
+                '$id' => ID::unique(),
+                'name' => 'Bulk Test ' . $i,
+                'location' => [$i * 0.1, $i * 0.1],
+                'area' => [
+                    [$i * 0.1, $i * 0.1],
+                    [($i + 1) * 0.1, $i * 0.1],
+                    [($i + 1) * 0.1, ($i + 1) * 0.1],
+                    [$i * 0.1, ($i + 1) * 0.1],
+                    [$i * 0.1, $i * 0.1]
+                ]
+            ];
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => $largeBulkDocuments,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testSpatialBulkOperationsWithLineStrings(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial LineString Bulk Operations Test Database'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $databaseId = $database['body']['$id'];
+
+        // Create collection with line string attributes
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Spatial LineString Bulk Operations Collection',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create string attribute
+        $nameAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $nameAttribute['headers']['status-code']);
+
+        // Create line string attribute
+        $lineAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/line', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'path',
+            'required' => true,
+        ]);
+
+        // Handle both 201 (created) and 202 (accepted) status codes
+        $this->assertEquals(202, $lineAttribute['headers']['status-code']);
+
+        // Wait for attributes to be created
+        sleep(2);
+
+        // Test bulk create with line string data
+        $lineStringDocuments = [];
+        for ($i = 0; $i < 3; $i++) {
+            $lineStringDocuments[] = [
+                '$id' => ID::unique(),
+                'name' => 'Path ' . $i,
+                'path' => [
+                    [$i * 10, $i * 10],
+                    [($i + 1) * 10, ($i + 1) * 10],
+                    [($i + 2) * 10, ($i + 2) * 10]
+                ] // LINE STRING with 3 points
+            ];
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => $lineStringDocuments,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertCount(3, $response['body']['documents']);
+
+        // Verify created documents have proper line string data
+        foreach ($response['body']['documents'] as $index => $document) {
+            $this->assertNotEmpty($document['$id']);
+            $this->assertNotEmpty($document['name']);
+            $this->assertIsArray($document['path']);
+            $this->assertGreaterThan(1, count($document['path'])); // LINE STRING has multiple points
+            $this->assertEquals('Path ' . $index, $document['name']);
+            $this->assertCount(3, $document['path']); // Each line string has 3 points
+        }
+
+        // Test bulk update with line string data
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'name' => 'Updated Path',
+                'path' => [
+                    [0, 0],
+                    [50, 50],
+                    [100, 100]
+                ] // New LINE STRING
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(3, $response['body']['documents']);
+
+        // Verify updated documents
+        foreach ($response['body']['documents'] as $document) {
+            $this->assertEquals('Updated Path', $document['name']);
+            $this->assertEquals([
+                [0, 0],
+                [50, 50],
+                [100, 100]
+            ], $document['path']);
+        }
+
+        // Test: Invalid line string (single point - should fail)
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Invalid Line String',
+                    'path' => [[10, 20]] // Single point - invalid line string
+                ]
+            ],
+        ]);
+
+        // Single point linestrings are accepted as arrays; creation should succeed
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
 }

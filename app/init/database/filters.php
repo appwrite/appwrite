@@ -92,6 +92,11 @@ Database::addFilter(
                     $filters = $attribute->getAttribute('filters', []);
                     $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
                     break;
+
+                case Database::VAR_POINT:
+                case Database::VAR_LINESTRING:
+                case Database::VAR_POLYGON:
+                    break;
             }
         }
 
