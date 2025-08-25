@@ -355,11 +355,15 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
         }
 
+        $executionId = ID::unique();
+
         $headers = \array_merge([], $requestHeaders);
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $headers['x-appwrite-client-ip'] = $request->getIP();
 
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
@@ -390,8 +394,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
-
-        $executionId = ID::unique();
 
         $execution = new Document([
             '$id' => $executionId,
