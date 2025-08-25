@@ -4435,6 +4435,10 @@ App::put('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         }
 
+        if (empty($upserted[0])) {
+            $upserted[0] = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+        }
+
         $document = $upserted[0];
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
