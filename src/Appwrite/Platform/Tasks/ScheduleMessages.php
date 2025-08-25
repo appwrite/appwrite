@@ -40,7 +40,7 @@ class ScheduleMessages extends ScheduleBase
             }
 
             \go(function () use ($schedule, $scheduledAt, $dbForPlatform) {
-                $queueForMessaging = new Messaging($this->publisher);
+                $queueForMessaging = new Messaging($this->publisherMessaging);
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 

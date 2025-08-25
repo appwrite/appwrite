@@ -27,6 +27,7 @@ abstract class ScheduleBase extends Action
     protected BrokerPool $publisher;
     protected BrokerPool $publisherMigrations;
     protected BrokerPool $publisherFunctions;
+    protected BrokerPool $publisherMessaging;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -47,6 +48,7 @@ abstract class ScheduleBase extends Action
             ->inject('publisher')
             ->inject('publisherMigrations')
             ->inject('publisherFunctions')
+            ->inject('publisherMessaging')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
@@ -69,7 +71,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
@@ -77,6 +79,7 @@ abstract class ScheduleBase extends Action
         $this->publisher = $publisher;
         $this->publisherMigrations = $publisherMigrations;
         $this->publisherFunctions = $publisherFunctions;
+        $this->publisherMessaging = $publisherMessaging;
 
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');

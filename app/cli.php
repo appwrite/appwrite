@@ -203,6 +203,9 @@ CLI::setResource('publisherMigrations', function (BrokerPool $publisher) {
 CLI::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
+CLI::setResource('publisherMessaging', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
 CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
