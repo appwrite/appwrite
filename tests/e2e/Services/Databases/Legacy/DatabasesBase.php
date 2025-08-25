@@ -1704,6 +1704,7 @@ trait DatabasesBase
     {
         $databaseId = $data['databaseId'];
         $documentId = ID::unique();
+
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1721,6 +1722,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertCount(3, $document['body']['$permissions']);
+
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
