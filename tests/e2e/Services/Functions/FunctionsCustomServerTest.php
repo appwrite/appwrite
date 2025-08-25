@@ -945,6 +945,29 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(1, $executions['body']['total']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
+        $this->assertEquals($data['deploymentId'], $executions['body']['executions'][0]['deploymentId']);
+
+        $executions = $this->listExecutions($data['functionId'], [
+            'queries' => [
+                Query::equal('deploymentId', [$data['deploymentId']])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals(1, $executions['body']['total']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertCount(1, $executions['body']['executions']);
+
+        $executions = $this->listExecutions($data['functionId'], [
+            'queries' => [
+                Query::equal('deploymentId', ['some-random-id'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals(0, $executions['body']['total']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertCount(0, $executions['body']['executions']);
 
         $executions = $this->listExecutions($data['functionId'], [
             'queries' => [
@@ -1034,8 +1057,9 @@ class FunctionsCustomServerTest extends Scope
          */
         $execution = $this->getExecution($data['functionId'], $data['executionId']);
 
-        $this->assertEquals($execution['headers']['status-code'], 200);
-        $this->assertEquals($execution['body']['$id'], $data['executionId']);
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals($data['executionId'], $execution['body']['$id']);
+        $this->assertEquals($data['deploymentId'], $execution['body']['deploymentId']);
 
         /**
          * Test for FAILURE
@@ -2285,6 +2309,47 @@ class FunctionsCustomServerTest extends Scope
         ]));
         $this->assertEquals(500, $response['headers']['status-code']);
         $this->assertStringContainsString('CustomError500', $response['body']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testLogAndErrorTruncation(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Log Truncation',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('log-error-truncation'),
+            'activate' => true
+        ]);
+
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false'
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+
+        // Verify logs are truncated and warning message is present at the beginning
+        $logs = $execution['body']['logs'];
+        $this->assertLessThanOrEqual(APP_FUNCTION_LOG_LENGTH_LIMIT, strlen($logs));
+        $this->assertStringStartsWith('[WARNING] Logs truncated', $logs);
+
+        $this->assertStringNotContainsString('z', $logs);
+        $this->assertStringContainsString('a', $logs);
+
+        // Verify errors are truncated and warning message is present at the beginning
+        $errors = $execution['body']['errors'];
+        $this->assertLessThanOrEqual(APP_FUNCTION_ERROR_LENGTH_LIMIT, strlen($errors));
+        $this->assertStringStartsWith('[WARNING] Errors truncated', $errors);
+
+        $this->assertStringNotContainsString('z', $errors);
+        $this->assertStringContainsString('a', $errors);
 
         $this->cleanupFunction($functionId);
     }
