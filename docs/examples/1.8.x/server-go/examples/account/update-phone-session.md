@@ -6,21 +6,14 @@ import (
     "github.com/appwrite/sdk-for-go/account"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+)
 
-    service := account.New(client)
-    response, error := service.UpdatePhoneSession(
-        "<USER_ID>",
-        "<SECRET>",
-    )
+service := account.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.UpdatePhoneSession(
+    "<USER_ID>",
+    "<SECRET>",
+)
