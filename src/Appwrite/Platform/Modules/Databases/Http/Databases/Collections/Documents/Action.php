@@ -232,6 +232,7 @@ abstract class Action extends AppwriteAction
 
         $collectionId = $collection->getId();
         $document->removeAttribute('$collection');
+        $document->removeAttribute('$tenant');
         $document->setAttribute('$databaseId', $database->getId());
         $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
 
