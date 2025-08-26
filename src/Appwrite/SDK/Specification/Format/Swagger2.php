@@ -3,7 +3,6 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
@@ -171,7 +170,7 @@ class Swagger2 extends Format
                 ],
             ];
 
-            if ($sdk->getDeprecated() instanceof Deprecated) {
+            if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [
                     'since' => $sdk->getDeprecated()->getSince(),
                     'replaceWith' => $sdk->getDeprecated()->getReplaceWith(),
@@ -235,7 +234,7 @@ class Swagger2 extends Format
                     ];
 
                     // add deprecation only if method has it!
-                    if ($methodObj->getDeprecated() instanceof Deprecated) {
+                    if ($methodObj->getDeprecated()) {
                         $additionalMethod['deprecated'] = [
                             'since' => $methodObj->getDeprecated()->getSince(),
                             'replaceWith' => $methodObj->getDeprecated()->getReplaceWith(),
