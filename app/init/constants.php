@@ -147,7 +147,7 @@ const APP_FUNCTION_LOG_LENGTH_LIMIT = 1000000;
 const APP_FUNCTION_ERROR_LENGTH_LIMIT = 1000000;
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
-const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
+const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length', 'x-appwrite-execution-id', 'x-appwrite-log-id'];
 // Message types
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';

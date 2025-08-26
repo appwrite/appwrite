@@ -549,6 +549,7 @@ class Functions extends Action
                     $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
                 }
             }
+            $headersFiltered[] = ['name' => 'x-appwrite-execution-id', 'value' => $execution->getId()];
 
             $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
             $logs = $executionResponse['logs'] ?? '';

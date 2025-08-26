@@ -142,6 +142,19 @@ class FunctionsCustomClientTest extends Scope
         ]);
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
+
+        $this->assertNotEmpty($execution['body']['responseHeaders']);
+
+        $executionIdHeader = null;
+        foreach ($execution['body']['responseHeaders'] as $header) {
+            if ($header['name'] === 'x-appwrite-execution-id') {
+                $executionIdHeader = $header['value'];
+                break;
+            }
+        }
+        $this->assertNotEmpty($executionIdHeader);
+        $this->assertEquals($execution['body']['$id'], $executionIdHeader);
+
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
         $this->assertEquals('completed', $execution['body']['status']);

@@ -610,6 +610,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 }
             }
 
+            if ($deployment->getAttribute('resourceType') === 'functions') {
+                $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+            } elseif ($deployment->getAttribute('resourceType') === 'sites') {
+                $executionResponse['headers']['x-appwrite-log-id'] = $execution->getId();
+            }
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {

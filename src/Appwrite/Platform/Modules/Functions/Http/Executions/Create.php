@@ -486,6 +486,8 @@ class Create extends Base
             $headers[] = ['name' => $key, 'value' => $value];
         }
 
+        $headers[] = ['name' => 'x-appwrite-execution-id', 'value' => $execution->getId()];
+
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 

@@ -1433,6 +1433,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Index page", $response['body']);
 
+        $this->assertArrayHasKey('x-appwrite-log-id', $response['headers']);
+        $this->assertNotEmpty($response['headers']['x-appwrite-log-id']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
