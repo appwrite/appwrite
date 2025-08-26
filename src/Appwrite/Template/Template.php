@@ -173,6 +173,8 @@ class Template extends View
      */
     public static function fromCamelCaseToDash($input): string
     {
-        return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
+        $result = \preg_replace('/([a-z0-9])([A-Z])(?=[a-z])/', '$1-$2', $input);
+        $result = \preg_replace('/([A-Z])([A-Z][a-z])/', '$1-$2', $result);
+        return \str_replace([' ', '_'], '-', \strtolower($result));
     }
 }

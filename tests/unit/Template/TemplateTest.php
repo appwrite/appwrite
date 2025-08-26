@@ -64,5 +64,6 @@ class TemplateTest extends TestCase
     {
         $this->assertEquals('app-write', Template::fromCamelCaseToDash('appWrite'));
         $this->assertEquals('app-write', Template::fromCamelCaseToDash('App Write'));
+        $this->assertEquals('tablesdb', Template::fromCamelCaseToDash('tablesDB'));
     }
 }
