@@ -1,1 +1,1 @@
-appwrite functions listSpecifications
+appwrite functions list-specifications

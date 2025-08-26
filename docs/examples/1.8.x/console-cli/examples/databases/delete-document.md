@@ -1,4 +1,4 @@
-appwrite databases deleteDocument \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --documentId <DOCUMENT_ID>
+appwrite databases delete-document \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --document-id <DOCUMENT_ID>

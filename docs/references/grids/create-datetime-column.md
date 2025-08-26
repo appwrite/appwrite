@@ -1,1 +1,0 @@
-Create a date time column according to the ISO 8601 standard.

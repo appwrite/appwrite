@@ -6,9 +6,9 @@ const client = new Client()
 
 const migrations = new Migrations(client);
 
-const result = await migrations.getFirebaseReport(
-    [], // resources
-    '<SERVICE_ACCOUNT>' // serviceAccount
-);
+const result = await migrations.getFirebaseReport({
+    resources: [],
+    serviceAccount: '<SERVICE_ACCOUNT>'
+});
 
 console.log(result);

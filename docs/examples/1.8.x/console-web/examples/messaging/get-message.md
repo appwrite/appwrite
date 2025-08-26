@@ -6,8 +6,8 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.getMessage(
-    '<MESSAGE_ID>' // messageId
-);
+const result = await messaging.getMessage({
+    messageId: '<MESSAGE_ID>'
+});
 
 console.log(result);

@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}} komandası",
     "emails.magicSession.subject": "Daxil Olmaq",
     "emails.magicSession.hello": "Salam,",
-    "emails.magicSession.body": "Daxil olmaq üçün bu linki izləyin.",
-    "emails.magicSession.footer": "Bu e-poçtdan istifadə edərək giriş istəməmisinizsə, bu mesajı görməməzlikdən gələ bilərsiniz.",
     "emails.magicSession.thanks": "Təşəkkürlər,",
     "emails.magicSession.signature": "{{project}} komandası",
     "emails.recovery.subject": "Şifrə Sıfırlanması",

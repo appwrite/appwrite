@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const avatars = new sdk.Avatars(client);
 
-const result = await avatars.getBrowser(
-    sdk.Browser.AvantBrowser, // code
-    0, // width (optional)
-    0, // height (optional)
-    -1 // quality (optional)
-);
+const result = await avatars.getBrowser({
+    code: sdk.Browser.AvantBrowser,
+    width: 0, // optional
+    height: 0, // optional
+    quality: -1 // optional
+});

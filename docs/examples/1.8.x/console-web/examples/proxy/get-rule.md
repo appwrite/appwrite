@@ -6,8 +6,8 @@ const client = new Client()
 
 const proxy = new Proxy(client);
 
-const result = await proxy.getRule(
-    '<RULE_ID>' // ruleId
-);
+const result = await proxy.getRule({
+    ruleId: '<RULE_ID>'
+});
 
 console.log(result);

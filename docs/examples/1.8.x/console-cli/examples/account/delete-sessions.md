@@ -1,1 +1,1 @@
-appwrite account deleteSessions
+appwrite account delete-sessions

@@ -13,6 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
@@ -32,6 +33,25 @@ App::get('/v1/mock/tests/general/oauth2')
     ->inject('response')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
+    });
+
+App::get('/v1/mock/tests/locale')
+    ->desc('Mock locale translation key')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('locale')
+    ->inject('localeCodes')
+    ->inject('request')
+    ->inject('response')
+    ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
+        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        if (\in_array($localeParam, $localeCodes)) {
+            $locale->setDefault($localeParam);
+        }
+
+        $response->send($locale->getText('mock'));
     });
 
 App::get('/v1/mock/tests/general/oauth2/token')

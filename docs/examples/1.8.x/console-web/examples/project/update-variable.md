@@ -6,11 +6,11 @@ const client = new Client()
 
 const project = new Project(client);
 
-const result = await project.updateVariable(
-    '<VARIABLE_ID>', // variableId
-    '<KEY>', // key
-    '<VALUE>', // value (optional)
-    false // secret (optional)
-);
+const result = await project.updateVariable({
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+});
 
 console.log(result);

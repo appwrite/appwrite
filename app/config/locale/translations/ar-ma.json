@@ -12,8 +12,6 @@
     "emails.verification.signature": "فرقة {{project}}",
     "emails.magicSession.subject": "تكونيكطا",
     "emails.magicSession.hello": "السلام،",
-    "emails.magicSession.body": "تبّع هاد الوصلة باش تتكونيكطا.",
-    "emails.magicSession.footer": "إلا ماشي نتا اللي طلبتي تتكونيكطا بهاد ليميل، ممكن تنخّل هاد البرية.",
     "emails.magicSession.thanks": "شكرا،",
     "emails.magicSession.signature": "فرقة {{project}}",
     "emails.recovery.subject": "تبدال كلمة السر",

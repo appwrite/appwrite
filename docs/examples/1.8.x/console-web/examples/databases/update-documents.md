@@ -6,11 +6,11 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.updateDocuments(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    {}, // data (optional)
-    [] // queries (optional)
-);
+const result = await databases.updateDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    data: {}, // optional
+    queries: [] // optional
+});
 
 console.log(result);

@@ -1,3 +1,3 @@
-appwrite account createRecovery \
-        --email email@example.com \
-        --url https://example.com
+appwrite account create-recovery \
+    --email email@example.com \
+    --url https://example.com

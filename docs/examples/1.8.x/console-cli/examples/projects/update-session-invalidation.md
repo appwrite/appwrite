@@ -1,3 +1,3 @@
-appwrite projects updateSessionInvalidation \
-        --projectId <PROJECT_ID> \
-        --enabled false
+appwrite projects update-session-invalidation \
+    --project-id <PROJECT_ID> \
+    --enabled false

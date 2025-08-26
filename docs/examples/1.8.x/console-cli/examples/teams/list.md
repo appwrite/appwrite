@@ -1,3 +1,1 @@
-appwrite teams list \
-
-
+appwrite teams list

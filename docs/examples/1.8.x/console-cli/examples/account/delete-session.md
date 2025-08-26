@@ -1,2 +1,2 @@
-appwrite account deleteSession \
-        --sessionId <SESSION_ID>
+appwrite account delete-session \
+    --session-id <SESSION_ID>

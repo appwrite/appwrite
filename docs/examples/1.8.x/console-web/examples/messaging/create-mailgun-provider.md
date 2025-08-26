@@ -6,17 +6,17 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.createMailgunProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '<API_KEY>', // apiKey (optional)
-    '<DOMAIN>', // domain (optional)
-    false, // isEuRegion (optional)
-    '<FROM_NAME>', // fromName (optional)
-    'email@example.com', // fromEmail (optional)
-    '<REPLY_TO_NAME>', // replyToName (optional)
-    'email@example.com', // replyToEmail (optional)
-    false // enabled (optional)
-);
+const result = await messaging.createMailgunProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    apiKey: '<API_KEY>', // optional
+    domain: '<DOMAIN>', // optional
+    isEuRegion: false, // optional
+    fromName: '<FROM_NAME>', // optional
+    fromEmail: 'email@example.com', // optional
+    replyToName: '<REPLY_TO_NAME>', // optional
+    replyToEmail: 'email@example.com', // optional
+    enabled: false // optional
+});
 
 console.log(result);

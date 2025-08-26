@@ -6,9 +6,9 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.listLogs(
-    '<SITE_ID>', // siteId
-    [] // queries (optional)
-);
+const result = await sites.listLogs({
+    siteId: '<SITE_ID>',
+    queries: [] // optional
+});
 
 console.log(result);

@@ -7,8 +7,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.upsertDocuments(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    [] // documents
-);
+const response = await databases.upsertDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documents: []
+});

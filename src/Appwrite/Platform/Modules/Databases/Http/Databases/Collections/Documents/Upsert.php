@@ -71,7 +71,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.upsertRow',
+                        replaceWith: 'tablesDB.upsertRow',
                     ),
                 ),
             ])
@@ -94,6 +94,10 @@ class Upsert extends Action
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
+            throw new Exception($this->getMissingPayloadException());
+        }
+
+        if (\array_is_list($data) && \count($data) > 1) { // Allow 1 associated array
             throw new Exception($this->getMissingPayloadException());
         }
 
@@ -213,8 +217,7 @@ class Upsert extends Action
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
-                        $relation->removeAttribute('$collectionId');
-                        $relation->removeAttribute('$databaseId');
+                        $this->removeReadonlyAttributes($relation);
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
@@ -266,7 +269,13 @@ class Upsert extends Action
         }
 
         $collectionsCache = [];
+
+        if (empty($upserted[0])) {
+            $upserted[0] = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+        }
+
         $document = $upserted[0];
+
         $this->processDocument(
             database: $database,
             collection: $collection,

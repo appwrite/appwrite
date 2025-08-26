@@ -52,22 +52,8 @@ class XList extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.listDatabases',
+                        replaceWith: 'tablesDB.list',
                     )
-                ),
-                new Method(
-                    namespace: 'grids',
-                    group: 'grids',
-                    name: 'listDatabases',
-                    description: '/docs/references/grids/list-databases.md',
-                    auth: [AuthType::KEY],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_DATABASE_LIST,
-                        )
-                    ],
-                    contentType: ContentType::JSON
                 ),
             ])
             ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)

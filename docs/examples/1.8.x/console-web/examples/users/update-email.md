@@ -6,9 +6,9 @@ const client = new Client()
 
 const users = new Users(client);
 
-const result = await users.updateEmail(
-    '<USER_ID>', // userId
-    'email@example.com' // email
-);
+const result = await users.updateEmail({
+    userId: '<USER_ID>',
+    email: 'email@example.com'
+});
 
 console.log(result);

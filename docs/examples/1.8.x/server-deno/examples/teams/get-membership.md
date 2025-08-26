@@ -7,7 +7,7 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const response = await teams.getMembership(
-    '<TEAM_ID>', // teamId
-    '<MEMBERSHIP_ID>' // membershipId
-);
+const response = await teams.getMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>'
+});

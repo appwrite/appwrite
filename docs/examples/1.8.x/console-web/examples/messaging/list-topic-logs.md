@@ -6,9 +6,9 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.listTopicLogs(
-    '<TOPIC_ID>', // topicId
-    [] // queries (optional)
-);
+const result = await messaging.listTopicLogs({
+    topicId: '<TOPIC_ID>',
+    queries: [] // optional
+});
 
 console.log(result);

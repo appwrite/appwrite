@@ -1,3 +1,3 @@
-appwrite databases getCollection \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID>
+appwrite databases get-collection \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID>

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.deleteSession(
-    '<USER_ID>', // userId
-    '<SESSION_ID>' // sessionId
-);
+const result = await users.deleteSession({
+    userId: '<USER_ID>',
+    sessionId: '<SESSION_ID>'
+});

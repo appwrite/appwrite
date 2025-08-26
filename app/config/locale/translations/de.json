@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}}-Team",
     "emails.magicSession.subject": "Login",
     "emails.magicSession.hello": "Hey,",
-    "emails.magicSession.body": "Folge diesem Link, um dich einzuloggen.",
-    "emails.magicSession.footer": "Solltest du keinen Login für diese E-Mail-Adresse angefordert haben, kannst du diese Nachricht ignorieren.",
     "emails.magicSession.thanks": "Danke,",
     "emails.magicSession.signature": "{{project}}-Team",
     "emails.recovery.subject": "Kennwort zurücksetzen",
@@ -247,5 +245,6 @@
     "emails.otpSession.clientInfo": "Diese Anmeldung wurde über {{agentClient}} auf {{agentDevice}} {{agentOs}} angefordert. Wenn Sie die Anmeldung nicht angefordert haben, können Sie diese E-Mail getrost ignorieren.",
     "emails.otpSession.securityPhrase": "Die Sicherheitsphrase für diese E-Mail lautet {{phrase}}. Sie können dieser E-Mail vertrauen, wenn diese Phrase mit der Phrase übereinstimmt, die beim Anmelden angezeigt wird.",
     "emails.otpSession.thanks": "Danke,",
-    "emails.otpSession.signature": "{{project}} Team"
+    "emails.otpSession.signature": "{{project}} Team",
+    "mock": "Eine Beispielübersetzung für Testzwecke."
 }

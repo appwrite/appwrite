@@ -6,13 +6,13 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.incrementDocumentAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<DOCUMENT_ID>', // documentId
-    '', // attribute
-    null, // value (optional)
-    null // max (optional)
-);
+const result = await databases.incrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: '',
+    value: null, // optional
+    max: null // optional
+});
 
 console.log(result);

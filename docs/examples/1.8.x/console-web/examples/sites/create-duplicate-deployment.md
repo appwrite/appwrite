@@ -6,9 +6,9 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.createDuplicateDeployment(
-    '<SITE_ID>', // siteId
-    '<DEPLOYMENT_ID>' // deploymentId
-);
+const result = await sites.createDuplicateDeployment({
+    siteId: '<SITE_ID>',
+    deploymentId: '<DEPLOYMENT_ID>'
+});
 
 console.log(result);

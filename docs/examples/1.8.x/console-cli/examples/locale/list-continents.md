@@ -1,1 +1,1 @@
-appwrite locale listContinents
+appwrite locale list-continents

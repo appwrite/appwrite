@@ -1,3 +1,3 @@
-appwrite sites getDeployment \
-        --siteId <SITE_ID> \
-        --deploymentId <DEPLOYMENT_ID>
+appwrite sites get-deployment \
+    --site-id <SITE_ID> \
+    --deployment-id <DEPLOYMENT_ID>

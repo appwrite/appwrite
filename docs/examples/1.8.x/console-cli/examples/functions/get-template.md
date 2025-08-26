@@ -1,2 +1,2 @@
-appwrite functions getTemplate \
-        --templateId <TEMPLATE_ID>
+appwrite functions get-template \
+    --template-id <TEMPLATE_ID>

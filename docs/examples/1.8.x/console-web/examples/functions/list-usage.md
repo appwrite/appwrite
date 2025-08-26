@@ -1,4 +1,4 @@
-import { Client, Functions, FunctionUsageRange } from "@appwrite.io/console";
+import { Client, Functions, UsageRange } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -6,8 +6,8 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = await functions.listUsage(
-    FunctionUsageRange.TwentyFourHours // range (optional)
-);
+const result = await functions.listUsage({
+    range: UsageRange.TwentyFourHours // optional
+});
 
 console.log(result);

@@ -7,23 +7,23 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.create(
-    '<SITE_ID>', // siteId
-    '<NAME>', // name
-    sdk..Analog, // framework
-    sdk..Node145, // buildRuntime
-    false, // enabled (optional)
-    false, // logging (optional)
-    1, // timeout (optional)
-    '<INSTALL_COMMAND>', // installCommand (optional)
-    '<BUILD_COMMAND>', // buildCommand (optional)
-    '<OUTPUT_DIRECTORY>', // outputDirectory (optional)
-    sdk..Static, // adapter (optional)
-    '<INSTALLATION_ID>', // installationId (optional)
-    '<FALLBACK_FILE>', // fallbackFile (optional)
-    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId (optional)
-    '<PROVIDER_BRANCH>', // providerBranch (optional)
-    false, // providerSilentMode (optional)
-    '<PROVIDER_ROOT_DIRECTORY>', // providerRootDirectory (optional)
-    '' // specification (optional)
-);
+const result = await sites.create({
+    siteId: '<SITE_ID>',
+    name: '<NAME>',
+    framework: sdk..Analog,
+    buildRuntime: sdk..Node145,
+    enabled: false, // optional
+    logging: false, // optional
+    timeout: 1, // optional
+    installCommand: '<INSTALL_COMMAND>', // optional
+    buildCommand: '<BUILD_COMMAND>', // optional
+    outputDirectory: '<OUTPUT_DIRECTORY>', // optional
+    adapter: sdk..Static, // optional
+    installationId: '<INSTALLATION_ID>', // optional
+    fallbackFile: '<FALLBACK_FILE>', // optional
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
+    providerBranch: '<PROVIDER_BRANCH>', // optional
+    providerSilentMode: false, // optional
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
+    specification: '' // optional
+});

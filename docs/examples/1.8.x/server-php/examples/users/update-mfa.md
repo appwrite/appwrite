@@ -10,7 +10,7 @@ $client = (new Client())
 
 $users = new Users($client);
 
-$result = $users->updateMfa(
+$result = $users->updateMFA(
     userId: '<USER_ID>',
     mfa: false
 );

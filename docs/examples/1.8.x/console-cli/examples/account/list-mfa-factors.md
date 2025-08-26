@@ -1,1 +1,1 @@
-appwrite account listMfaFactors
+appwrite account list-mfa-factors

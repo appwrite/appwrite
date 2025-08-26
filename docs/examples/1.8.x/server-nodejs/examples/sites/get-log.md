@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.getLog(
-    '<SITE_ID>', // siteId
-    '<LOG_ID>' // logId
-);
+const result = await sites.getLog({
+    siteId: '<SITE_ID>',
+    logId: '<LOG_ID>'
+});

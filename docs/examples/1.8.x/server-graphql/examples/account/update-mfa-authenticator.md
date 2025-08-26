@@ -1,5 +1,5 @@
 mutation {
-    accountUpdateMfaAuthenticator(
+    accountUpdateMFAAuthenticator(
         type: "totp",
         otp: "<OTP>"
     ) {

@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.getDeploymentDownload(
-    '<SITE_ID>', // siteId
-    '<DEPLOYMENT_ID>', // deploymentId
-    sdk.DeploymentDownloadType.Source // type (optional)
-);
+const result = await sites.getDeploymentDownload({
+    siteId: '<SITE_ID>',
+    deploymentId: '<DEPLOYMENT_ID>',
+    type: sdk.DeploymentDownloadType.Source // optional
+});

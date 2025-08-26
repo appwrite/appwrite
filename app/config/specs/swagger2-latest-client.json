@@ -624,7 +624,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
@@ -642,6 +642,60 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.createMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaType"
+                                }
+                            ],
+                            "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
+                            "demo": "account\/create-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.createMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "createMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaType"
+                                }
+                            ],
+                            "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
+                            "demo": "account\/create-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -690,7 +744,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
@@ -708,6 +762,64 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.updateMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type",
+                                "otp"
+                            ],
+                            "required": [
+                                "type",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/user"
+                                }
+                            ],
+                            "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
+                            "demo": "account\/update-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.updateMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "updateMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type",
+                                "otp"
+                            ],
+                            "required": [
+                                "type",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/user"
+                                }
+                            ],
+                            "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
+                            "demo": "account\/update-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -769,7 +881,7 @@
                         "description": "No content"
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
@@ -787,6 +899,58 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.deleteMFAAuthenticator"
+                    },
+                    "methods": [
+                        {
+                            "name": "deleteMfaAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator for a user by ID.",
+                            "demo": "account\/delete-mfa-authenticator.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.deleteMFAAuthenticator"
+                            }
+                        },
+                        {
+                            "name": "deleteMFAAuthenticator",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "type"
+                            ],
+                            "required": [
+                                "type"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 204
+                                }
+                            ],
+                            "description": "Delete an authenticator for a user by ID.",
+                            "demo": "account\/delete-m-f-a-authenticator.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -837,7 +1001,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
@@ -855,6 +1019,60 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.createMFAChallenge"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "factor"
+                            ],
+                            "required": [
+                                "factor"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/mfaChallenge"
+                                }
+                            ],
+                            "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
+                            "demo": "account\/create-mfa-challenge.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.createMFAChallenge"
+                            }
+                        },
+                        {
+                            "name": "createMFAChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "factor"
+                            ],
+                            "required": [
+                                "factor"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/mfaChallenge"
+                                }
+                            ],
+                            "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
+                            "demo": "account\/create-m-f-a-challenge.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -914,7 +1132,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
@@ -932,6 +1150,64 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.updateMFAChallenge"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "required": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/session"
+                                }
+                            ],
+                            "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/update-mfa-challenge.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.updateMFAChallenge"
+                            }
+                        },
+                        {
+                            "name": "updateMFAChallenge",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "required": [
+                                "challengeId",
+                                "otp"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/session"
+                                }
+                            ],
+                            "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/update-m-f-a-challenge.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -992,7 +1268,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
@@ -1010,6 +1286,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.listMFAFactors"
+                    },
+                    "methods": [
+                        {
+                            "name": "listMfaFactors",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "account\/list-mfa-factors.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.listMFAFactors"
+                            }
+                        },
+                        {
+                            "name": "listMFAFactors",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaFactors"
+                                }
+                            ],
+                            "description": "List the factors available on the account to be used as a MFA challange.",
+                            "demo": "account\/list-m-f-a-factors.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -1043,7 +1365,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
@@ -1061,6 +1383,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.getMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "getMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
+                            "demo": "account\/get-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.getMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "getMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
+                            "demo": "account\/get-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -1094,7 +1462,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
@@ -1112,6 +1480,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.createMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "createMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/create-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.createMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "createMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
+                            "demo": "account\/create-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -1145,7 +1559,7 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
@@ -1163,6 +1577,52 @@
                         "server"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "account.updateMFARecoveryCodes"
+                    },
+                    "methods": [
+                        {
+                            "name": "updateMfaRecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
+                            "demo": "account\/update-mfa-recovery-codes.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.updateMFARecoveryCodes"
+                            }
+                        },
+                        {
+                            "name": "updateMFARecoveryCodes",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/mfaRecoveryCodes"
+                                }
+                            ],
+                            "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
+                            "demo": "account\/update-m-f-a-recovery-codes.md"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -2751,7 +3211,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the email address has never been used, a **new account is created** using the provided `userId`. Otherwise, if the email address is already attached to an account, the **user ID is ignored**. Then, the user will receive an email with the one-time password. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2799,7 +3259,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -2886,7 +3346,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -3111,7 +3571,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -4504,7 +4964,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 339,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-documents.md",
@@ -4520,7 +4980,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.listRows"
+                        "replaceWith": "tablesDB.listRows"
                     },
                     "auth": {
                         "Project": []
@@ -4589,7 +5049,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 331,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-document.md",
@@ -4605,12 +5065,13 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.createRow"
+                        "replaceWith": "tablesDB.createRow"
                     },
                     "methods": [
                         {
                             "name": "createDocument",
                             "namespace": "databases",
+                            "desc": "Create document",
                             "auth": {
                                 "Project": []
                             },
@@ -4634,9 +5095,10 @@
                                 }
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/create-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "grids.createRow"
+                                "replaceWith": "tablesDB.createRow"
                             }
                         }
                     ],
@@ -4734,7 +5196,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 332,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-document.md",
@@ -4750,7 +5212,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.getRow"
+                        "replaceWith": "tablesDB.getRow"
                     },
                     "auth": {
                         "Project": []
@@ -4814,7 +5276,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4827,7 +5289,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 335,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-document.md",
@@ -4843,12 +5305,13 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.upsertRow"
+                        "replaceWith": "tablesDB.upsertRow"
                     },
                     "methods": [
                         {
                             "name": "upsertDocument",
                             "namespace": "databases",
+                            "desc": "",
                             "auth": {
                                 "Project": []
                             },
@@ -4871,10 +5334,11 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/upsert-document.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "grids.upsertRow"
+                                "replaceWith": "tablesDB.upsertRow"
                             }
                         }
                     ],
@@ -4968,7 +5432,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 333,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-document.md",
@@ -4984,7 +5448,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.updateRow"
+                        "replaceWith": "tablesDB.updateRow"
                     },
                     "auth": {
                         "Project": []
@@ -5068,7 +5532,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 337,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-document.md",
@@ -5084,7 +5548,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "grids.deleteRow"
+                        "replaceWith": "tablesDB.deleteRow"
                     },
                     "auth": {
                         "Project": []
@@ -5125,89 +5589,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows": {
-            "get": {
-                "summary": "List rows",
-                "operationId": "gridsListRows",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
-                "responses": {
-                    "200": {
-                        "description": "Rows List",
-                        "schema": {
-                            "$ref": "#\/definitions\/rowList"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "listRows",
-                    "group": "rows",
-                    "weight": 412,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/list-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/list-rows.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
-                        "required": false,
-                        "type": "array",
-                        "collectionFormat": "multi",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": [],
-                        "in": "query"
-                    }
-                ]
-            },
-            "post": {
-                "summary": "Create row",
-                "operationId": "gridsCreateRow",
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
+            "patch": {
+                "summary": "Decrement document attribute",
+                "operationId": "databasesDecrementDocumentAttribute",
                 "consumes": [
                     "application\/json"
                 ],
@@ -5215,64 +5600,40 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "grids"
+                    "databases"
                 ],
-                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
+                "description": "Decrement a specific attribute of a document by a given value.",
                 "responses": {
-                    "201": {
-                        "description": "Row",
+                    "200": {
+                        "description": "Document",
                         "schema": {
-                            "$ref": "#\/definitions\/row"
+                            "$ref": "#\/definitions\/document"
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
-                    "method": "createRow",
-                    "group": "rows",
-                    "weight": 404,
+                    "method": "decrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
-                    "demo": "grids\/create-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/create-row.md",
+                    "demo": "databases\/decrement-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server"
+                        "server",
+                        "console"
                     ],
                     "packaging": false,
-                    "methods": [
-                        {
-                            "name": "createRow",
-                            "namespace": "grids",
-                            "auth": {
-                                "Project": []
-                            },
-                            "parameters": [
-                                "databaseId",
-                                "tableId",
-                                "rowId",
-                                "data",
-                                "permissions"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "tableId",
-                                "rowId",
-                                "data"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/definitions\/row"
-                                }
-                            ],
-                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
-                        }
-                    ],
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tablesDB.decrementRowColumn"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -5294,11 +5655,26 @@
                         "in": "path"
                     },
                     {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate). Make sure to define columns before creating rows.",
+                        "name": "collectionId",
+                        "description": "Collection ID.",
                         "required": true,
                         "type": "string",
-                        "x-example": "<TABLE_ID>",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
                         "in": "path"
                     },
                     {
@@ -5307,35 +5683,17 @@
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "rowId": {
-                                    "type": "string",
-                                    "description": "Row ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
-                                    "default": "",
-                                    "x-example": "<ROW_ID>"
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
                                 },
-                                "data": {
-                                    "type": "object",
-                                    "description": "Row data as JSON object.",
-                                    "default": [],
-                                    "x-example": "{}"
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                "min": {
+                                    "type": "number",
+                                    "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                },
-                                "rows": {
-                                    "type": "array",
-                                    "description": "Array of documents data as JSON objects.",
-                                    "default": [],
-                                    "x-example": null,
-                                    "items": {
-                                        "type": "object"
-                                    }
+                                    "x-example": null
                                 }
                             }
                         }
@@ -5343,226 +5701,10 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/grids\/tables\/{tableId}\/rows\/{rowId}": {
-            "get": {
-                "summary": "Get row",
-                "operationId": "gridsGetRow",
-                "consumes": [],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
-                "responses": {
-                    "200": {
-                        "description": "Row",
-                        "schema": {
-                            "$ref": "#\/definitions\/row"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "getRow",
-                    "group": "rows",
-                    "weight": 405,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/get-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/get-row.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "rowId",
-                        "description": "Row ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<ROW_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
-                        "required": false,
-                        "type": "array",
-                        "collectionFormat": "multi",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": [],
-                        "in": "query"
-                    }
-                ]
-            },
-            "put": {
-                "summary": "Create or update a row",
-                "operationId": "gridsUpsertRow",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console.",
-                "responses": {
-                    "201": {
-                        "description": "Row",
-                        "schema": {
-                            "$ref": "#\/definitions\/row"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "upsertRow",
-                    "group": "rows",
-                    "weight": 408,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/upsert-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/upsert-row.md",
-                    "rate-limit": 120,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "methods": [
-                        {
-                            "name": "upsertRow",
-                            "namespace": "grids",
-                            "auth": {
-                                "Project": []
-                            },
-                            "parameters": [
-                                "databaseId",
-                                "tableId",
-                                "rowId",
-                                "data",
-                                "permissions"
-                            ],
-                            "required": [
-                                "databaseId",
-                                "tableId",
-                                "rowId"
-                            ],
-                            "responses": [
-                                {
-                                    "code": 201,
-                                    "model": "#\/definitions\/row"
-                                }
-                            ],
-                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateTable) API or directly from your database console."
-                        }
-                    ],
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "rowId",
-                        "description": "Row ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<ROW_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
-                                    "default": [],
-                                    "x-example": "{}"
-                                },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                    "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
             "patch": {
-                "summary": "Update row",
-                "operationId": "gridsUpdateRow",
+                "summary": "Increment document attribute",
+                "operationId": "databasesIncrementDocumentAttribute",
                 "consumes": [
                     "application\/json"
                 ],
@@ -5570,35 +5712,40 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "grids"
+                    "databases"
                 ],
-                "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
+                "description": "Increment a specific attribute of a document by a given value.",
                 "responses": {
                     "200": {
-                        "description": "Row",
+                        "description": "Document",
                         "schema": {
-                            "$ref": "#\/definitions\/row"
+                            "$ref": "#\/definitions\/document"
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
-                    "method": "updateRow",
-                    "group": "rows",
-                    "weight": 406,
+                    "method": "incrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
-                    "demo": "grids\/update-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/update-row.md",
+                    "demo": "databases\/increment-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server"
+                        "server",
+                        "console"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tablesDB.incrementRowColumn"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -5620,19 +5767,26 @@
                         "in": "path"
                     },
                     {
-                        "name": "tableId",
-                        "description": "Table ID.",
+                        "name": "collectionId",
+                        "description": "Collection ID.",
                         "required": true,
                         "type": "string",
-                        "x-example": "<TABLE_ID>",
+                        "x-example": "<COLLECTION_ID>",
                         "in": "path"
                     },
                     {
-                        "name": "rowId",
-                        "description": "Row ID.",
+                        "name": "documentId",
+                        "description": "Document ID.",
                         "required": true,
                         "type": "string",
-                        "x-example": "<ROW_ID>",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
                         "in": "path"
                     },
                     {
@@ -5641,95 +5795,20 @@
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
-                                    "default": [],
-                                    "x-example": "{}"
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
                                 },
-                                "permissions": {
-                                    "type": "array",
-                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                "max": {
+                                    "type": "number",
+                                    "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
-                                    "x-example": "[\"read(\"any\")\"]",
-                                    "items": {
-                                        "type": "string"
-                                    }
+                                    "x-example": null
                                 }
                             }
                         }
-                    }
-                ]
-            },
-            "delete": {
-                "summary": "Delete row",
-                "operationId": "gridsDeleteRow",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [],
-                "tags": [
-                    "grids"
-                ],
-                "description": "Delete a row by its unique ID.",
-                "responses": {
-                    "204": {
-                        "description": "No content"
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "deleteRow",
-                    "group": "rows",
-                    "weight": 410,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "grids\/delete-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/grids\/delete-row.md",
-                    "rate-limit": 60,
-                    "rate-time": 60,
-                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
-                    "platforms": [
-                        "client",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<DATABASE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tables#tablesCreate).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<TABLE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "rowId",
-                        "description": "Row ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<ROW_ID>",
-                        "in": "path"
                     }
                 ]
             }
@@ -5758,7 +5837,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 440,
+                    "weight": 448,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -5831,7 +5910,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 438,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -5947,7 +6026,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 439,
+                    "weight": 447,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -6018,7 +6097,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 254,
+                    "weight": 255,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -6091,7 +6170,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 253,
+                    "weight": 254,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -6572,7 +6651,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 300,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -6656,7 +6735,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 304,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -7457,6 +7536,835 @@
                         "x-example": "<TOKEN>",
                         "default": "",
                         "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows": {
+            "get": {
+                "summary": "List rows",
+                "operationId": "tablesDBListRows",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Get a list of all the user's rows in a given table. You can use the query params to filter your results.",
+                "responses": {
+                    "200": {
+                        "description": "Rows List",
+                        "schema": {
+                            "$ref": "#\/definitions\/rowList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listRows",
+                    "group": "rows",
+                    "weight": 420,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/list-rows.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdbdb#tablesdbCreate).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create row",
+                "operationId": "tablesDBCreateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createRow",
+                    "group": "rows",
+                    "weight": 412,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/create-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createRow",
+                            "namespace": "tablesDB",
+                            "desc": "Create row",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "demo": "tables-d-b\/create-row.md"
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate). Make sure to define columns before creating rows.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "rowId": {
+                                    "type": "string",
+                                    "description": "Row ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "default": "",
+                                    "x-example": "<ROW_ID>"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "rows": {
+                                    "type": "array",
+                                    "description": "Array of documents data as JSON objects.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}": {
+            "get": {
+                "summary": "Get row",
+                "operationId": "tablesDBGetRow",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Get a row by its unique ID. This endpoint response returns a JSON object with the row data.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getRow",
+                    "group": "rows",
+                    "weight": 413,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/get-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Create or update a row",
+                "operationId": "tablesDBUpsertRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "upsertRow",
+                    "group": "rows",
+                    "weight": 416,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/upsert-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "methods": [
+                        {
+                            "name": "upsertRow",
+                            "namespace": "tablesDB",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "tableId",
+                                "rowId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "tableId",
+                                "rowId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/row"
+                                }
+                            ],
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "demo": "tables-d-b\/upsert-row.md"
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update row",
+                "operationId": "tablesDBUpdateRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Update a row by its unique ID. Using the patch method you can pass only specific fields that will get updated.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateRow",
+                    "group": "rows",
+                    "weight": 414,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/update-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "permissions": {
+                                    "type": "array",
+                                    "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
+                                    "x-example": "[\"read(\"any\")\"]",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete row",
+                "operationId": "tablesDBDeleteRow",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Delete a row by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteRow",
+                    "group": "rows",
+                    "weight": 418,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/delete-row.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/decrement": {
+            "patch": {
+                "summary": "Decrement row column",
+                "operationId": "tablesDBDecrementRowColumn",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Decrement a specific column of a row by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "decrementRowColumn",
+                    "group": "rows",
+                    "weight": 423,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/decrement-row-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "column",
+                        "description": "Column key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the column by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "min": {
+                                    "type": "number",
+                                    "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/increment": {
+            "patch": {
+                "summary": "Increment row column",
+                "operationId": "tablesDBIncrementRowColumn",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Increment a specific column of a row by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Row",
+                        "schema": {
+                            "$ref": "#\/definitions\/row"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "incrementRowColumn",
+                    "group": "rows",
+                    "weight": 422,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tables-d-b\/increment-row-column.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<TABLE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "rowId",
+                        "description": "Row ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ROW_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "column",
+                        "description": "Column key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the column by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "max": {
+                                    "type": "number",
+                                    "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
                     }
                 ]
             }
@@ -8488,8 +9396,8 @@
             "description": "The Databases service allows you to create structured collections of documents, query and filter lists of documents"
         },
         {
-            "name": "tables",
-            "description": "The Tables service allows you to create structured tables of rows, query and filter lists of rows"
+            "name": "tablesdb",
+            "description": "The TablesDB service allows you to create structured tables of columns, query and filter lists of rows"
         },
         {
             "name": "locale",
@@ -8552,7 +9460,8 @@
         "any": {
             "description": "Any",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": []
         },
         "rowList": {
             "description": "Rows List",
@@ -8560,7 +9469,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of rows rows that matched your query.",
+                    "description": "Total number of rows that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8577,7 +9486,11 @@
             "required": [
                 "total",
                 "rows"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "rows": ""
+            }
         },
         "documentList": {
             "description": "Documents List",
@@ -8585,7 +9498,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of documents rows that matched your query.",
+                    "description": "Total number of documents that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8602,7 +9515,11 @@
             "required": [
                 "total",
                 "documents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "documents": ""
+            }
         },
         "sessionList": {
             "description": "Sessions List",
@@ -8610,7 +9527,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of sessions rows that matched your query.",
+                    "description": "Total number of sessions that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8627,7 +9544,11 @@
             "required": [
                 "total",
                 "sessions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "sessions": ""
+            }
         },
         "identityList": {
             "description": "Identities List",
@@ -8635,7 +9556,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of identities rows that matched your query.",
+                    "description": "Total number of identities that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8652,7 +9573,11 @@
             "required": [
                 "total",
                 "identities"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "identities": ""
+            }
         },
         "logList": {
             "description": "Logs List",
@@ -8660,7 +9585,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of logs rows that matched your query.",
+                    "description": "Total number of logs that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8677,7 +9602,11 @@
             "required": [
                 "total",
                 "logs"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "logs": ""
+            }
         },
         "fileList": {
             "description": "Files List",
@@ -8685,7 +9614,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of files rows that matched your query.",
+                    "description": "Total number of files that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8702,7 +9631,11 @@
             "required": [
                 "total",
                 "files"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "files": ""
+            }
         },
         "teamList": {
             "description": "Teams List",
@@ -8710,7 +9643,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of teams rows that matched your query.",
+                    "description": "Total number of teams that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8727,7 +9660,11 @@
             "required": [
                 "total",
                 "teams"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "teams": ""
+            }
         },
         "membershipList": {
             "description": "Memberships List",
@@ -8735,7 +9672,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of memberships rows that matched your query.",
+                    "description": "Total number of memberships that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8752,7 +9689,11 @@
             "required": [
                 "total",
                 "memberships"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "memberships": ""
+            }
         },
         "executionList": {
             "description": "Executions List",
@@ -8760,7 +9701,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of executions rows that matched your query.",
+                    "description": "Total number of executions that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8777,7 +9718,11 @@
             "required": [
                 "total",
                 "executions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "executions": ""
+            }
         },
         "countryList": {
             "description": "Countries List",
@@ -8785,7 +9730,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of countries rows that matched your query.",
+                    "description": "Total number of countries that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8802,7 +9747,11 @@
             "required": [
                 "total",
                 "countries"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "countries": ""
+            }
         },
         "continentList": {
             "description": "Continents List",
@@ -8810,7 +9759,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of continents rows that matched your query.",
+                    "description": "Total number of continents that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8827,7 +9776,11 @@
             "required": [
                 "total",
                 "continents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "continents": ""
+            }
         },
         "languageList": {
             "description": "Languages List",
@@ -8835,7 +9788,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of languages rows that matched your query.",
+                    "description": "Total number of languages that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8852,7 +9805,11 @@
             "required": [
                 "total",
                 "languages"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "languages": ""
+            }
         },
         "currencyList": {
             "description": "Currencies List",
@@ -8860,7 +9817,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of currencies rows that matched your query.",
+                    "description": "Total number of currencies that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8877,7 +9834,11 @@
             "required": [
                 "total",
                 "currencies"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "currencies": ""
+            }
         },
         "phoneList": {
             "description": "Phones List",
@@ -8885,7 +9846,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of phones rows that matched your query.",
+                    "description": "Total number of phones that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8902,7 +9863,11 @@
             "required": [
                 "total",
                 "phones"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "phones": ""
+            }
         },
         "localeCodeList": {
             "description": "Locale codes list",
@@ -8910,7 +9875,7 @@
             "properties": {
                 "total": {
                     "type": "integer",
-                    "description": "Total number of localeCodes rows that matched your query.",
+                    "description": "Total number of localeCodes that matched your query.",
                     "x-example": 5,
                     "format": "int32"
                 },
@@ -8927,7 +9892,11 @@
             "required": [
                 "total",
                 "localeCodes"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "localeCodes": ""
+            }
         },
         "row": {
             "description": "Row",
@@ -8984,7 +9953,18 @@
                 "$createdAt",
                 "$updatedAt",
                 "$permissions"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$sequence": 1,
+                "$tableId": "5e5ea5c15117e",
+                "$databaseId": "5e5ea5c15117e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ]
+            }
         },
         "document": {
             "description": "Document",
@@ -9044,7 +10024,23 @@
                 "$createdAt",
                 "$updatedAt",
                 "$permissions"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$sequence": 1,
+                "$collectionId": "5e5ea5c15117e",
+                "$databaseId": "5e5ea5c15117e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "username": "john.doe",
+                "email": "john.doe@example.com",
+                "fullName": "John Doe",
+                "age": 30,
+                "isAdmin": false
+            }
         },
         "log": {
             "description": "Log",
@@ -9178,7 +10174,30 @@
                 "deviceModel",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "event": "account.sessions.create",
+                "userId": "610fc2f985ee0",
+                "userEmail": "john@appwrite.io",
+                "userName": "John Doe",
+                "mode": "admin",
+                "ip": "127.0.0.1",
+                "time": "2020-10-15T06:38:00.000+00:00",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "user": {
             "description": "User",
@@ -9341,7 +10360,33 @@
                 "prefs",
                 "targets",
                 "accessedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "John Doe",
+                "password": "$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L\/4LdgrVRXxE",
+                "hash": "argon2",
+                "hashOptions": {},
+                "registration": "2020-10-15T06:38:00.000+00:00",
+                "status": true,
+                "labels": [
+                    "vip"
+                ],
+                "passwordUpdate": "2020-10-15T06:38:00.000+00:00",
+                "email": "john@appwrite.io",
+                "phone": "+4930901820",
+                "emailVerification": true,
+                "phoneVerification": true,
+                "mfa": true,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                },
+                "targets": [],
+                "accessedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "algoMd5": {
             "description": "AlgoMD5",
@@ -9355,7 +10400,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "md5"
+            }
         },
         "algoSha": {
             "description": "AlgoSHA",
@@ -9369,7 +10417,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "sha"
+            }
         },
         "algoPhpass": {
             "description": "AlgoPHPass",
@@ -9383,7 +10434,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "phpass"
+            }
         },
         "algoBcrypt": {
             "description": "AlgoBcrypt",
@@ -9397,7 +10451,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "bcrypt"
+            }
         },
         "algoScrypt": {
             "description": "AlgoScrypt",
@@ -9439,7 +10496,14 @@
                 "costMemory",
                 "costParallel",
                 "length"
-            ]
+            ],
+            "example": {
+                "type": "scrypt",
+                "costCpu": 8,
+                "costMemory": 14,
+                "costParallel": 1,
+                "length": 64
+            }
         },
         "algoScryptModified": {
             "description": "AlgoScryptModified",
@@ -9471,7 +10535,13 @@
                 "salt",
                 "saltSeparator",
                 "signerKey"
-            ]
+            ],
+            "example": {
+                "type": "scryptMod",
+                "salt": "UxLMreBr6tYyjQ==",
+                "saltSeparator": "Bw==",
+                "signerKey": "XyEKE9RcTDeLEsL\/RjwPDBv\/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=="
+            }
         },
         "algoArgon2": {
             "description": "AlgoArgon2",
@@ -9506,12 +10576,23 @@
                 "memoryCost",
                 "timeCost",
                 "threads"
-            ]
+            ],
+            "example": {
+                "type": "argon2",
+                "memoryCost": 65536,
+                "timeCost": 4,
+                "threads": 3
+            }
         },
         "preferences": {
             "description": "Preferences",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": {
+                "language": "en",
+                "timezone": "UTC",
+                "darkTheme": true
+            }
         },
         "session": {
             "description": "Session",
@@ -9698,7 +10779,40 @@
                 "factors",
                 "secret",
                 "mfaUpdatedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "provider": "email",
+                "providerUid": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "ip": "127.0.0.1",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States",
+                "current": true,
+                "factors": [
+                    "email"
+                ],
+                "secret": "5e5bb8c16897e",
+                "mfaUpdatedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "identity": {
             "description": "Identity",
@@ -9766,7 +10880,19 @@
                 "providerAccessToken",
                 "providerAccessTokenExpiry",
                 "providerRefreshToken"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "provider": "email",
+                "providerUid": "5e5bb8c16897e",
+                "providerEmail": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+            }
         },
         "token": {
             "description": "Token",
@@ -9810,7 +10936,15 @@
                 "secret",
                 "expire",
                 "phrase"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "secret": "",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "phrase": "Golden Fox"
+            }
         },
         "jwt": {
             "description": "JWT",
@@ -9824,7 +10958,10 @@
             },
             "required": [
                 "jwt"
-            ]
+            ],
+            "example": {
+                "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            }
         },
         "locale": {
             "description": "Locale",
@@ -9874,7 +11011,16 @@
                 "continent",
                 "eu",
                 "currency"
-            ]
+            ],
+            "example": {
+                "ip": "127.0.0.1",
+                "countryCode": "US",
+                "country": "United States",
+                "continentCode": "NA",
+                "continent": "North America",
+                "eu": false,
+                "currency": "USD"
+            }
         },
         "localeCode": {
             "description": "LocaleCode",
@@ -9894,7 +11040,11 @@
             "required": [
                 "code",
                 "name"
-            ]
+            ],
+            "example": {
+                "code": "en-us",
+                "name": "US"
+            }
         },
         "file": {
             "description": "File",
@@ -9976,7 +11126,22 @@
                 "sizeOriginal",
                 "chunksTotal",
                 "chunksUploaded"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "bucketId": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "name": "Pink.png",
+                "signature": "5d529fd02b544198ae075bd57c1762bb",
+                "mimeType": "image\/png",
+                "sizeOriginal": 17890,
+                "chunksTotal": 17890,
+                "chunksUploaded": 17890
+            }
         },
         "team": {
             "description": "Team",
@@ -10028,7 +11193,18 @@
                 "name",
                 "total",
                 "prefs"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "VIP",
+                "total": 7,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                }
+            }
         },
         "membership": {
             "description": "Membership",
@@ -10119,7 +11295,24 @@
                 "confirm",
                 "mfa",
                 "roles"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c16897e",
+                "userName": "John Doe",
+                "userEmail": "john@appwrite.io",
+                "teamId": "5e5ea5c16897e",
+                "teamName": "VIP",
+                "invited": "2020-10-15T06:38:00.000+00:00",
+                "joined": "2020-10-15T06:38:00.000+00:00",
+                "confirm": false,
+                "mfa": false,
+                "roles": [
+                    "owner"
+                ]
+            }
         },
         "execution": {
             "description": "Execution",
@@ -10137,7 +11330,7 @@
                 },
                 "$updatedAt": {
                     "type": "string",
-                    "description": "Execution upate date in ISO 8601 format.",
+                    "description": "Execution update date in ISO 8601 format.",
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "$permissions": {
@@ -10154,6 +11347,11 @@
                     "type": "string",
                     "description": "Function ID.",
                     "x-example": "5e5ea6g16897e"
+                },
+                "deploymentId": {
+                    "type": "string",
+                    "description": "Function's deployment ID used to create the execution.",
+                    "x-example": "5e5ea5c16897e"
                 },
                 "trigger": {
                     "type": "string",
@@ -10241,6 +11439,7 @@
                 "$updatedAt",
                 "$permissions",
                 "functionId",
+                "deploymentId",
                 "trigger",
                 "status",
                 "requestMethod",
@@ -10252,7 +11451,37 @@
                 "logs",
                 "errors",
                 "duration"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "any"
+                ],
+                "functionId": "5e5ea6g16897e",
+                "deploymentId": "5e5ea5c16897e",
+                "trigger": "http",
+                "status": "processing",
+                "requestMethod": "GET",
+                "requestPath": "\/articles?id=5",
+                "requestHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "responseStatusCode": 200,
+                "responseBody": "",
+                "responseHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "logs": "",
+                "errors": "",
+                "duration": 0.4,
+                "scheduledAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "country": {
             "description": "Country",
@@ -10272,7 +11501,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "United States",
+                "code": "US"
+            }
         },
         "continent": {
             "description": "Continent",
@@ -10292,7 +11525,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "Europe",
+                "code": "EU"
+            }
         },
         "language": {
             "description": "Language",
@@ -10318,7 +11555,12 @@
                 "name",
                 "code",
                 "nativeName"
-            ]
+            ],
+            "example": {
+                "name": "Italian",
+                "code": "it",
+                "nativeName": "Italiano"
+            }
         },
         "currency": {
             "description": "Currency",
@@ -10370,7 +11612,16 @@
                 "rounding",
                 "code",
                 "namePlural"
-            ]
+            ],
+            "example": {
+                "symbol": "$",
+                "name": "US dollar",
+                "symbolNative": "$",
+                "decimalDigits": 2,
+                "rounding": 0,
+                "code": "USD",
+                "namePlural": "US dollars"
+            }
         },
         "phone": {
             "description": "Phone",
@@ -10396,7 +11647,12 @@
                 "code",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "code": "+1",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "headers": {
             "description": "Headers",
@@ -10416,7 +11672,11 @@
             "required": [
                 "name",
                 "value"
-            ]
+            ],
+            "example": {
+                "name": "Content-Type",
+                "value": "application\/json"
+            }
         },
         "mfaChallenge": {
             "description": "MFA Challenge",
@@ -10448,7 +11708,13 @@
                 "$createdAt",
                 "userId",
                 "expire"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "expire": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "mfaRecoveryCodes": {
             "description": "MFA Recovery Codes",
@@ -10468,7 +11734,13 @@
             },
             "required": [
                 "recoveryCodes"
-            ]
+            ],
+            "example": {
+                "recoveryCodes": [
+                    "a3kf0-s0cl2",
+                    "s0co1-as98s"
+                ]
+            }
         },
         "mfaType": {
             "description": "MFAType",
@@ -10488,7 +11760,11 @@
             "required": [
                 "secret",
                 "uri"
-            ]
+            ],
+            "example": {
+                "secret": true,
+                "uri": true
+            }
         },
         "mfaFactors": {
             "description": "MFAFactors",
@@ -10520,7 +11796,13 @@
                 "phone",
                 "email",
                 "recoveryCode"
-            ]
+            ],
+            "example": {
+                "totp": true,
+                "phone": true,
+                "email": true,
+                "recoveryCode": true
+            }
         },
         "subscriber": {
             "description": "Subscriber",
@@ -10595,7 +11877,27 @@
                 "userName",
                 "topicId",
                 "providerType"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "targetId": "259125845563242502",
+                "target": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "providerType": "email",
+                    "providerId": "259125845563242502",
+                    "name": "ageon-app-email",
+                    "identifier": "random-mail@email.org",
+                    "userId": "5e5ea5c16897e"
+                },
+                "userId": "5e5ea5c16897e",
+                "userName": "Aegon Targaryen",
+                "topicId": "259125845563242502",
+                "providerType": "email"
+            }
         },
         "target": {
             "description": "Target",
@@ -10657,7 +11959,18 @@
                 "providerType",
                 "identifier",
                 "expired"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "Apple iPhone 12",
+                "userId": "259125845563242502",
+                "providerId": "259125845563242502",
+                "providerType": "email",
+                "identifier": "token",
+                "expired": false
+            }
         }
     },
     "externalDocs": {

@@ -1,3 +1,3 @@
-appwrite sites deleteLog \
-        --siteId <SITE_ID> \
-        --logId <LOG_ID>
+appwrite sites delete-log \
+    --site-id <SITE_ID> \
+    --log-id <LOG_ID>

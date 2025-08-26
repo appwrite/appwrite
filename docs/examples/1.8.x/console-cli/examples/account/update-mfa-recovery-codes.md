@@ -1,1 +1,1 @@
-appwrite account updateMfaRecoveryCodes
+appwrite account update-mfa-recovery-codes

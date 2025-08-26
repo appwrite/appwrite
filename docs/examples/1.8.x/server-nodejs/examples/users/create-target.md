@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.createTarget(
-    '<USER_ID>', // userId
-    '<TARGET_ID>', // targetId
-    sdk.MessagingProviderType.Email, // providerType
-    '<IDENTIFIER>', // identifier
-    '<PROVIDER_ID>', // providerId (optional)
-    '<NAME>' // name (optional)
-);
+const result = await users.createTarget({
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>',
+    providerType: sdk.MessagingProviderType.Email,
+    identifier: '<IDENTIFIER>',
+    providerId: '<PROVIDER_ID>', // optional
+    name: '<NAME>' // optional
+});

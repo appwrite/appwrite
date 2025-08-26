@@ -1,7 +1,3 @@
-appwrite messaging createTelesignProvider \
-        --providerId <PROVIDER_ID> \
-        --name <NAME> \
-
-
-
-
+appwrite messaging create-telesign-provider \
+    --provider-id <PROVIDER_ID> \
+    --name <NAME>

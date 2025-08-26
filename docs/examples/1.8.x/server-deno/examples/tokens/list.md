@@ -7,8 +7,8 @@ const client = new Client()
 
 const tokens = new Tokens(client);
 
-const response = await tokens.list(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    [] // queries (optional)
-);
+const response = await tokens.list({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    queries: [] // optional
+});

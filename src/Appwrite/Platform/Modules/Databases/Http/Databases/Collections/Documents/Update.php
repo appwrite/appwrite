@@ -69,7 +69,7 @@ class Update extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.updateRow',
+                    replaceWith: 'tablesDB.updateRow',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -209,8 +209,7 @@ class Update extends Action
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
-                        $relation->removeAttribute('$collectionId');
-                        $relation->removeAttribute('$databaseId');
+                        $this->removeReadonlyAttributes($relation);
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
@@ -280,11 +279,11 @@ class Update extends Action
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setContext('database', $database)
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setParam('rowId', $document->getId())
+            ->setContext('database', $database)
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->getPayload(), sensitive: $relationships);
     }

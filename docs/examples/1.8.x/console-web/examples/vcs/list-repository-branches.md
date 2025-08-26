@@ -6,9 +6,9 @@ const client = new Client()
 
 const vcs = new Vcs(client);
 
-const result = await vcs.listRepositoryBranches(
-    '<INSTALLATION_ID>', // installationId
-    '<PROVIDER_REPOSITORY_ID>' // providerRepositoryId
-);
+const result = await vcs.listRepositoryBranches({
+    installationId: '<INSTALLATION_ID>',
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>'
+});
 
 console.log(result);

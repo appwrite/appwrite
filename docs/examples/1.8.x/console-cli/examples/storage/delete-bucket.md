@@ -1,2 +1,2 @@
-appwrite storage deleteBucket \
-        --bucketId <BUCKET_ID>
+appwrite storage delete-bucket \
+    --bucket-id <BUCKET_ID>

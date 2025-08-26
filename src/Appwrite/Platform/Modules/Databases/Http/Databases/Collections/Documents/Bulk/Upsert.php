@@ -64,7 +64,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.upsertRows',
+                        replaceWith: 'tablesDB.upsertRows',
                     ),
                 )
             ])
@@ -129,7 +129,7 @@ class Upsert extends Action
 
         foreach ($upserted as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage

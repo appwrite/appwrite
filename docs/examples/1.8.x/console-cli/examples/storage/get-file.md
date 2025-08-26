@@ -1,3 +1,3 @@
-appwrite storage getFile \
-        --bucketId <BUCKET_ID> \
-        --fileId <FILE_ID>
+appwrite storage get-file \
+    --bucket-id <BUCKET_ID> \
+    --file-id <FILE_ID>

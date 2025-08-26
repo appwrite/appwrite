@@ -1,3 +1,3 @@
-appwrite account createSession \
-        --userId <USER_ID> \
-        --secret <SECRET>
+appwrite account create-session \
+    --user-id <USER_ID> \
+    --secret <SECRET>

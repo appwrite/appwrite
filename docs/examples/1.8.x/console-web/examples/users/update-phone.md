@@ -6,9 +6,9 @@ const client = new Client()
 
 const users = new Users(client);
 
-const result = await users.updatePhone(
-    '<USER_ID>', // userId
-    '+12065550100' // number
-);
+const result = await users.updatePhone({
+    userId: '<USER_ID>',
+    number: '+12065550100'
+});
 
 console.log(result);

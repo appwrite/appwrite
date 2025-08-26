@@ -6,13 +6,13 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.createDeployment(
-    '<SITE_ID>', // siteId
-    document.getElementById('uploader').files[0], // code
-    false, // activate
-    '<INSTALL_COMMAND>', // installCommand (optional)
-    '<BUILD_COMMAND>', // buildCommand (optional)
-    '<OUTPUT_DIRECTORY>' // outputDirectory (optional)
-);
+const result = await sites.createDeployment({
+    siteId: '<SITE_ID>',
+    code: document.getElementById('uploader').files[0],
+    activate: false,
+    installCommand: '<INSTALL_COMMAND>', // optional
+    buildCommand: '<BUILD_COMMAND>', // optional
+    outputDirectory: '<OUTPUT_DIRECTORY>' // optional
+});
 
 console.log(result);

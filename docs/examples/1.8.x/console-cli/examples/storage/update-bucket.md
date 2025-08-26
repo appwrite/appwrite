@@ -1,11 +1,3 @@
-appwrite storage updateBucket \
-        --bucketId <BUCKET_ID> \
-        --name <NAME> \
-
-
-
-
-
-
-
-
+appwrite storage update-bucket \
+    --bucket-id <BUCKET_ID> \
+    --name <NAME>

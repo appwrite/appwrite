@@ -1,5 +1,5 @@
 mutation {
-    accountUpdateMfaRecoveryCodes {
+    accountUpdateMFARecoveryCodes {
         recoveryCodes
     }
 }

@@ -1,3 +1,3 @@
-appwrite account updatePushTarget \
-        --targetId <TARGET_ID> \
-        --identifier <IDENTIFIER>
+appwrite account update-push-target \
+    --target-id <TARGET_ID> \
+    --identifier <IDENTIFIER>

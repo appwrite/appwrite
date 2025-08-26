@@ -7,6 +7,6 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updatePrefs(
-    {} // prefs
-);
+const response = await account.updatePrefs({
+    prefs: {}
+});

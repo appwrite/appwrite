@@ -7,13 +7,13 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.updateIntegerAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    null, // default
-    null, // min (optional)
-    null, // max (optional)
-    '' // newKey (optional)
-);
+const result = await databases.updateIntegerAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: null,
+    min: null, // optional
+    max: null, // optional
+    newKey: '' // optional
+});

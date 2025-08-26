@@ -1,2 +1,2 @@
 appwrite databases delete \
-        --databaseId <DATABASE_ID>
+    --database-id <DATABASE_ID>

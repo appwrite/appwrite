@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.updatePhoneVerification(
-    '<USER_ID>', // userId
-    false // phoneVerification
-);
+const response = await users.updatePhoneVerification({
+    userId: '<USER_ID>',
+    phoneVerification: false
+});

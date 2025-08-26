@@ -66,6 +66,7 @@ class Create extends Action
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: self::getName(),
+                    desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -84,13 +85,14 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRow',
+                        replaceWith: 'tablesDB.createRow',
                     ),
                 ),
                 new Method(
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: $this->getBulkActionName(self::getName()),
+                    desc: 'Create documents',
                     description: '/docs/references/databases/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
@@ -107,7 +109,7 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRows',
+                        replaceWith: 'tablesDB.createRows',
                     ),
                 )
             ])
@@ -316,8 +318,7 @@ class Create extends Action
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $relation->removeAttribute('$collectionId');
-                            $relation->removeAttribute('$databaseId');
+                            $this->removeReadonlyAttributes($relation);
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
@@ -418,7 +419,6 @@ class Create extends Action
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
-
 
         if ($isBulk) {
             $response->dynamic(new Document([

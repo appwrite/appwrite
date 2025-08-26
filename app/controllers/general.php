@@ -363,7 +363,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
 
-        $jwtExpiry = $resource->getAttribute('timeout', 900);
+        $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
             'projectId' => $project->getId(),
@@ -617,11 +617,32 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 }
             }
 
+            // Truncate logs if they exceed the limit
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
+            $logs = $executionResponse['logs'] ?? '';
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = max(0, $maxLogLength - $warningLength);
+                $logs = $warningMessage . ($maxContentLength > 0 ? \substr($logs, -$maxContentLength) : '');
+            }
+
+            // Truncate errors if they exceed the limit
+            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
+            $errors = $executionResponse['errors'] ?? '';
+
+            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = max(0, $maxErrorLength - $warningLength);
+                $errors = $warningMessage . ($maxContentLength > 0 ? \substr($errors, -$maxContentLength) : '');
+            }
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
-            $execution->setAttribute('logs', $executionResponse['logs']);
-            $execution->setAttribute('errors', $executionResponse['errors']);
+            $execution->setAttribute('logs', $logs);
+            $execution->setAttribute('errors', $errors);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', $executionResponse['duration']);

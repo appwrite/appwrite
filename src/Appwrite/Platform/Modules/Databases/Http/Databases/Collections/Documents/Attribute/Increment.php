@@ -12,6 +12,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use InvalidArgumentException;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Limit as LimitException;
@@ -42,10 +43,10 @@ class Increment extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/:attribute/increment')
             ->desc('Increment document attribute')
             ->groups(['api', 'database'])
-            ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].increment')
+            ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('audits.event', 'documents.increment')
+            ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
@@ -55,7 +56,7 @@ class Increment extends Action
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/increment-document-attribute.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -65,7 +66,7 @@ class Increment extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.incrementRowColumn',
+                    replaceWith: 'tablesDB.incrementRowColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -109,7 +110,17 @@ class Increment extends Action
             throw new Exception($this->getLimitException(), $this->getSdkNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
         } catch (TypeException) {
             throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSdkNamespace() . ' "' . $attribute . '" is not a number');
+        } catch (InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
@@ -117,10 +128,13 @@ class Increment extends Action
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setContext('database', $database)
             ->setParam('collectionId', $collectionId)
             ->setParam('tableId', $collectionId)
-            ->setContext($this->getCollectionsEventsContext(), $collection);
+            ->setParam('documentId', $documentId)
+            ->setParam('rowId', $documentId)
+            ->setContext('database', $database)
+            ->setContext($this->getCollectionsEventsContext(), $collection)
+            ->setPayload($response->getPayload(), sensitive: $relationships);
 
         $response->dynamic($document, $this->getResponseModel());
     }

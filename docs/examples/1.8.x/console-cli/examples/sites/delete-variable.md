@@ -1,3 +1,3 @@
-appwrite sites deleteVariable \
-        --siteId <SITE_ID> \
-        --variableId <VARIABLE_ID>
+appwrite sites delete-variable \
+    --site-id <SITE_ID> \
+    --variable-id <VARIABLE_ID>

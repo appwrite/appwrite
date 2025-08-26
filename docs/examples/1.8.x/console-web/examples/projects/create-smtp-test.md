@@ -6,17 +6,17 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.createSmtpTest(
-    '<PROJECT_ID>', // projectId
-    [], // emails
-    '<SENDER_NAME>', // senderName
-    'email@example.com', // senderEmail
-    '', // host
-    'email@example.com', // replyTo (optional)
-    null, // port (optional)
-    '<USERNAME>', // username (optional)
-    '<PASSWORD>', // password (optional)
-    SMTPSecure.Tls // secure (optional)
-);
+const result = await projects.createSMTPTest({
+    projectId: '<PROJECT_ID>',
+    emails: [],
+    senderName: '<SENDER_NAME>',
+    senderEmail: 'email@example.com',
+    host: '',
+    replyTo: 'email@example.com', // optional
+    port: null, // optional
+    username: '<USERNAME>', // optional
+    password: '<PASSWORD>', // optional
+    secure: SMTPSecure.Tls // optional
+});
 
 console.log(result);

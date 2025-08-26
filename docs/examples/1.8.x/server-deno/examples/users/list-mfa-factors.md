@@ -7,6 +7,6 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.listMfaFactors(
-    '<USER_ID>' // userId
-);
+const response = await users.listMFAFactors({
+    userId: '<USER_ID>'
+});

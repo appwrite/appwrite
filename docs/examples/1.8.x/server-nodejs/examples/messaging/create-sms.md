@@ -7,12 +7,12 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.createSms(
-    '<MESSAGE_ID>', // messageId
-    '<CONTENT>', // content
-    [], // topics (optional)
-    [], // users (optional)
-    [], // targets (optional)
-    false, // draft (optional)
-    '' // scheduledAt (optional)
-);
+const result = await messaging.createSMS({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    draft: false, // optional
+    scheduledAt: '' // optional
+});

@@ -6,8 +6,8 @@ const client = new Client()
 
 const project = new Project(client);
 
-const result = await project.deleteVariable(
-    '<VARIABLE_ID>' // variableId
-);
+const result = await project.deleteVariable({
+    variableId: '<VARIABLE_ID>'
+});
 
 console.log(result);

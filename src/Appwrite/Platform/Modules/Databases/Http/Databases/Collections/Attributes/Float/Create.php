@@ -58,7 +58,7 @@ class Create extends Action
                 ],
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.createFloatColumn',
+                    replaceWith: 'tablesDB.createFloatColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

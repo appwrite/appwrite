@@ -1,4 +1,2 @@
-appwrite storage listFiles \
-        --bucketId <BUCKET_ID> \
-
-
+appwrite storage list-files \
+    --bucket-id <BUCKET_ID>

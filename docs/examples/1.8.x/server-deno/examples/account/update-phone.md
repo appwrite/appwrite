@@ -7,7 +7,7 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updatePhone(
-    '+12065550100', // phone
-    'password' // password
-);
+const response = await account.updatePhone({
+    phone: '+12065550100',
+    password: 'password'
+});

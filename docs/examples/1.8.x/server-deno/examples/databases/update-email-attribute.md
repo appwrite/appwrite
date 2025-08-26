@@ -7,11 +7,11 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.updateEmailAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    'email@example.com', // default
-    '' // newKey (optional)
-);
+const response = await databases.updateEmailAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: 'email@example.com',
+    newKey: '' // optional
+});

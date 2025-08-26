@@ -1,4 +1,4 @@
-appwrite vcs updateExternalDeployments \
-        --installationId <INSTALLATION_ID> \
-        --repositoryId <REPOSITORY_ID> \
-        --providerPullRequestId <PROVIDER_PULL_REQUEST_ID>
+appwrite vcs update-external-deployments \
+    --installation-id <INSTALLATION_ID> \
+    --repository-id <REPOSITORY_ID> \
+    --provider-pull-request-id <PROVIDER_PULL_REQUEST_ID>

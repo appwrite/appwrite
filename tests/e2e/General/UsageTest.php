@@ -714,7 +714,7 @@ class UsageTest extends Scope
 
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/databases/' . $databaseId . '/grids/tables',
+                '/tablesdb/' . $databaseId . '/tables',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id']
@@ -743,7 +743,7 @@ class UsageTest extends Scope
             if ($i < (self::CREATE / 2)) {
                 $response = $this->client->call(
                     Client::METHOD_DELETE,
-                    '/databases/' . $databaseId . '/grids/tables/' . $tableId,
+                    '/tablesdb/' . $databaseId . '/tables/' . $tableId,
                     array_merge([
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders()),
@@ -758,7 +758,7 @@ class UsageTest extends Scope
 
         $response = $this->client->call(
             Client::METHOD_POST,
-            '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/columns' . '/string',
+            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns' . '/string',
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
@@ -781,7 +781,7 @@ class UsageTest extends Scope
 
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows',
+                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id']
@@ -803,7 +803,7 @@ class UsageTest extends Scope
             if ($i < (self::CREATE / 2)) {
                 $response = $this->client->call(
                     Client::METHOD_DELETE,
-                    '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/rows/' . $rowId,
+                    '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId,
                     array_merge([
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders()),
@@ -899,7 +899,7 @@ class UsageTest extends Scope
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/databases/' . $databaseId . '/grids/tables/' . $tableId . '/usage?range=30d',
+            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/usage?range=30d',
             $this->getConsoleHeaders()
         );
 

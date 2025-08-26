@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const result = await functions.getExecution(
-    '<FUNCTION_ID>', // functionId
-    '<EXECUTION_ID>' // executionId
-);
+const result = await functions.getExecution({
+    functionId: '<FUNCTION_ID>',
+    executionId: '<EXECUTION_ID>'
+});

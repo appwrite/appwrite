@@ -1,4 +1,2 @@
-appwrite messaging listSubscribers \
-        --topicId <TOPIC_ID> \
-
-
+appwrite messaging list-subscribers \
+    --topic-id <TOPIC_ID>

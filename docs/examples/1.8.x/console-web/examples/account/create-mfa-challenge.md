@@ -6,8 +6,8 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.createMfaChallenge(
-    AuthenticationFactor.Email // factor
-);
+const result = await account.createMFAChallenge({
+    factor: AuthenticationFactor.Email
+});
 
 console.log(result);

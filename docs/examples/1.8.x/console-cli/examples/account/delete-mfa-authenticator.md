@@ -1,2 +1,2 @@
-appwrite account deleteMfaAuthenticator \
-        --type totp
+appwrite account delete-mfa-authenticator \
+    --type totp

@@ -14,7 +14,6 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        // Project database timeout init hook!
         $this->addAction(Timeout::getName(), new Timeout());
 
         foreach ([

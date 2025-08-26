@@ -6,8 +6,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.delete(
-    '<DATABASE_ID>' // databaseId
-);
+const result = await databases.delete({
+    databaseId: '<DATABASE_ID>'
+});
 
 console.log(result);

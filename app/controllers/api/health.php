@@ -23,10 +23,12 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/health')
@@ -397,7 +399,7 @@ App::get('/v1/health/certificate')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
+    ->param('domain', null, new Multiple([new AnyOf([new URL(), new Domain()]), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
         if (filter_var($domain, FILTER_VALIDATE_URL)) {
@@ -554,12 +556,12 @@ App::get('/v1/health/queue/deletes')
         contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
+    ->inject('publisherDeletes')
     ->inject('response')
-    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisherDeletes, Response $response) {
         $threshold = \intval($threshold);
 
-        $size = $publisher->getQueueSize(new Queue(Event::DELETE_QUEUE_NAME));
+        $size = $publisherDeletes->getQueueSize(new Queue(Event::DELETE_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -587,12 +589,12 @@ App::get('/v1/health/queue/mails')
         contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
+    ->inject('publisherMails')
     ->inject('response')
-    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisherMails, Response $response) {
         $threshold = \intval($threshold);
 
-        $size = $publisher->getQueueSize(new Queue(Event::MAILS_QUEUE_NAME));
+        $size = $publisherMails->getQueueSize(new Queue(Event::MAILS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -620,12 +622,12 @@ App::get('/v1/health/queue/messaging')
         contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
+    ->inject('publisherMessaging')
     ->inject('response')
-    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisherMessaging, Response $response) {
         $threshold = \intval($threshold);
 
-        $size = $publisher->getQueueSize(new Queue(Event::MESSAGING_QUEUE_NAME));
+        $size = $publisherMessaging->getQueueSize(new Queue(Event::MESSAGING_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -686,12 +688,12 @@ App::get('/v1/health/queue/functions')
         contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('publisher')
+    ->inject('publisherFunctions')
     ->inject('response')
-    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisherFunctions, Response $response) {
         $threshold = \intval($threshold);
 
-        $size = $publisher->getQueueSize(new Queue(Event::FUNCTIONS_QUEUE_NAME));
+        $size = $publisherFunctions->getQueueSize(new Queue(Event::FUNCTIONS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");

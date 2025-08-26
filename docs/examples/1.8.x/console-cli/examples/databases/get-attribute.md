@@ -1,4 +1,4 @@
-appwrite databases getAttribute \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --key ''
+appwrite databases get-attribute \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --key ''

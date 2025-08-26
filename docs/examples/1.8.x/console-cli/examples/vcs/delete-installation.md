@@ -1,2 +1,2 @@
-appwrite vcs deleteInstallation \
-        --installationId <INSTALLATION_ID>
+appwrite vcs delete-installation \
+    --installation-id <INSTALLATION_ID>

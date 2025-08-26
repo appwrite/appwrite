@@ -1,1 +1,1 @@
-appwrite health getPubSub
+appwrite health get-pub-sub

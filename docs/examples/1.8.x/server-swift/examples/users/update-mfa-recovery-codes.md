@@ -7,7 +7,7 @@ let client = Client()
 
 let users = Users(client)
 
-let mfaRecoveryCodes = try await users.updateMfaRecoveryCodes(
+let mfaRecoveryCodes = try await users.updateMFARecoveryCodes(
     userId: "<USER_ID>"
 )
 

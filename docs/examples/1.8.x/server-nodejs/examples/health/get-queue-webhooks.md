@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const health = new sdk.Health(client);
 
-const result = await health.getQueueWebhooks(
-    null // threshold (optional)
-);
+const result = await health.getQueueWebhooks({
+    threshold: null // optional
+});

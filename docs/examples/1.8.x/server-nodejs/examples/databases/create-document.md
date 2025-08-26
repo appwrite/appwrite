@@ -7,10 +7,10 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.createDocument(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<DOCUMENT_ID>', // documentId
-    {}, // data
-    ["read("any")"] // permissions (optional)
-);
+const result = await databases.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: {},
+    permissions: ["read("any")"] // optional
+});

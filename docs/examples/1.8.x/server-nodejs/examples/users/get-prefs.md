@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.getPrefs(
-    '<USER_ID>' // userId
-);
+const result = await users.getPrefs({
+    userId: '<USER_ID>'
+});

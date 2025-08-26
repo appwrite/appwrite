@@ -1,1 +1,1 @@
-appwrite account getPrefs
+appwrite account get-prefs

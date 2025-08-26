@@ -8,9 +8,9 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const result = await storage.createFile(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    InputFile.fromPath('/path/to/file', 'filename'), // file
-    ["read("any")"] // permissions (optional)
-);
+const result = await storage.createFile({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    file: InputFile.fromPath('/path/to/file', 'filename'),
+    permissions: ["read("any")"] // optional
+});
