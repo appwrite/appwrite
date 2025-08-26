@@ -456,7 +456,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        var_dump($response['body']);
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
