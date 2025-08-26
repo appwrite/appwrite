@@ -7975,6 +7975,106 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
+    }
+
+    public function testSpatialIndex(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial Index Test DB'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'SpatialIdx',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create spatial columns: one required, one optional
+        $reqPoint = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'pRequired',
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $reqPoint['headers']['status-code']);
+
+        $optPoint = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'pOptional',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $optPoint['headers']['status-code']);
+
+        // Ensure columns are available
+        sleep(2);
+
+        // Create index on required spatial column (should succeed)
+        $okIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_required_point',
+            'type' => Database::INDEX_SPATIAL,
+            'columns' => ['pRequired'],
+        ]);
+        $this->assertEquals(202, $okIndex['headers']['status-code']);
+
+        // Create index on optional spatial column (should fail in case of mariadb)
+        $badIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_optional_point',
+            'type' => Database::INDEX_SPATIAL,
+            'columns' => ['pOptional'],
+        ]);
+        $this->assertEquals(202, $badIndex['headers']['status-code']);
+
+        // Passing orders to spatial index should not throw error (in case of mariadb)
+        $ordersIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_required_point_with_orders',
+            'type' => Database::INDEX_SPATIAL,
+            'columns' => ['pRequired'],
+            'orders' => ['ASC']
+        ]);
+        $this->assertEquals(202, $ordersIndex['headers']['status-code']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

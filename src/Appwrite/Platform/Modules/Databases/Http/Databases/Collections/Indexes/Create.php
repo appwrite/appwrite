@@ -71,7 +71,7 @@ class Create extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('key', null, new Key(), 'Index Key.')
-            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
+            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL]), 'Index type.')
             ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
@@ -190,11 +190,29 @@ class Create extends Action
             'orders' => $orders,
         ]);
 
+        // Determine adapter capabilities. For TablesDB, be permissive to accept requests
+        // and let the background worker enforce engine-specific constraints.
+        $maxIndexLength = $dbForProject->getAdapter()->getMaxIndexLength();
+        $internalIndexesKeys = $dbForProject->getAdapter()->getInternalIndexesKeys();
+        $supportForIndexArray = $dbForProject->getAdapter()->getSupportForIndexArray();
+        $supportForSpatialAttributes = $dbForProject->getAdapter()->getSupportForSpatialAttributes();
+        $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
+        $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
+
+        if (!$this->isCollectionsAPI()) {
+            // Relax spatial constraints for TablesDB API
+            $supportForSpatialIndexNull = true;
+            $supportForSpatialIndexOrder = true;
+        }
+
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
-            $dbForProject->getAdapter()->getMaxIndexLength(),
-            $dbForProject->getAdapter()->getInternalIndexesKeys(),
-            $dbForProject->getAdapter()->getSupportForIndexArray()
+            $maxIndexLength,
+            $internalIndexesKeys,
+            $supportForIndexArray,
+            $supportForSpatialAttributes,
+            $supportForSpatialIndexNull,
+            $supportForSpatialIndexOrder
         );
 
         if (!$validator->isValid($index)) {

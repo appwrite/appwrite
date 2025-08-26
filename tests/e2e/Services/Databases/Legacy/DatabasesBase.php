@@ -7261,4 +7261,104 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
+
+    public function testSpatialIndex(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial Index Test DB'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'SpatialIdx',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create spatial attributes: one required, one optional
+        $reqPoint = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'pRequired',
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $reqPoint['headers']['status-code']);
+
+        $optPoint = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'pOptional',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $optPoint['headers']['status-code']);
+
+        // Ensure attributes are available
+        sleep(2);
+
+        // Create index on required spatial attribute (should succeed)
+        $okIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_required_point',
+            'type' => Database::INDEX_SPATIAL,
+            'attributes' => ['pRequired'],
+        ]);
+        $this->assertEquals(202, $okIndex['headers']['status-code']);
+
+        // Create index on optional spatial attribute (should fail in case of mariadb)
+        $badIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_optional_point',
+            'type' => Database::INDEX_SPATIAL,
+            'attributes' => ['pOptional'],
+        ]);
+        $this->assertEquals(400, $badIndex['headers']['status-code']);
+
+        // Passing orders to spatial index should not throw error(in case of mariadb)
+        $ordersIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_required_point_with_orders',
+            'type' => Database::INDEX_SPATIAL,
+            'attributes' => ['pRequired'],
+            'orders' => ['ASC']
+        ]);
+        $this->assertEquals(202, $ordersIndex['headers']['status-code']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
 }
