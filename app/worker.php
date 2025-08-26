@@ -263,6 +263,10 @@ Server::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
 
+Server::setResource('publisherMessaging', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
 Server::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
