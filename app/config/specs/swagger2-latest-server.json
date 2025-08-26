@@ -455,7 +455,7 @@
                     "weight": 30,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-j-w-t.md",
+                    "demo": "account\/create-jwt.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "rate-limit": 100,
                     "rate-time": 3600,
@@ -572,7 +572,7 @@
                     "weight": 45,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-m-f-a.md",
+                    "demo": "account\/update-mfa.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -710,7 +710,7 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-m-f-a-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -837,7 +837,7 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-m-f-a-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -971,7 +971,7 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-m-f-a-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -1094,7 +1094,7 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1231,7 +1231,7 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-m-f-a-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1358,7 +1358,7 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-m-f-a-factors.md"
+                            "demo": "account\/list-mfa-factors.md"
                         }
                     ],
                     "auth": {
@@ -1458,7 +1458,7 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-m-f-a-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1558,7 +1558,7 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1658,7 +1658,7 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-m-f-a-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -2461,7 +2461,7 @@
                     "weight": 27,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-magic-u-r-l-session.md",
+                    "demo": "account\/update-magic-url-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -3017,7 +3017,7 @@
                     "weight": 25,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-magic-u-r-l-token.md",
+                    "demo": "account\/create-magic-url-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "rate-limit": 60,
                     "rate-time": 3600,
@@ -3105,7 +3105,7 @@
                     "weight": 24,
                     "cookies": false,
                     "type": "webAuth",
-                    "demo": "account\/create-o-auth2token.md",
+                    "demo": "account\/create-o-auth-2-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
@@ -4596,7 +4596,7 @@
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
-                    "demo": "avatars\/get-q-r.md",
+                    "demo": "avatars\/get-qr.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -4805,7 +4805,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDB.createDatabase"
+                        "replaceWith": "tablesDB.create"
                     },
                     "methods": [
                         {
@@ -4835,7 +4835,7 @@
                             "demo": "databases\/create.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDB.createDatabase"
+                                "replaceWith": "tablesDB.create"
                             }
                         }
                     ],
@@ -12570,7 +12570,7 @@
                     "weight": 80,
                     "cookies": false,
                     "type": "",
-                    "demo": "health\/get-d-b.md",
+                    "demo": "health\/get-db.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-db.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -13858,7 +13858,7 @@
                     "weight": 73,
                     "cookies": false,
                     "type": "",
-                    "demo": "locale\/list-countries-e-u.md",
+                    "demo": "locale\/list-countries-eu.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -14930,7 +14930,7 @@
                                 }
                             ],
                             "description": "Create a new SMS message.",
-                            "demo": "messaging\/create-s-m-s.md"
+                            "demo": "messaging\/create-sms.md"
                         }
                     ],
                     "auth": {
@@ -15117,7 +15117,7 @@
                                 }
                             ],
                             "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
-                            "demo": "messaging\/update-s-m-s.md"
+                            "demo": "messaging\/update-sms.md"
                         }
                     ],
                     "auth": {
@@ -15643,7 +15643,7 @@
                                 }
                             ],
                             "description": "Create a new Apple Push Notification service provider.",
-                            "demo": "messaging\/create-a-p-n-s-provider.md"
+                            "demo": "messaging\/create-apns-provider.md"
                         }
                     ],
                     "auth": {
@@ -15829,7 +15829,7 @@
                                 }
                             ],
                             "description": "Update a Apple Push Notification service provider by its unique ID.",
-                            "demo": "messaging\/update-a-p-n-s-provider.md"
+                            "demo": "messaging\/update-apns-provider.md"
                         }
                     ],
                     "auth": {
@@ -16007,7 +16007,7 @@
                                 }
                             ],
                             "description": "Create a new Firebase Cloud Messaging provider.",
-                            "demo": "messaging\/create-f-c-m-provider.md"
+                            "demo": "messaging\/create-fcm-provider.md"
                         }
                     ],
                     "auth": {
@@ -16161,7 +16161,7 @@
                                 }
                             ],
                             "description": "Update a Firebase Cloud Messaging provider by its unique ID.",
-                            "demo": "messaging\/update-f-c-m-provider.md"
+                            "demo": "messaging\/update-fcm-provider.md"
                         }
                     ],
                     "auth": {
@@ -16497,7 +16497,7 @@
                     "weight": 274,
                     "cookies": false,
                     "type": "",
-                    "demo": "messaging\/create-msg91provider.md",
+                    "demo": "messaging\/create-msg-91-provider.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/create-msg91-provider.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -16601,7 +16601,7 @@
                     "weight": 287,
                     "cookies": false,
                     "type": "",
-                    "demo": "messaging\/update-msg91provider.md",
+                    "demo": "messaging\/update-msg-91-provider.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/update-msg91-provider.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -17027,7 +17027,7 @@
                                 }
                             ],
                             "description": "Create a new SMTP provider.",
-                            "demo": "messaging\/create-s-m-t-p-provider.md"
+                            "demo": "messaging\/create-smtp-provider.md"
                         }
                     ],
                     "auth": {
@@ -17269,7 +17269,7 @@
                                 }
                             ],
                             "description": "Update a SMTP provider by its unique ID.",
-                            "demo": "messaging\/update-s-m-t-p-provider.md"
+                            "demo": "messaging\/update-smtp-provider.md"
                         }
                     ],
                     "auth": {
@@ -22730,7 +22730,7 @@
                     "weight": 375,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list.md",
+                    "demo": "tables-db\/list.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22803,7 +22803,7 @@
                     "weight": 371,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create.md",
+                    "demo": "tables-db\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22886,7 +22886,7 @@
                     "weight": 372,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get.md",
+                    "demo": "tables-db\/get.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -22946,7 +22946,7 @@
                     "weight": 373,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update.md",
+                    "demo": "tables-db\/update.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23025,7 +23025,7 @@
                     "weight": 374,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete.md",
+                    "demo": "tables-db\/delete.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23085,7 +23085,7 @@
                     "weight": 382,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list-tables.md",
+                    "demo": "tables-db\/list-tables.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-tables.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23166,7 +23166,7 @@
                     "weight": 378,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-table.md",
+                    "demo": "tables-db\/create-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23272,7 +23272,7 @@
                     "weight": 379,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get-table.md",
+                    "demo": "tables-db\/get-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23340,7 +23340,7 @@
                     "weight": 380,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-table.md",
+                    "demo": "tables-db\/update-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23442,7 +23442,7 @@
                     "weight": 381,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-table.md",
+                    "demo": "tables-db\/delete-table.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-table.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23510,7 +23510,7 @@
                     "weight": 387,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list-columns.md",
+                    "demo": "tables-db\/list-columns.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-columns.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23592,7 +23592,7 @@
                     "weight": 388,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-boolean-column.md",
+                    "demo": "tables-db\/create-boolean-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23699,7 +23699,7 @@
                     "weight": 389,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-boolean-column.md",
+                    "demo": "tables-db\/update-boolean-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-boolean-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23808,7 +23808,7 @@
                     "weight": 390,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-datetime-column.md",
+                    "demo": "tables-db\/create-datetime-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -23915,7 +23915,7 @@
                     "weight": 391,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-datetime-column.md",
+                    "demo": "tables-db\/update-datetime-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-datetime-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24024,7 +24024,7 @@
                     "weight": 392,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-email-column.md",
+                    "demo": "tables-db\/create-email-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24131,7 +24131,7 @@
                     "weight": 393,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-email-column.md",
+                    "demo": "tables-db\/update-email-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-email-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24240,7 +24240,7 @@
                     "weight": 394,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-enum-column.md",
+                    "demo": "tables-db\/create-enum-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24357,7 +24357,7 @@
                     "weight": 395,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-enum-column.md",
+                    "demo": "tables-db\/update-enum-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-enum-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24476,7 +24476,7 @@
                     "weight": 396,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-float-column.md",
+                    "demo": "tables-db\/create-float-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24595,7 +24595,7 @@
                     "weight": 397,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-float-column.md",
+                    "demo": "tables-db\/update-float-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-float-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24716,7 +24716,7 @@
                     "weight": 398,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-integer-column.md",
+                    "demo": "tables-db\/create-integer-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24835,7 +24835,7 @@
                     "weight": 399,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-integer-column.md",
+                    "demo": "tables-db\/update-integer-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-integer-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -24956,7 +24956,7 @@
                     "weight": 400,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-ip-column.md",
+                    "demo": "tables-db\/create-ip-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25063,7 +25063,7 @@
                     "weight": 401,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-ip-column.md",
+                    "demo": "tables-db\/update-ip-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-ip-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25172,7 +25172,7 @@
                     "weight": 402,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-relationship-column.md",
+                    "demo": "tables-db\/create-relationship-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25306,7 +25306,7 @@
                     "weight": 404,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-string-column.md",
+                    "demo": "tables-db\/create-string-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25426,7 +25426,7 @@
                     "weight": 405,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-string-column.md",
+                    "demo": "tables-db\/update-string-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-string-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25541,7 +25541,7 @@
                     "weight": 406,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-url-column.md",
+                    "demo": "tables-db\/create-url-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25648,7 +25648,7 @@
                     "weight": 407,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-url-column.md",
+                    "demo": "tables-db\/update-url-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-url-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25786,7 +25786,7 @@
                     "weight": 385,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get-column.md",
+                    "demo": "tables-db\/get-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25856,7 +25856,7 @@
                     "weight": 386,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-column.md",
+                    "demo": "tables-db\/delete-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -25933,7 +25933,7 @@
                     "weight": 403,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-relationship-column.md",
+                    "demo": "tables-db\/update-relationship-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-relationship-column.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -26036,7 +26036,7 @@
                     "weight": 411,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list-indexes.md",
+                    "demo": "tables-db\/list-indexes.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-indexes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -26116,7 +26116,7 @@
                     "weight": 408,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-index.md",
+                    "demo": "tables-db\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -26244,7 +26244,7 @@
                     "weight": 409,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get-index.md",
+                    "demo": "tables-db\/get-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -26314,7 +26314,7 @@
                     "weight": 410,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-index.md",
+                    "demo": "tables-db\/delete-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -26389,7 +26389,7 @@
                     "weight": 420,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list-rows.md",
+                    "demo": "tables-db\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -26472,7 +26472,7 @@
                     "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-row.md",
+                    "demo": "tables-db\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -26512,7 +26512,7 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/create-row.md"
+                            "demo": "tables-db\/create-row.md"
                         },
                         {
                             "name": "createRows",
@@ -26539,7 +26539,7 @@
                                 }
                             ],
                             "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/create-rows.md"
+                            "demo": "tables-db\/create-rows.md"
                         }
                     ],
                     "auth": {
@@ -26641,7 +26641,7 @@
                     "weight": 417,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/upsert-rows.md",
+                    "demo": "tables-db\/upsert-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -26678,7 +26678,7 @@
                                 }
                             ],
                             "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.\n",
-                            "demo": "tables-d-b\/upsert-rows.md"
+                            "demo": "tables-db\/upsert-rows.md"
                         }
                     ],
                     "auth": {
@@ -26760,7 +26760,7 @@
                     "weight": 415,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-rows.md",
+                    "demo": "tables-db\/update-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-rows.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -26853,7 +26853,7 @@
                     "weight": 419,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-rows.md",
+                    "demo": "tables-db\/delete-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-rows.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -26940,7 +26940,7 @@
                     "weight": 413,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get-row.md",
+                    "demo": "tables-db\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -27031,7 +27031,7 @@
                     "weight": 416,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/upsert-row.md",
+                    "demo": "tables-db\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -27070,7 +27070,7 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/upsert-row.md"
+                            "demo": "tables-db\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -27165,7 +27165,7 @@
                     "weight": 414,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-row.md",
+                    "demo": "tables-db\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -27263,7 +27263,7 @@
                     "weight": 418,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-row.md",
+                    "demo": "tables-db\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -27344,7 +27344,7 @@
                     "weight": 423,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/decrement-row-column.md",
+                    "demo": "tables-db\/decrement-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -27454,7 +27454,7 @@
                     "weight": 422,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/increment-row-column.md",
+                    "demo": "tables-db\/increment-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -29126,7 +29126,7 @@
                     "weight": 188,
                     "cookies": false,
                     "type": "",
-                    "demo": "users\/create-argon2user.md",
+                    "demo": "users\/create-argon-2-user.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/users\/create-argon2-user.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -29440,7 +29440,7 @@
                     "weight": 187,
                     "cookies": false,
                     "type": "",
-                    "demo": "users\/create-m-d5user.md",
+                    "demo": "users\/create-md-5-user.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/users\/create-md5-user.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -29532,7 +29532,7 @@
                     "weight": 190,
                     "cookies": false,
                     "type": "",
-                    "demo": "users\/create-p-h-pass-user.md",
+                    "demo": "users\/create-ph-pass-user.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/users\/create-phpass-user.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -29864,7 +29864,7 @@
                     "weight": 189,
                     "cookies": false,
                     "type": "",
-                    "demo": "users\/create-s-h-a-user.md",
+                    "demo": "users\/create-sha-user.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/users\/create-sha-user.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -30172,7 +30172,7 @@
                     "weight": 226,
                     "cookies": false,
                     "type": "",
-                    "demo": "users\/create-j-w-t.md",
+                    "demo": "users\/create-jwt.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/users\/create-user-jwt.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -30558,7 +30558,7 @@
                                 }
                             ],
                             "description": "Enable or disable MFA on a user account.",
-                            "demo": "users\/update-m-f-a.md"
+                            "demo": "users\/update-mfa.md"
                         }
                     ],
                     "auth": {
@@ -30691,7 +30691,7 @@
                                 }
                             ],
                             "description": "Delete an authenticator app.",
-                            "demo": "users\/delete-m-f-a-authenticator.md"
+                            "demo": "users\/delete-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -30820,7 +30820,7 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "users\/list-m-f-a-factors.md"
+                            "demo": "users\/list-mfa-factors.md"
                         }
                     ],
                     "auth": {
@@ -30936,7 +30936,7 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow by User ID. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
-                            "demo": "users\/get-m-f-a-recovery-codes.md"
+                            "demo": "users\/get-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -31052,7 +31052,7 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow by User ID. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
-                            "demo": "users\/update-m-f-a-recovery-codes.md"
+                            "demo": "users\/update-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -31168,7 +31168,7 @@
                                 }
                             ],
                             "description": "Generate recovery codes used as backup for MFA flow for User ID. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method by client SDK.",
-                            "demo": "users\/create-m-f-a-recovery-codes.md"
+                            "demo": "users\/create-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
