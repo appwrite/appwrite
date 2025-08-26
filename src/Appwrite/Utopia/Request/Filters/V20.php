@@ -33,7 +33,7 @@ class V20 extends Filter
     protected function manageSelectQueries(array $content): array
     {
         $hasWildcard = false;
-        if (! isset($content['queries'])) {
+        if (!isset($content['queries'])) {
             $hasWildcard = true;
             // only query, make it json encoded!
             $content['queries'] = [Query::select(['*'])->toString()];
@@ -48,7 +48,11 @@ class V20 extends Filter
 
         $selections = Query::groupByType($parsed)['selections'] ?? [];
 
-        if (! $hasWildcard) {
+        // If there are no select queries at all, add wildcard
+        if (empty($selections)) {
+            $hasWildcard = true;
+            $parsed[] = Query::select(['*']);
+        } else if (!$hasWildcard) {
             // check if any select includes a wildcard as we added one above
             foreach ($selections as $select) {
                 if (\in_array('*', $select->getValues(), true)) {
