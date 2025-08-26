@@ -46,18 +46,17 @@ class Base extends Queries
         foreach ($collection['attributes'] as $attribute) {
             $key = $attribute['$id'];
 
-            if (!isset($allowedAttributesLookup[$key])) {
-                continue;
-            }
-
             $attributeDocument = new Document([
                 'key' => $key,
                 'type' => $attribute['type'],
                 'array' => $attribute['array'],
             ]);
 
-            $attributes[] = $attributeDocument;
             $allAttributes[] = $attributeDocument;
+
+            if (isset($allowedAttributesLookup[$key])) {
+                $attributes[] = $attributeDocument;
+            }
         }
 
         $internalAttributes = [
