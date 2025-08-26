@@ -62,6 +62,9 @@ class FunctionsScheduleTest extends Scope
             $this->assertNotEmpty($asyncExecution['logs']);
             $this->assertNotEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
+            $this->assertNotEmpty($asyncExecution['$id']);
+            $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
+            $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
         }, 60000, 500);
 
         $this->cleanupFunction($functionId);

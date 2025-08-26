@@ -1538,6 +1538,9 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
             $this->assertStringContainsString($userId, $lastExecution['logs']);
             $this->assertStringContainsString('Event User', $lastExecution['logs']);
+            $this->assertNotEmpty($lastExecution['$id']);
+            $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
+            $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);

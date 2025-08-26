@@ -270,7 +270,6 @@ class Functions extends Action
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
-        $headers['x-appwrite-client-ip'] = '';
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
@@ -408,7 +407,6 @@ class Functions extends Action
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
-        $headers['x-appwrite-client-ip'] = '';
 
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
