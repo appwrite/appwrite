@@ -2316,6 +2316,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "0.16.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -2525,6 +2529,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "0.16.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }

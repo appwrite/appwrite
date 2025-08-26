@@ -2450,6 +2450,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "0.16.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -2660,6 +2664,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "0.16.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -5281,7 +5289,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "tablesDB.createDatabase"
+                        "replaceWith": "tablesDB.create"
                     },
                     "methods": [
                         {
@@ -5310,7 +5318,7 @@
                             "demo": "databases\/create.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "tablesDB.createDatabase"
+                                "replaceWith": "tablesDB.create"
                             }
                         }
                     ],
