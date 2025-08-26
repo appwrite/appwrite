@@ -448,7 +448,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $projectId = str_repeat('very_long_id', 10);
-        if('mongodb' === strtolower(System::getEnv('_APP_DB_ADAPTER', 'mongodb'))){  // to support mongodb UID length
+        if($this->isMongoDB()){  // to support mongodb UID length
             $projectId = str_repeat('long_id', 20);
         }
 
@@ -456,7 +456,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-
+        var_dump($response['body']);
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "342004735dc16f5a13ced84c15186ad4",
+    "content-hash": "23490b85e8fb51d82f92fa975e4519af",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -758,23 +758,26 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.31.1",
+            "version": "v4.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "2b028ce8876254e2acbeceea7d9b573faad41864"
+                "reference": "9a9a92ecbe9c671dc1863f6d4a91ea3ea12c8646"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/2b028ce8876254e2acbeceea7d9b573faad41864",
-                "reference": "2b028ce8876254e2acbeceea7d9b573faad41864",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/9a9a92ecbe9c671dc1863f6d4a91ea3ea12c8646",
+                "reference": "9a9a92ecbe9c671dc1863f6d4a91ea3ea12c8646",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.0.0"
+                "php": ">=8.1.0"
+            },
+            "provide": {
+                "ext-protobuf": "*"
             },
             "require-dev": {
-                "phpunit/phpunit": ">=5.0.0"
+                "phpunit/phpunit": ">=5.0.0 <8.5.27"
             },
             "suggest": {
                 "ext-bcmath": "Need to support JSON deserialization"
@@ -796,9 +799,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.31.1"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.32.0"
             },
-            "time": "2025-05-28T18:52:35+00:00"
+            "time": "2025-08-14T20:00:33+00:00"
         },
         {
             "name": "league/csv",
@@ -1305,16 +1308,16 @@
         },
         {
             "name": "open-telemetry/context",
-            "version": "1.3.0",
+            "version": "1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/context.git",
-                "reference": "4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc"
+                "reference": "438f71812242db3f196fb4c717c6f92cbc819be6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc",
-                "reference": "4d5d98f1d4311a55b8d07e3d4c06d2430b4e6efc",
+                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/438f71812242db3f196fb4c717c6f92cbc819be6",
+                "reference": "438f71812242db3f196fb4c717c6f92cbc819be6",
                 "shasum": ""
             },
             "require": {
@@ -1360,7 +1363,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-08-04T03:25:06+00:00"
+            "time": "2025-08-13T01:12:00+00:00"
         },
         {
             "name": "open-telemetry/exporter-otlp",
@@ -3698,16 +3701,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-mongo-tmp",
+            "version": "dev-feat-mongo-tmp-with-uuid7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "60996313ee6954e49807a12b4db2facfa026982f"
+                "reference": "74cd59d3e7125c354dda1d376f6b729abfaa1832"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/60996313ee6954e49807a12b4db2facfa026982f",
-                "reference": "60996313ee6954e49807a12b4db2facfa026982f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/74cd59d3e7125c354dda1d376f6b729abfaa1832",
+                "reference": "74cd59d3e7125c354dda1d376f6b729abfaa1832",
                 "shasum": ""
             },
             "require": {
@@ -3716,7 +3719,7 @@
                 "php": ">=8.1",
                 "utopia-php/cache": "0.13.*",
                 "utopia-php/framework": "0.33.*",
-                "utopia-php/mongo": "dev-feat-partial-filter-expression as 0.5.3",
+                "utopia-php/mongo": "dev-feat-create-UUID as 0.5.3",
                 "utopia-php/pools": "0.8.*"
             },
             "require-dev": {
@@ -3749,9 +3752,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-mongo-tmp"
+                "source": "https://github.com/utopia-php/database/tree/feat-mongo-tmp-with-uuid7"
             },
-            "time": "2025-08-11T15:11:19+00:00"
+            "time": "2025-08-19T06:28:48+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4311,22 +4314,23 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "dev-feat-partial-filter-expression",
+            "version": "dev-feat-create-UUID",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "b2c89d4c21b77cfa3cb1b740bd0245c971040e7f"
+                "reference": "f25c14e4e3037093ad5679398da4805abb3dfec1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/b2c89d4c21b77cfa3cb1b740bd0245c971040e7f",
-                "reference": "b2c89d4c21b77cfa3cb1b740bd0245c971040e7f",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/f25c14e4e3037093ad5679398da4805abb3dfec1",
+                "reference": "f25c14e4e3037093ad5679398da4805abb3dfec1",
                 "shasum": ""
             },
             "require": {
                 "ext-mongodb": "2.1.1",
                 "mongodb/mongodb": "2.1.0",
-                "php": ">=8.0"
+                "php": ">=8.0",
+                "ramsey/uuid": "^4.9.0"
             },
             "require-dev": {
                 "fakerphp/faker": "^1.14",
@@ -4365,9 +4369,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/feat-partial-filter-expression"
+                "source": "https://github.com/utopia-php/mongo/tree/feat-create-UUID"
             },
-            "time": "2025-08-10T12:40:53+00:00"
+            "time": "2025-08-18T14:00:43+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -5132,16 +5136,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.41.29",
+            "version": "0.41.30",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "4af563f3b0879747efc8434eb8ed8bf97e75039f"
+                "reference": "14a6e52d0d1075d176f4c80cafde9afe506e7455"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/4af563f3b0879747efc8434eb8ed8bf97e75039f",
-                "reference": "4af563f3b0879747efc8434eb8ed8bf97e75039f",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/14a6e52d0d1075d176f4c80cafde9afe506e7455",
+                "reference": "14a6e52d0d1075d176f4c80cafde9afe506e7455",
                 "shasum": ""
             },
             "require": {
@@ -5177,9 +5181,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.29"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.41.30"
             },
-            "time": "2025-08-04T04:34:45+00:00"
+            "time": "2025-08-18T01:39:09+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5658,16 +5662,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.6.0",
+            "version": "v5.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56"
+                "reference": "f103601b29efebd7ff4a1ca7b3eeea9e3336a2a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/221b0d0fdf1369c71047ad1d18bb5880017bbc56",
-                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/f103601b29efebd7ff4a1ca7b3eeea9e3336a2a2",
+                "reference": "f103601b29efebd7ff4a1ca7b3eeea9e3336a2a2",
                 "shasum": ""
             },
             "require": {
@@ -5686,7 +5690,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.0-dev"
+                    "dev-master": "5.x-dev"
                 }
             },
             "autoload": {
@@ -5710,9 +5714,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.6.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.6.1"
             },
-            "time": "2025-07-27T20:03:57+00:00"
+            "time": "2025-08-13T20:13:15+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -8618,7 +8622,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-feat-mongo-tmp",
+            "version": "dev-feat-mongo-tmp-with-uuid7",
             "alias": "0.73.0",
             "alias_normalized": "0.73.0.0"
         }

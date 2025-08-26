@@ -54,7 +54,7 @@
         "utopia-php/cache": "0.13.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-feat-mongo-tmp as 0.73.0",
+        "utopia-php/database": "dev-feat-mongo-tmp-with-uuid7 as 0.73.0",
         "utopia-php/detector": "0.1.*",
         "utopia-php/domains": "0.8.*",
         "utopia-php/dns": "0.3.*",
