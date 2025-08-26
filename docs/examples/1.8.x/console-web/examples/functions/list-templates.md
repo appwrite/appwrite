@@ -7,10 +7,10 @@ const client = new Client()
 const functions = new Functions(client);
 
 const result = await functions.listTemplates({
-    runtimes: [],
-    useCases: [],
-    limit: 1,
-    offset: 0
+    runtimes: [], // optional
+    useCases: [], // optional
+    limit: 1, // optional
+    offset: 0 // optional
 });
 
 console.log(result);

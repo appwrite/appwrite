@@ -1,2 +1,2 @@
 appwrite graphql query \
-        --query '{ "key": "value" }'
+    --query '{ "key": "value" }'

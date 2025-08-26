@@ -9,5 +9,5 @@ const functions = new Functions(client);
 
 const response = await functions.listExecutions({
     functionId: '<FUNCTION_ID>',
-    queries: []
+    queries: [] // optional
 });

@@ -1,6 +1,4 @@
-appwrite tablesDB updateRelationshipColumn \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key '' \
-
-
+appwrite tables-db update-relationship-column \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key ''

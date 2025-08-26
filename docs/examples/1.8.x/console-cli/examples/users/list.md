@@ -1,3 +1,1 @@
-appwrite users list \
-
-
+appwrite users list

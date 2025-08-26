@@ -10,8 +10,8 @@ const result = await sites.updateVariable({
     siteId: '<SITE_ID>',
     variableId: '<VARIABLE_ID>',
     key: '<KEY>',
-    value: '<VALUE>',
-    secret: false
+    value: '<VALUE>', // optional
+    secret: false // optional
 });
 
 console.log(result);

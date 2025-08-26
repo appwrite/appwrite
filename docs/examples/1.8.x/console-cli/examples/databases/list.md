@@ -1,3 +1,1 @@
-appwrite databases list \
-
-
+appwrite databases list

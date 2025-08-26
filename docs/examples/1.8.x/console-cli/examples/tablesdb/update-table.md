@@ -1,7 +1,4 @@
-appwrite tablesDB updateTable \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --name <NAME> \
-
-
-
+appwrite tables-db update-table \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --name <NAME>

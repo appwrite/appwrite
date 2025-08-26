@@ -7,7 +7,7 @@ Client client = Client()
 
 Messaging messaging = Messaging(client);
 
-Provider result = await messaging.updateSmtpProvider(
+Provider result = await messaging.updateSMTPProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>', // (optional)
     host: '<HOST>', // (optional)

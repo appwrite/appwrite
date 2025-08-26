@@ -6,24 +6,17 @@ import (
     "github.com/appwrite/sdk-for-go/tablesdb"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithSession("") // The user session to authenticate with
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithSession("")
+)
 
-    service := tablesdb.New(client)
-    response, error := service.GetRow(
-        "<DATABASE_ID>",
-        "<TABLE_ID>",
-        "<ROW_ID>",
-        tablesdb.WithGetRowQueries([]interface{}{}),
-    )
+service := tablesdb.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.GetRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    tablesdb.WithGetRowQueries([]interface{}{}),
+)

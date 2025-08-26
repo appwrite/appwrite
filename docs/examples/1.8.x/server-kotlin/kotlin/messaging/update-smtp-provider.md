@@ -9,7 +9,7 @@ val client = Client()
 
 val messaging = Messaging(client)
 
-val response = messaging.updateSmtpProvider(
+val response = messaging.updateSMTPProvider(
     providerId = "<PROVIDER_ID>",
     name = "<NAME>", // optional
     host = "<HOST>", // optional

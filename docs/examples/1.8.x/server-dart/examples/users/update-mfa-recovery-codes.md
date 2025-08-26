@@ -7,6 +7,6 @@ Client client = Client()
 
 Users users = Users(client);
 
-MfaRecoveryCodes result = await users.updateMfaRecoveryCodes(
+MfaRecoveryCodes result = await users.updateMFARecoveryCodes(
     userId: '<USER_ID>',
 );

@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.createFcmProvider(
+messaging.createFCMProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name
     mapOf( "a" to "b" ), // serviceAccountJSON (optional)

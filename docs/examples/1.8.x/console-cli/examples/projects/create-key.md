@@ -1,5 +1,4 @@
-appwrite projects createKey \
-        --projectId <PROJECT_ID> \
-        --name <NAME> \
-        --scopes one two three \
-
+appwrite projects create-key \
+    --project-id <PROJECT_ID> \
+    --name <NAME> \
+    --scopes one two three

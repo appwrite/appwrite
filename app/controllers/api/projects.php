@@ -635,7 +635,7 @@ App::patch('/v1/projects/:projectId/api')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateAPIStatus',
+                replaceWith: 'projects.updateAPIStatus',
             ),
         ),
         new Method(
@@ -692,7 +692,7 @@ App::patch('/v1/projects/:projectId/api/all')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateAPIStatusAll',
+                replaceWith: 'projects.updateAPIStatusAll',
             ),
         ),
         new Method(
@@ -2072,7 +2072,7 @@ App::patch('/v1/projects/:projectId/smtp')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateSMTP',
+                replaceWith: 'projects.updateSMTP',
             ),
         ),
         new Method(
@@ -2188,7 +2188,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createSMTPTest',
+                replaceWith: 'projects.createSMTPTest',
             ),
         ),
         new Method(
@@ -2282,7 +2282,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'getSMSTemplate',
+                replaceWith: 'projects.getSMSTemplate',
             ),
         ),
         new Method(
@@ -2448,7 +2448,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateSMSTemplate',
+                replaceWith: 'projects.updateSMSTemplate',
             ),
         ),
         new Method(
@@ -2572,7 +2572,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'deleteSMSTemplate',
+                replaceWith: 'projects.deleteSMSTemplate',
             ),
         ),
         new Method(

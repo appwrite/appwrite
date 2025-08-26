@@ -1,6 +1,4 @@
-appwrite databases updateDocument \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --documentId <DOCUMENT_ID> \
-
-
+appwrite databases update-document \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --document-id <DOCUMENT_ID>

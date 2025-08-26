@@ -8,7 +8,7 @@ const functions = new Functions(client);
 
 const result = await functions.getUsage({
     functionId: '<FUNCTION_ID>',
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

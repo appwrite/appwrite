@@ -1,5 +1,5 @@
 mutation {
-    messagingCreateApnsProvider(
+    messagingCreateAPNSProvider(
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
         authKey: "<AUTH_KEY>",

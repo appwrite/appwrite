@@ -13,6 +13,6 @@ const response = await databases.createEnumAttribute({
     key: '',
     elements: [],
     required: false,
-    default: '<DEFAULT>',
-    array: false
+    default: '<DEFAULT>', // optional
+    array: false // optional
 });

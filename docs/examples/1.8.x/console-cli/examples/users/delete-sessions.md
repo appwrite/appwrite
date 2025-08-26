@@ -1,2 +1,2 @@
-appwrite users deleteSessions \
-        --userId <USER_ID>
+appwrite users delete-sessions \
+    --user-id <USER_ID>

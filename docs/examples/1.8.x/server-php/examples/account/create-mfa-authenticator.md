@@ -11,6 +11,6 @@ $client = (new Client())
 
 $account = new Account($client);
 
-$result = $account->createMfaAuthenticator(
+$result = $account->createMFAAuthenticator(
     type: AuthenticatorType::TOTP()
 );

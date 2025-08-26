@@ -1,5 +1,5 @@
 mutation {
-    accountDeleteMfaAuthenticator(
+    accountDeleteMFAAuthenticator(
         type: "totp"
     ) {
         status

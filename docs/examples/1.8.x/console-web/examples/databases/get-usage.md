@@ -8,7 +8,7 @@ const databases = new Databases(client);
 
 const result = await databases.getUsage({
     databaseId: '<DATABASE_ID>',
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

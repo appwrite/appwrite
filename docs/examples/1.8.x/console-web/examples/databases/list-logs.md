@@ -8,7 +8,7 @@ const databases = new Databases(client);
 
 const result = await databases.listLogs({
     databaseId: '<DATABASE_ID>',
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

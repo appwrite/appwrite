@@ -10,12 +10,12 @@ const storage = new Storage(client);
 const response = await storage.updateBucket({
     bucketId: '<BUCKET_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"],
-    fileSecurity: false,
-    enabled: false,
-    maximumFileSize: 1,
-    allowedFileExtensions: [],
-    compression: .None,
-    encryption: false,
-    antivirus: false
+    permissions: ["read("any")"], // optional
+    fileSecurity: false, // optional
+    enabled: false, // optional
+    maximumFileSize: 1, // optional
+    allowedFileExtensions: [], // optional
+    compression: .None, // optional
+    encryption: false, // optional
+    antivirus: false // optional
 });

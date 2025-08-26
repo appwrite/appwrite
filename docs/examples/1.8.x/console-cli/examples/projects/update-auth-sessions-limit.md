@@ -1,3 +1,3 @@
-appwrite projects updateAuthSessionsLimit \
-        --projectId <PROJECT_ID> \
-        --limit 1
+appwrite projects update-auth-sessions-limit \
+    --project-id <PROJECT_ID> \
+    --limit 1

@@ -1,1 +1,1 @@
-appwrite health getCache
+appwrite health get-cache

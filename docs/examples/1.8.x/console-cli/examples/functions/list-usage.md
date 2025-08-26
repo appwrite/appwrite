@@ -1,2 +1,1 @@
-appwrite functions listUsage \
-
+appwrite functions list-usage

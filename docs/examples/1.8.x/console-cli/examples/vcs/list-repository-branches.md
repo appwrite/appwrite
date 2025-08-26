@@ -1,3 +1,3 @@
-appwrite vcs listRepositoryBranches \
-        --installationId <INSTALLATION_ID> \
-        --providerRepositoryId <PROVIDER_REPOSITORY_ID>
+appwrite vcs list-repository-branches \
+    --installation-id <INSTALLATION_ID> \
+    --provider-repository-id <PROVIDER_REPOSITORY_ID>

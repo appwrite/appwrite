@@ -11,6 +11,6 @@ const response = await functions.createDeployment({
     functionId: '<FUNCTION_ID>',
     code: InputFile.fromPath('/path/to/file.png', 'file.png'),
     activate: false,
-    entrypoint: '<ENTRYPOINT>',
-    commands: '<COMMANDS>'
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>' // optional
 });

@@ -1,11 +1,11 @@
-import { Client, TablesDb } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const tablesDB = new TablesDb(client);
+const tablesDB = new TablesDB(client);
 
 const response = await tablesDB.updateStringColumn({
     databaseId: '<DATABASE_ID>',
@@ -13,6 +13,6 @@ const response = await tablesDB.updateStringColumn({
     key: '',
     required: false,
     default: '<DEFAULT>',
-    size: 1,
-    newKey: ''
+    size: 1, // optional
+    newKey: '' // optional
 });

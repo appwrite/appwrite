@@ -10,7 +10,7 @@ const result = await functions.createVcsDeployment({
     functionId: '<FUNCTION_ID>',
     type: VCSDeploymentType.Branch,
     reference: '<REFERENCE>',
-    activate: false
+    activate: false // optional
 });
 
 console.log(result);

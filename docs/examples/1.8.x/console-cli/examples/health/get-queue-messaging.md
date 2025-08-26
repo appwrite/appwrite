@@ -1,2 +1,1 @@
-appwrite health getQueueMessaging \
-
+appwrite health get-queue-messaging

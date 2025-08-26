@@ -11,5 +11,5 @@ const response = await storage.createFile({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     file: InputFile.fromPath('/path/to/file.png', 'file.png'),
-    permissions: ["read("any")"]
+    permissions: ["read("any")"] // optional
 });

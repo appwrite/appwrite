@@ -945,6 +945,29 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(1, $executions['body']['total']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
+        $this->assertEquals($data['deploymentId'], $executions['body']['executions'][0]['deploymentId']);
+
+        $executions = $this->listExecutions($data['functionId'], [
+            'queries' => [
+                Query::equal('deploymentId', [$data['deploymentId']])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals(1, $executions['body']['total']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertCount(1, $executions['body']['executions']);
+
+        $executions = $this->listExecutions($data['functionId'], [
+            'queries' => [
+                Query::equal('deploymentId', ['some-random-id'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals(0, $executions['body']['total']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertCount(0, $executions['body']['executions']);
 
         $executions = $this->listExecutions($data['functionId'], [
             'queries' => [
@@ -1034,8 +1057,9 @@ class FunctionsCustomServerTest extends Scope
          */
         $execution = $this->getExecution($data['functionId'], $data['executionId']);
 
-        $this->assertEquals($execution['headers']['status-code'], 200);
-        $this->assertEquals($execution['body']['$id'], $data['executionId']);
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals($data['executionId'], $execution['body']['$id']);
+        $this->assertEquals($data['deploymentId'], $execution['body']['deploymentId']);
 
         /**
          * Test for FAILURE

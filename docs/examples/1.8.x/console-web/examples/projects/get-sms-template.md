@@ -6,7 +6,7 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.getSmsTemplate({
+const result = await projects.getSMSTemplate({
     projectId: '<PROJECT_ID>',
     type: SmsTemplateType.Verification,
     locale: SmsTemplateLocale.Af

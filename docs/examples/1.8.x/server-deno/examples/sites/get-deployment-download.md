@@ -10,5 +10,5 @@ const sites = new Sites(client);
 const result = sites.getDeploymentDownload({
     siteId: '<SITE_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
-    type: DeploymentDownloadType.Source
+    type: DeploymentDownloadType.Source // optional
 });

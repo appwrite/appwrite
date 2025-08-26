@@ -10,9 +10,9 @@ const result = await databases.createCollection({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"],
-    documentSecurity: false,
-    enabled: false
+    permissions: ["read("any")"], // optional
+    documentSecurity: false, // optional
+    enabled: false // optional
 });
 
 console.log(result);

@@ -1,2 +1,2 @@
-appwrite project getVariable \
-        --variableId <VARIABLE_ID>
+appwrite project get-variable \
+    --variable-id <VARIABLE_ID>

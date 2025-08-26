@@ -1,14 +1,4 @@
 appwrite projects create \
-        --projectId '' \
-        --name <NAME> \
-        --teamId <TEAM_ID> \
-
-
-
-
-
-
-
-
-
-
+    --project-id '' \
+    --name <NAME> \
+    --team-id <TEAM_ID>

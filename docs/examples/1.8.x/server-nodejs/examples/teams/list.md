@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const teams = new sdk.Teams(client);
 
 const result = await teams.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

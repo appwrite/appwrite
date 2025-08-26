@@ -1,4 +1,3 @@
-appwrite tablesDB deleteRows \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-
+appwrite tables-db delete-rows \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID>

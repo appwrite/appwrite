@@ -8,7 +8,7 @@ const account = new Account(client);
 
 const result = await account.updatePassword({
     password: '',
-    oldPassword: 'password'
+    oldPassword: 'password' // optional
 });
 
 console.log(result);

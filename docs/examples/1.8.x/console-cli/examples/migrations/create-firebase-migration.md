@@ -1,3 +1,3 @@
-appwrite migrations createFirebaseMigration \
-        --resources one two three \
-        --serviceAccount <SERVICE_ACCOUNT>
+appwrite migrations create-firebase-migration \
+    --resources one two three \
+    --service-account <SERVICE_ACCOUNT>

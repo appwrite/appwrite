@@ -13,5 +13,5 @@ const response = await databases.updateDatetimeAttribute({
     key: '',
     required: false,
     default: '',
-    newKey: ''
+    newKey: '' // optional
 });

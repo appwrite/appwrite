@@ -3557,16 +3557,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-spatial-attribute-support",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/ArnabChatterjee20k/php-utopia-database.git",
-                "reference": "88998edfc808821fc0c04883b922335ae090e5b5"
+                "url": "https://github.com/utopia-php/database.git",
+                "reference": "653e19d26c5607b9dce917c50737824772cd3dd8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ArnabChatterjee20k/php-utopia-database/zipball/88998edfc808821fc0c04883b922335ae090e5b5",
-                "reference": "88998edfc808821fc0c04883b922335ae090e5b5",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/653e19d26c5607b9dce917c50737824772cd3dd8",
+                "reference": "653e19d26c5607b9dce917c50737824772cd3dd8",
                 "shasum": ""
             },
             "require": {
@@ -3637,9 +3637,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/ArnabChatterjee20k/php-utopia-database/tree/spatial-attribute-support"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/1.2.0"
             },
-            "time": "2025-08-26T15:18:37+00:00"
+            "time": "2025-08-26T12:51:42+00:00"
         },
         {
             "name": "utopia-php/detector",

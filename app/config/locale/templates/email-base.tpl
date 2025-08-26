@@ -1,9 +1,32 @@
 <!doctype html>
 <html>
     <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap">
+        <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+        <style>
+            @font-face {
+                font-family: 'Inter';
+                src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+            
+            @font-face {
+                font-family: 'DM Sans';
+                src: url('https://assets.appwrite.io/fonts/dm-sans/dm-sans-v16-latin-600.woff2') format('woff2');
+                font-weight: 600;
+                font-style: normal;
+                font-display: swap;
+            }
+            
+            @font-face {
+                font-family: 'Poppins';
+                src: url('https://assets.appwrite.io/fonts/poppins/poppins-v23-latin-regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
         <style>
             body {
                 padding: 32px;
@@ -15,6 +38,7 @@
                 background-color: #ffffff;
                 margin: 0;
                 padding: 0;
+                line-height: 150%;
             }
             a {
                 color: currentColor;
@@ -67,57 +91,15 @@
                 border: none;
                 border-top: 1px solid #e8e9f0;
             }
+            h* {
+                font-family: 'Poppins', sans-serif;
+            }
+    
+            p {
+                margin-bottom: 10px;
+            }
         </style>
     </head>
-
-<head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap"
-            rel="stylesheet">
-    <style>
-        a { color:currentColor; word-break: break-all; }
-        body {
-            background-color: #ffffff;
-            padding: 32px;
-            color: #616B7C;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            line-height: 150%;
-        }
-
-        table {
-            width: 100%;
-            border-spacing: 0 !important;
-        }
-
-        table,
-        tr,
-        th,
-        td {
-            margin: 0;
-            padding: 0;
-        }
-
-        td {
-            vertical-align: top;
-        }
-
-        h* {
-            font-family: 'Poppins', sans-serif;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid #E8E9F0;
-        }
-
-        p {
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
 
 <body style="direction: {{direction}}">
 

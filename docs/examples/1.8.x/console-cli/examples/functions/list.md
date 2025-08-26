@@ -1,3 +1,1 @@
-appwrite functions list \
-
-
+appwrite functions list

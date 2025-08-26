@@ -383,7 +383,7 @@
                     "weight": 30,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-j-w-t.md",
+                    "demo": "account\/create-jwt.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "rate-limit": 100,
                     "rate-time": 3600,
@@ -498,7 +498,7 @@
                     "weight": 45,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-m-f-a.md",
+                    "demo": "account\/update-mfa.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -581,7 +581,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAAuthenticator"
+                        "replaceWith": "account.createMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -607,7 +607,7 @@
                             "demo": "account\/create-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAAuthenticator"
+                                "replaceWith": "account.createMFAAuthenticator"
                             }
                         },
                         {
@@ -630,7 +630,7 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-m-f-a-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -701,7 +701,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAAuthenticator"
+                        "replaceWith": "account.updateMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -729,7 +729,7 @@
                             "demo": "account\/update-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAAuthenticator"
+                                "replaceWith": "account.updateMFAAuthenticator"
                             }
                         },
                         {
@@ -754,7 +754,7 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-m-f-a-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -837,7 +837,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "deleteMFAAuthenticator"
+                        "replaceWith": "account.deleteMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -862,7 +862,7 @@
                             "demo": "account\/delete-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "deleteMFAAuthenticator"
+                                "replaceWith": "account.deleteMFAAuthenticator"
                             }
                         },
                         {
@@ -884,7 +884,7 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-m-f-a-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -957,7 +957,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAChallenge"
+                        "replaceWith": "account.createMFAChallenge"
                     },
                     "methods": [
                         {
@@ -983,7 +983,7 @@
                             "demo": "account\/create-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAChallenge"
+                                "replaceWith": "account.createMFAChallenge"
                             }
                         },
                         {
@@ -1006,7 +1006,7 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1085,7 +1085,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAChallenge"
+                        "replaceWith": "account.updateMFAChallenge"
                     },
                     "methods": [
                         {
@@ -1113,7 +1113,7 @@
                             "demo": "account\/update-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAChallenge"
+                                "replaceWith": "account.updateMFAChallenge"
                             }
                         },
                         {
@@ -1138,7 +1138,7 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-m-f-a-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1219,7 +1219,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "listMFAFactors"
+                        "replaceWith": "account.listMFAFactors"
                     },
                     "methods": [
                         {
@@ -1241,7 +1241,7 @@
                             "demo": "account\/list-mfa-factors.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "listMFAFactors"
+                                "replaceWith": "account.listMFAFactors"
                             }
                         },
                         {
@@ -1260,7 +1260,7 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-m-f-a-factors.md"
+                            "demo": "account\/list-mfa-factors.md"
                         }
                     ],
                     "auth": {
@@ -1316,7 +1316,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "getMFARecoveryCodes"
+                        "replaceWith": "account.getMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1338,7 +1338,7 @@
                             "demo": "account\/get-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "getMFARecoveryCodes"
+                                "replaceWith": "account.getMFARecoveryCodes"
                             }
                         },
                         {
@@ -1357,7 +1357,7 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-m-f-a-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1411,7 +1411,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFARecoveryCodes"
+                        "replaceWith": "account.createMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1433,7 +1433,7 @@
                             "demo": "account\/create-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFARecoveryCodes"
+                                "replaceWith": "account.createMFARecoveryCodes"
                             }
                         },
                         {
@@ -1452,7 +1452,7 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1506,7 +1506,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFARecoveryCodes"
+                        "replaceWith": "account.updateMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1528,7 +1528,7 @@
                             "demo": "account\/update-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFARecoveryCodes"
+                                "replaceWith": "account.updateMFARecoveryCodes"
                             }
                         },
                         {
@@ -1547,7 +1547,7 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-m-f-a-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -2305,7 +2305,7 @@
                     "weight": 27,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-magic-u-r-l-session.md",
+                    "demo": "account\/update-magic-url-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -2316,6 +2316,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.6.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -2372,7 +2376,7 @@
                     "weight": 20,
                     "cookies": false,
                     "type": "webAuth",
-                    "demo": "account\/create-o-auth2session.md",
+                    "demo": "account\/create-o-auth-2-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
@@ -2525,6 +2529,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.6.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -3082,7 +3090,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the email address has never been used, a **new account is created** using the provided `userId`. Otherwise, if the email address is already attached to an account, the **user ID is ignored**. Then, the user will receive an email with the one-time password. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3133,7 +3141,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "email": {
@@ -3184,7 +3192,7 @@
                     "weight": 25,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-magic-u-r-l-token.md",
+                    "demo": "account\/create-magic-url-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "rate-limit": 60,
                     "rate-time": 3600,
@@ -3215,7 +3223,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "email": {
@@ -3264,7 +3272,7 @@
                     "weight": 24,
                     "cookies": false,
                     "type": "webAuth",
-                    "demo": "account\/create-o-auth2token.md",
+                    "demo": "account\/create-o-auth-2-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
@@ -3437,7 +3445,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "phone": {
@@ -4726,7 +4734,7 @@
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
-                    "demo": "avatars\/get-q-r.md",
+                    "demo": "avatars\/get-qr.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -6316,7 +6324,7 @@
                     "weight": 73,
                     "cookies": false,
                     "type": "",
-                    "demo": "locale\/list-countries-e-u.md",
+                    "demo": "locale\/list-countries-eu.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7485,7 +7493,7 @@
                     "weight": 420,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list-rows.md",
+                    "demo": "tablesdb\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7570,7 +7578,7 @@
                     "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-row.md",
+                    "demo": "tablesdb\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7610,7 +7618,7 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/create-row.md"
+                            "demo": "tables-db\/create-row.md"
                         }
                     ],
                     "auth": {
@@ -7712,7 +7720,7 @@
                     "weight": 413,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get-row.md",
+                    "demo": "tablesdb\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7807,7 +7815,7 @@
                     "weight": 416,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/upsert-row.md",
+                    "demo": "tablesdb\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7846,7 +7854,7 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/upsert-row.md"
+                            "demo": "tables-db\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -7943,7 +7951,7 @@
                     "weight": 414,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-row.md",
+                    "demo": "tablesdb\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -8042,7 +8050,7 @@
                     "weight": 418,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-row.md",
+                    "demo": "tablesdb\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -8126,7 +8134,7 @@
                     "weight": 423,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/decrement-row-column.md",
+                    "demo": "tablesdb\/decrement-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -8241,7 +8249,7 @@
                     "weight": 422,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/increment-row-column.md",
+                    "demo": "tablesdb\/increment-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -11331,7 +11339,7 @@
                     },
                     "$updatedAt": {
                         "type": "string",
-                        "description": "Execution upate date in ISO 8601 format.",
+                        "description": "Execution update date in ISO 8601 format.",
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "$permissions": {
@@ -11348,6 +11356,11 @@
                         "type": "string",
                         "description": "Function ID.",
                         "x-example": "5e5ea6g16897e"
+                    },
+                    "deploymentId": {
+                        "type": "string",
+                        "description": "Function's deployment ID used to create the execution.",
+                        "x-example": "5e5ea5c16897e"
                     },
                     "trigger": {
                         "type": "string",
@@ -11433,6 +11446,7 @@
                     "$updatedAt",
                     "$permissions",
                     "functionId",
+                    "deploymentId",
                     "trigger",
                     "status",
                     "requestMethod",
@@ -11453,6 +11467,7 @@
                         "any"
                     ],
                     "functionId": "5e5ea6g16897e",
+                    "deploymentId": "5e5ea5c16897e",
                     "trigger": "http",
                     "status": "processing",
                     "requestMethod": "GET",

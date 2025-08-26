@@ -1,3 +1,3 @@
-appwrite projects updateServiceStatusAll \
-        --projectId <PROJECT_ID> \
-        --status false
+appwrite projects update-service-status-all \
+    --project-id <PROJECT_ID> \
+    --status false

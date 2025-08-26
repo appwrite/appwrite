@@ -1,5 +1,4 @@
-appwrite tablesDB getRow \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --rowId <ROW_ID> \
-
+appwrite tables-db get-row \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --row-id <ROW_ID>

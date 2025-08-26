@@ -10,8 +10,8 @@ const result = await databases.updateRelationshipAttribute({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     key: '',
-    onDelete: RelationMutate.Cascade,
-    newKey: ''
+    onDelete: RelationMutate.Cascade, // optional
+    newKey: '' // optional
 });
 
 console.log(result);

@@ -1,5 +1,4 @@
-appwrite sites createVariable \
-        --siteId <SITE_ID> \
-        --key <KEY> \
-        --value <VALUE> \
-
+appwrite sites create-variable \
+    --site-id <SITE_ID> \
+    --key <KEY> \
+    --value <VALUE>

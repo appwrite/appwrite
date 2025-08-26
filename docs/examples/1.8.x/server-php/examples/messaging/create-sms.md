@@ -10,7 +10,7 @@ $client = (new Client())
 
 $messaging = new Messaging($client);
 
-$result = $messaging->createSms(
+$result = $messaging->createSMS(
     messageId: '<MESSAGE_ID>',
     content: '<CONTENT>',
     topics: [], // optional

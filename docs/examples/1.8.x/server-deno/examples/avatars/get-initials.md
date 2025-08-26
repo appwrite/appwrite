@@ -8,8 +8,8 @@ const client = new Client()
 const avatars = new Avatars(client);
 
 const result = avatars.getInitials({
-    name: '<NAME>',
-    width: 0,
-    height: 0,
-    background: ''
+    name: '<NAME>', // optional
+    width: 0, // optional
+    height: 0, // optional
+    background: '' // optional
 });

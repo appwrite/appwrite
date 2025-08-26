@@ -12,7 +12,7 @@ const result = await databases.updateIpAttribute({
     key: '',
     required: false,
     default: '',
-    newKey: ''
+    newKey: '' // optional
 });
 
 console.log(result);

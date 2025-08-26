@@ -7,12 +7,12 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.updateSms({
+const response = await messaging.updateSMS({
     messageId: '<MESSAGE_ID>',
-    topics: [],
-    users: [],
-    targets: [],
-    content: '<CONTENT>',
-    draft: false,
-    scheduledAt: ''
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    content: '<CONTENT>', // optional
+    draft: false, // optional
+    scheduledAt: '' // optional
 });

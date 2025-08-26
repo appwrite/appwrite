@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.updateSms(
+messaging.updateSMS(
     "<MESSAGE_ID>", // messageId
     listOf(), // topics (optional)
     listOf(), // users (optional)

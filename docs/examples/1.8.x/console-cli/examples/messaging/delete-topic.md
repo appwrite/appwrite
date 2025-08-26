@@ -1,2 +1,2 @@
-appwrite messaging deleteTopic \
-        --topicId <TOPIC_ID>
+appwrite messaging delete-topic \
+    --topic-id <TOPIC_ID>

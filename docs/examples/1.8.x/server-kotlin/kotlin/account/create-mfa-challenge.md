@@ -9,6 +9,6 @@ val client = Client()
 
 val account = Account(client)
 
-val response = account.createMfaChallenge(
+val response = account.createMFAChallenge(
     factor =  AuthenticationFactor.EMAIL
 )

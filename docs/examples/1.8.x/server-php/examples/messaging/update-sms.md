@@ -10,7 +10,7 @@ $client = (new Client())
 
 $messaging = new Messaging($client);
 
-$result = $messaging->updateSms(
+$result = $messaging->updateSMS(
     messageId: '<MESSAGE_ID>',
     topics: [], // optional
     users: [], // optional

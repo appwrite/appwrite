@@ -7,10 +7,10 @@ const client = new Client()
 const sites = new Sites(client);
 
 const result = await sites.listTemplates({
-    frameworks: [],
-    useCases: [],
-    limit: 1,
-    offset: 0
+    frameworks: [], // optional
+    useCases: [], // optional
+    limit: 1, // optional
+    offset: 0 // optional
 });
 
 console.log(result);

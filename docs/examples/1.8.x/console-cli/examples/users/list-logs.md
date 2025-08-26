@@ -1,3 +1,2 @@
-appwrite users listLogs \
-        --userId <USER_ID> \
-
+appwrite users list-logs \
+    --user-id <USER_ID>

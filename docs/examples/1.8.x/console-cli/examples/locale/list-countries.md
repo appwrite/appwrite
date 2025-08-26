@@ -1,1 +1,1 @@
-appwrite locale listCountries
+appwrite locale list-countries

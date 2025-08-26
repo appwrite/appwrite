@@ -8,7 +8,7 @@ const users = new Users(client);
 
 const result = await users.listLogs({
     userId: '<USER_ID>',
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

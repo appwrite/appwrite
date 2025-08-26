@@ -5,9 +5,9 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const tablesDB = new sdk.TablesDb(client);
+const tablesDB = new sdk.TablesDB(client);
 
 const result = await tablesDB.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

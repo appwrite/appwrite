@@ -10,9 +10,9 @@ const result = await projects.createPlatform({
     projectId: '<PROJECT_ID>',
     type: PlatformType.Web,
     name: '<NAME>',
-    key: '<KEY>',
-    store: '<STORE>',
-    hostname: ''
+    key: '<KEY>', // optional
+    store: '<STORE>', // optional
+    hostname: '' // optional
 });
 
 console.log(result);

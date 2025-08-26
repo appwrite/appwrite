@@ -10,16 +10,16 @@ const storage = new Storage(client);
 const result = storage.getFilePreview({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    width: 0,
-    height: 0,
-    gravity: ImageGravity.Center,
-    quality: -1,
-    borderWidth: 0,
-    borderColor: '',
-    borderRadius: 0,
-    opacity: 0,
-    rotation: -360,
-    background: '',
-    output: ImageFormat.Jpg,
-    token: '<TOKEN>'
+    width: 0, // optional
+    height: 0, // optional
+    gravity: ImageGravity.Center, // optional
+    quality: -1, // optional
+    borderWidth: 0, // optional
+    borderColor: '', // optional
+    borderRadius: 0, // optional
+    opacity: 0, // optional
+    rotation: -360, // optional
+    background: '', // optional
+    output: ImageFormat.Jpg, // optional
+    token: '<TOKEN>' // optional
 });

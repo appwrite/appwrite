@@ -9,7 +9,7 @@ Client client = new Client(context)
 
 Account account = new Account(client);
 
-account.updateMfaAuthenticator(
+account.updateMFAAuthenticator(
     AuthenticatorType.TOTP, // type 
     "<OTP>", // otp 
     new CoroutineCallback<>((result, error) -> {

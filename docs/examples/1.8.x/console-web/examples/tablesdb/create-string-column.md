@@ -1,10 +1,10 @@
-import { Client, TablesDb } from "@appwrite.io/console";
+import { Client, TablesDB } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>'); // Your project ID
 
-const tablesDB = new TablesDb(client);
+const tablesDB = new TablesDB(client);
 
 const result = await tablesDB.createStringColumn({
     databaseId: '<DATABASE_ID>',
@@ -12,9 +12,9 @@ const result = await tablesDB.createStringColumn({
     key: '',
     size: 1,
     required: false,
-    default: '<DEFAULT>',
-    array: false,
-    encrypt: false
+    default: '<DEFAULT>', // optional
+    array: false, // optional
+    encrypt: false // optional
 });
 
 console.log(result);

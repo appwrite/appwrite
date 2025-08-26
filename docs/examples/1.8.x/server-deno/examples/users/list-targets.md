@@ -9,5 +9,5 @@ const users = new Users(client);
 
 const response = await users.listTargets({
     userId: '<USER_ID>',
-    queries: []
+    queries: [] // optional
 });

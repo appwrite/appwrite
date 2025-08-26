@@ -6,7 +6,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const result = await users.getMfaRecoveryCodes({
+const result = await users.getMFARecoveryCodes({
     userId: '<USER_ID>'
 });
 

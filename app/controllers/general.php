@@ -624,8 +624,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxLogLength - $warningLength;
-                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+                $maxContentLength = max(0, $maxLogLength - $warningLength);
+                $logs = $warningMessage . ($maxContentLength > 0 ? \substr($logs, -$maxContentLength) : '');
             }
 
             // Truncate errors if they exceed the limit
@@ -635,10 +635,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxErrorLength - $warningLength;
-                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+                $maxContentLength = max(0, $maxErrorLength - $warningLength);
+                $errors = $warningMessage . ($maxContentLength > 0 ? \substr($errors, -$maxContentLength) : '');
             }
-
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);

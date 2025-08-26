@@ -1,6 +1,5 @@
-appwrite tablesDB createRow \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --rowId <ROW_ID> \
-        --data '{ "key": "value" }' \
-
+appwrite tables-db create-row \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --row-id <ROW_ID> \
+    --data '{ "key": "value" }'

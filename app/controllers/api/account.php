@@ -2419,7 +2419,10 @@ App::put('/v1/account/sessions/magic-url')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -2457,7 +2460,10 @@ App::put('/v1/account/sessions/phone')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -4025,7 +4031,7 @@ App::get('/v1/account/mfa/factors')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'listMFAFactors',
+                replaceWith: 'account.listMFAFactors',
             ),
         ),
         new Method(
@@ -4086,7 +4092,7 @@ App::post('/v1/account/mfa/authenticators/:type')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createMFAAuthenticator',
+                replaceWith: 'account.createMFAAuthenticator',
             ),
         ),
         new Method(
@@ -4183,7 +4189,7 @@ App::put('/v1/account/mfa/authenticators/:type')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateMFAAuthenticator',
+                replaceWith: 'account.updateMFAAuthenticator',
             ),
         ),
         new Method(
@@ -4273,7 +4279,7 @@ App::post('/v1/account/mfa/recovery-codes')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createMFARecoveryCodes',
+                replaceWith: 'account.createMFARecoveryCodes',
             ),
         ),
         new Method(
@@ -4340,7 +4346,7 @@ App::patch('/v1/account/mfa/recovery-codes')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateMFARecoveryCodes',
+                replaceWith: 'account.updateMFARecoveryCodes',
             ),
         ),
         new Method(
@@ -4402,7 +4408,7 @@ App::get('/v1/account/mfa/recovery-codes')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'getMFARecoveryCodes',
+                replaceWith: 'account.getMFARecoveryCodes',
             ),
         ),
         new Method(
@@ -4461,7 +4467,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
             contentType: ContentType::NONE,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'deleteMFAAuthenticator',
+                replaceWith: 'account.deleteMFAAuthenticator',
             ),
         ),
         new Method(
@@ -4527,7 +4533,7 @@ App::post('/v1/account/mfa/challenge')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createMFAChallenge',
+                replaceWith: 'account.createMFAChallenge',
             ),
         ),
         new Method(
@@ -4769,7 +4775,7 @@ App::put('/v1/account/mfa/challenge')
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateMFAChallenge',
+                replaceWith: 'account.updateMFAChallenge',
             ),
         ),
         new Method(

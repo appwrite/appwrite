@@ -1772,7 +1772,7 @@ App::patch('/v1/users/:userId/mfa')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateMFA',
+                replaceWith: 'users.updateMFA',
             ),
         ),
         new Method(
@@ -1831,7 +1831,7 @@ App::get('/v1/users/:userId/mfa/factors')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'listMFAFactors',
+                replaceWith: 'users.listMFAFactors',
             ),
         ),
         new Method(
@@ -1889,7 +1889,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'getMFARecoveryCodes',
+                replaceWith: 'users.getMFARecoveryCodes',
             ),
         ),
         new Method(
@@ -1953,7 +1953,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createMFARecoveryCodes',
+                replaceWith: 'users.createMFARecoveryCodes',
             ),
         ),
         new Method(
@@ -2024,7 +2024,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateMFARecoveryCodes',
+                replaceWith: 'users.updateMFARecoveryCodes',
             ),
         ),
         new Method(
@@ -2095,7 +2095,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
             contentType: ContentType::NONE,
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'deleteMFAAuthenticator',
+                replaceWith: 'users.deleteMFAAuthenticator',
             ),
         ),
         new Method(

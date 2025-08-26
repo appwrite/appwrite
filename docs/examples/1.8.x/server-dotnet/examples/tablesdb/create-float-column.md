@@ -7,7 +7,7 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
-TablesDb tablesDB = new TablesDb(client);
+TablesDB tablesDB = new TablesDB(client);
 
 ColumnFloat result = await tablesDB.CreateFloatColumn(
     databaseId: "<DATABASE_ID>",

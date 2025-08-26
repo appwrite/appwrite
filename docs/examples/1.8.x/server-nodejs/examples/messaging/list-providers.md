@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const result = await messaging.listProviders({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

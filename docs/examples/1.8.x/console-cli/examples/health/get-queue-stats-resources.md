@@ -1,2 +1,1 @@
-appwrite health getQueueStatsResources \
-
+appwrite health get-queue-stats-resources

@@ -5,15 +5,15 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const tablesDB = new sdk.TablesDb(client);
+const tablesDB = new sdk.TablesDB(client);
 
 const result = await tablesDB.createIntegerColumn({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: '',
     required: false,
-    min: null,
-    max: null,
-    default: null,
-    array: false
+    min: null, // optional
+    max: null, // optional
+    default: null, // optional
+    array: false // optional
 });

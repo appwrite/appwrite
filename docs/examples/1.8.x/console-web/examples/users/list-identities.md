@@ -7,8 +7,8 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.listIdentities({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

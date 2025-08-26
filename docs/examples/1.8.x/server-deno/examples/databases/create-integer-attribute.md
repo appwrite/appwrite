@@ -12,8 +12,8 @@ const response = await databases.createIntegerAttribute({
     collectionId: '<COLLECTION_ID>',
     key: '',
     required: false,
-    min: null,
-    max: null,
-    default: null,
-    array: false
+    min: null, // optional
+    max: null, // optional
+    default: null, // optional
+    array: false // optional
 });

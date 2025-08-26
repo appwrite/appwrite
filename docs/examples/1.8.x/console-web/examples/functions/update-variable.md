@@ -10,8 +10,8 @@ const result = await functions.updateVariable({
     functionId: '<FUNCTION_ID>',
     variableId: '<VARIABLE_ID>',
     key: '<KEY>',
-    value: '<VALUE>',
-    secret: false
+    value: '<VALUE>', // optional
+    secret: false // optional
 });
 
 console.log(result);

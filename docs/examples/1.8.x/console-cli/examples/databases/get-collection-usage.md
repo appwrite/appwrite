@@ -1,4 +1,3 @@
-appwrite databases getCollectionUsage \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-
+appwrite databases get-collection-usage \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID>

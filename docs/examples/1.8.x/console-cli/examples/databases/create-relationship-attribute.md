@@ -1,9 +1,5 @@
-appwrite databases createRelationshipAttribute \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --relatedCollectionId <RELATED_COLLECTION_ID> \
-        --type oneToOne \
-
-
-
-
+appwrite databases create-relationship-attribute \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --related-collection-id <RELATED_COLLECTION_ID> \
+    --type oneToOne

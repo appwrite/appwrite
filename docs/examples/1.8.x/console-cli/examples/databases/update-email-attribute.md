@@ -1,7 +1,6 @@
-appwrite databases updateEmailAttribute \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --key '' \
-        --required false \
-        --default email@example.com \
-
+appwrite databases update-email-attribute \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --key '' \
+    --required false \
+    --default email@example.com

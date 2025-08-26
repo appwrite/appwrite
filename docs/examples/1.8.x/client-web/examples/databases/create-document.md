@@ -11,7 +11,7 @@ const result = await databases.createDocument({
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
     data: {},
-    permissions: ["read("any")"]
+    permissions: ["read("any")"] // optional
 });
 
 console.log(result);

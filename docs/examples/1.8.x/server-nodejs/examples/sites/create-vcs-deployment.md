@@ -11,5 +11,5 @@ const result = await sites.createVcsDeployment({
     siteId: '<SITE_ID>',
     type: sdk.VCSDeploymentType.Branch,
     reference: '<REFERENCE>',
-    activate: false
+    activate: false // optional
 });

@@ -13,5 +13,5 @@ const response = await databases.updateBooleanAttribute({
     key: '',
     required: false,
     default: false,
-    newKey: ''
+    newKey: '' // optional
 });

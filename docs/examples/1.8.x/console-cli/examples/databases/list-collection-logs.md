@@ -1,4 +1,3 @@
-appwrite databases listCollectionLogs \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-
+appwrite databases list-collection-logs \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID>

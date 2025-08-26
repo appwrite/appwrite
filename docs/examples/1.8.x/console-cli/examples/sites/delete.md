@@ -1,2 +1,2 @@
 appwrite sites delete \
-        --siteId <SITE_ID>
+    --site-id <SITE_ID>

@@ -9,9 +9,9 @@ const messaging = new Messaging(client);
 
 const response = await messaging.updateVonageProvider({
     providerId: '<PROVIDER_ID>',
-    name: '<NAME>',
-    enabled: false,
-    apiKey: '<API_KEY>',
-    apiSecret: '<API_SECRET>',
-    from: '<FROM>'
+    name: '<NAME>', // optional
+    enabled: false, // optional
+    apiKey: '<API_KEY>', // optional
+    apiSecret: '<API_SECRET>', // optional
+    from: '<FROM>' // optional
 });

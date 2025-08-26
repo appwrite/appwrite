@@ -11,5 +11,5 @@ const response = await functions.createVariable({
     functionId: '<FUNCTION_ID>',
     key: '<KEY>',
     value: '<VALUE>',
-    secret: false
+    secret: false // optional
 });
