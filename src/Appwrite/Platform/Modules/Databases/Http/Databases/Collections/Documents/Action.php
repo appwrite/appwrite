@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends AppwriteAction
@@ -349,5 +350,87 @@ abstract class Action extends AppwriteAction
         $queueForRealtime->reset();
         $queueForFunctions->reset();
         $queueForWebhooks->reset();
+    }
+
+    /**
+     * Add select queries for relationship attributes in the collection.
+     *
+     * @param array{
+     *     filters: array<Query>,
+     *     selections: array<Query>,
+     *     limit: int|null,
+     *     offset: int|null,
+     *     orderAttributes: array<string>,
+     *     orderTypes: array<string>,
+     *     cursor: Document|null,
+     *     cursorDirection: string|null
+     * } $queriesByType
+     * @param Document $collection
+     * @return array
+     */
+    protected function addRelatedSelects(Database $dbForProject, array &$queriesByType, Document $database, Document $collection, string $prefix = ''): void
+    {
+        $level = substr_count($prefix, '.') + 1;
+        if ($level >= Database::RELATION_MAX_DEPTH) {
+            return;
+        }
+
+        $relationshipAttributes = \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attr) => $attr['type'] === Database::VAR_RELATIONSHIP && $attr['status'] === 'available'
+        );
+
+        foreach ($relationshipAttributes as $relationshipAttribute) {
+            $queriesByType['selections'][] = Query::select([$prefix . $relationshipAttribute->getAttribute('key') . '.*']);
+            $relatedCollection = $dbForProject->getDocument(
+                'database_' . $database->getSequence(),
+                $relationshipAttribute->getAttribute('relatedCollection')
+            );
+            $this->addRelatedSelects($dbForProject, $queriesByType, $database, $relatedCollection, $prefix . $relationshipAttribute->getAttribute('key') . '.');
+        }
+    }
+
+    /**
+     * Aggregate queries that were grouped by type.
+     *
+     * @param array{
+     *     filters: array<Query>,
+     *     selections: array<Query>,
+     *     limit: int|null,
+     *     offset: int|null,
+     *     orderAttributes: array<string>,
+     *     orderTypes: array<string>,
+     *     cursor: Document|null,
+     *     cursorDirection: string|null
+     * } $queriesByType
+     * @return array
+     */
+    protected function aggregateGroupedQueries(array $queriesByType): array
+    {
+        $queries = array_merge(
+            $queriesByType['filters'] ?? [],
+            $queriesByType['selections'] ?? []
+        );
+        if (isset($queriesByType['limit'])) {
+            $queries[] = Query::limit($queriesByType['limit']);
+        }
+        if (isset($queriesByType['offset'])) {
+            $queries[] = Query::offset($queriesByType['offset']);
+        }
+        foreach ($queriesByType['orderTypes'] ?? [] as $i => $orderType) {
+            if ($orderType == Database::ORDER_ASC) {
+                $queries[] = Query::orderAsc($queriesByType['orderAttributes'][$i]);
+            } else {
+                $queries[] = Query::orderDesc($queriesByType['orderAttributes'][$i]);
+            }
+        }
+        if (isset($queriesByType['cursorDirection']) && isset($queriesByType['cursor']) && $queriesByType['cursor'] instanceof Document) {
+            if ($queriesByType['cursorDirection'] == Database::CURSOR_AFTER) {
+                $queries[] = Query::cursorAfter($queriesByType['cursor']);
+            } else {
+                $queries[] = Query::cursorBefore($queriesByType['cursor']);
+            }
+        }
+        return $queries;
     }
 }

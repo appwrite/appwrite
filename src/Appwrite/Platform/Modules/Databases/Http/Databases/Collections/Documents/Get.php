@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
@@ -17,6 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
@@ -63,13 +65,14 @@ class Get extends Action
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('documentId', '', new UID(), 'Document ID.')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, Request $request, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -92,9 +95,20 @@ class Get extends Action
         }
 
         try {
-            $selects = Query::groupByType($queries)['selections'] ?? [];
+            $queriesByType = Query::groupByType($queries);
 
-            if (! empty($selects)) {
+            // if request is from an older SDK, add selects for relationships 3 levels deep
+            $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+            if ($responseFormat && version_compare($responseFormat, '1.8.0', '<')) {
+                $this->addRelatedSelects($dbForProject, $queriesByType, $database, $collection);
+            }
+
+            $selectQueries = $queriesByType['selections'] ?? [];
+
+            // rebuild $queries array from updated $queriesByType
+            $queries = $this->aggregateGroupedQueries($queriesByType);
+
+            if (! empty($selectQueries)) {
                 // has selects, allow relationship on documents!
                 $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries);
             } else {
