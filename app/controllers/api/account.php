@@ -1843,7 +1843,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
         } elseif ($protocol === 'http' && $port !== '80') {
             $callbackBase .= ':' . $port;
         }
-       var_dump( $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId());
+
         $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 

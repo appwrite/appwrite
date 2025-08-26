@@ -1049,7 +1049,6 @@ trait MigrationsBase
             $this->assertEquals('Appwrite', $migration['body']['destination']);
             $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
             $this->assertEmpty($migration['body']['statusCounters']);
-
             $errorJson = $migration['body']['errors'][0];
             $errorData = json_decode($errorJson, true);
 
@@ -1082,7 +1081,6 @@ trait MigrationsBase
             $this->assertEquals('Appwrite', $migration['body']['destination']);
             $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
             $this->assertEmpty($migration['body']['statusCounters']);
-
             $errorJson = $migration['body']['errors'][0];
             $errorData = json_decode($errorJson, true);
 

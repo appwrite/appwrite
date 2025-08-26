@@ -243,7 +243,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             if ($project->getId() === 'console') {
                 $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
+
+               // var_dump(['Authorization users start::$status' =>  Authorization::$status]);
                 $user = $dbForProject->getDocument('users', Auth::$unique);
+                //var_dump(['Authorization users end::$status' =>  Authorization::$status]);
+
             }
         }
     }
@@ -290,7 +294,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             }
         }
     }
-
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
 

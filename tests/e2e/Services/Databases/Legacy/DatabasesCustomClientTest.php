@@ -229,6 +229,10 @@ class DatabasesCustomClientTest extends Scope
     public function testUpdateTwoWayRelationship(): void
     {
 
+        if($this->isMongoDB()){ 
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -319,6 +323,11 @@ class DatabasesCustomClientTest extends Scope
 
     public function testRelationshipSameTwoWayKey(): void
     {
+
+        if($this->isMongoDB()){ 
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -477,6 +486,11 @@ class DatabasesCustomClientTest extends Scope
 
     public function testUpdateWithoutRelationPermission(): void
     {
+
+        if($this->isMongoDB()){ 
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $userId = $this->getUser()['$id'];
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
