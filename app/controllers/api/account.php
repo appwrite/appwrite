@@ -2420,7 +2420,7 @@ App::put('/v1/account/sessions/magic-url')
         ],
         contentType: ContentType::JSON,
         deprecated: new Deprecated(
-            since: '0.16.0',
+            since: '1.6.0',
             replaceWith: 'account.createSession'
         ),
     ))
@@ -2461,7 +2461,7 @@ App::put('/v1/account/sessions/phone')
         ],
         contentType: ContentType::JSON,
         deprecated: new Deprecated(
-            since: '0.16.0',
+            since: '1.6.0',
             replaceWith: 'account.createSession'
         ),
     ))

@@ -2425,7 +2425,7 @@
                     ],
                     "packaging": false,
                     "deprecated": {
-                        "since": "0.16.0",
+                        "since": "1.6.0",
                         "replaceWith": "account.createSession"
                     },
                     "auth": {
@@ -2639,7 +2639,7 @@
                     ],
                     "packaging": false,
                     "deprecated": {
-                        "since": "0.16.0",
+                        "since": "1.6.0",
                         "replaceWith": "account.createSession"
                     },
                     "auth": {

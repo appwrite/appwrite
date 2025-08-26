@@ -226,7 +226,7 @@ class OpenAPI3 extends Format
                     ];
 
                     // add deprecation only if method has it!
-                    if ($methodObj->getDeprecated() instanceof Deprecated) {
+                    if ($methodObj->getDeprecated()) {
                         $additionalMethod['deprecated'] = [
                             'since' => $methodObj->getDeprecated()->getSince(),
                             'replaceWith' => $methodObj->getDeprecated()->getReplaceWith(),
