@@ -156,7 +156,7 @@ class OpenAPI3 extends Format
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
-                    'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
+                    'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
