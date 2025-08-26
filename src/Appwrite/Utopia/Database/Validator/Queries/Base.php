@@ -105,6 +105,6 @@ class Base extends Queries
 
     public function isSelectQueryAllowed(): bool
     {
-        return true;
+        return false;
     }
 }
