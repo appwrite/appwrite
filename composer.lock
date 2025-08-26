@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "73ce235556fcb80b52ba92b0670b66e8",
+    "content-hash": "13f580eba5642949316d81d524996ba8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3856,16 +3856,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.21",
+            "version": "dev-feat-domain-restrictions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "eb0e82e90b8fa493f99b8d131bdd25173422c493"
+                "reference": "4a029c13b374c6daa13cd1cbc043ccd713fc6d79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/eb0e82e90b8fa493f99b8d131bdd25173422c493",
-                "reference": "eb0e82e90b8fa493f99b8d131bdd25173422c493",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/4a029c13b374c6daa13cd1cbc043ccd713fc6d79",
+                "reference": "4a029c13b374c6daa13cd1cbc043ccd713fc6d79",
                 "shasum": ""
             },
             "require": {
@@ -3897,9 +3897,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.21"
+                "source": "https://github.com/utopia-php/http/tree/feat-domain-restrictions"
             },
-            "time": "2025-08-19T10:52:15+00:00"
+            "time": "2025-08-26T09:28:47+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8420,9 +8420,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-feat-domain-restrictions",
+            "alias": "0.33.88",
+            "alias_normalized": "0.33.88.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8446,5 +8455,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

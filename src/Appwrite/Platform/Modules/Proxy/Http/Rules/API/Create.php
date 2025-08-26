@@ -71,6 +71,24 @@ class Create extends Action
 
     public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
     {
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+
+        $restrictions = [];
+        if (!empty($sitesDomain)) {
+            $domainLevel = \count(\explode('.', $sitesDomain));
+            $restrictions[] = ValidatorDomain::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
+        }
+        if (!empty($functionsDomain)) {
+            $domainLevel = \count(\explode('.', $functionsDomain));
+            $restrictions[] = ValidatorDomain::createRestriction($functionsDomain, $domainLevel + 1);
+        }
+        $validator = new ValidatorDomain($restrictions);
+
+        if (!$validator->isValid($domain)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
+        }
+
         $deniedDomains = [
             'localhost',
             APP_HOSTNAME_INTERNAL
@@ -79,12 +97,10 @@ class Create extends Action
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         $deniedDomains[] = $mainDomain;
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         if (!empty($sitesDomain)) {
             $deniedDomains[] = $sitesDomain;
         }
 
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
             $deniedDomains[] = $functionsDomain;
         }
@@ -99,10 +115,6 @@ class Create extends Action
         }
 
         if (\in_array($domain, $deniedDomains)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
