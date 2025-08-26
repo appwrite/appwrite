@@ -7719,8 +7719,8 @@ trait DatabasesBase
             'queries' => [Query::equal('name', ['Test Row 1'])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['documents']);
-        $this->assertEquals('row1', $response['body']['documents'][0]['$id']);
+        $this->assertCount(1, $response['body']['rows']);
+        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
 
         // Polygon column queries
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7730,8 +7730,8 @@ trait DatabasesBase
             'queries' => [Query::equal('polyAttr', [[[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]]])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['documents']);
-        $this->assertEquals('row1', $response['body']['documents'][0]['$id']);
+        $this->assertCount(1, $response['body']['rows']);
+        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
 
         // Not equal queries
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7741,7 +7741,7 @@ trait DatabasesBase
             'queries' => [Query::notEqual('pointAttr', [[6.0, 6.0]])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['documents']);
+        $this->assertCount(2, $response['body']['rows']);
 
         // contains on line (point on line)
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7751,8 +7751,8 @@ trait DatabasesBase
             'queries' => [Query::contains('lineAttr', [[1.0, 1.0]])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['documents']);
-        $this->assertEquals('row1', $response['body']['documents'][0]['$id']);
+        $this->assertCount(1, $response['body']['rows']);
+        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
 
         // notContains on polygon (point outside all polygons)
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7773,7 +7773,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals('row1', $response['body']['documents'][0]['$id']);
+        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
 
         // notIntersects on polygon (point outside all polygons)
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7795,7 +7795,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals('row1', $response['body']['documents'][0]['$id']);
+        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
 
         // notOverlaps on polygon (polygon that overlaps none)
         $noOverlapPoly = [[[60.0, 60.0], [70.0, 60.0], [70.0, 70.0], [60.0, 70.0], [60.0, 60.0]]];
@@ -7813,18 +7813,18 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distance('pointAttr', [[[6.0, 6.0], 1.0]])->toString()]
+            'queries' => [Query::distanceEqual('pointAttr', [6.0, 6.0], 1.0)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals('row2', $response['body']['documents'][0]['$id']);
+        $this->assertEquals('row2', $response['body']['rows'][0]['$id']);
 
         // notDistance (outside radius) on point
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notDistance('pointAttr', [[[6.0, 6.0], 1.0]])->toString()]
+            'queries' => [Query::distanceNotEqual('pointAttr', [6.0, 6.0], 1.0)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
@@ -7834,7 +7834,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceGreaterThan('pointAttr', [[[6.0, 6.0], 5.0]])->toString()]
+            'queries' => [Query::distanceGreaterThan('pointAttr', [6.0, 6.0], 5.0)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -7844,7 +7844,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceLessThan('pointAttr', [[[6.0, 6.0], 0.5]])->toString()]
+            'queries' => [Query::distanceLessThan('pointAttr', [6.0, 6.0], 0.5)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -7859,7 +7859,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals('row1', $response['body']['documents'][0]['$id']);
+        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
 
         // notCrosses on line (query line does not cross any stored lines)
         $nonCrossLine = [[0.0, 1.0], [0.0, 2.0]];
@@ -7882,7 +7882,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
-        $this->assertEquals('row1', $response['body']['documents'][0]['$id']);
+        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
 
         // notTouches on polygon (polygon far away should not touch)
         $farPoly = [[[60.0, 60.0], [70.0, 60.0], [70.0, 70.0], [60.0, 70.0], [60.0, 60.0]]];
@@ -7903,8 +7903,8 @@ trait DatabasesBase
             'queries' => [Query::select(['name', 'pointAttr'])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(3, $response['body']['documents']);
-        foreach ($response['body']['documents'] as $doc) {
+        $this->assertCount(3, $response['body']['rows']);
+        foreach ($response['body']['rows'] as $doc) {
             $this->assertArrayHasKey('name', $doc);
             $this->assertArrayHasKey('pointAttr', $doc);
             $this->assertArrayNotHasKey('lineAttr', $doc);
@@ -7919,10 +7919,10 @@ trait DatabasesBase
             'queries' => [Query::orderAsc('name')->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(3, $response['body']['documents']);
-        $this->assertEquals('Test Row 1', $response['body']['documents'][0]['name']);
-        $this->assertEquals('Test Row 2', $response['body']['documents'][1]['name']);
-        $this->assertEquals('Test Row 3', $response['body']['documents'][2]['name']);
+        $this->assertCount(3, $response['body']['rows']);
+        $this->assertEquals('Test Row 1', $response['body']['rows'][0]['name']);
+        $this->assertEquals('Test Row 2', $response['body']['rows'][1]['name']);
+        $this->assertEquals('Test Row 3', $response['body']['rows'][2]['name']);
 
         // Limit results
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7932,7 +7932,7 @@ trait DatabasesBase
             'queries' => [Query::limit(2)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['documents']);
+        $this->assertCount(2, $response['body']['rows']);
 
         // Offset results
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7942,7 +7942,7 @@ trait DatabasesBase
             'queries' => [Query::offset(1)->toString(), Query::limit(2)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['documents']);
+        $this->assertCount(2, $response['body']['rows']);
 
         // Complex query with multiple conditions
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7956,8 +7956,8 @@ trait DatabasesBase
             ]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['documents']);
-        $this->assertEquals('Test Row 1', $response['body']['documents'][0]['name']);
+        $this->assertCount(1, $response['body']['rows']);
+        $this->assertEquals('Test Row 1', $response['body']['rows'][0]['name']);
 
         // Query with no results
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -7967,7 +7967,7 @@ trait DatabasesBase
             'queries' => [Query::equal('name', ['Non-existent Row'])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['documents']);
+        $this->assertCount(0, $response['body']['rows']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([
