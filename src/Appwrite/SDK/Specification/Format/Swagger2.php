@@ -3,7 +3,6 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
