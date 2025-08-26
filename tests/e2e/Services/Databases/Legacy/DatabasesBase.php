@@ -6739,4 +6739,526 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
+
+    public function testSpatialRelationshipOneToOne(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial OneToOne Test DB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $place = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Place',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $placeId = $place['body']['$id'];
+
+        $location = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Location',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $locationId = $location['body']['$id'];
+
+        // attributes
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $placeId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $locationId . '/attributes/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'coordinates',
+            'required' => true,
+        ]);
+
+        sleep(2);
+
+        // relationship: place.oneToOne -> location
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $placeId . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $locationId,
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'key' => 'location',
+            'twoWay' => true,
+            'twoWayKey' => 'place',
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+        $this->assertEquals(202, $relation['headers']['status-code']);
+
+        sleep(2);
+
+        // create doc with nested spatial related doc
+        $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $placeId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'name' => 'Museum',
+                'location' => [
+                    '$id' => ID::unique(),
+                    'coordinates' => [40.7794, -73.9632],
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $doc['headers']['status-code']);
+        $this->assertEquals([40.7794, -73.9632], $doc['body']['location']['coordinates']);
+
+        // fetch with select to ensure relationship shape
+        $fetched = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $placeId . '/documents/' . $doc['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['name', 'location.coordinates'])->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals([40.7794, -73.9632], $fetched['body']['location']['coordinates']);
+
+        // cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $placeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $locationId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testSpatialRelationshipOneToMany(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial OneToMany Test DB'
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Person',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $personId = $person['body']['$id'];
+
+        $visit = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Visit',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $visitId = $visit['body']['$id'];
+
+        // attributes
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'fullName',
+            'size' => 255,
+            'required' => true,
+        ]);
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $visitId . '/attributes/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'point',
+            'required' => true,
+        ]);
+
+        sleep(2);
+
+        // relationship person.oneToMany -> visit
+        $rel = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personId . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $visitId,
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'key' => 'visits',
+            'twoWay' => true,
+            'twoWayKey' => 'person',
+        ]);
+        $this->assertEquals(202, $rel['headers']['status-code']);
+
+        sleep(2);
+
+        $personDoc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'person-spatial-1',
+            'data' => [
+                'fullName' => 'Alice',
+                'visits' => [
+                    [ '$id' => 'visit-1', 'point' => [40.7589, -73.9851] ],
+                    [ '$id' => 'visit-2', 'point' => [40.7505, -73.9934] ],
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $personDoc['headers']['status-code']);
+        $this->assertCount(2, $personDoc['body']['visits']);
+        $this->assertEquals([40.7589, -73.9851], $personDoc['body']['visits'][0]['point']);
+
+        $visitDoc = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $visitId . '/documents/visit-2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['point', 'person.$id'])->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $visitDoc['headers']['status-code']);
+        $this->assertEquals('person-spatial-1', $visitDoc['body']['person']['$id']);
+
+        // cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $personId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $visitId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testSpatialRelationshipManyToOne(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial ManyToOne Test DB'
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $cities = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'City',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $citiesId = $cities['body']['$id'];
+
+        $stores = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Store',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $storesId = $stores['body']['$id'];
+
+        // attributes
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $citiesId . '/attributes/polygon', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'area',
+            'required' => true,
+        ]);
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $storesId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        sleep(2);
+
+        // relationship stores.manyToOne -> cities
+        $rel = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $storesId . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $citiesId,
+            'type' => Database::RELATION_MANY_TO_ONE,
+            'key' => 'city',
+            'twoWay' => true,
+            'twoWayKey' => 'stores',
+        ]);
+        $this->assertEquals(202, $rel['headers']['status-code']);
+
+        sleep(2);
+
+        $store = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $storesId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'store-1',
+            'data' => [
+                'name' => 'Main Store',
+                'city' => [
+                    '$id' => ID::unique(),
+                    'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]]
+                ],
+            ]
+        ]);
+        $this->assertEquals(201, $store['headers']['status-code']);
+        $this->assertEquals('Main Store', $store['body']['name']);
+        $this->assertEquals([[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]], $store['body']['city']['area']);
+
+        $city = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $citiesId . '/documents/' . $store['body']['city']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['stores.$id'])->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $city['headers']['status-code']);
+        $this->assertEquals('store-1', $city['body']['stores'][0]['$id']);
+
+        // cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $storesId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $citiesId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testSpatialRelationshipManyToMany(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial ManyToMany Test DB'
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $drivers = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Drivers',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $driversId = $drivers['body']['$id'];
+
+        $zones = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Zones',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $zonesId = $zones['body']['$id'];
+
+        // attributes
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $driversId . '/attributes/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'home',
+            'required' => true,
+        ]);
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $zonesId . '/attributes/polygon', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'area',
+            'required' => true,
+        ]);
+
+        sleep(2);
+
+        // relationship drivers.manyToMany <-> zones
+        $rel = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $driversId . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $zonesId,
+            'type' => Database::RELATION_MANY_TO_MANY,
+            'key' => 'zones',
+            'twoWay' => true,
+            'twoWayKey' => 'drivers',
+        ]);
+        $this->assertEquals(202, $rel['headers']['status-code']);
+
+        sleep(2);
+
+        // create driver with two zones containing spatial polygons
+        $driver = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $driversId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'driver-1',
+            'data' => [
+                'home' => [40.7128, -74.0060],
+                'zones' => [
+                    [ '$id' => 'zone-1', 'area' => [[[0,0],[10,0],[10,10],[0,10],[0,0]]]],
+                    [ '$id' => 'zone-2', 'area' => [[[20,20],[30,20],[30,30],[20,30],[20,20]]]],
+                ],
+            ]
+        ]);
+        $this->assertEquals(201, $driver['headers']['status-code']);
+        $this->assertCount(2, $driver['body']['zones']);
+        $this->assertEquals([40.7128, -74.0060], $driver['body']['home']);
+
+        $zone = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $zonesId . '/documents/zone-1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['drivers.$id'])->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $zone['headers']['status-code']);
+        $this->assertEquals('driver-1', $zone['body']['drivers'][0]['$id']);
+
+        // cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $driversId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $zonesId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
 }
