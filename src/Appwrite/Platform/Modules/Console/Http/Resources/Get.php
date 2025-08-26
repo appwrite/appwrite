@@ -74,10 +74,12 @@ class Get extends Action
 
             $restrictions = [];
             if (!empty($sitesDomain)) {
+                // Ensure site domains are exactly 1 subdomain, and dont start with reserved prefix
                 $domainLevel = \count(\explode('.', $sitesDomain));
                 $restrictions[] = DomainValidator::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
             }
             if (!empty($functionsDomain)) {
+                // Ensure function domains are exactly 1 subdomain
                 $domainLevel = \count(\explode('.', $functionsDomain));
                 $restrictions[] = DomainValidator::createRestriction($functionsDomain, $domainLevel + 1);
             }
