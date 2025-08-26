@@ -29,7 +29,7 @@ abstract class Action extends AppwriteAction
 
         // Use the same helper method to ensure consistency
         $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
-        $this->removableAttributes = ['$databaseId', $contextId];
+        $this->removableAttributes = ['$databaseId', $contextId, '$sequence'];
 
         return parent::setHttpPath($path);
     }
@@ -232,7 +232,6 @@ abstract class Action extends AppwriteAction
 
         $collectionId = $collection->getId();
         $document->removeAttribute('$collection');
-        $document->removeAttribute('$tenant');
         $document->setAttribute('$databaseId', $database->getId());
         $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
 
