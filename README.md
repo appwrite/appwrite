@@ -1,4 +1,6 @@
-> Appwrite Databases just got the most significant update to date. We proudly present new terminology, a new TablesDB UI, and a supporting TablesDB API, all built to make working with databases simpler and faster. - [Learn more](https://appwrite.io/blog/post/announcing-appwrite-databases-new-ui)
+> We just announced a brand new TablesDB UI for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-appwrite-databases-new-ui)
+
+> Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
 > [Get started with Appwrite](https://apwr.dev/appcloud)
 
