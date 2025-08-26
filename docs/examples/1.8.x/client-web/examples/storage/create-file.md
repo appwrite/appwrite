@@ -10,7 +10,7 @@ const result = await storage.createFile({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     file: document.getElementById('uploader').files[0],
-    permissions: ["read("any")"]
+    permissions: ["read("any")"] // optional
 });
 
 console.log(result);

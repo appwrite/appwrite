@@ -10,5 +10,5 @@ const databases = new Databases(client);
 const response = await databases.update({
     databaseId: '<DATABASE_ID>',
     name: '<NAME>',
-    enabled: false
+    enabled: false // optional
 });

@@ -12,6 +12,6 @@ const response = await tablesDB.createEmailColumn({
     tableId: '<TABLE_ID>',
     key: '',
     required: false,
-    default: 'email@example.com',
-    array: false
+    default: 'email@example.com', // optional
+    array: false // optional
 });

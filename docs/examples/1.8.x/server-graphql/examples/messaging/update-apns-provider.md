@@ -1,5 +1,5 @@
 mutation {
-    messagingUpdateApnsProvider(
+    messagingUpdateAPNSProvider(
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
         enabled: false,

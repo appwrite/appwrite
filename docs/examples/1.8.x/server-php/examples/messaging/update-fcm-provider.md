@@ -10,7 +10,7 @@ $client = (new Client())
 
 $messaging = new Messaging($client);
 
-$result = $messaging->updateFcmProvider(
+$result = $messaging->updateFCMProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>', // optional
     enabled: false, // optional

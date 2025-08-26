@@ -14,11 +14,11 @@ func main() {
     )
 
     service := messaging.New(client)
-    response, error := service.UpdateFcmProvider(
+    response, error := service.UpdateFCMProvider(
         "<PROVIDER_ID>",
-        messaging.WithUpdateFcmProviderName("<NAME>"),
-        messaging.WithUpdateFcmProviderEnabled(false),
-        messaging.WithUpdateFcmProviderServiceAccountJSON(map[string]interface{}{}),
+        messaging.WithUpdateFCMProviderName("<NAME>"),
+        messaging.WithUpdateFCMProviderEnabled(false),
+        messaging.WithUpdateFCMProviderServiceAccountJSON(map[string]interface{}{}),
     )
 
     if error != nil {

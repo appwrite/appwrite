@@ -9,6 +9,6 @@ const tablesDB = new sdk.TablesDB(client);
 
 const result = await tablesDB.listTables({
     databaseId: '<DATABASE_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

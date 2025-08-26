@@ -1,5 +1,2 @@
-appwrite avatars getBrowser \
-        --code aa \
-
-
-
+appwrite avatars get-browser \
+    --code aa

@@ -14,7 +14,7 @@ func main() {
     )
 
     service := users.New(client)
-    response, error := service.CreateMfaRecoveryCodes(
+    response, error := service.CreateMFARecoveryCodes(
         "<USER_ID>",
     )
 

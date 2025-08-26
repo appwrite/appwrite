@@ -12,8 +12,8 @@ const result = await tablesDB.createIndex({
     key: '',
     type: IndexType.Key,
     columns: [],
-    orders: [],
-    lengths: []
+    orders: [], // optional
+    lengths: [] // optional
 });
 
 console.log(result);

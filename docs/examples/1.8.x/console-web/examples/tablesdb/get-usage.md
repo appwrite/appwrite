@@ -8,7 +8,7 @@ const tablesDB = new TablesDB(client);
 
 const result = await tablesDB.getUsage({
     databaseId: '<DATABASE_ID>',
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

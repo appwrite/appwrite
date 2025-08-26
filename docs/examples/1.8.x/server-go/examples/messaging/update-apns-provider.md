@@ -14,15 +14,15 @@ func main() {
     )
 
     service := messaging.New(client)
-    response, error := service.UpdateApnsProvider(
+    response, error := service.UpdateAPNSProvider(
         "<PROVIDER_ID>",
-        messaging.WithUpdateApnsProviderName("<NAME>"),
-        messaging.WithUpdateApnsProviderEnabled(false),
-        messaging.WithUpdateApnsProviderAuthKey("<AUTH_KEY>"),
-        messaging.WithUpdateApnsProviderAuthKeyId("<AUTH_KEY_ID>"),
-        messaging.WithUpdateApnsProviderTeamId("<TEAM_ID>"),
-        messaging.WithUpdateApnsProviderBundleId("<BUNDLE_ID>"),
-        messaging.WithUpdateApnsProviderSandbox(false),
+        messaging.WithUpdateAPNSProviderName("<NAME>"),
+        messaging.WithUpdateAPNSProviderEnabled(false),
+        messaging.WithUpdateAPNSProviderAuthKey("<AUTH_KEY>"),
+        messaging.WithUpdateAPNSProviderAuthKeyId("<AUTH_KEY_ID>"),
+        messaging.WithUpdateAPNSProviderTeamId("<TEAM_ID>"),
+        messaging.WithUpdateAPNSProviderBundleId("<BUNDLE_ID>"),
+        messaging.WithUpdateAPNSProviderSandbox(false),
     )
 
     if error != nil {

@@ -1,7 +1,5 @@
-appwrite tablesDB createIpColumn \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key '' \
-        --required false \
-
-
+appwrite tables-db create-ip-column \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key '' \
+    --required false

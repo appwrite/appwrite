@@ -11,8 +11,8 @@ const result = await tablesDB.createIpColumn({
     tableId: '<TABLE_ID>',
     key: '',
     required: false,
-    default: '',
-    array: false
+    default: '', // optional
+    array: false // optional
 });
 
 console.log(result);

@@ -9,6 +9,6 @@ Client client = new Client()
 
 Users users = new Users(client);
 
-MfaFactors result = await users.ListMfaFactors(
+MfaFactors result = await users.ListMFAFactors(
     userId: "<USER_ID>"
 );

@@ -13,7 +13,7 @@ const response = await tablesDB.updateIntegerColumn({
     key: '',
     required: false,
     default: null,
-    min: null,
-    max: null,
-    newKey: ''
+    min: null, // optional
+    max: null, // optional
+    newKey: '' // optional
 });

@@ -1,3 +1,3 @@
-appwrite migrations getFirebaseReport \
-        --resources one two three \
-        --serviceAccount <SERVICE_ACCOUNT>
+appwrite migrations get-firebase-report \
+    --resources one two three \
+    --service-account <SERVICE_ACCOUNT>

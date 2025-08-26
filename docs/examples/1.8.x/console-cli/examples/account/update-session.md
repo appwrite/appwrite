@@ -1,2 +1,2 @@
-appwrite account updateSession \
-        --sessionId <SESSION_ID>
+appwrite account update-session \
+    --session-id <SESSION_ID>

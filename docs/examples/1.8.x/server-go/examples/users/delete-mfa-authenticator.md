@@ -14,7 +14,7 @@ func main() {
     )
 
     service := users.New(client)
-    response, error := service.DeleteMfaAuthenticator(
+    response, error := service.DeleteMFAAuthenticator(
         "<USER_ID>",
         "totp",
     )

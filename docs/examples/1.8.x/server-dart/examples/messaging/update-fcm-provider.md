@@ -7,7 +7,7 @@ Client client = Client()
 
 Messaging messaging = Messaging(client);
 
-Provider result = await messaging.updateFcmProvider(
+Provider result = await messaging.updateFCMProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>', // (optional)
     enabled: false, // (optional)

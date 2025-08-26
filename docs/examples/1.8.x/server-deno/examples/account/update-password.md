@@ -9,5 +9,5 @@ const account = new Account(client);
 
 const response = await account.updatePassword({
     password: '',
-    oldPassword: 'password'
+    oldPassword: 'password' // optional
 });

@@ -1,3 +1,3 @@
-appwrite projects updatePersonalDataCheck \
-        --projectId <PROJECT_ID> \
-        --enabled false
+appwrite projects update-personal-data-check \
+    --project-id <PROJECT_ID> \
+    --enabled false

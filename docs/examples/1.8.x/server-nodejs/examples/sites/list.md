@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const sites = new sdk.Sites(client);
 
 const result = await sites.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

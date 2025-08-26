@@ -1,5 +1,5 @@
 mutation {
-    messagingCreateSmtpProvider(
+    messagingCreateSMTPProvider(
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
         host: "<HOST>",

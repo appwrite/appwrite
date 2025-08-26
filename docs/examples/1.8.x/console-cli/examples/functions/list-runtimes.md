@@ -1,1 +1,1 @@
-appwrite functions listRuntimes
+appwrite functions list-runtimes

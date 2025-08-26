@@ -1,3 +1,2 @@
-appwrite messaging listMessageLogs \
-        --messageId <MESSAGE_ID> \
-
+appwrite messaging list-message-logs \
+    --message-id <MESSAGE_ID>

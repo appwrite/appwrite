@@ -6,5 +6,5 @@ let client = Client()
 
 let account = Account(client)
 
-let mfaRecoveryCodes = try await account.updateMfaRecoveryCodes()
+let mfaRecoveryCodes = try await account.updateMFARecoveryCodes()
 

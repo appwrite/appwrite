@@ -1,4 +1,3 @@
-appwrite tablesDB listIndexes \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-
+appwrite tables-db list-indexes \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID>

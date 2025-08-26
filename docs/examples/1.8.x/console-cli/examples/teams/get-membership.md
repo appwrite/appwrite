@@ -1,3 +1,3 @@
-appwrite teams getMembership \
-        --teamId <TEAM_ID> \
-        --membershipId <MEMBERSHIP_ID>
+appwrite teams get-membership \
+    --team-id <TEAM_ID> \
+    --membership-id <MEMBERSHIP_ID>

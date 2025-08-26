@@ -10,5 +10,5 @@ const tablesDB = new TablesDB(client);
 const response = await tablesDB.listIndexes({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    queries: []
+    queries: [] // optional
 });

@@ -13,5 +13,5 @@ const result = await tablesDB.updateEmailColumn({
     key: '',
     required: false,
     default: 'email@example.com',
-    newKey: ''
+    newKey: '' // optional
 });

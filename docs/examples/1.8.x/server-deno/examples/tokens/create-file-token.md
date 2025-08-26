@@ -10,5 +10,5 @@ const tokens = new Tokens(client);
 const response = await tokens.createFileToken({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    expire: ''
+    expire: '' // optional
 });

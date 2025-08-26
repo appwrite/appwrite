@@ -7,7 +7,7 @@ const client = new Client()
 const health = new Health(client);
 
 const result = await health.getQueueBuilds({
-    threshold: null
+    threshold: null // optional
 });
 
 console.log(result);

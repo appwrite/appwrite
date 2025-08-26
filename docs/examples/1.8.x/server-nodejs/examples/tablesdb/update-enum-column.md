@@ -14,5 +14,5 @@ const result = await tablesDB.updateEnumColumn({
     elements: [],
     required: false,
     default: '<DEFAULT>',
-    newKey: ''
+    newKey: '' // optional
 });

@@ -7,7 +7,7 @@ const client = new Client()
 const health = new Health(client);
 
 const result = await health.getCertificate({
-    domain: ''
+    domain: '' // optional
 });
 
 console.log(result);

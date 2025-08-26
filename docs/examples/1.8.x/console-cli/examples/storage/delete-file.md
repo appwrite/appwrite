@@ -1,3 +1,3 @@
-appwrite storage deleteFile \
-        --bucketId <BUCKET_ID> \
-        --fileId <FILE_ID>
+appwrite storage delete-file \
+    --bucket-id <BUCKET_ID> \
+    --file-id <FILE_ID>

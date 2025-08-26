@@ -1,4 +1,4 @@
-appwrite tablesDB getColumn \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key ''
+appwrite tables-db get-column \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key ''

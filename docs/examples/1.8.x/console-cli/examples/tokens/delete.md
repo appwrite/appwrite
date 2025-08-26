@@ -1,2 +1,2 @@
 appwrite tokens delete \
-        --tokenId <TOKEN_ID>
+    --token-id <TOKEN_ID>

@@ -10,6 +10,6 @@ $client = (new Client())
 
 $users = new Users($client);
 
-$result = $users->updateMfaRecoveryCodes(
+$result = $users->updateMFARecoveryCodes(
     userId: '<USER_ID>'
 );

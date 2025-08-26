@@ -1,3 +1,3 @@
-appwrite teams updateName \
-        --teamId <TEAM_ID> \
-        --name <NAME>
+appwrite teams update-name \
+    --team-id <TEAM_ID> \
+    --name <NAME>

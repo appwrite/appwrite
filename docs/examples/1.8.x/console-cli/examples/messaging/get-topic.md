@@ -1,2 +1,2 @@
-appwrite messaging getTopic \
-        --topicId <TOPIC_ID>
+appwrite messaging get-topic \
+    --topic-id <TOPIC_ID>

@@ -14,7 +14,7 @@ func main() {
     )
 
     service := account.New(client)
-    response, error := service.GetMfaRecoveryCodes(
+    response, error := service.GetMFARecoveryCodes(
     )
 
     if error != nil {

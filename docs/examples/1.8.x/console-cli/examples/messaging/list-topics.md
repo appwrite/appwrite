@@ -1,3 +1,1 @@
-appwrite messaging listTopics \
-
-
+appwrite messaging list-topics

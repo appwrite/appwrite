@@ -1,8 +1,2 @@
-appwrite messaging updateSms \
-        --messageId <MESSAGE_ID> \
-
-
-
-
-
-
+appwrite messaging update-sms \
+    --message-id <MESSAGE_ID>

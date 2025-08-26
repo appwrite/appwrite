@@ -1,4 +1,3 @@
 appwrite databases update \
-        --databaseId <DATABASE_ID> \
-        --name <NAME> \
-
+    --database-id <DATABASE_ID> \
+    --name <NAME>

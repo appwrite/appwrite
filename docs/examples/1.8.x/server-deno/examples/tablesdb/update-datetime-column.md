@@ -13,5 +13,5 @@ const response = await tablesDB.updateDatetimeColumn({
     key: '',
     required: false,
     default: '',
-    newKey: ''
+    newKey: '' // optional
 });

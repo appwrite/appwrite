@@ -1,5 +1,1 @@
-appwrite avatars getInitials \
-
-
-
-
+appwrite avatars get-initials

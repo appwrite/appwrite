@@ -1,5 +1,5 @@
 mutation {
-    usersDeleteMfaAuthenticator(
+    usersDeleteMFAAuthenticator(
         userId: "<USER_ID>",
         type: "totp"
     ) {

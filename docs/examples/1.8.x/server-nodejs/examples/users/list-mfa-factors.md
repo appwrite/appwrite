@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.listMfaFactors({
+const result = await users.listMFAFactors({
     userId: '<USER_ID>'
 });

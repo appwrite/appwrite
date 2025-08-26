@@ -7,7 +7,7 @@ const client = new Client()
 const databases = new Databases(client);
 
 const result = await databases.listUsage({
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

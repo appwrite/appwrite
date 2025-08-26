@@ -11,7 +11,7 @@ const result = await tablesDB.createRow({
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
     data: {},
-    permissions: ["read("any")"]
+    permissions: ["read("any")"] // optional
 });
 
 console.log(result);

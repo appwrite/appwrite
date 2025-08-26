@@ -10,7 +10,7 @@ const result = await tablesDB.getRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

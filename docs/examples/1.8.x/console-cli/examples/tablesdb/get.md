@@ -1,2 +1,2 @@
-appwrite tablesDB get \
-        --databaseId <DATABASE_ID>
+appwrite tables-db get \
+    --database-id <DATABASE_ID>

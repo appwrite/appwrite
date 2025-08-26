@@ -1,4 +1,3 @@
-appwrite tokens createFileToken \
-        --bucketId <BUCKET_ID> \
-        --fileId <FILE_ID> \
-
+appwrite tokens create-file-token \
+    --bucket-id <BUCKET_ID> \
+    --file-id <FILE_ID>

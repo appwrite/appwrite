@@ -12,7 +12,7 @@ const result = await tablesDB.updateIpColumn({
     key: '',
     required: false,
     default: '',
-    newKey: ''
+    newKey: '' // optional
 });
 
 console.log(result);

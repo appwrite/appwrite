@@ -6,6 +6,6 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.listMfaFactors();
+const result = await account.listMFAFactors();
 
 console.log(result);

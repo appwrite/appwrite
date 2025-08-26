@@ -13,6 +13,6 @@ const result = await tablesDB.createEnumColumn({
     key: '',
     elements: [],
     required: false,
-    default: '<DEFAULT>',
-    array: false
+    default: '<DEFAULT>', // optional
+    array: false // optional
 });

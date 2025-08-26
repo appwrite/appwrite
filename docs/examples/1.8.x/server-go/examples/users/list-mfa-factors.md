@@ -14,7 +14,7 @@ func main() {
     )
 
     service := users.New(client)
-    response, error := service.ListMfaFactors(
+    response, error := service.ListMFAFactors(
         "<USER_ID>",
     )
 

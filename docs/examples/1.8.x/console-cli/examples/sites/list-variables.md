@@ -1,2 +1,2 @@
-appwrite sites listVariables \
-        --siteId <SITE_ID>
+appwrite sites list-variables \
+    --site-id <SITE_ID>

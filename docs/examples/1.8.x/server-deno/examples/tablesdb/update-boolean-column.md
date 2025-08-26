@@ -13,5 +13,5 @@ const response = await tablesDB.updateBooleanColumn({
     key: '',
     required: false,
     default: false,
-    newKey: ''
+    newKey: '' // optional
 });

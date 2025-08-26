@@ -9,4 +9,4 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-MfaRecoveryCodes result = await account.CreateMfaRecoveryCodes();
+MfaRecoveryCodes result = await account.CreateMFARecoveryCodes();

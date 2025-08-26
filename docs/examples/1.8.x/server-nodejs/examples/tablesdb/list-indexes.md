@@ -10,5 +10,5 @@ const tablesDB = new sdk.TablesDB(client);
 const result = await tablesDB.listIndexes({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    queries: []
+    queries: [] // optional
 });

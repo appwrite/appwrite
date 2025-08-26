@@ -1,2 +1,1 @@
-appwrite sites listUsage \
-
+appwrite sites list-usage

@@ -9,7 +9,7 @@ const functions = new Functions(client);
 const result = await functions.createDuplicateDeployment({
     functionId: '<FUNCTION_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
-    buildId: '<BUILD_ID>'
+    buildId: '<BUILD_ID>' // optional
 });
 
 console.log(result);

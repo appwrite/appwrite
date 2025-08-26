@@ -9,7 +9,7 @@ const avatars = new Avatars(client);
 
 const result = avatars.getCreditCard({
     code: CreditCard.AmericanExpress,
-    width: 0,
-    height: 0,
-    quality: -1
+    width: 0, // optional
+    height: 0, // optional
+    quality: -1 // optional
 });

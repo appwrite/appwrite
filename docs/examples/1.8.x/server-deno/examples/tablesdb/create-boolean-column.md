@@ -12,6 +12,6 @@ const response = await tablesDB.createBooleanColumn({
     tableId: '<TABLE_ID>',
     key: '',
     required: false,
-    default: false,
-    array: false
+    default: false, // optional
+    array: false // optional
 });

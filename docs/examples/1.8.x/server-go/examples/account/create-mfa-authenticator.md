@@ -14,7 +14,7 @@ func main() {
     )
 
     service := account.New(client)
-    response, error := service.CreateMfaAuthenticator(
+    response, error := service.CreateMFAAuthenticator(
         "totp",
     )
 

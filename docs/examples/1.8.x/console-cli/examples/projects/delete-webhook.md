@@ -1,3 +1,3 @@
-appwrite projects deleteWebhook \
-        --projectId <PROJECT_ID> \
-        --webhookId <WEBHOOK_ID>
+appwrite projects delete-webhook \
+    --project-id <PROJECT_ID> \
+    --webhook-id <WEBHOOK_ID>

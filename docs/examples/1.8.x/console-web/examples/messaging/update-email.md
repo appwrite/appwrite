@@ -8,17 +8,17 @@ const messaging = new Messaging(client);
 
 const result = await messaging.updateEmail({
     messageId: '<MESSAGE_ID>',
-    topics: [],
-    users: [],
-    targets: [],
-    subject: '<SUBJECT>',
-    content: '<CONTENT>',
-    draft: false,
-    html: false,
-    cc: [],
-    bcc: [],
-    scheduledAt: '',
-    attachments: []
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    subject: '<SUBJECT>', // optional
+    content: '<CONTENT>', // optional
+    draft: false, // optional
+    html: false, // optional
+    cc: [], // optional
+    bcc: [], // optional
+    scheduledAt: '', // optional
+    attachments: [] // optional
 });
 
 console.log(result);

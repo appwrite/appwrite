@@ -1,1 +1,1 @@
-appwrite health getStorageLocal
+appwrite health get-storage-local

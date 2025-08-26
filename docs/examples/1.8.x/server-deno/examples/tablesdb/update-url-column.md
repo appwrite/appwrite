@@ -13,5 +13,5 @@ const response = await tablesDB.updateUrlColumn({
     key: '',
     required: false,
     default: 'https://example.com',
-    newKey: ''
+    newKey: '' // optional
 });

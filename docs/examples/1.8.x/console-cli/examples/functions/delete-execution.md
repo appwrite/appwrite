@@ -1,3 +1,3 @@
-appwrite functions deleteExecution \
-        --functionId <FUNCTION_ID> \
-        --executionId <EXECUTION_ID>
+appwrite functions delete-execution \
+    --function-id <FUNCTION_ID> \
+    --execution-id <EXECUTION_ID>

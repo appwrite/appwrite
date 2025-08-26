@@ -9,6 +9,6 @@ const teams = new Teams(client);
 
 const response = await teams.listMemberships({
     teamId: '<TEAM_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

@@ -12,7 +12,7 @@ const result = await databases.updateBooleanAttribute({
     key: '',
     required: false,
     default: false,
-    newKey: ''
+    newKey: '' // optional
 });
 
 console.log(result);

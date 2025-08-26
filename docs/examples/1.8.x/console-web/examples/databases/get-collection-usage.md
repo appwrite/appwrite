@@ -9,7 +9,7 @@ const databases = new Databases(client);
 const result = await databases.getCollectionUsage({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

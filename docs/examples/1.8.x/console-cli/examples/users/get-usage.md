@@ -1,2 +1,1 @@
-appwrite users getUsage \
-
+appwrite users get-usage

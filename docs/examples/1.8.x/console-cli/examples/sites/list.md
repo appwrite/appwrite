@@ -1,3 +1,1 @@
-appwrite sites list \
-
-
+appwrite sites list

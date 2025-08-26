@@ -9,7 +9,7 @@ const tablesDB = new TablesDB(client);
 const result = await tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

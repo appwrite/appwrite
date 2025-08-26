@@ -13,7 +13,7 @@ func main() {
     )
 
     service := account.New(client)
-    response, error := service.CreateMfaChallenge(
+    response, error := service.CreateMFAChallenge(
         "email",
     )
 

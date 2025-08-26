@@ -10,7 +10,7 @@ $client = (new Client())
 
 $messaging = new Messaging($client);
 
-$result = $messaging->createFcmProvider(
+$result = $messaging->createFCMProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>',
     serviceAccountJSON: [], // optional

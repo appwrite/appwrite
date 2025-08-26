@@ -1,1 +1,1 @@
-appwrite account createMfaRecoveryCodes
+appwrite account create-mfa-recovery-codes

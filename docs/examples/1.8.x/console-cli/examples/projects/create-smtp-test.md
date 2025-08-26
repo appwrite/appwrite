@@ -1,11 +1,6 @@
-appwrite projects createSmtpTest \
-        --projectId <PROJECT_ID> \
-        --emails one two three \
-        --senderName <SENDER_NAME> \
-        --senderEmail email@example.com \
-        --host '' \
-
-
-
-
-
+appwrite projects create-smtp-test \
+    --project-id <PROJECT_ID> \
+    --emails one two three \
+    --sender-name <SENDER_NAME> \
+    --sender-email email@example.com \
+    --host ''

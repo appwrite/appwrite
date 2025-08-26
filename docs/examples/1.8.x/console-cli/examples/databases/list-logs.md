@@ -1,3 +1,2 @@
-appwrite databases listLogs \
-        --databaseId <DATABASE_ID> \
-
+appwrite databases list-logs \
+    --database-id <DATABASE_ID>

@@ -7,8 +7,8 @@ const client = new Client()
 const tablesDB = new TablesDB(client);
 
 const result = await tablesDB.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

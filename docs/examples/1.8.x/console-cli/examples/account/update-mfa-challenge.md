@@ -1,3 +1,3 @@
-appwrite account updateMfaChallenge \
-        --challengeId <CHALLENGE_ID> \
-        --otp <OTP>
+appwrite account update-mfa-challenge \
+    --challenge-id <CHALLENGE_ID> \
+    --otp <OTP>

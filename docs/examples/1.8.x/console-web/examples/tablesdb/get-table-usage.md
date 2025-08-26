@@ -9,7 +9,7 @@ const tablesDB = new TablesDB(client);
 const result = await tablesDB.getTableUsage({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

@@ -11,7 +11,7 @@ const response = await tablesDB.createTable({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"],
-    rowSecurity: false,
-    enabled: false
+    permissions: ["read("any")"], // optional
+    rowSecurity: false, // optional
+    enabled: false // optional
 });

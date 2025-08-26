@@ -14,21 +14,21 @@ func main() {
     )
 
     service := messaging.New(client)
-    response, error := service.UpdateSmtpProvider(
+    response, error := service.UpdateSMTPProvider(
         "<PROVIDER_ID>",
-        messaging.WithUpdateSmtpProviderName("<NAME>"),
-        messaging.WithUpdateSmtpProviderHost("<HOST>"),
-        messaging.WithUpdateSmtpProviderPort(1),
-        messaging.WithUpdateSmtpProviderUsername("<USERNAME>"),
-        messaging.WithUpdateSmtpProviderPassword("<PASSWORD>"),
-        messaging.WithUpdateSmtpProviderEncryption("none"),
-        messaging.WithUpdateSmtpProviderAutoTLS(false),
-        messaging.WithUpdateSmtpProviderMailer("<MAILER>"),
-        messaging.WithUpdateSmtpProviderFromName("<FROM_NAME>"),
-        messaging.WithUpdateSmtpProviderFromEmail("email@example.com"),
-        messaging.WithUpdateSmtpProviderReplyToName("<REPLY_TO_NAME>"),
-        messaging.WithUpdateSmtpProviderReplyToEmail("<REPLY_TO_EMAIL>"),
-        messaging.WithUpdateSmtpProviderEnabled(false),
+        messaging.WithUpdateSMTPProviderName("<NAME>"),
+        messaging.WithUpdateSMTPProviderHost("<HOST>"),
+        messaging.WithUpdateSMTPProviderPort(1),
+        messaging.WithUpdateSMTPProviderUsername("<USERNAME>"),
+        messaging.WithUpdateSMTPProviderPassword("<PASSWORD>"),
+        messaging.WithUpdateSMTPProviderEncryption("none"),
+        messaging.WithUpdateSMTPProviderAutoTLS(false),
+        messaging.WithUpdateSMTPProviderMailer("<MAILER>"),
+        messaging.WithUpdateSMTPProviderFromName("<FROM_NAME>"),
+        messaging.WithUpdateSMTPProviderFromEmail("email@example.com"),
+        messaging.WithUpdateSMTPProviderReplyToName("<REPLY_TO_NAME>"),
+        messaging.WithUpdateSMTPProviderReplyToEmail("<REPLY_TO_EMAIL>"),
+        messaging.WithUpdateSMTPProviderEnabled(false),
     )
 
     if error != nil {

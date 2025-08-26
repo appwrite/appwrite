@@ -9,7 +9,7 @@ const account = new Account(client);
 const result = await account.createEmailToken({
     userId: '<USER_ID>',
     email: 'email@example.com',
-    phrase: false
+    phrase: false // optional
 });
 
 console.log(result);

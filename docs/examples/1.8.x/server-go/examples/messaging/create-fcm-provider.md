@@ -14,11 +14,11 @@ func main() {
     )
 
     service := messaging.New(client)
-    response, error := service.CreateFcmProvider(
+    response, error := service.CreateFCMProvider(
         "<PROVIDER_ID>",
         "<NAME>",
-        messaging.WithCreateFcmProviderServiceAccountJSON(map[string]interface{}{}),
-        messaging.WithCreateFcmProviderEnabled(false),
+        messaging.WithCreateFCMProviderServiceAccountJSON(map[string]interface{}{}),
+        messaging.WithCreateFCMProviderEnabled(false),
     )
 
     if error != nil {

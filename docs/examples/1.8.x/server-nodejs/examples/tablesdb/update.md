@@ -10,5 +10,5 @@ const tablesDB = new sdk.TablesDB(client);
 const result = await tablesDB.update({
     databaseId: '<DATABASE_ID>',
     name: '<NAME>',
-    enabled: false
+    enabled: false // optional
 });

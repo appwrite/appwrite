@@ -1,3 +1,2 @@
 appwrite tokens update \
-        --tokenId <TOKEN_ID> \
-
+    --token-id <TOKEN_ID>

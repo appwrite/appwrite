@@ -1,3 +1,3 @@
-appwrite projects updateAuthDuration \
-        --projectId <PROJECT_ID> \
-        --duration 0
+appwrite projects update-auth-duration \
+    --project-id <PROJECT_ID> \
+    --duration 0

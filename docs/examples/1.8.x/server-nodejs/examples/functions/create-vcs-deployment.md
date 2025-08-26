@@ -11,5 +11,5 @@ const result = await functions.createVcsDeployment({
     functionId: '<FUNCTION_ID>',
     type: sdk.VCSDeploymentType.Branch,
     reference: '<REFERENCE>',
-    activate: false
+    activate: false // optional
 });

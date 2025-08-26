@@ -10,7 +10,7 @@ Client client = new Client()
 
 Users users = new Users(client);
 
-await users.DeleteMfaAuthenticator(
+await users.DeleteMFAAuthenticator(
     userId: "<USER_ID>",
     type: AuthenticatorType.Totp
 );

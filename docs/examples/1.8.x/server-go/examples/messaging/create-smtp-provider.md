@@ -14,21 +14,21 @@ func main() {
     )
 
     service := messaging.New(client)
-    response, error := service.CreateSmtpProvider(
+    response, error := service.CreateSMTPProvider(
         "<PROVIDER_ID>",
         "<NAME>",
         "<HOST>",
-        messaging.WithCreateSmtpProviderPort(1),
-        messaging.WithCreateSmtpProviderUsername("<USERNAME>"),
-        messaging.WithCreateSmtpProviderPassword("<PASSWORD>"),
-        messaging.WithCreateSmtpProviderEncryption("none"),
-        messaging.WithCreateSmtpProviderAutoTLS(false),
-        messaging.WithCreateSmtpProviderMailer("<MAILER>"),
-        messaging.WithCreateSmtpProviderFromName("<FROM_NAME>"),
-        messaging.WithCreateSmtpProviderFromEmail("email@example.com"),
-        messaging.WithCreateSmtpProviderReplyToName("<REPLY_TO_NAME>"),
-        messaging.WithCreateSmtpProviderReplyToEmail("email@example.com"),
-        messaging.WithCreateSmtpProviderEnabled(false),
+        messaging.WithCreateSMTPProviderPort(1),
+        messaging.WithCreateSMTPProviderUsername("<USERNAME>"),
+        messaging.WithCreateSMTPProviderPassword("<PASSWORD>"),
+        messaging.WithCreateSMTPProviderEncryption("none"),
+        messaging.WithCreateSMTPProviderAutoTLS(false),
+        messaging.WithCreateSMTPProviderMailer("<MAILER>"),
+        messaging.WithCreateSMTPProviderFromName("<FROM_NAME>"),
+        messaging.WithCreateSMTPProviderFromEmail("email@example.com"),
+        messaging.WithCreateSMTPProviderReplyToName("<REPLY_TO_NAME>"),
+        messaging.WithCreateSMTPProviderReplyToEmail("email@example.com"),
+        messaging.WithCreateSMTPProviderEnabled(false),
     )
 
     if error != nil {

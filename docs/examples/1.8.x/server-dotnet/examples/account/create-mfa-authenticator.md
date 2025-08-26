@@ -10,6 +10,6 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-MfaType result = await account.CreateMfaAuthenticator(
+MfaType result = await account.CreateMFAAuthenticator(
     type: AuthenticatorType.Totp
 );

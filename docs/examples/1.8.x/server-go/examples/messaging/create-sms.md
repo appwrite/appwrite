@@ -14,14 +14,14 @@ func main() {
     )
 
     service := messaging.New(client)
-    response, error := service.CreateSms(
+    response, error := service.CreateSMS(
         "<MESSAGE_ID>",
         "<CONTENT>",
-        messaging.WithCreateSmsTopics([]interface{}{}),
-        messaging.WithCreateSmsUsers([]interface{}{}),
-        messaging.WithCreateSmsTargets([]interface{}{}),
-        messaging.WithCreateSmsDraft(false),
-        messaging.WithCreateSmsScheduledAt(""),
+        messaging.WithCreateSMSTopics([]interface{}{}),
+        messaging.WithCreateSMSUsers([]interface{}{}),
+        messaging.WithCreateSMSTargets([]interface{}{}),
+        messaging.WithCreateSMSDraft(false),
+        messaging.WithCreateSMSScheduledAt(""),
     )
 
     if error != nil {

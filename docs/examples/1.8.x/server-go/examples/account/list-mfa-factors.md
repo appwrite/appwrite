@@ -14,7 +14,7 @@ func main() {
     )
 
     service := account.New(client)
-    response, error := service.ListMfaFactors(
+    response, error := service.ListMFAFactors(
     )
 
     if error != nil {

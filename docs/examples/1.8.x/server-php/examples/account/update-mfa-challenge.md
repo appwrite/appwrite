@@ -10,7 +10,7 @@ $client = (new Client())
 
 $account = new Account($client);
 
-$result = $account->updateMfaChallenge(
+$result = $account->updateMFAChallenge(
     challengeId: '<CHALLENGE_ID>',
     otp: '<OTP>'
 );

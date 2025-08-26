@@ -14,7 +14,7 @@ func main() {
     )
 
     service := account.New(client)
-    response, error := service.UpdateMfaChallenge(
+    response, error := service.UpdateMFAChallenge(
         "<CHALLENGE_ID>",
         "<OTP>",
     )

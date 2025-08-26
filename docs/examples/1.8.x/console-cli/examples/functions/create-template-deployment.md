@@ -1,7 +1,6 @@
-appwrite functions createTemplateDeployment \
-        --functionId <FUNCTION_ID> \
-        --repository <REPOSITORY> \
-        --owner <OWNER> \
-        --rootDirectory <ROOT_DIRECTORY> \
-        --version <VERSION> \
-
+appwrite functions create-template-deployment \
+    --function-id <FUNCTION_ID> \
+    --repository <REPOSITORY> \
+    --owner <OWNER> \
+    --root-directory <ROOT_DIRECTORY> \
+    --version <VERSION>

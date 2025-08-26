@@ -8,5 +8,5 @@ const client = new Client()
 const health = new Health(client);
 
 const response = await health.getQueueMessaging({
-    threshold: null
+    threshold: null // optional
 });

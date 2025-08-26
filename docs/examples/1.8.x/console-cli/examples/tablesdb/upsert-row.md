@@ -1,6 +1,4 @@
-appwrite tablesDB upsertRow \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --rowId <ROW_ID> \
-
-
+appwrite tables-db upsert-row \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --row-id <ROW_ID>

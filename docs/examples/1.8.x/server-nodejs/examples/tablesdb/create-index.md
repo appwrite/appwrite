@@ -13,6 +13,6 @@ const result = await tablesDB.createIndex({
     key: '',
     type: sdk.IndexType.Key,
     columns: [],
-    orders: [],
-    lengths: []
+    orders: [], // optional
+    lengths: [] // optional
 });

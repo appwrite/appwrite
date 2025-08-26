@@ -9,7 +9,7 @@ const account = new Account(client);
 const result = await account.createPushTarget({
     targetId: '<TARGET_ID>',
     identifier: '<IDENTIFIER>',
-    providerId: '<PROVIDER_ID>'
+    providerId: '<PROVIDER_ID>' // optional
 });
 
 console.log(result);

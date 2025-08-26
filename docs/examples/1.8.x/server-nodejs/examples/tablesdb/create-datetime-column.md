@@ -12,6 +12,6 @@ const result = await tablesDB.createDatetimeColumn({
     tableId: '<TABLE_ID>',
     key: '',
     required: false,
-    default: '',
-    array: false
+    default: '', // optional
+    array: false // optional
 });

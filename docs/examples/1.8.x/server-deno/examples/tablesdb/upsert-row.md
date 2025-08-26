@@ -11,6 +11,6 @@ const response = await tablesDB.upsertRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
-    data: {},
-    permissions: ["read("any")"]
+    data: {}, // optional
+    permissions: ["read("any")"] // optional
 });

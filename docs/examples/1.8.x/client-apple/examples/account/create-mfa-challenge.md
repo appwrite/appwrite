@@ -7,7 +7,7 @@ let client = Client()
 
 let account = Account(client)
 
-let mfaChallenge = try await account.createMfaChallenge(
+let mfaChallenge = try await account.createMFAChallenge(
     factor: .email
 )
 

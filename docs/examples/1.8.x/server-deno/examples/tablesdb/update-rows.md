@@ -10,6 +10,6 @@ const tablesDB = new TablesDB(client);
 const response = await tablesDB.updateRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    data: {},
-    queries: []
+    data: {}, // optional
+    queries: [] // optional
 });

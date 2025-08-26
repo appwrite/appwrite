@@ -1,3 +1,3 @@
-appwrite account updateEmail \
-        --email email@example.com \
-        --password password
+appwrite account update-email \
+    --email email@example.com \
+    --password password

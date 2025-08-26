@@ -7,8 +7,8 @@ const client = new Client()
 const storage = new Storage(client);
 
 const result = await storage.listBuckets({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

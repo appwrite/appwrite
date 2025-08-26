@@ -14,7 +14,7 @@ func main() {
     )
 
     service := users.New(client)
-    response, error := service.UpdateMfa(
+    response, error := service.UpdateMFA(
         "<USER_ID>",
         false,
     )

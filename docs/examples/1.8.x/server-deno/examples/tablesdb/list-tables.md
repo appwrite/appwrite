@@ -9,6 +9,6 @@ const tablesDB = new TablesDB(client);
 
 const response = await tablesDB.listTables({
     databaseId: '<DATABASE_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

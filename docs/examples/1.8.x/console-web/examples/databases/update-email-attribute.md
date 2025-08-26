@@ -12,7 +12,7 @@ const result = await databases.updateEmailAttribute({
     key: '',
     required: false,
     default: 'email@example.com',
-    newKey: ''
+    newKey: '' // optional
 });
 
 console.log(result);

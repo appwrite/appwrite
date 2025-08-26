@@ -1,20 +1,2 @@
-appwrite messaging createPush \
-        --messageId <MESSAGE_ID> \
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+appwrite messaging create-push \
+    --message-id <MESSAGE_ID>

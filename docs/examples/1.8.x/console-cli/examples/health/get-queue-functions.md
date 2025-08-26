@@ -1,2 +1,1 @@
-appwrite health getQueueFunctions \
-
+appwrite health get-queue-functions

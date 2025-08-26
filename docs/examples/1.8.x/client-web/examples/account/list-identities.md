@@ -7,7 +7,7 @@ const client = new Client()
 const account = new Account(client);
 
 const result = await account.listIdentities({
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

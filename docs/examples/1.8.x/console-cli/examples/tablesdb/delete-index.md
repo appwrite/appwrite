@@ -1,4 +1,4 @@
-appwrite tablesDB deleteIndex \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key ''
+appwrite tables-db delete-index \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key ''

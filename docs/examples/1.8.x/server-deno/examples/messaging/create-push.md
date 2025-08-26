@@ -9,22 +9,22 @@ const messaging = new Messaging(client);
 
 const response = await messaging.createPush({
     messageId: '<MESSAGE_ID>',
-    title: '<TITLE>',
-    body: '<BODY>',
-    topics: [],
-    users: [],
-    targets: [],
-    data: {},
-    action: '<ACTION>',
-    image: '[ID1:ID2]',
-    icon: '<ICON>',
-    sound: '<SOUND>',
-    color: '<COLOR>',
-    tag: '<TAG>',
-    badge: null,
-    draft: false,
-    scheduledAt: '',
-    contentAvailable: false,
-    critical: false,
-    priority: MessagePriority.Normal
+    title: '<TITLE>', // optional
+    body: '<BODY>', // optional
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    data: {}, // optional
+    action: '<ACTION>', // optional
+    image: '[ID1:ID2]', // optional
+    icon: '<ICON>', // optional
+    sound: '<SOUND>', // optional
+    color: '<COLOR>', // optional
+    tag: '<TAG>', // optional
+    badge: null, // optional
+    draft: false, // optional
+    scheduledAt: '', // optional
+    contentAvailable: false, // optional
+    critical: false, // optional
+    priority: MessagePriority.Normal // optional
 });

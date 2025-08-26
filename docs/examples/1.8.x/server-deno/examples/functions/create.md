@@ -11,19 +11,19 @@ const response = await functions.create({
     functionId: '<FUNCTION_ID>',
     name: '<NAME>',
     runtime: .Node145,
-    execute: ["any"],
-    events: [],
-    schedule: '',
-    timeout: 1,
-    enabled: false,
-    logging: false,
-    entrypoint: '<ENTRYPOINT>',
-    commands: '<COMMANDS>',
-    scopes: [],
-    installationId: '<INSTALLATION_ID>',
-    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>',
-    providerBranch: '<PROVIDER_BRANCH>',
-    providerSilentMode: false,
-    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>',
-    specification: ''
+    execute: ["any"], // optional
+    events: [], // optional
+    schedule: '', // optional
+    timeout: 1, // optional
+    enabled: false, // optional
+    logging: false, // optional
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>', // optional
+    scopes: [], // optional
+    installationId: '<INSTALLATION_ID>', // optional
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
+    providerBranch: '<PROVIDER_BRANCH>', // optional
+    providerSilentMode: false, // optional
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
+    specification: '' // optional
 });

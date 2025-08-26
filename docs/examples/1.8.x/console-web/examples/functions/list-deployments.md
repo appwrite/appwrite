@@ -8,8 +8,8 @@ const functions = new Functions(client);
 
 const result = await functions.listDeployments({
     functionId: '<FUNCTION_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

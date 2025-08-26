@@ -11,10 +11,10 @@ const result = await tablesDB.createRelationshipColumn({
     tableId: '<TABLE_ID>',
     relatedTableId: '<RELATED_TABLE_ID>',
     type: RelationshipType.OneToOne,
-    twoWay: false,
-    key: '',
-    twoWayKey: '',
-    onDelete: RelationMutate.Cascade
+    twoWay: false, // optional
+    key: '', // optional
+    twoWayKey: '', // optional
+    onDelete: RelationMutate.Cascade // optional
 });
 
 console.log(result);

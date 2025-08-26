@@ -1,3 +1,3 @@
-appwrite users deleteTarget \
-        --userId <USER_ID> \
-        --targetId <TARGET_ID>
+appwrite users delete-target \
+    --user-id <USER_ID> \
+    --target-id <TARGET_ID>

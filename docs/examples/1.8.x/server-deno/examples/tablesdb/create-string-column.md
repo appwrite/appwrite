@@ -13,7 +13,7 @@ const response = await tablesDB.createStringColumn({
     key: '',
     size: 1,
     required: false,
-    default: '<DEFAULT>',
-    array: false,
-    encrypt: false
+    default: '<DEFAULT>', // optional
+    array: false, // optional
+    encrypt: false // optional
 });

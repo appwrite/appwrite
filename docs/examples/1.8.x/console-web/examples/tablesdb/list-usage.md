@@ -7,7 +7,7 @@ const client = new Client()
 const tablesDB = new TablesDB(client);
 
 const result = await tablesDB.listUsage({
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

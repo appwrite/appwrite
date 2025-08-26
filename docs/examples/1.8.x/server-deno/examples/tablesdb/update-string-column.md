@@ -13,6 +13,6 @@ const response = await tablesDB.updateStringColumn({
     key: '',
     required: false,
     default: '<DEFAULT>',
-    size: 1,
-    newKey: ''
+    size: 1, // optional
+    newKey: '' // optional
 });
