@@ -723,6 +723,18 @@ class FunctionsCustomServerTest extends Scope
 
         $deployments = $this->listDeployments($functionId, [
             'queries' => [
+                Query::select(['status'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        $deployments = $this->listDeployments($functionId, [
+            'queries' => [
                 Query::offset(1)->toString(),
             ],
         ]);

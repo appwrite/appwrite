@@ -49,7 +49,7 @@ class Base extends Queries
             if (!isset($allowedAttributesLookup[$key])) {
                 continue;
             }
-        
+
             $attributeDocument = new Document([
                 'key' => $key,
                 'type' => $attribute['type'],
@@ -59,7 +59,7 @@ class Base extends Queries
             $attributes[] = $attributeDocument;
             $allAttributes[] = $attributeDocument;
         }
-        
+
         $internalAttributes = [
             new Document([
                 'key' => '$id',
@@ -82,8 +82,8 @@ class Base extends Queries
                 'array' => false,
             ])
         ];
-        
-        foreach($internalAttributes as $attribute) {
+
+        foreach ($internalAttributes as $attribute) {
             $attributes[] = $attribute;
             $allAttributes[] = $attribute;
         }
@@ -95,14 +95,14 @@ class Base extends Queries
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
             new Order($attributes),
         ];
-        
-        if($this->isSelectQueryAllowed()) {
+
+        if ($this->isSelectQueryAllowed()) {
             $validators[] = new Select($allAttributes);
         }
 
         parent::__construct($validators);
     }
-    
+
     public function isSelectQueryAllowed(): bool
     {
         return true;
