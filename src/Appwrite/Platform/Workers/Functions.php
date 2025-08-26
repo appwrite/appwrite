@@ -543,13 +543,14 @@ class Functions extends Action
 
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
+            $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
                     $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
                 }
             }
-            $headersFiltered[] = ['name' => 'x-appwrite-execution-id', 'value' => $execution->getId()];
 
             $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
             $logs = $executionResponse['logs'] ?? '';
