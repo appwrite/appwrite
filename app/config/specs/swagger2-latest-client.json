@@ -442,7 +442,7 @@
                     "weight": 30,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-j-w-t.md",
+                    "demo": "account\/create-jwt.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "rate-limit": 100,
                     "rate-time": 3600,
@@ -558,7 +558,7 @@
                     "weight": 45,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-m-f-a.md",
+                    "demo": "account\/update-mfa.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -693,7 +693,7 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-m-f-a-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -817,7 +817,7 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-m-f-a-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -948,7 +948,7 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-m-f-a-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -1070,7 +1070,7 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1205,7 +1205,7 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-m-f-a-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1329,7 +1329,7 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-m-f-a-factors.md"
+                            "demo": "account\/list-mfa-factors.md"
                         }
                     ],
                     "auth": {
@@ -1426,7 +1426,7 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-m-f-a-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1523,7 +1523,7 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1620,7 +1620,7 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-m-f-a-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -2413,7 +2413,7 @@
                     "weight": 27,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-magic-u-r-l-session.md",
+                    "demo": "account\/update-magic-url-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -2486,7 +2486,7 @@
                     "weight": 20,
                     "cookies": false,
                     "type": "webAuth",
-                    "demo": "account\/create-o-auth2session.md",
+                    "demo": "account\/create-o-auth-2-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
@@ -3314,7 +3314,7 @@
                     "weight": 25,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-magic-u-r-l-token.md",
+                    "demo": "account\/create-magic-url-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "rate-limit": 60,
                     "rate-time": 3600,
@@ -3402,7 +3402,7 @@
                     "weight": 24,
                     "cookies": false,
                     "type": "webAuth",
-                    "demo": "account\/create-o-auth2token.md",
+                    "demo": "account\/create-o-auth-2-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
@@ -4877,7 +4877,7 @@
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
-                    "demo": "avatars\/get-q-r.md",
+                    "demo": "avatars\/get-qr.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -6448,7 +6448,7 @@
                     "weight": 73,
                     "cookies": false,
                     "type": "",
-                    "demo": "locale\/list-countries-e-u.md",
+                    "demo": "locale\/list-countries-eu.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7567,7 +7567,7 @@
                     "weight": 420,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list-rows.md",
+                    "demo": "tables-db\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7648,7 +7648,7 @@
                     "weight": 412,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-row.md",
+                    "demo": "tables-db\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7687,7 +7687,7 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/create-row.md"
+                            "demo": "tables-db\/create-row.md"
                         }
                     ],
                     "auth": {
@@ -7787,7 +7787,7 @@
                     "weight": 413,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get-row.md",
+                    "demo": "tables-db\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7876,7 +7876,7 @@
                     "weight": 416,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/upsert-row.md",
+                    "demo": "tables-db\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -7914,7 +7914,7 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/upsert-row.md"
+                            "demo": "tables-db\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -8007,7 +8007,7 @@
                     "weight": 414,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-row.md",
+                    "demo": "tables-db\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -8103,7 +8103,7 @@
                     "weight": 418,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-row.md",
+                    "demo": "tables-db\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
@@ -8182,7 +8182,7 @@
                     "weight": 423,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/decrement-row-column.md",
+                    "demo": "tables-db\/decrement-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
@@ -8290,7 +8290,7 @@
                     "weight": 422,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/increment-row-column.md",
+                    "demo": "tables-db\/increment-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
