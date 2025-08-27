@@ -32189,7 +32189,7 @@
                                 }
                             ],
                             "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "tables-db\/list-usage.md"
+                            "demo": "tablesdb\/list-usage.md"
                         }
                     ],
                     "auth": {
@@ -36082,7 +36082,7 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/create-row.md"
+                            "demo": "tablesdb\/create-row.md"
                         },
                         {
                             "name": "createRows",
@@ -36108,7 +36108,7 @@
                                 }
                             ],
                             "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/create-rows.md"
+                            "demo": "tablesdb\/create-rows.md"
                         }
                     ],
                     "auth": {
@@ -36247,7 +36247,7 @@
                                 }
                             ],
                             "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.\n",
-                            "demo": "tables-db\/upsert-rows.md"
+                            "demo": "tablesdb\/upsert-rows.md"
                         }
                     ],
                     "auth": {
@@ -36662,7 +36662,7 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -37410,7 +37410,7 @@
                                 }
                             ],
                             "description": "Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "tables-db\/get-usage.md"
+                            "demo": "tablesdb\/get-usage.md"
                         }
                     ],
                     "auth": {
