@@ -4927,13 +4927,17 @@
         {
             "name": "appwrite/sdk-generator",
             "version": "1.1.15",
+            "version": "1.1.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
                 "reference": "8e8e39634ba7558704522959d88f3542563a5444"
+                "reference": "8e8e39634ba7558704522959d88f3542563a5444"
             },
             "dist": {
                 "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8e8e39634ba7558704522959d88f3542563a5444",
+                "reference": "8e8e39634ba7558704522959d88f3542563a5444",
                 "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8e8e39634ba7558704522959d88f3542563a5444",
                 "reference": "8e8e39634ba7558704522959d88f3542563a5444",
                 "shasum": ""
@@ -4972,7 +4976,9 @@
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/1.1.15"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.1.15"
             },
+            "time": "2025-08-27T04:59:35+00:00"
             "time": "2025-08-27T04:59:35+00:00"
         },
         {

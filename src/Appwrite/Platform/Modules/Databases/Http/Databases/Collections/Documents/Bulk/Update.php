@@ -127,6 +127,9 @@ class Update extends Action
             }
         }
 
+        // Remove sequence if set
+        unset($document['$sequence']);
+
         $documents = [];
 
         try {

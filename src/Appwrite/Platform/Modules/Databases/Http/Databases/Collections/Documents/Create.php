@@ -351,6 +351,9 @@ class Create extends Action
                 }
             }
 
+            // Remove sequence if set
+            unset($document['$sequence']);
+
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
 

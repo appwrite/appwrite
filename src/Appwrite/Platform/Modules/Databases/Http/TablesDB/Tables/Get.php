@@ -30,7 +30,7 @@ class Get extends CollectionGet
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId')
             ->desc('Get table')
             ->groups(['api', 'database'])
-            ->label('scope', 'tables.read')
+            ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
