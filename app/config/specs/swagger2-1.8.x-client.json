@@ -5978,7 +5978,7 @@
                                 },
                                 "method": {
                                     "type": "string",
-                                    "description": "HTTP method of execution. Default value is GET.",
+                                    "description": "HTTP method of execution. Default value is POST.",
                                     "default": "POST",
                                     "x-example": "GET",
                                     "enum": [
@@ -5987,7 +5987,8 @@
                                         "PUT",
                                         "PATCH",
                                         "DELETE",
-                                        "OPTIONS"
+                                        "OPTIONS",
+                                        "HEAD"
                                     ],
                                     "x-enum-name": "ExecutionMethod",
                                     "x-enum-keys": []
