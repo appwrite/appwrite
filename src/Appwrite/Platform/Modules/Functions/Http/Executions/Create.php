@@ -481,6 +481,8 @@ class Create extends Base
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
+        $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
             $headers[] = ['name' => $key, 'value' => $value];

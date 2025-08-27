@@ -3613,7 +3613,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, unionpay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3631,7 +3631,7 @@
                                 "mastercard",
                                 "naranja",
                                 "targeta-shopping",
-                                "union-china-pay",
+                                "unionpay",
                                 "visa",
                                 "mir",
                                 "maestro",
@@ -3651,7 +3651,7 @@
                                 "Mastercard",
                                 "Naranja",
                                 "Tarjeta Shopping",
-                                "Union China Pay",
+                                "Union Pay",
                                 "Visa",
                                 "MIR",
                                 "Maestro",
@@ -22861,7 +22861,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.read",
+                    "scope": [
+                        "tables.read",
+                        "collections.read"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -22945,7 +22948,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23050,7 +23056,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.read",
+                    "scope": [
+                        "tables.read",
+                        "collections.read"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23120,7 +23129,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23220,7 +23232,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23292,7 +23307,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.read",
+                    "scope": [
+                        "tables.read",
+                        "collections.read"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23377,7 +23395,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23484,7 +23505,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23596,7 +23620,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23703,7 +23730,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23815,7 +23845,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -23922,7 +23955,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24034,7 +24070,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24150,7 +24189,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24271,7 +24313,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24388,7 +24433,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24510,7 +24558,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24627,7 +24678,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24749,7 +24803,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24856,7 +24913,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -24968,7 +25028,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25100,7 +25163,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25218,7 +25284,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25335,7 +25404,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25442,7 +25514,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25585,7 +25660,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.read",
+                    "scope": [
+                        "tables.read",
+                        "collections.read"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25657,7 +25735,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25738,7 +25819,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25847,7 +25931,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.read",
+                    "scope": [
+                        "tables.read",
+                        "collections.read"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -25930,7 +26017,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -26059,7 +26149,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.read",
+                    "scope": [
+                        "tables.read",
+                        "collections.read"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -26131,7 +26224,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "tables.write",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
                     "platforms": [
                         "server"
                     ],
@@ -26212,7 +26308,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -26299,7 +26398,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -26469,7 +26571,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "console",
                         "server"
@@ -26591,7 +26696,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "console",
                         "server"
@@ -26686,7 +26794,10 @@
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "console",
                         "server"
@@ -26778,7 +26889,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -26875,7 +26989,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -27014,7 +27131,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -27115,7 +27235,10 @@
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -27201,7 +27324,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -27318,7 +27444,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",

@@ -32,7 +32,7 @@ class XList extends DocumentXList
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/rows')
             ->desc('List rows')
             ->groups(['api', 'database'])
-            ->label('scope', 'rows.read')
+            ->label('scope', ['rows.read', 'documents.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
