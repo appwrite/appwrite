@@ -1015,9 +1015,6 @@ App::init()
             if (version_compare($responseFormat, '1.7.0', '<')) {
                 $response->addFilter(new ResponseV19());
             }
-            if (version_compare($responseFormat, '1.8.0', '<')) {
-                $response->addFilter(new ResponseV20());
-            }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";
             }
