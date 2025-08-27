@@ -942,6 +942,35 @@ trait Base
                         array
                     }
                 }';
+            case self::CREATE_POINT_COLUMN:
+                return 'mutation createPointColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $array: Boolean){
+                    tablesDBCreatePointColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, array: $array) {
+                        key
+                        required
+                        array
+                        status
+                    }
+                }';
+
+            case self::CREATE_LINE_COLUMN:
+                return 'mutation createLineColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $array: Boolean){
+                    tablesDBCreateLineColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, array: $array) {
+                        key
+                        required
+                        array
+                        status
+                    }
+                }';
+
+            case self::CREATE_POLYGON_COLUMN:
+                return 'mutation createPolygonColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $array: Boolean){
+                    tablesDBCreatePolygonColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, array: $array) {
+                        key
+                        required
+                        array
+                        status
+                    }
+                }';
             case self::CREATE_RELATIONSHIP_COLUMN:
                 return 'mutation createRelationshipColumn($databaseId: String!, $tableId: String!, $relatedTableId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
                     tablesDBCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
@@ -1021,6 +1050,27 @@ trait Base
                         default
                     }
                 }';
+            case self::UPDATE_POINT_COLUMN:
+                return 'mutation updatePointColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!){
+                    tablesDBUpdatePointColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required) {
+                        required
+                    }
+                }';
+
+            case self::UPDATE_LINE_COLUMN:
+                return 'mutation updateLineColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!){
+                    tablesDBUpdateLineColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required) {
+                        required
+                    }
+                }';
+
+            case self::UPDATE_POLYGON_COLUMN:
+                return 'mutation updatePolygonColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!){
+                    tablesDBUpdatePolygonColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required) {
+                        required
+                    }
+                }';
+
             case self::UPDATE_RELATIONSHIP_COLUMN:
                 return 'mutation updateRelationshipColumn($databaseId: String!, $tableId: String!, $key: String!, $onDelete: String){
                     tablesDBUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
