@@ -121,7 +121,9 @@ class FunctionsScheduleTest extends Scope
         $this->assertEquals('scheduled', $execution['body']['status']);
         $this->assertEquals('PATCH', $execution['body']['requestMethod']);
         $this->assertEquals('/custom-path', $execution['body']['requestPath']);
-        $this->assertCount(0, $execution['body']['requestHeaders']);
+        $this->assertCount(1, $execution['body']['requestHeaders']);
+        $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
+        $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
 
         \sleep(120);
 
