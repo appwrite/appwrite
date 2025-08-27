@@ -7625,7 +7625,7 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/create-row.md"
+                            "demo": "tablesdb\/create-row.md"
                         }
                     ],
                     "auth": {
@@ -7867,7 +7867,7 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md"
                         }
                     ],
                     "auth": {
