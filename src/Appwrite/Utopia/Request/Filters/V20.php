@@ -135,7 +135,10 @@ class V20 extends Filter
         $relationshipKeys = [];
 
         foreach ($attributes as $attr) {
-            if (($attr['type'] ?? null) !== Database::VAR_RELATIONSHIP) {
+            if (
+                ($attr['type'] ?? null) !== Database::VAR_RELATIONSHIP ||
+                $attr['status'] !== 'available'
+            ) {
                 continue;
             }
 
