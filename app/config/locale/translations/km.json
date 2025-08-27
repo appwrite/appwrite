@@ -2,7 +2,7 @@
     "settings.inspire": "\"សិល្បៈនៃប្រាជ្ញាគឺជាសិល្បៈនៃការស្គាល់ពីអ្វីដែលត្រូវមើលរំលង។\"",
     "settings.locale": "km",
     "settings.direction": "ltr",
-    "emails.sender": "ក្រុម %s",
+    "emails.sender": "ក្រុម {{project}}",
     "emails.verification.subject": "",
     "emails.verification.hello": "",
     "emails.verification.body": "",

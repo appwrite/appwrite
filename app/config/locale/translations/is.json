@@ -2,7 +2,7 @@
     "settings.inspire": "\"Listin að vera vitur er listin að vita hvað á að líta framhjá.\"",
     "settings.locale": "is",
     "settings.direction": "ltr",
-    "emails.sender": "%s Teymi",
+    "emails.sender": "{{project}} Teymi",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",

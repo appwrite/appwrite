@@ -393,10 +393,11 @@ class Certificates extends Action
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
+            'domain' => $domain,
         ];
 
-        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-        $preview = \sprintf($locale->getText("emails.certificate.preview"), $domain);
+        $subject = $locale->getText("emails.certificate.subject");
+        $preview = $locale->getText("emails.certificate.preview");
 
         $queueForMails
             ->setSubject($subject)
