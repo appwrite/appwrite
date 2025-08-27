@@ -182,7 +182,7 @@ class V20 extends Filter
                     $visited
                 );
 
-                \array_push($relationshipKeys, ...$nestedKeys);
+                $relationshipKeys = \array_merge($relationshipKeys, $nestedKeys);
             }
         }
 
