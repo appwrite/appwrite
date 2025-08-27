@@ -38,7 +38,7 @@ class V20 extends Filter
 
         // Handle case where queries is an array but empty
         if (\is_array($content['queries'])) {
-            $content['queries'] = \array_filter($content['queries'], function($q) {
+            $content['queries'] = \array_filter($content['queries'], function ($q) {
                 if (\is_object($q) && empty((array)$q)) {
                     return false;
                 }
@@ -59,7 +59,7 @@ class V20 extends Filter
         }
 
         $selections = Query::groupByType($parsed)['selections'] ?? [];
-        
+
         // Check if we need to add wildcard + relationships
         // This happens when:
         // 1. No select queries exist, OR
@@ -123,7 +123,7 @@ class V20 extends Filter
         ) {
             return [];
         }
-        
+
         // Check if we've already visited this collection in the current path to prevent cycles
         if (in_array($collectionId, $visited)) {
             return [];
@@ -163,7 +163,7 @@ class V20 extends Filter
             $key = $attr['key'];
             $fullKey = $prefix ? $prefix . '.' . $key : $key;
             $relatedCollectionId = $attr['relatedCollection'] ?? null;
-            
+
             // Skip this relationship entirely if it points to an already visited collection
             if ($relatedCollectionId && in_array($relatedCollectionId, $visited)) {
                 continue;
