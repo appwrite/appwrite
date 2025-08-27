@@ -8,9 +8,11 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
+use Swoole\Http\Request as SwooleRequest;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -610,7 +612,7 @@ class Functions extends Action
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $executionModel = new Execution();
-        $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
+        $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()), new Request(new SwooleRequest()));
         $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
 
         $queueForEvents

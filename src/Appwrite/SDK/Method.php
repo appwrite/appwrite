@@ -3,7 +3,9 @@
 namespace Appwrite\SDK;
 
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Swoole\Http\Request as HttpRequest;
 use Swoole\Http\Response as HttpResponse;
 
 class Method
@@ -101,7 +103,8 @@ class Method
 
     protected function validateResponseModel(string|array $responseModel): void
     {
-        $response = new Response(new HttpResponse());
+        $request = new Request(new HttpRequest());
+        $response = new Response(new HttpResponse(), $request);
 
         if (!\is_array($responseModel)) {
             $responseModel = [$responseModel];

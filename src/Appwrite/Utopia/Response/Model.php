@@ -2,7 +2,9 @@
 
 namespace Appwrite\Utopia\Response;
 
+use Appwrite\Utopia\Request;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 
 abstract class Model
 {
@@ -44,10 +46,12 @@ abstract class Model
 
     /**
      * Filter Document Structure
+     * @param Document $document Document to apply filter on
+     * @param Request $request Relevant request object, useful for select query filtering
      *
      * @return Document
      */
-    public function filter(Document $document): Document
+    public function filter(Document $document, Request $request): Document
     {
         return $document;
     }
@@ -185,5 +189,45 @@ abstract class Model
     public function isPublic(): bool
     {
         return $this->public;
+    }
+
+    /**
+     * Apply Select Queries
+     *
+     * Helper method to respect request select queries,
+     * to prevent default rule values from being applied on not-selected attributes
+     *
+     * @param Document $document
+     * @param Request $request
+     * @return void
+     */
+    public function applySelectQueries(Document $document, Request $request): void
+    {
+        $queries = $request->getParam('queries', []);
+
+        $queries = Query::parseQueries($queries);
+        $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+
+        // No select queries means no filtering out
+        if (empty($selectQueries)) {
+            return;
+        }
+
+        $attributes = [];
+        foreach ($selectQueries as $query) {
+            foreach ($query->getValues() as $attribute) {
+                $attributes[] = $attribute;
+            }
+        }
+
+        foreach ($this->getRules() as $ruleName => $rule) {
+            if (\str_starts_with($ruleName, '$')) {
+                continue;
+            }
+
+            if (!\in_array($ruleName, $attributes)) {
+                $this->removeRule($ruleName);
+            }
+        }
     }
 }

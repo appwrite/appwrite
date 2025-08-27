@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 
@@ -80,7 +81,7 @@ class ColumnRelationship extends Column
      *
      * @return Document
      */
-    public function filter(Document $document): Document
+    public function filter(Document $document, Request $request): Document
     {
         $options = $document->getAttribute('options');
         if (!\is_null($options)) {

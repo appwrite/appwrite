@@ -504,7 +504,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
     $app = new App('UTC');
     $request = new Request($request);
-    $response = new Response(new SwooleResponse());
+    $response = new Response(new SwooleResponse(), $request);
 
     Console::info("Connection open (user: {$connection})");
 
@@ -625,7 +625,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
-        $response = new Response(new SwooleResponse());
+        $request = new Request(new SwooleRequest());
+        $response = new Response(new SwooleResponse(), $request);
         $projectId = $realtime->connections[$connection]['projectId'];
         $database = getConsoleDB();
 

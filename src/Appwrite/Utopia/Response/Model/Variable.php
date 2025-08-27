@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
@@ -69,7 +70,7 @@ class Variable extends Model
      * @param Document $document
      * @return Document
      */
-    public function filter(Document $document): Document
+    public function filter(Document $document, Request $request): Document
     {
         $secret = $document->getAttribute('secret');
         if ($secret === true) {

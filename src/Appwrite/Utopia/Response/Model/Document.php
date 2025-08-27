@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document as DatabaseDocument;
 
@@ -78,7 +79,7 @@ class Document extends Any
             ]);
     }
 
-    public function filter(DatabaseDocument $document): DatabaseDocument
+    public function filter(DatabaseDocument $document, Request $request): DatabaseDocument
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
@@ -88,11 +89,11 @@ class Document extends Any
             if (\is_array($attribute)) {
                 foreach ($attribute as $subAttribute) {
                     if ($subAttribute instanceof DatabaseDocument) {
-                        $this->filter($subAttribute);
+                        $this->filter($subAttribute, $request);
                     }
                 }
             } elseif ($attribute instanceof DatabaseDocument) {
-                $this->filter($attribute);
+                $this->filter($attribute, $request);
             }
         }
 
