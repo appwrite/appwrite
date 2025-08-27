@@ -30,7 +30,7 @@ class Delete extends CollectionDelete
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId')
             ->desc('Delete table')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'tables.write')
+            ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].delete')
             ->label('audits.event', 'table.delete')

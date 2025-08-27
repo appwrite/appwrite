@@ -33,7 +33,7 @@ class V20 extends Filter
     protected function manageSelectQueries(array $content): array
     {
         $hasWildcard = false;
-        if (! isset($content['queries'])) {
+        if (!isset($content['queries'])) {
             $hasWildcard = true;
             // only query, make it json encoded!
             $content['queries'] = [Query::select(['*'])->toString()];
@@ -48,7 +48,11 @@ class V20 extends Filter
 
         $selections = Query::groupByType($parsed)['selections'] ?? [];
 
-        if (! $hasWildcard) {
+        // If there are no select queries at all, add wildcard
+        if (empty($selections)) {
+            $hasWildcard = true;
+            $parsed[] = Query::select(['*']);
+        } elseif (!$hasWildcard) {
             // check if any select includes a wildcard as we added one above
             foreach ($selections as $select) {
                 if (\in_array('*', $select->getValues(), true)) {
@@ -92,36 +96,74 @@ class V20 extends Filter
     /**
      * Returns all relationship attribute keys in `key.*` format for use with `Query::select`.
      */
-    private function getRelatedCollectionKeys(): array
-    {
-        $dbForProject = $this->getDbForProject();
+    private function getRelatedCollectionKeys(
+        ?string $databaseId = null,
+        ?string $collectionId = null,
+        ?string $prefix = null,
+        int $depth = 1,
+    ): array {
+        $databaseId ??= $this->getParamValue('databaseId');
+        $collectionId ??= $this->getParamValue('collectionId');
 
+        if (
+            empty($databaseId) ||
+            empty($collectionId) ||
+            $depth > Database::RELATION_MAX_DEPTH
+        ) {
+            return [];
+        }
+
+        $dbForProject = $this->getDbForProject();
         if ($dbForProject === null) {
             return [];
         }
 
-        $databaseId = $this->getParamValue('databaseId');
-        $collectionId = $this->getParamValue('collectionId');
-
-        if (empty($databaseId) || empty($collectionId)) {
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
             return [];
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        $collection = $dbForProject->getDocument(
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument(
             'database_' . $database->getSequence(),
             $collectionId
-        );
+        ));
+        if ($collection->isEmpty()) {
+            return [];
+        }
 
         $attributes = $collection->getAttribute('attributes', []);
+        $relationshipKeys = [];
 
-        return \array_values(\array_map(
-            fn ($attr) => $attr['key'] . '.*',
-            \array_filter(
-                $attributes,
-                fn ($attr) => ($attr['type'] ?? null) === Database::VAR_RELATIONSHIP
-            )
-        ));
+        foreach ($attributes as $attr) {
+            if (
+                ($attr['type'] ?? null) !== Database::VAR_RELATIONSHIP ||
+                $attr['status'] !== 'available'
+            ) {
+                continue;
+            }
+
+            $key = $attr['key'];
+            $fullKey = $prefix ? $prefix . '.' . $key : $key;
+
+            // Add the wildcard select for this relationship
+            $relationshipKeys[] = $fullKey . '.*';
+
+            // Get the related collection for nested relationships
+            $relatedCollectionId = $attr['relatedCollection'] ?? null;
+
+            if ($relatedCollectionId) {
+                // Recursively get nested relationship keys
+                $nestedKeys = $this->getRelatedCollectionKeys(
+                    $databaseId,
+                    $relatedCollectionId,
+                    $fullKey,
+                    $depth + 1,
+                );
+
+                $relationshipKeys = \array_merge($relationshipKeys, $nestedKeys);
+            }
+        }
+
+        return \array_values(\array_unique($relationshipKeys));
     }
 }

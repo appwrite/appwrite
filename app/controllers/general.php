@@ -28,7 +28,6 @@ use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
-use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -881,7 +880,7 @@ App::init()
             }
             if (version_compare($requestFormat, '1.8.0', '<')) {
                 $dbForProject = $getProjectDB($project);
-                $request->addFilter(new RequestV20($dbForProject, $request->getParams()));
+                $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
             }
         }
 
@@ -1020,9 +1019,6 @@ App::init()
             }
             if (version_compare($responseFormat, '1.7.0', '<')) {
                 $response->addFilter(new ResponseV19());
-            }
-            if (version_compare($responseFormat, '1.8.0', '<')) {
-                $response->addFilter(new ResponseV20());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";

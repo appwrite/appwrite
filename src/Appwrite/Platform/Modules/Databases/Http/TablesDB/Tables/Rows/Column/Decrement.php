@@ -33,7 +33,7 @@ class Decrement extends DecrementDocumentAttribute
             ->desc('Decrement row column')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].update')
-            ->label('scope', 'rows.write')
+            ->label('scope', ['rows.write', 'documents.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'rows.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
