@@ -32446,7 +32446,7 @@
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "listTables",
-                    "group": null,
+                    "group": "tables",
                     "weight": 382,
                     "cookies": false,
                     "type": "",
@@ -32532,7 +32532,7 @@
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "createTable",
-                    "group": null,
+                    "group": "tables",
                     "weight": 378,
                     "cookies": false,
                     "type": "",
@@ -32639,7 +32639,7 @@
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "getTable",
-                    "group": null,
+                    "group": "tables",
                     "weight": 379,
                     "cookies": false,
                     "type": "",
@@ -32711,7 +32711,7 @@
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "updateTable",
-                    "group": null,
+                    "group": "tables",
                     "weight": 380,
                     "cookies": false,
                     "type": "",
@@ -32813,7 +32813,7 @@
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteTable",
-                    "group": null,
+                    "group": "tables",
                     "weight": 381,
                     "cookies": false,
                     "type": "",
