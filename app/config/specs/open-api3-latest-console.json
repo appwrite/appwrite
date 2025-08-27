@@ -9360,7 +9360,7 @@
                 ]
             },
             "put": {
-                "summary": "Create or update a document",
+                "summary": "Upsert a document",
                 "operationId": "databasesUpsertDocument",
                 "tags": [
                     "databases"
@@ -12791,7 +12791,7 @@
                                     },
                                     "method": {
                                         "type": "string",
-                                        "description": "HTTP method of execution. Default value is GET.",
+                                        "description": "HTTP method of execution. Default value is POST.",
                                         "x-example": "GET",
                                         "enum": [
                                             "GET",
@@ -36594,7 +36594,7 @@
                 ]
             },
             "put": {
-                "summary": "Create or update a row",
+                "summary": "Upsert a row",
                 "operationId": "tablesDBUpsertRow",
                 "tags": [
                     "tablesDB"
