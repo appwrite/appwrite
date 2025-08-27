@@ -925,6 +925,19 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
+        /** Test create execution with HEAD method */
+        $execution = $this->createExecution($data['functionId'], [
+            'async' => 'false',
+            'method' => 'HEAD',
+        ]);
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertIsArray($execution['body']['responseHeaders']);
+        $this->assertEmpty($execution['body']['responseBody']); // For head requests, response body is empty
+
+        /** Test create execution with 400 status code */
         $execution = $this->createExecution($data['functionId'], [
             'async' => 'false',
             'path' => '/?code=400'
