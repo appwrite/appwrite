@@ -546,6 +546,8 @@ class Functions extends Action
 
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
+            $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {

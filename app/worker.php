@@ -275,10 +275,6 @@ Server::setResource('consumerDatabases', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);
 
-Server::setResource('consumerFunctions', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-
 Server::setResource('consumerMigrations', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);

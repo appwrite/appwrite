@@ -61,6 +61,12 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
+/**
+ * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
+ *
+ * Accounts can be created in many ways beyond `createAccount`
+ * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
+ */
 $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
     // Only trigger events for user creation with the database listener.
     if ($document->getCollection() !== 'users') {
@@ -373,9 +379,9 @@ App::init()
         }
 
         // Do now allow access if scope is not allowed
-        $scope = $route->getLabel('scope', 'none');
-        if (!\in_array($scope, $scopes)) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
+        $allowed = (array)$route->getLabel('scope', 'none');
+        if (empty(\array_intersect($allowed, $scopes))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
 
         // Do not allow access to blocked accounts
@@ -807,8 +813,8 @@ App::shutdown()
             Console::info("Triggering database event: \n" .  \json_encode([
                 'projectId' => $project->getId(),
                 'databaseId' => $queueForDatabase->getDatabase()?->getId(),
-                'collectionId' => $queueForDatabase->getCollection()?->getId(),
-                'documentId' => $queueForDatabase->getDocument()?->getId(),
+                'tableId' => $queueForDatabase->getTable()?->getId() ?? $queueForDatabase->getCollection()?->getId(),
+                'rowId' => $queueForDatabase->getRow()?->getId() ?? $queueForDatabase->getDocument()?->getId(),
             ]));
             $queueForDatabase->trigger();
         }

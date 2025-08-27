@@ -246,8 +246,11 @@ class Migrations extends Action
                 'functions.write',
                 'databases.read',
                 'collections.read',
+                'tables.read',
                 'documents.read',
                 'documents.write',
+                'rows.read',
+                'rows.write',
                 'tokens.read',
                 'tokens.write',
             ]

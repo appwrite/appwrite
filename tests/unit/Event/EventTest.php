@@ -93,57 +93,57 @@ class EventTest extends TestCase
         $this->assertContains('users.*.update', $event);
         $this->assertContains('users.*', $event);
 
-        $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create', [
-            'collectionId' => 'chapters',
-            'documentId' => 'prolog',
+        $event = Event::generateEvents('tables.[tableId].rows.[rowId].create', [
+            'tableId' => 'chapters',
+            'rowId' => 'prolog',
         ]);
         $this->assertCount(10, $event);
 
-        $this->assertContains('collections.chapters.documents.prolog.create', $event);
-        $this->assertContains('collections.chapters.documents.prolog', $event);
-        $this->assertContains('collections.chapters.documents.*.create', $event);
-        $this->assertContains('collections.chapters.documents.*', $event);
-        $this->assertContains('collections.chapters', $event);
-        $this->assertContains('collections.*.documents.prolog.create', $event);
-        $this->assertContains('collections.*.documents.prolog', $event);
-        $this->assertContains('collections.*.documents.*.create', $event);
-        $this->assertContains('collections.*.documents.*', $event);
-        $this->assertContains('collections.*', $event);
+        $this->assertContains('tables.chapters.rows.prolog.create', $event);
+        $this->assertContains('tables.chapters.rows.prolog', $event);
+        $this->assertContains('tables.chapters.rows.*.create', $event);
+        $this->assertContains('tables.chapters.rows.*', $event);
+        $this->assertContains('tables.chapters', $event);
+        $this->assertContains('tables.*.rows.prolog.create', $event);
+        $this->assertContains('tables.*.rows.prolog', $event);
+        $this->assertContains('tables.*.rows.*.create', $event);
+        $this->assertContains('tables.*.rows.*', $event);
+        $this->assertContains('tables.*', $event);
 
-        $event = Event::generateEvents('databases.[databaseId].collections.[collectionId].documents.[documentId].create', [
+        $event = Event::generateEvents('databases.[databaseId].tables.[tableId].rows.[rowId].create', [
             'databaseId' => 'chaptersDB',
-            'collectionId' => 'chapters',
-            'documentId' => 'prolog',
+            'tableId' => 'chapters',
+            'rowId' => 'prolog',
         ]);
 
         $this->assertCount(22, $event);
-        $this->assertContains('databases.chaptersDB.collections.chapters.documents.prolog.create', $event);
-        $this->assertContains('databases.chaptersDB.collections.chapters.documents.prolog', $event);
-        $this->assertContains('databases.chaptersDB.collections.chapters.documents.*.create', $event);
-        $this->assertContains('databases.chaptersDB.collections.chapters.documents.*', $event);
-        $this->assertContains('databases.chaptersDB.collections.chapters', $event);
-        $this->assertContains('databases.chaptersDB.collections.*.documents.prolog.create', $event);
-        $this->assertContains('databases.chaptersDB.collections.*.documents.prolog', $event);
-        $this->assertContains('databases.chaptersDB.collections.*', $event);
+        $this->assertContains('databases.chaptersDB.tables.chapters.rows.prolog.create', $event);
+        $this->assertContains('databases.chaptersDB.tables.chapters.rows.prolog', $event);
+        $this->assertContains('databases.chaptersDB.tables.chapters.rows.*.create', $event);
+        $this->assertContains('databases.chaptersDB.tables.chapters.rows.*', $event);
+        $this->assertContains('databases.chaptersDB.tables.chapters', $event);
+        $this->assertContains('databases.chaptersDB.tables.*.rows.prolog.create', $event);
+        $this->assertContains('databases.chaptersDB.tables.*.rows.prolog', $event);
+        $this->assertContains('databases.chaptersDB.tables.*', $event);
         $this->assertContains('databases.chaptersDB', $event);
-        $this->assertContains('databases.*.collections.chapters.documents.prolog.create', $event);
-        $this->assertContains('databases.*.collections.chapters.documents.prolog', $event);
-        $this->assertContains('databases.*.collections.chapters', $event);
-        $this->assertContains('databases.*.collections.*.documents.*.create', $event);
-        $this->assertContains('databases.*.collections.*.documents.*', $event);
-        $this->assertContains('databases.*.collections.*', $event);
+        $this->assertContains('databases.*.tables.chapters.rows.prolog.create', $event);
+        $this->assertContains('databases.*.tables.chapters.rows.prolog', $event);
+        $this->assertContains('databases.*.tables.chapters', $event);
+        $this->assertContains('databases.*.tables.*.rows.*.create', $event);
+        $this->assertContains('databases.*.tables.*.rows.*', $event);
+        $this->assertContains('databases.*.tables.*', $event);
         $this->assertContains('databases.*', $event);
-        $this->assertContains('databases.*.collections.*.documents.prolog', $event);
-        $this->assertContains('databases.*.collections.*.documents.prolog.create', $event);
-        $this->assertContains('databases.*.collections.chapters.documents.*', $event);
-        $this->assertContains('databases.*.collections.chapters.documents.*.create', $event);
-        $this->assertContains('databases.chaptersDB.collections.*.documents.*', $event);
-        $this->assertContains('databases.chaptersDB.collections.*.documents.*.create', $event);
+        $this->assertContains('databases.*.tables.*.rows.prolog', $event);
+        $this->assertContains('databases.*.tables.*.rows.prolog.create', $event);
+        $this->assertContains('databases.*.tables.chapters.rows.*', $event);
+        $this->assertContains('databases.*.tables.chapters.rows.*.create', $event);
+        $this->assertContains('databases.chaptersDB.tables.*.rows.*', $event);
+        $this->assertContains('databases.chaptersDB.tables.*.rows.*.create', $event);
 
 
         try {
-            $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create', [
-                'collectionId' => 'chapters'
+            $event = Event::generateEvents('tables.[tableId].rows.[rowId].create', [
+                'tableId' => 'chapters'
             ]);
             $this->fail();
         } catch (\Throwable $th) {
@@ -151,7 +151,7 @@ class EventTest extends TestCase
         }
 
         try {
-            $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create');
+            $event = Event::generateEvents('tables.[tableId].rows.[rowId].create');
             $this->fail();
         } catch (\Throwable $th) {
             $this->assertInstanceOf(InvalidArgumentException::class, $th, 'An invalid exception was thrown');

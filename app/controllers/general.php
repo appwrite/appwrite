@@ -22,6 +22,7 @@ use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
+use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -610,6 +611,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 }
             }
 
+            if ($deployment->getAttribute('resourceType') === 'functions') {
+                $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+            } elseif ($deployment->getAttribute('resourceType') === 'sites') {
+                $executionResponse['headers']['x-appwrite-log-id'] = $execution->getId();
+            }
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
@@ -624,8 +631,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxLogLength - $warningLength;
-                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+                $maxContentLength = max(0, $maxLogLength - $warningLength);
+                $logs = $warningMessage . ($maxContentLength > 0 ? \substr($logs, -$maxContentLength) : '');
             }
 
             // Truncate errors if they exceed the limit
@@ -635,10 +642,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxErrorLength - $warningLength;
-                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+                $maxContentLength = max(0, $maxErrorLength - $warningLength);
+                $errors = $warningMessage . ($maxContentLength > 0 ? \substr($errors, -$maxContentLength) : '');
             }
-
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
@@ -874,6 +880,10 @@ App::init()
             if (version_compare($requestFormat, '1.7.0', '<')) {
                 $request->addFilter(new RequestV19());
             }
+            if (version_compare($requestFormat, '1.8.0', '<')) {
+                $dbForProject = $getProjectDB($project);
+                $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
+            }
         }
 
         $domain = $request->getHostname();
@@ -993,6 +1003,8 @@ App::init()
                 )
         );
 
+        $warnings = [];
+
         /*
         * Response format
         */
@@ -1011,7 +1023,7 @@ App::init()
                 $response->addFilter(new ResponseV19());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
-                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+                $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";
             }
         }
 
@@ -1046,6 +1058,30 @@ App::init()
 
         if (!$devKey->isEmpty()) {
             $response->addHeader('Access-Control-Allow-Origin', '*');
+        }
+
+        /**
+         * Deprecation Warning
+         */
+        /** @var \Appwrite\SDK\Method $sdk */
+        $sdk = $route->getLabel('sdk', false);
+        $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
+        $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
+        if (!empty($sdkItems) && count($sdkItems) > 0) {
+            $allDeprecated = true;
+            foreach ($sdkItems as $sdkItem) {
+                if (!$sdkItem->isDeprecated()) {
+                    $allDeprecated = false;
+                    break;
+                }
+            }
+            if ($allDeprecated) {
+                $warnings[] = $deprecationWarning;
+            }
+        }
+
+        if (!empty($warnings)) {
+            $response->addHeader('X-Appwrite-Warning', implode(';', $warnings));
         }
 
         /*
@@ -1284,7 +1320,7 @@ App::error()
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
-                /** @var Appwrite\SDK\Method $sdk */
+                /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
             }
 

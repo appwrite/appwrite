@@ -892,6 +892,19 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
+
+        $this->assertNotEmpty($execution['body']['responseHeaders']);
+
+        $executionIdHeader = null;
+        foreach ($execution['body']['responseHeaders'] as $header) {
+            if ($header['name'] === 'x-appwrite-execution-id') {
+                $executionIdHeader = $header['value'];
+                break;
+            }
+        }
+        $this->assertNotEmpty($executionIdHeader);
+        $this->assertEquals($execution['body']['$id'], $executionIdHeader);
+
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
@@ -1541,7 +1554,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertNotEmpty($lastExecution['$id']);
             $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
             $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
-        }, 10000, 500);
+        }, 20_000, 500);
 
         $this->cleanupFunction($functionId);
 
@@ -1684,6 +1697,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($cookie, $response['body']);
+
+        $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
+        $this->assertNotEmpty($response['headers']['x-appwrite-execution-id']);
 
         // Async execution document creation
         $this->assertEventually(function () use ($functionId) {

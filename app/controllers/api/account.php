@@ -25,6 +25,7 @@ use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
@@ -2418,7 +2419,10 @@ App::put('/v1/account/sessions/magic-url')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -2456,7 +2460,10 @@ App::put('/v1/account/sessions/phone')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -2937,6 +2944,18 @@ App::patch('/v1/account/password')
             ->setAttribute('passwordUpdate', DateTime::now())
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+
+        $sessions = $user->getAttribute('sessions', []);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate && !empty($current)) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                if ($session->getId() !== $current) {
+                    $dbForProject->deleteDocument('sessions', $session->getId());
+                }
+            }
+        }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -3996,20 +4015,40 @@ App::get('/v1/account/mfa/factors')
     ->desc('List factors')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'listMfaFactors',
-        description: '/docs/references/account/list-mfa-factors.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_FACTORS,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'listMfaFactors',
+            description: '/docs/references/account/list-mfa-factors.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_FACTORS,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.listMFAFactors',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'listMFAFactors',
+            description: '/docs/references/account/list-mfa-factors.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_FACTORS,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
@@ -4037,20 +4076,40 @@ App::post('/v1/account/mfa/authenticators/:type')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'createMfaAuthenticator',
-        description: '/docs/references/account/create-mfa-authenticator.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_TYPE,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMfaAuthenticator',
+            description: '/docs/references/account/create-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_TYPE,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.createMFAAuthenticator',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMFAAuthenticator',
+            description: '/docs/references/account/create-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_TYPE,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -4114,20 +4173,40 @@ App::put('/v1/account/mfa/authenticators/:type')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'updateMfaAuthenticator',
-        description: '/docs/references/account/update-mfa-authenticator.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USER,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMfaAuthenticator',
+            description: '/docs/references/account/update-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_USER,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.updateMFAAuthenticator',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMFAAuthenticator',
+            description: '/docs/references/account/update-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_USER,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
@@ -4184,20 +4263,40 @@ App::post('/v1/account/mfa/recovery-codes')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'createMfaRecoveryCodes',
-        description: '/docs/references/account/create-mfa-recovery-codes.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMfaRecoveryCodes',
+            description: '/docs/references/account/create-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.createMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMFARecoveryCodes',
+            description: '/docs/references/account/create-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -4231,20 +4330,40 @@ App::patch('/v1/account/mfa/recovery-codes')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'updateMfaRecoveryCodes',
-        description: '/docs/references/account/update-mfa-recovery-codes.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMfaRecoveryCodes',
+            description: '/docs/references/account/update-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.updateMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMFARecoveryCodes',
+            description: '/docs/references/account/update-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('dbForProject')
     ->inject('response')
     ->inject('user')
@@ -4273,20 +4392,40 @@ App::get('/v1/account/mfa/recovery-codes')
     ->desc('List MFA recovery codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'getMfaRecoveryCodes',
-        description: '/docs/references/account/get-mfa-recovery-codes.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'getMfaRecoveryCodes',
+            description: '/docs/references/account/get-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.getMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'getMFARecoveryCodes',
+            description: '/docs/references/account/get-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
@@ -4312,20 +4451,40 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'deleteMfaAuthenticator',
-        description: '/docs/references/account/delete-mfa-authenticator.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::NONE
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'deleteMfaAuthenticator',
+            description: '/docs/references/account/delete-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            contentType: ContentType::NONE,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.deleteMFAAuthenticator',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'deleteMFAAuthenticator',
+            description: '/docs/references/account/delete-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            contentType: ContentType::NONE
+        )
+    ])
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
     ->inject('user')
@@ -4358,20 +4517,40 @@ App::post('/v1/account/mfa/challenge')
     ->label('audits.event', 'challenge.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'createMfaChallenge',
-        description: '/docs/references/account/create-mfa-challenge.md',
-        auth: [],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_MFA_CHALLENGE,
-            )
-        ],
-        contentType: ContentType::JSON,
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMfaChallenge',
+            description: '/docs/references/account/create-mfa-challenge.md',
+            auth: [],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_CHALLENGE,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.createMFAChallenge',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMFAChallenge',
+            description: '/docs/references/account/create-mfa-challenge.md',
+            auth: [],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_CHALLENGE,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
@@ -4580,20 +4759,40 @@ App::put('/v1/account/mfa/challenge')
     ->label('audits.event', 'challenges.update')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'updateMfaChallenge',
-        description: '/docs/references/account/update-mfa-challenge.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SESSION,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMfaChallenge',
+            description: '/docs/references/account/update-mfa-challenge.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SESSION,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.updateMFAChallenge',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMFAChallenge',
+            description: '/docs/references/account/update-mfa-challenge.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SESSION,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
     ->param('challengeId', '', new Text(256), 'ID of the challenge.')

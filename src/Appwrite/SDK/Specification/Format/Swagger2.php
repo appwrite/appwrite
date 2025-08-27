@@ -102,6 +102,7 @@ class Swagger2 extends Format
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
+                /** @var Method $sdk */
                 $sdk = $sdk[0];
             }
 
@@ -110,11 +111,7 @@ class Swagger2 extends Format
                 $consumes = [$sdk->getRequestType()->value];
             }
 
-            $method = $sdk->getMethodName() ?? \uniqid();
-
-            if (!empty($method) && is_array($method)) {
-                $method = array_keys($method)[0];
-            }
+            $methodName = $sdk->getMethodName() ?? \uniqid();
 
             $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
@@ -149,29 +146,36 @@ class Swagger2 extends Format
 
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $namespace . ucfirst($method),
+                'operationId' => $namespace . ucfirst($methodName),
                 'consumes' => [],
                 'produces' => [],
                 'tags' => [$namespace],
                 'description' => $descContents,
                 'responses' => [],
+                'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $method,
+                    'method' => $methodName,
                     'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
-                    'deprecated' => $sdk->isDeprecated(),
-                    'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
+                    'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $sdk->isPackaging()
+                    'packaging' => $sdk->isPackaging(),
                 ],
             ];
+
+            if ($sdk->getDeprecated()) {
+                $temp['x-appwrite']['deprecated'] = [
+                    'since' => $sdk->getDeprecated()->getSince(),
+                    'replaceWith' => $sdk->getDeprecated()->getReplaceWith(),
+                ];
+            }
 
             if ($produces) {
                 $temp['produces'][] = $produces;
@@ -179,11 +183,11 @@ class Swagger2 extends Format
 
             if (!empty($additionalMethods)) {
                 $temp['x-appwrite']['methods'] = [];
-                foreach ($additionalMethods as $method) {
-                    /** @var Method $method */
-                    $desc = $method->getDescriptionFilePath();
+                foreach ($additionalMethods as $methodObj) {
+                    /** @var Method $methodObj */
+                    $desc = $methodObj->getDescriptionFilePath();
 
-                    $methodSecurities = $method->getAuth();
+                    $methodSecurities = $methodObj->getAuth();
                     $methodSdkPlatforms = [];
                     foreach ($methodSecurities as $value) {
                         switch ($value) {
@@ -210,7 +214,7 @@ class Swagger2 extends Format
                     }
 
                     $methodSecurities = ['Project' => []];
-                    foreach ($method->getAuth() as $security) {
+                    foreach ($methodObj->getAuth() as $security) {
                         /** @var AuthType $security */
                         if (\array_key_exists($security->value, $this->keys)) {
                             $methodSecurities[$security->value] = [];
@@ -218,23 +222,44 @@ class Swagger2 extends Format
                     }
 
                     $additionalMethod = [
-                        'name' => $method->getMethodName(),
+                        'name' => $methodObj->getMethodName(),
+                        'namespace' => $methodObj->getNamespace(),
+                        'desc' => $methodObj->getDesc() ?? '',
                         'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                     ];
 
-                    foreach ($method->getParameters() as $parameter) {
-                        $additionalMethod['parameters'][] = $parameter->getName();
+                    // add deprecation only if method has it!
+                    if ($methodObj->getDeprecated()) {
+                        $additionalMethod['deprecated'] = [
+                            'since' => $methodObj->getDeprecated()->getSince(),
+                            'replaceWith' => $methodObj->getDeprecated()->getReplaceWith(),
+                        ];
+                    }
 
-                        if (!$parameter->getOptional()) {
-                            $additionalMethod['required'][] = $parameter->getName();
+                    // If additional method has no parameters, inherit from route
+                    if (empty($methodObj->getParameters())) {
+                        foreach ($route->getParams() as $name => $param) {
+                            $additionalMethod['parameters'][] = $name;
+                            if (!$param['optional']) {
+                                $additionalMethod['required'][] = $name;
+                            }
+                        }
+                    } else {
+                        // Use method's own parameters
+                        foreach ($methodObj->getParameters() as $parameter) {
+                            $additionalMethod['parameters'][] = $parameter->getName();
+                            if (!$parameter->getOptional()) {
+                                $additionalMethod['required'][] = $parameter->getName();
+                            }
                         }
                     }
 
-                    foreach ($method->getResponses() as $response) {
+                    foreach ($methodObj->getResponses() as $response) {
                         /** @var Response $response */
                         if (\is_array($response->getModel())) {
                             $additionalMethod['responses'][] = [
@@ -242,10 +267,16 @@ class Swagger2 extends Format
                                 'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
                             ];
                         } else {
-                            $additionalMethod['responses'][] = [
+                            $responseData = [
                                 'code' => $response->getCode(),
-                                'model' => '#/definitions/' . $response->getModel()
                             ];
+
+                            // lets not assume stuff here!
+                            if ($response->getCode() !== 204) {
+                                $responseData['model'] = '#/definitions/' . $response->getModel();
+                            }
+
+                            $additionalMethod['responses'][] = $responseData;
                         }
                     }
 
@@ -318,11 +349,10 @@ class Swagger2 extends Format
                 }
             }
 
-            if (!empty($scope)) { //  && 'public' != $scope
+            if (!empty($scope)) {
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
-                    /** @var AuthType $security */
                     if (\array_key_exists($security->value, $this->keys)) {
                         $securities[$security->value] = [];
                     }
@@ -451,6 +481,8 @@ class Swagger2 extends Format
                     case 'Utopia\Database\Validator\Queries':
                     case 'Utopia\Database\Validator\Queries\Document':
                     case 'Utopia\Database\Validator\Queries\Documents':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
                         $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [
@@ -506,10 +538,10 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
 
-                        //Iterate the blackList. If it matches with the current one, then it is blackListed
+                        // Iterate the blackList. If it matches with the current one, then it is blackListed
                         $allowed = true;
                         foreach ($this->enumBlacklist as $blacklist) {
-                            if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $method && $blacklist['parameter'] == $name) {
+                            if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
                                 $allowed = false;
                                 break;
                             }
@@ -517,8 +549,8 @@ class Swagger2 extends Format
 
                         if ($allowed && $validator->getType() === 'string') {
                             $node['enum'] = $validator->getList();
-                            $node['x-enum-name'] = $this->getEnumName($namespace, $method, $name);
-                            $node['x-enum-keys'] = $this->getEnumKeys($namespace, $method, $name);
+                            $node['x-enum-name'] = $this->getEnumName($namespace, $methodName, $name);
+                            $node['x-enum-keys'] = $this->getEnumKeys($namespace, $methodName, $name);
                         }
 
                         if ($validator->getType() === 'integer') {

@@ -1,0 +1,1 @@
+appwrite storage get-usage

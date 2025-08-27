@@ -354,6 +354,7 @@ App::get('/v1/project/usage')
             'executionsMbSecondsTotal' => $total[METRIC_EXECUTIONS_MB_SECONDS],
             'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
+            'rowsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
             'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
             'usersTotal' => $total[METRIC_USERS],
