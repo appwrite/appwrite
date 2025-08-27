@@ -214,7 +214,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'description',
-            'size' => 512,
+            'size' => 500,
             'required' => false,
             'default' => '',
         ]);
@@ -225,7 +225,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'tagline',
-            'size' => 512,
+            'size' => 600,
             'required' => false,
             'default' => '',
         ]);
@@ -295,6 +295,20 @@ trait DatabasesBase
             'max' => 99,
         ]);
 
+        //Since mongodb does not allow multiple indexes on the same field, we need to create a second index.
+        $integers2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'integers2',
+            'required' => false,
+            'array' => true,
+            'min' => 10,
+            'max' => 99,
+        ]);
+
+
         $this->assertEquals(202, $title['headers']['status-code']);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
@@ -304,14 +318,14 @@ trait DatabasesBase
         $this->assertEquals(202, $description['headers']['status-code']);
         $this->assertEquals($description['body']['key'], 'description');
         $this->assertEquals($description['body']['type'], 'string');
-        $this->assertEquals($description['body']['size'], 512);
+        $this->assertEquals($description['body']['size'], 500);
         $this->assertEquals($description['body']['required'], false);
         $this->assertEquals($description['body']['default'], '');
 
         $this->assertEquals(202, $tagline['headers']['status-code']);
         $this->assertEquals($tagline['body']['key'], 'tagline');
         $this->assertEquals($tagline['body']['type'], 'string');
-        $this->assertEquals($tagline['body']['size'], 512);
+        $this->assertEquals($tagline['body']['size'], 600); // to match the index max length in mongo also.
         $this->assertEquals($tagline['body']['required'], false);
         $this->assertEquals($tagline['body']['default'], '');
 
@@ -352,6 +366,12 @@ trait DatabasesBase
         $this->assertEquals($integers['body']['required'], false);
         $this->assertEquals($integers['body']['array'], true);
 
+        $this->assertEquals(202, $integers2['headers']['status-code']);
+        $this->assertEquals($integers2['body']['key'], 'integers2');
+        $this->assertEquals($integers2['body']['type'], 'integer');
+        $this->assertArrayNotHasKey('size', $integers2['body']);
+        $this->assertEquals($integers2['body']['required'], false);
+        $this->assertEquals($integers2['body']['array'], true);
         // wait for database worker to create attributes
         sleep(2);
 
@@ -362,7 +382,7 @@ trait DatabasesBase
         ]));
 
         $this->assertIsArray($movies['body']['columns']);
-        $this->assertCount(9, $movies['body']['columns']);
+        $this->assertCount(10, $movies['body']['columns']);
         $this->assertEquals($movies['body']['columns'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['columns'][1]['key'], $description['body']['key']);
         $this->assertEquals($movies['body']['columns'][2]['key'], $tagline['body']['key']);
@@ -372,6 +392,7 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['columns'][6]['key'], $datetime['body']['key']);
         $this->assertEquals($movies['body']['columns'][7]['key'], $relationship['body']['key']);
         $this->assertEquals($movies['body']['columns'][8]['key'], $integers['body']['key']);
+        $this->assertEquals($movies['body']['columns'][9]['key'], $integers2['body']['key']);
 
         return $data;
     }
@@ -1395,7 +1416,7 @@ trait DatabasesBase
         ]), [
             'key' => 'integers-size',
             'type' => 'key',
-            'columns' => ['integers'], // array column
+            'columns' => ['integers2'], // array column
         ]);
 
         $this->assertEquals(202, $index2['headers']['status-code']);
@@ -1468,7 +1489,8 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
 
-        // Test case for lengths exceeding total of 768
+        // Test case for lengths exceeding total of 768(or 1024 in mongodb)
+        $maxLength = $this->isMongoDB() ? 1024 : 768;
         $create = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1477,7 +1499,7 @@ trait DatabasesBase
             'key' => 'lengthTooLargeIndex',
             'type' => 'key',
             'columns' => ['title','description','tagline','actors'],
-            'lengths' => [256,256,256,20]
+            'lengths' => [$maxLength,$maxLength,$maxLength,20]
         ]);
 
         $this->assertEquals(400, $create['headers']['status-code']);
