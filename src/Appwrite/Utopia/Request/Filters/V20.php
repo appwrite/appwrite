@@ -101,8 +101,7 @@ class V20 extends Filter
         ?string $collectionId = null,
         ?string $prefix = null,
         int $depth = 1,
-    ): array
-    {
+    ): array {
         $databaseId ??= $this->getParamValue('databaseId');
         $collectionId ??= $this->getParamValue('collectionId');
 
@@ -142,13 +141,13 @@ class V20 extends Filter
 
             $key = $attr['key'];
             $fullKey = $prefix ? $prefix . '.' . $key : $key;
-            
+
             // Add the wildcard select for this relationship
             $relationshipKeys[] = $fullKey . '.*';
 
             // Get the related collection for nested relationships
             $relatedCollectionId = $attr['relatedCollection'] ?? null;
-            
+
             if ($relatedCollectionId) {
                 // Recursively get nested relationship keys
                 $nestedKeys = $this->getRelatedCollectionKeys(
@@ -157,7 +156,7 @@ class V20 extends Filter
                     $fullKey,
                     $depth + 1,
                 );
-                
+
                 $relationshipKeys = \array_merge($relationshipKeys, $nestedKeys);
             }
         }
