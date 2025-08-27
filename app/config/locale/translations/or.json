@@ -23,7 +23,7 @@
     "emails.recovery.signature": "{{project}} ଦଳ",
     "emails.invitation.subject": "{{team}} ରେ {{project}} ଦଳକୁ ନିମନ୍ତ୍ରଣ |",
     "emails.invitation.hello": "ନମସ୍କାର,",
-    "emails.invitation.body": "ଏହି ମେଲ୍ ଆପଣଙ୍କୁ ପଠାଯାଇଥିଲା କାରଣ {{owner}} ଆପଣଙ୍କୁ {{project} ରେ {{team}} ଦଳର ସଦସ୍ୟ ହେବାକୁ ଆମନ୍ତ୍ରଣ କରିବାକୁ ଚାହୁଁଥିଲେ |",
+    "emails.invitation.body": "ଏହି ମେଲ୍ ଆପଣଙ୍କୁ ପଠାଯାଇଥିଲା କାରଣ {{owner}} ଆପଣଙ୍କୁ {{project}} ରେ {{team}} ଦଳର ସଦସ୍ୟ ହେବାକୁ ଆମନ୍ତ୍ରଣ କରିବାକୁ ଚାହୁଁଥିଲେ |",
     "emails.invitation.footer": "ଯଦି ଆପଣ ଆଗ୍ରହୀ ନୁହଁନ୍ତି, ଆପଣ ଏହି ସନ୍ଦେଶକୁ ଅଣଦେଖା କରିପାରିବେ |",
     "emails.invitation.thanks": "ଧନ୍ୟବାଦ,",
     "emails.invitation.buttonText": "{{team}} ପାଇଁ ଆମନ୍ତ୍ରଣ ଗ୍ରହଣ କରନ୍ତୁ",
