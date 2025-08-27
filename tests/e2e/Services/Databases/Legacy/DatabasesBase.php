@@ -6453,13 +6453,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'required' => true,
+            'required' => false,
             'default' => json_encode([[0, 0], [1, 1]]),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(true, $response['body']['required']);
-        $this->assertEquals('[[0, 0], [1, 1]]', $response['body']['default']);
+        $this->assertEquals(false, $response['body']['required']);
+        $this->assertEquals([[0, 0], [1, 1]], $response['body']['default']);
 
         // Test 3: Update polygon attribute - change key name
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/polygon/area', array_merge([
@@ -6482,11 +6482,11 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'default' => json_encode([0, 0]),
-            'required' => true
+            'required' => false
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('[0, 0]', $response['body']['default']);
+        $this->assertEquals([0, 0], $response['body']['default']);
 
         // Test 5: Verify attribute updates by creating a document
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
