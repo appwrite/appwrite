@@ -271,6 +271,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
+                $previewRuleId = $ruleId;
                 Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
@@ -359,6 +360,24 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     } catch (Duplicate $err) {
                         // Ignore, rule already exists; will be updated by builds worker
                     }
+                }
+            }
+
+            if ($resource->getCollection() === 'sites' && !empty($latestCommentId) && !empty($previewRuleId)) {
+                try {
+                    $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
+
+                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+                    $previewUrl = !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
+
+                    if (!empty($previewUrl)) {
+                        $comment = new Comment();
+                        $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
+                        $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
+                    }
+                } catch (\Throwable $th) {
+                    // Ignore, rule already exists; will be updated by builds worker
                 }
             }
 
