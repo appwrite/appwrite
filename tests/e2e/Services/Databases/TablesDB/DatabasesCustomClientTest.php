@@ -234,7 +234,6 @@ class DatabasesCustomClientTest extends Scope
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
-        $database = $this->client->call(Client::METHOD_POST, '/databases', [
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
