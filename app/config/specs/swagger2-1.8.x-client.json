@@ -7580,7 +7580,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server"
@@ -7661,7 +7664,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server"
@@ -7800,7 +7806,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server"
@@ -7889,7 +7898,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server"
@@ -8020,7 +8032,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server"
@@ -8116,7 +8131,10 @@
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server"
@@ -8195,7 +8213,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8303,7 +8324,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
