@@ -52,7 +52,7 @@ class V20 extends Filter
         if (empty($selections)) {
             $hasWildcard = true;
             $parsed[] = Query::select(['*']);
-        } else if (!$hasWildcard) {
+        } elseif (!$hasWildcard) {
             // check if any select includes a wildcard as we added one above
             foreach ($selections as $select) {
                 if (\in_array('*', $select->getValues(), true)) {
