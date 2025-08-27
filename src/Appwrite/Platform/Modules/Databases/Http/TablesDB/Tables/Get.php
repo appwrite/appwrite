@@ -34,7 +34,7 @@ class Get extends CollectionGet
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
-                group: null,
+                group: "tables",
                 name: self::getName(),
                 description: '/docs/references/tablesdb/get-table.md',
                 auth: [AuthType::KEY],
