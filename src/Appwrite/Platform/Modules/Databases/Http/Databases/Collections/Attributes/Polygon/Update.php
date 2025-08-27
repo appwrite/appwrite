@@ -14,8 +14,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
-use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -63,7 +63,7 @@ class Update extends Action
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#createCollection).')
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new \Utopia\Validator\Boolean(), 'Is attribute required?')
-            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+            ->param('default', null, new Nullable(new JSON()), 'Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.')
             ->param('newKey', null, new Key(), 'New attribute key.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -73,6 +73,8 @@ class Update extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
+        $decodedDefault = \is_string($default) ? \json_decode($default, true) : $default;
+
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -80,7 +82,7 @@ class Update extends Action
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
             type: Database::VAR_POLYGON,
-            default: $default,
+            default: $decodedDefault,
             required: $required,
             newKey: $newKey
         );

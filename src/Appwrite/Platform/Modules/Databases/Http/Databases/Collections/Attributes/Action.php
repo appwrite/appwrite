@@ -446,7 +446,7 @@ abstract class Action extends UtopiaAction
         return $attribute;
     }
 
-    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, string $type, int $size = null, string $filter = null, string|bool|int|float $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, string $type, int $size = null, string $filter = null, string|bool|int|float|array $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
