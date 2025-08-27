@@ -12799,7 +12799,8 @@
                                             "PUT",
                                             "PATCH",
                                             "DELETE",
-                                            "OPTIONS"
+                                            "OPTIONS",
+                                            "HEAD"
                                         ],
                                         "x-enum-name": "ExecutionMethod",
                                         "x-enum-keys": []
