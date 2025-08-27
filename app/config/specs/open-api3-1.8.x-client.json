@@ -5881,7 +5881,7 @@
                                     },
                                     "method": {
                                         "type": "string",
-                                        "description": "HTTP method of execution. Default value is GET.",
+                                        "description": "HTTP method of execution. Default value is POST.",
                                         "x-example": "GET",
                                         "enum": [
                                             "GET",
