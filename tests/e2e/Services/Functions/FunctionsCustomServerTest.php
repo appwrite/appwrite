@@ -931,7 +931,7 @@ class FunctionsCustomServerTest extends Scope
             'method' => 'HEAD',
         ]);
 
-        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertIsArray($execution['body']['responseHeaders']);
