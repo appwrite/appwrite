@@ -159,6 +159,9 @@ class Update extends Action
             $permissions = $document->getPermissions() ?? [];
         }
 
+        // Remove sequence if set
+        unset($document['$sequence']);
+
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
