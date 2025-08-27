@@ -17,6 +17,13 @@ use Utopia\Validator\Text;
 
 class DevGenerateTranslations extends Action
 {
+    public const TRUSTED_TRANSLATIONS = [
+        'en.json',
+        'es.json',
+        'fr.json',
+        'de.json'
+    ];
+
     public static function getName(): string
     {
         return 'dev-generate-translations';
@@ -89,7 +96,20 @@ class DevGenerateTranslations extends Action
                     foreach ($missingKeys as $missingKey) {
                         $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
 
-                        $translation = $this->generateTranslation($language, $mainJson[$missingKey], $apiKey);
+                        $translations = [];
+
+                        foreach (self::TRUSTED_TRANSLATIONS as $file) {
+                            $trustedJson = \json_decode(\file_get_contents($dir . '/' . $file), true);
+                            if (\array_key_exists($missingKey, $trustedJson)) {
+                                $translations[$language] = $trustedJson[$missingKey];
+                            }
+                        }
+
+                        if (empty($translations)) {
+                            throw new \Exception('No current translations found in trusted languages for key ' . $missingKey);
+                        }
+
+                        $translation = $this->generateTranslation($missingKey, $language, $translations, $apiKey);
 
                         Console::log('Translation results:');
                         Console::log('English: ' . $mainJson[$missingKey]);
@@ -116,7 +136,7 @@ class DevGenerateTranslations extends Action
         Console::info("Done. Processed {$filesProcessed} files and {$keysProcessed} keys.");
     }
 
-    private function generateTranslation(string $targetLanguage, string $enTranslation, string $apiKey): string
+    private function generateTranslation(string $translationKey, string $targetLanguage, array $translations, string $apiKey): string
     {
         // Replace placeholders with <m id=x label="y" /> to prevent AI from translating them, but still provide context
         $placeholders = [];
@@ -152,9 +172,17 @@ class DevGenerateTranslations extends Action
         $user = new User('user', 'Translator');
         $assistant = new Assistant('assistant', 'System');
 
+        $formattedTranslations = \array_map(function ($lang) use ($translations) {
+            return $lang . ': ' . $translations[$lang];
+        }, \array_keys($translations));
+
         $conversation = new Conversation($agent);
         $conversation
-            ->message($assistant, new AgentText('User will give you a message in English language, and you will translate it into ' . $targetLanguage . ' language. Do not translate XML tags, HTML tags, or placeholders - preserve those in the same place in the new message.'))
+            ->message($assistant, new AgentText('Task instructions: User will give you a message in English language, and you will translate it into ' . $targetLanguage . ' language. Do not translate XML tags, HTML tags, or placeholders - preserve those in the same place in the new message.'))
+            ->message($assistant, new AgentText('Additional details for context: You are creating translation for key ' . $translationKey))
+            ->message($assistant, new AgentText('Translation help: Here is same text translated into some other languages, for more grammar context: ' . \implode(",\n", $formattedTranslations)))
+            ->message($assistant, new AgentText('Background: You are providing translations service. You are creating translations for Appwrite, a backend as a service platform. It is platform like Supabase, Firebase, NHost or Backendless. Services provided by Appwrite are Auth (teams, permissions, oauth, security), Databases (collections, documents), Tables (rows, columns), Storage (buckets, files), Functions (triggers, events, webhooks, deployments, domains), and more.'))
+
             ->message($user, new AgentText($enTranslation));
 
         $output = $conversation->send()->getContent();
