@@ -67,8 +67,7 @@ class Get extends Action
         Database $dbForPlatform
     ) {
         if ($type === 'rules') {
-            $validator = new Domain($value);
-
+            $validator = new Domain();
             if (!$validator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
             }
