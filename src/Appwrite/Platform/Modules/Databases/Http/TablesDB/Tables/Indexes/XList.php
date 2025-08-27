@@ -31,7 +31,7 @@ class XList extends IndexXList
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/indexes')
             ->desc('List indexes')
             ->groups(['api', 'database'])
-            ->label('scope', 'tables.read')
+            ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),

@@ -32,7 +32,7 @@ class Upsert extends DocumentsUpsert
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/rows')
             ->desc('Create or update rows')
             ->groups(['api', 'database'])
-            ->label('scope', 'rows.write')
+            ->label('scope', ['rows.write', 'documents.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'row.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
