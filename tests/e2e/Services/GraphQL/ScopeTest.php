@@ -33,7 +33,7 @@ class ScopeTest extends Scope
             'x-appwrite-key' => $apiKey,
         ], $gqlPayload);
 
-        $message = "app.{$projectId}@service.localhost (role: applications) missing scope (databases.write)";
+        $message = "app.{$projectId}@service.localhost (role: applications) missing scopes ([\"databases.write\"])";
         $this->assertArrayHasKey('errors', $database['body']);
         $this->assertEquals($message, $database['body']['errors'][0]['message']);
     }

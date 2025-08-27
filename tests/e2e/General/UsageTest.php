@@ -1290,7 +1290,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'domain' => 'test-' . ID::unique() . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
                 'functionId' => $functionId,
             ],
         );

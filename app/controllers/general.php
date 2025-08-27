@@ -28,7 +28,6 @@ use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
-use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -357,11 +356,16 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
         }
 
+        $executionId = ID::unique();
+
         $headers = \array_merge([], $requestHeaders);
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $ip = $request->getIP();
+        $headers['x-appwrite-client-ip'] = $ip;
 
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
@@ -373,7 +377,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-jwt'] = '';
 
-        $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
             $record = $geodb->get($ip);
 
@@ -392,8 +395,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
-
-        $executionId = ID::unique();
 
         $execution = new Document([
             '$id' => $executionId,
@@ -608,6 +609,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                         $executionResponse['headers'][$key] = 'text/html';
                     }
                 }
+            }
+
+            if ($deployment->getAttribute('resourceType') === 'functions') {
+                $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+            } elseif ($deployment->getAttribute('resourceType') === 'sites') {
+                $executionResponse['headers']['x-appwrite-log-id'] = $execution->getId();
             }
 
             $headersFiltered = [];
@@ -875,7 +882,7 @@ App::init()
             }
             if (version_compare($requestFormat, '1.8.0', '<')) {
                 $dbForProject = $getProjectDB($project);
-                $request->addFilter(new RequestV20($dbForProject, $request->getParams()));
+                $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
             }
         }
 
@@ -1014,9 +1021,6 @@ App::init()
             }
             if (version_compare($responseFormat, '1.7.0', '<')) {
                 $response->addFilter(new ResponseV19());
-            }
-            if (version_compare($responseFormat, '1.8.0', '<')) {
-                $response->addFilter(new ResponseV20());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";
