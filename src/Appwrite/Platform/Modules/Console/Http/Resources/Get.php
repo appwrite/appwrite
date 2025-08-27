@@ -11,9 +11,11 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Domains\Domain as Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Domain;
+use Utopia\System\System;
+use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -67,9 +69,59 @@ class Get extends Action
         Database $dbForPlatform
     ) {
         if ($type === 'rules') {
-            $validator = new Domain();
+            $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+            $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+
+            $restrictions = [];
+            if (!empty($sitesDomain)) {
+                // Ensure site domains are exactly 1 subdomain, and dont start with reserved prefix
+                $domainLevel = \count(\explode('.', $sitesDomain));
+                $restrictions[] = DomainValidator::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
+            }
+            if (!empty($functionsDomain)) {
+                // Ensure function domains are exactly 1 subdomain
+                $domainLevel = \count(\explode('.', $functionsDomain));
+                $restrictions[] = DomainValidator::createRestriction($functionsDomain, $domainLevel + 1);
+            }
+            $validator = new DomainValidator($restrictions);
+
             if (!$validator->isValid($value)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
+            }
+
+            $deniedDomains = [
+                'localhost',
+                APP_HOSTNAME_INTERNAL
+            ];
+
+            $mainDomain = System::getEnv('_APP_DOMAIN', '');
+            $deniedDomains[] = $mainDomain;
+
+            if (!empty($sitesDomain)) {
+                $deniedDomains[] = $sitesDomain;
+            }
+
+            if (!empty($functionsDomain)) {
+                $deniedDomains[] = $functionsDomain;
+            }
+
+            $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
+            $denyListDomains = \array_map('trim', explode(',', $denyListDomains));
+            foreach ($denyListDomains as $denyListDomain) {
+                if (empty($denyListDomain)) {
+                    continue;
+                }
+                $deniedDomains[] = $denyListDomain;
+            }
+
+            if (\in_array($value, $deniedDomains)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
+            }
+
+            try {
+                $domain = new Domain($value);
+            } catch (\Throwable) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
             }
 
             $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
