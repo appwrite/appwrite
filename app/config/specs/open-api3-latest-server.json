@@ -3613,7 +3613,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, unionpay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3631,7 +3631,7 @@
                                 "mastercard",
                                 "naranja",
                                 "targeta-shopping",
-                                "union-china-pay",
+                                "unionpay",
                                 "visa",
                                 "mir",
                                 "maestro",
@@ -3651,7 +3651,7 @@
                                 "Mastercard",
                                 "Naranja",
                                 "Tarjeta Shopping",
-                                "Union China Pay",
+                                "Union Pay",
                                 "Visa",
                                 "MIR",
                                 "Maestro",
