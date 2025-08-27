@@ -264,6 +264,8 @@ class Functions extends Action
         string $jwt = null,
         string $event = null,
     ): void {
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -276,7 +278,6 @@ class Functions extends Action
             }
         }
 
-        $executionId = ID::unique();
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
@@ -397,6 +398,7 @@ class Functions extends Action
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
@@ -409,6 +411,8 @@ class Functions extends Action
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
+            $executionId = ID::unique();
+            $headers['x-appwrite-execution-id'] = $executionId;
             $headersFiltered = [];
             foreach ($headers as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
@@ -416,7 +420,6 @@ class Functions extends Action
                 }
             }
 
-            $executionId = ID::unique();
             $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],

@@ -1173,6 +1173,12 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
 
+        // Test execution ID and client IP
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertEquals($executionId, $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_CLIENT_IP']);
+
         // Change the specs to 1vcpu 512mb
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
@@ -1545,6 +1551,9 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
             $this->assertStringContainsString($userId, $lastExecution['logs']);
             $this->assertStringContainsString('Event User', $lastExecution['logs']);
+            $this->assertNotEmpty($lastExecution['$id']);
+            $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
+            $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
         }, 20_000, 500);
 
         $this->cleanupFunction($functionId);
