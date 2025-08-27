@@ -89,8 +89,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
-      - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
+
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
@@ -102,6 +101,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_EDITION
+      - _APP_DB_ADAPTER=mariadb
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_COMPRESSION_MIN_SIZE_BYTES
