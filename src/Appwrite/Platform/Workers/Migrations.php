@@ -445,7 +445,6 @@ class Migrations extends Action
         /**
          * @var Resource $resource
          */
-        var_dump($resources);
         $resource = $resources[0];
 
         $databaseInternalId = null;
