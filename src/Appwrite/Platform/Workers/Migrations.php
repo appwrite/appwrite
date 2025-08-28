@@ -322,7 +322,34 @@ class Migrations extends Action
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
 
                         if (!empty($resources)) {
-                            $aggregatedResources[] = $resources;
+                            /**
+                             * @var Resource $resource
+                            */
+                            $resource = $resources[0];
+                            $count = count($resources);
+                            $databaseId = null;
+                            $tableId = null;
+                            switch ($resource->getName()) {
+                                case ResourceTable::getName():
+                                    /** @var ResourceTable $resource */
+                                    $databaseId = $resource->getDatabase()->getSequence();
+                                    break;
+                                case ResourceRow::getName():
+                                    /** @var ResourceRow $resource */
+                                    $table = $resource->getTable();
+                                    $databaseId = $table->getDatabase()->getSequence();
+                                    $tableId = $table->getSequence();
+                                    break;
+                                default:
+                                    break;
+                            }
+                            $aggregatedResources[] = [
+                                "name" => $resource->getName(),
+                                "count" => $count,
+                                "databaseId" => $databaseId,
+                                "tableId" => $tableId
+                            ];
+
                         }
                         $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
                     },
@@ -442,14 +469,12 @@ class Migrations extends Action
 
     private function processMigrationResourceStats(array $resources, StatsUsage $queueForStatsUsage, Document $projectDocument, string $source, ?string $resourceId)
     {
-        /**
-         * @var Resource $resource
-         */
-        $resource = $resources[0];
+        $resourceName = $resources['name'];
+        $count = $resources['count'];
+        $databaseInternalId = $resources['databaseId'];
+        $tableInternalId = $resources['tableId'];
 
-        $databaseInternalId = null;
-        $tableInternalId = null;
-        if ($source === CSV::getName() && !empty($resourceId)) {
+        if ($source === CSV::getName()) {
             [$databaseId, $tableId] = explode(':', $resourceId);
             $database = AuthorizationValidator::skip(fn () => $this->dbForProject->getDocument('databases', $databaseId));
             $table = AuthorizationValidator::skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $tableId));
@@ -457,49 +482,32 @@ class Migrations extends Action
             $tableInternalId = (int) $table->getSequence();
         }
 
-        $count = count($resources);
-
-        switch ($resource->getName()) {
+        switch ($resourceName) {
             case ResourceDatabase::getName():
                 $queueForStatsUsage->addMetric(METRIC_DATABASES, $count);
                 break;
 
             case ResourceTable::getName():
-                /** @var ResourceTable $resource */
-                $dbSeq = ($source === CSV::getName() && !empty($databaseInternalId))
-                    ? (int) $databaseInternalId
-                    : (int) $resource->getDatabase()->getSequence();
-
                 $queueForStatsUsage
                     ->addMetric(METRIC_COLLECTIONS, $count)
                     ->addMetric(
-                        str_replace('{databaseInternalId}', $dbSeq, METRIC_DATABASE_ID_COLLECTIONS),
+                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS),
                         $count
                     );
                 break;
 
             case ResourceRow::getName():
-                /** @var ResourceRow $resource */
-
-                $table = $resource->getTable();
-                $dbSeq = ($source === CSV::getName() && !empty($databaseInternalId))
-                    ? (int) $databaseInternalId
-                    : (int) $table->getDatabase()->getSequence();
-                $colSeq = ($source === CSV::getName() && !empty($tableInternalId))
-                    ? (int) $tableInternalId
-                    : (int) $table->getSequence();
-
                 $queueForStatsUsage
                     ->addMetric(
                         str_replace(
                             ['{databaseInternalId}','{collectionInternalId}'],
-                            [$dbSeq, $colSeq],
+                            [$databaseInternalId, $tableInternalId],
                             METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
                         ),
                         $count
                     )
                     ->addMetric(
-                        str_replace('{databaseInternalId}', $dbSeq, METRIC_DATABASE_ID_DOCUMENTS),
+                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
                         $count
                     );
                 break;
