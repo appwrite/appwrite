@@ -386,7 +386,34 @@ class Migrations extends Action
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
 
                         if (!empty($resources)) {
-                            $aggregatedResources[] = $resources;
+                            /**
+                             * @var Resource $resource
+                            */
+                            $resource = $resources[0];
+                            $count = count($resources);
+                            $databaseId = null;
+                            $tableId = null;
+                            switch ($resource->getName()) {
+                                case ResourceTable::getName():
+                                    /** @var ResourceTable $resource */
+                                    $databaseId = $resource->getDatabase()->getSequence();
+                                    break;
+                                case ResourceRow::getName():
+                                    /** @var ResourceRow $resource */
+                                    $table = $resource->getTable();
+                                    $databaseId = $table->getDatabase()->getSequence();
+                                    $tableId = $table->getSequence();
+                                    break;
+                                default:
+                                    break;
+                            }
+                            $aggregatedResources[] = [
+                                "name" => $resource->getName(),
+                                "count" => $count,
+                                "databaseId" => $databaseId,
+                                "tableId" => $tableId
+                            ];
+
                         }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
