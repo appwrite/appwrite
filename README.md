@@ -1,4 +1,4 @@
-> We just announced a brand new TablesDB UI for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-appwrite-databases-new-ui)
+> We just announced Opt-in relationship loading for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-opt-in-relationship-loading)
 
 > Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
