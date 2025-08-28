@@ -1554,30 +1554,16 @@ class Builds extends Action
                         default => throw new \Exception('Invalid resource type')
                     };
 
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                        Query::equal("projectInternalId", [$project->getSequence()]),
+                        Query::equal("type", ["deployment"]),
+                        Query::equal("deploymentInternalId", [$deployment->getSequence()]),
+                    ]));
+
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                     $previewUrl = match($resource->getCollection()) {
                         'functions' => '',
-                        'sites' => (function () use ($deployment, $project, $dbForPlatform, $protocol, $resource) {
-                            $providerBranch = $deployment->getAttribute('providerBranch', '');
-                            if (!empty($providerBranch)) {
-                                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                                $branchPrefix = substr($providerBranch, 0, 16);
-                                if (strlen($providerBranch) > 16) {
-                                    $remainingChars = substr($providerBranch, 16);
-                                    $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
-                                }
-                                $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
-                                $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
-                                $ruleId = md5($domain);
-
-                                $branchRule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
-
-                                if (!empty($branchRule) && !$branchRule->isEmpty()) {
-                                    return "{$protocol}://" . $branchRule->getAttribute('domain', '');
-                                }
-                            }
-                            return '';
-                        })(),
+                        'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
                         default => throw new \Exception('Invalid resource type')
                     };
 
