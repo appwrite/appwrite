@@ -2444,10 +2444,10 @@ return [
             ],
             [
                 '$id' => ID::custom('resourceInternalId'),
-                'type' => Database::VAR_ID,
+                'type' => Database::VAR_STRING, // Not numeric
                 'format' => '',
-                'size' => 0,
-                'signed' => false,
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
                 'required' => true,
                 'default' => null,
                 'array' => false,
