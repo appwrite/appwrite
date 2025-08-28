@@ -271,7 +271,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-                $previewRuleId = $ruleId;
                 Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
@@ -304,6 +303,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
                     $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
+                    $previewRuleId = $ruleId;
                     try {
                         Authorization::skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
