@@ -213,7 +213,7 @@ class Create extends Base
             'deploymentId' => '',
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleInternalId' => '',
+            'scheduleInternalId' => null,
             'scheduleId' => '',
             'timeout' => $timeout,
             'entrypoint' => $entrypoint,

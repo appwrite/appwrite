@@ -1632,7 +1632,6 @@ return [
             [
                 '$id' => ID::custom('resourceInternalId'),
                 'type' => Database::VAR_ID,
-                'type' => Database::VAR_ID,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
@@ -1771,7 +1770,6 @@ return [
             ],
             [
                 '$id' => ID::custom('projectInternalId'),
-                'type' => Database::VAR_ID,
                 'type' => Database::VAR_ID,
                 'format' => '',
                 'size' => 0,
