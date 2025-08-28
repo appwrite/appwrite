@@ -408,10 +408,10 @@ class Migrations extends Action
                                     break;
                             }
                             $aggregatedResources[] = [
-                                "name" => $resource->getName(),
-                                "count" => $count,
-                                "databaseId" => $databaseId,
-                                "tableId" => $tableId
+                                'name' => $resource->getName(),
+                                'count' => $count,
+                                'databaseId' => $databaseId,
+                                'tableId' => $tableId
                             ];
 
                         }
