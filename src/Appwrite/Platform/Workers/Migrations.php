@@ -25,6 +25,10 @@ use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Exception as MigrationException;
+use Utopia\Migration\Resource;
+use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
+use Utopia\Migration\Resources\Database\Row as ResourceRow;
+use Utopia\Migration\Resources\Database\Table as ResourceTable;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
@@ -52,6 +56,7 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
+    private string $source;
     /**
      * @var callable|null
      */
@@ -368,6 +373,7 @@ class Migrations extends Action
                 $destination
             );
 
+            $aggregatedResources = [];
             /** Start Transfer */
             if (empty($source->getErrors())) {
                 $migration->setAttribute('stage', 'migrating');
@@ -375,10 +381,14 @@ class Migrations extends Action
 
                 $transfer->run(
                     $migration->getAttribute('resources'),
-                    function () use ($migration, $transfer, $project, $queueForRealtime) {
+                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+
+                        if (!empty($resources)) {
+                            $aggregatedResources[] = $resources;
+                        }
+                        $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
                     },
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
