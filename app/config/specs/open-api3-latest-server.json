@@ -8416,7 +8416,7 @@
                 }
             },
             "put": {
-                "summary": "Upsert Documents",
+                "summary": "Upsert documents",
                 "operationId": "databasesUpsertDocuments",
                 "tags": [
                     "databases"
@@ -26542,7 +26542,7 @@
                 }
             },
             "put": {
-                "summary": "Upsert Rows",
+                "summary": "Upsert rows",
                 "operationId": "tablesDBUpsertRows",
                 "tags": [
                     "tablesDB"

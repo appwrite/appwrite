@@ -8524,7 +8524,7 @@
                 ]
             },
             "put": {
-                "summary": "Upsert Documents",
+                "summary": "Upsert documents",
                 "operationId": "databasesUpsertDocuments",
                 "consumes": [
                     "application\/json"
@@ -26725,7 +26725,7 @@
                 ]
             },
             "put": {
-                "summary": "Upsert Rows",
+                "summary": "Upsert rows",
                 "operationId": "tablesDBUpsertRows",
                 "consumes": [
                     "application\/json"
