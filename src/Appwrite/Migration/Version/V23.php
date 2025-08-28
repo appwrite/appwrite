@@ -8,6 +8,9 @@ use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Timeout;
 
 class V23 extends Migration
 {
@@ -19,34 +22,117 @@ class V23 extends Migration
         /**
          * Disable SubQueries for Performance.
          */
-        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryDevKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subQueryVariables', 'subQueryChallenges', 'subQueryProjectVariables', 'subQueryTargets', 'subQueryTopicTargets'] as $name) {
+        $subQueries = [
+            'subQueryAttributes',
+            'subQueryAuthenticators',
+            'subQueryChallenges',
+            'subQueryDevKeys',
+            'subQueryIndexes',
+            'subQueryKeys',
+            'subQueryMemberships',
+            'subQueryPlatforms',
+            'subQueryProjectVariables',
+            'subQuerySessions',
+            'subQueryTargets',
+            'subQueryTokens',
+            'subQueryTopicTargets',
+            'subQueryVariables',
+            'subQueryWebhooks',
+        ];
+        foreach ($subQueries as $name) {
             Database::addFilter(
                 $name,
-                fn () => null,
-                fn () => []
+                fn() => null,
+                fn() => []
             );
         }
 
-        Console::info('Migrating databases');
-        $this->migrateDatabases();
+        Console::info('Migrating collections');
+        $this->migrateCollections();
+
+        Console::info('Migrating documents');
+        $this->forEachDocument($this->migrateDocument(...));
     }
 
     /**
-     * Migrate Databases.
+     * Migrate Collections.
      *
      * @return void
      * @throws Exception|Throwable
      */
-    private function migrateDatabases(): void
+    private function migrateCollections(): void
     {
-        if ($this->project->getId() === 'console') {
-            return;
+        $projectInternalId = $this->project->getSequence();
+
+        if (empty($projectInternalId)) {
+            throw new Exception('Project ID is null');
         }
 
-        // since required + default can't be used together
-        // so first creating the attribute then bulk updating the attribute
-        $this->createAttributeFromCollection($this->dbForProject, 'databases', 'type');
-        $this->dbForProject->updateDocuments('databases', new Document(['type' => 'legacy']));
+        $collectionType = match ($projectInternalId) {
+            'console' => 'console',
+            default => 'projects',
+        };
+
+        $collections = $this->collections[$collectionType];
+
+        foreach ($collections as $collection) {
+            $id = $collection['$id'];
+
+            if (empty($id)) {
+                continue;
+            }
+
+            Console::log("Migrating collection \"{$id}\"");
+
+            switch ($id) {
+                case 'databases':
+                    $attributes = [
+                        'type',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+                case 'schedules':
+                    try {
+                        $this->dbForProject->updateAttribute($id, 'resourceInternalId', required: false);
+                    } catch (Throwable $th) {
+                        Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
+    /**
+     * Fix run on each document
+     *
+     * @param Document $document
+     * @return Document
+     * @throws Conflict
+     * @throws Structure
+     * @throws Timeout
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws \Utopia\Database\Exception\Query
+     */
+    private function migrateDocument(Document $document): Document
+    {
+        switch ($document->getCollection()) {
+            case 'databases':
+                $document->setAttribute('type', $document->getAttribute('type', 'legacy'));
+                break;
+            default:
+                break;
+        }
+        return $document;
+    }
 }
