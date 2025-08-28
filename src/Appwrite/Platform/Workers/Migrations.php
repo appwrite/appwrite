@@ -388,7 +388,7 @@ class Migrations extends Action
                         if (!empty($resources)) {
                             $aggregatedResources[] = $resources;
                         }
-                        $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
+                        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
