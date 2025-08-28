@@ -76,7 +76,7 @@ class Migrations extends Action
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
-            ->inject('queueForStatsUsage') // Added
+            ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
@@ -111,7 +111,7 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($migration, $queueForRealtime, $queueForStatsUsage); // Updated
+        $this->processMigration($migration, $queueForRealtime, $queueForStatsUsage);
     }
 
     /**
