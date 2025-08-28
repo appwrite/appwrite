@@ -221,7 +221,7 @@ class OpenAPI3 extends Format
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
-                        'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
+                        'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                     ];
 
                     // add deprecation only if method has it!
