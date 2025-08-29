@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\StatsUsage;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -14,14 +13,9 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Validator\Authorization as AuthorizationValidator;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
-use Utopia\Migration\Resource;
-use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
-use Utopia\Migration\Resources\Database\Row as ResourceRow;
-use Utopia\Migration\Resources\Database\Table as ResourceTable;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
@@ -51,7 +45,6 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
-    private string $source;
     /**
      * @var callable
      */
@@ -76,14 +69,13 @@ class Migrations extends Action
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
-            ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports, StatsUsage $queueForStatsUsage): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
     {
         $payload = $message->getPayload() ?? [];
         $this->deviceForImports = $deviceForImports;
@@ -111,7 +103,7 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($migration, $queueForRealtime, $queueForStatsUsage);
+        $this->processMigration($migration, $queueForRealtime);
     }
 
     /**
@@ -274,7 +266,7 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function processMigration(Document $migration, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage): void
+    protected function processMigration(Document $migration, Realtime $queueForRealtime): void
     {
         $project = $this->project;
         $projectDocument = $this->dbForPlatform->getDocument('projects', $project->getId());
@@ -308,7 +300,6 @@ class Migrations extends Action
                 $destination
             );
 
-            $aggregatedResources = [];
             /** Start Transfer */
             if (empty($source->getErrors())) {
                 $migration->setAttribute('stage', 'migrating');
@@ -316,40 +307,9 @@ class Migrations extends Action
 
                 $transfer->run(
                     $migration->getAttribute('resources'),
-                    function ($resources) use ($migration, $transfer, $projectDocument, $queueForRealtime, &$aggregatedResources) {
+                    function () use ($migration, $transfer, $projectDocument, $queueForRealtime) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-
-                        if (!empty($resources)) {
-                            /**
-                             * @var Resource $resource
-                            */
-                            $resource = $resources[0];
-                            $count = count($resources);
-                            $databaseId = null;
-                            $tableId = null;
-                            switch ($resource->getName()) {
-                                case ResourceTable::getName():
-                                    /** @var ResourceTable $resource */
-                                    $databaseId = $resource->getDatabase()->getSequence();
-                                    break;
-                                case ResourceRow::getName():
-                                    /** @var ResourceRow $resource */
-                                    $table = $resource->getTable();
-                                    $databaseId = $table->getDatabase()->getSequence();
-                                    $tableId = $table->getSequence();
-                                    break;
-                                default:
-                                    break;
-                            }
-                            $aggregatedResources[] = [
-                                'name' => $resource->getName(),
-                                'count' => $count,
-                                'databaseId' => $databaseId,
-                                'tableId' => $tableId
-                            ];
-
-                        }
                         $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
                     },
                     $migration->getAttribute('resourceId'),
@@ -451,71 +411,9 @@ class Migrations extends Action
             }
 
             if ($migration->getAttribute('status', '') === 'completed') {
-                foreach ($aggregatedResources as $resource) {
-                    $this->processMigrationResourceStats(
-                        $resource,
-                        $queueForStatsUsage,
-                        $projectDocument,
-                        $migration->getAttribute('source'),
-                        $migration->getAttribute('resourceId')
-                    );
-                }
                 $destination?->success();
                 $source?->success();
             }
         }
-    }
-
-    private function processMigrationResourceStats(array $resources, StatsUsage $queueForStatsUsage, Document $projectDocument, string $source, ?string $resourceId)
-    {
-        $resourceName = $resources['name'];
-        $count = $resources['count'];
-        $databaseInternalId = $resources['databaseId'];
-        $tableInternalId = $resources['tableId'];
-
-        if ($source === CSV::getName()) {
-            [$databaseId, $tableId] = explode(':', $resourceId);
-            $database = AuthorizationValidator::skip(fn () => $this->dbForProject->getDocument('databases', $databaseId));
-            $table = AuthorizationValidator::skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $tableId));
-            $databaseInternalId = (int) $database->getSequence();
-            $tableInternalId = (int) $table->getSequence();
-        }
-
-        switch ($resourceName) {
-            case ResourceDatabase::getName():
-                $queueForStatsUsage->addMetric(METRIC_DATABASES, $count);
-                break;
-
-            case ResourceTable::getName():
-                $queueForStatsUsage
-                    ->addMetric(METRIC_COLLECTIONS, $count)
-                    ->addMetric(
-                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS),
-                        $count
-                    );
-                break;
-
-            case ResourceRow::getName():
-                $queueForStatsUsage
-                    ->addMetric(
-                        str_replace(
-                            ['{databaseInternalId}','{collectionInternalId}'],
-                            [$databaseInternalId, $tableInternalId],
-                            METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
-                        ),
-                        $count
-                    )
-                    ->addMetric(
-                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
-                        $count
-                    );
-                break;
-
-            default:
-                break;
-        }
-
-        $queueForStatsUsage->setProject($projectDocument)->trigger();
-        $queueForStatsUsage->reset();
     }
 }
