@@ -170,6 +170,7 @@ class Upsert extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
+        $data = $this->removeReadonlyAttributes($data);
         $newDocument = new Document($data);
         $operations = 0;
 
@@ -203,6 +204,8 @@ class Upsert extends Action
                 );
 
                 foreach ($relations as &$relation) {
+                    $relation = $this->removeReadonlyAttributes($relation);
+
                     // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
@@ -217,7 +220,7 @@ class Upsert extends Action
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
-                        $this->removeReadonlyAttributes($relation);
+
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',

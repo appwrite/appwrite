@@ -159,17 +159,14 @@ class Update extends Action
             $permissions = $document->getPermissions() ?? [];
         }
 
-        // Remove sequence if set
-        unset($document['$sequence']);
-
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
+        $data = $this->removeReadonlyAttributes($data);
         $newDocument = new Document($data);
 
         $operations = 0;
 
         $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
-
             $operations++;
 
             $relationships = \array_filter(
@@ -198,6 +195,8 @@ class Update extends Action
                 );
 
                 foreach ($relations as &$relation) {
+                    $relation = $this->removeReadonlyAttributes($relation);
+
                     // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
@@ -212,7 +211,7 @@ class Update extends Action
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
-                        $this->removeReadonlyAttributes($relation);
+
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
@@ -241,6 +240,8 @@ class Update extends Action
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+
+        \var_dump($newDocument);
 
         try {
             $document = $dbForProject->withRequestTimestamp(

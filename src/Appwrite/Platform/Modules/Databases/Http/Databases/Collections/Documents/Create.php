@@ -298,6 +298,8 @@ class Create extends Action
                 );
 
                 foreach ($relations as &$relation) {
+                    $relation = $this->removeReadonlyAttributes($relation);
+
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
@@ -318,7 +320,6 @@ class Create extends Action
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $this->removeReadonlyAttributes($relation);
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
@@ -351,9 +352,6 @@ class Create extends Action
                 }
             }
 
-            // Remove sequence if set
-            unset($document['$sequence']);
-
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
 
@@ -368,10 +366,11 @@ class Create extends Action
                 }
             }
 
+            $document = $this->removeReadonlyAttributes($document);
+
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
-
             return $document;
         }, $documents);
 

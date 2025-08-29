@@ -1697,6 +1697,7 @@ trait DatabasesBase
         return $data;
     }
 
+
     /**
      * @depends testCreateIndexes
      */
@@ -2211,6 +2212,49 @@ trait DatabasesBase
             $this->assertArrayHasKey('$permissions', $library3['body']);
             $this->assertCount(3, $library3['body']['$permissions']);
             $this->assertNotEmpty($library3['body']['$permissions']);
+
+            // Readonly attributes are ignored
+            $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    '$id' => 'some-other-id',
+                    '$collectionId' => 'some-other-collection',
+                    '$databaseId' => 'some-other-database',
+                    '$createdAt' => '2024-01-01T00:00:00Z',
+                    '$updatedAt' => '2024-01-01T00:00:00Z',
+                    'library' => [
+                        '$id' => 'library3',
+                        'libraryName' => 'Library 3',
+                        '$createdAt' => '2024-01-01T00:00:00Z',
+                        '$updatedAt' => '2024-01-01T00:00:00Z',
+                    ],
+                ],
+            ]);
+
+            $update = $personNoPerm;
+            $update['body']['$id'] = 'random';
+            $update['body']['$sequence'] = 123;
+            $update['body']['$databaseId'] = 'random';
+            $update['body']['$collectionId'] = 'random';
+            $update['body']['$createdAt'] = '2024-01-01T00:00:00Z';
+            $update['body']['$updatedAt'] = '2024-01-01T00:00:00Z';
+
+            $upserted = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => $update['body']
+            ]);
+
+            $this->assertEquals(200, $upserted['headers']['status-code']);
+            $this->assertEquals($personNoPerm['body']['$id'], $upserted['body']['$id']);
+            $this->assertEquals($personNoPerm['body']['$collectionId'], $upserted['body']['$collectionId']);
+            $this->assertEquals($personNoPerm['body']['$databaseId'], $upserted['body']['$databaseId']);
+            $this->assertEquals($personNoPerm['body']['$sequence'], $upserted['body']['$sequence']);
+            $this->assertEquals($personNoPerm['body']['$createdAt'], $upserted['body']['$createdAt']);
+            $this->assertNotEquals('2024-01-01T00:00:00Z', $upserted['body']['$updatedAt']);
         }
     }
 
@@ -2999,6 +3043,31 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Test readonly attributes are ignored
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-timestamp' => DateTime::formatTz(DateTime::now()),
+        ], $this->getHeaders()), [
+            'data' => [
+                '$id' => 'newId',
+                '$sequence' => 9999,
+                '$collectionId' => 'newCollectionId',
+                '$databaseId' => 'newDatabaseId',
+                '$createdAt' => '2024-01-01T00:00:00+00:00',
+                '$updatedAt' => '2024-01-01T00:00:00+00:00',
+                'title' => 'Thor: Ragnarok',
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($id, $response['body']['$id']);
+        $this->assertEquals($data['moviesId'], $response['body']['$collectionId']);
+        $this->assertEquals($databaseId, $response['body']['$databaseId']);
+        $this->assertNotEquals('2024-01-01T00:00:00+00:00', $response['body']['$createdAt']);
+        $this->assertNotEquals('2024-01-01T00:00:00+00:00', $response['body']['$updatedAt']);
+        $this->assertNotEquals(9999, $response['body']['$sequence']);
 
         return [];
     }

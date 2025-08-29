@@ -27,9 +27,8 @@ abstract class Action extends AppwriteAction
             $this->context = ROWS;
         }
 
-        // Use the same helper method to ensure consistency
         $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
-        $this->removableAttributes = ['$databaseId', $contextId, '$sequence'];
+        $this->removableAttributes = ['$sequence', '$databaseId', $contextId];
 
         return parent::setHttpPath($path);
     }
@@ -200,11 +199,13 @@ abstract class Action extends AppwriteAction
      * Remove configured removable attributes from a document.
      * Used for relationship path handling to remove API-specific attributes.
      */
-    protected function removeReadonlyAttributes(Document $document): void
+    protected function removeReadonlyAttributes(Document|array $document): Document|array
     {
         foreach ($this->removableAttributes as $attribute) {
-            $document->removeAttribute($attribute);
+            \var_dump('Removing attribute: ' . $attribute);
+            unset($document[$attribute]);
         }
+        return $document;
     }
 
     /**
