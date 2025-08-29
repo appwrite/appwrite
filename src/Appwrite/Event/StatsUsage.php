@@ -85,4 +85,11 @@ class StatsUsage extends Event
             }),
         ];
     }
+
+    public function reset(): Event
+    {
+        $this->metrics = [];
+        parent::reset();
+        return $this;
+    }
 }
