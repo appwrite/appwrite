@@ -1081,7 +1081,8 @@ App::init()
                     $replaceWith = preg_replace('/\./', '#', $replaceWith, 1);
                 }
                 $deprecatedReplaceWithLink = 'https://appwrite.io/docs/references/cloud/server-rest/' . $replaceWith;
-                $deprecationWarning = 'Route ' . $route->getPath() . ' is deprecated since ' . $deprecatedMethod->getSince() . '. Please use `' . $deprecatedMethod->getReplaceWith() . '` instead. See: ' . $deprecatedReplaceWithLink;
+                $isSdkUsed = !empty($request->getHeader('x-sdk-name')) || !empty($request->getHeader('x-sdk-version'));
+                $deprecationWarning = (!$isSdkUsed ? 'Route ' . $route->getPath() : 'Method `' . $sdkItems[0]->getNamespace() . '.' . $sdkItems[0]->getMethodName() . '`') . ' is deprecated since ' . $deprecatedMethod->getSince() . '. Please use `' . $deprecatedMethod->getReplaceWith() . '` instead. See: ' . $deprecatedReplaceWithLink;
                 $warnings[] = $deprecationWarning;
             }
         }
