@@ -212,8 +212,7 @@ abstract class Action extends AppwriteAction
     protected function removeReadonlyAttributes(
         Document|array $document,
         bool $privileged = false,
-    ): Document|array
-    {
+    ): Document|array {
         foreach ($this->removableAttributes['*'] as $attribute) {
             unset($document[$attribute]);
         }
