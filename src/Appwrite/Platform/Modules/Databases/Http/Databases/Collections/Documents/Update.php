@@ -195,8 +195,6 @@ class Update extends Action
                 );
 
                 foreach ($relations as &$relation) {
-                    $relation = $this->removeReadonlyAttributes($relation);
-
                     // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
@@ -207,6 +205,8 @@ class Update extends Action
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
+                        $relation = $this->removeReadonlyAttributes($relation);
+
                         $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()

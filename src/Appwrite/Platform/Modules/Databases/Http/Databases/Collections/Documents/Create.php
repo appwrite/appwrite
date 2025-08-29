@@ -298,8 +298,6 @@ class Create extends Action
                 );
 
                 foreach ($relations as &$relation) {
-                    $relation = $this->removeReadonlyAttributes($relation);
-
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
@@ -309,6 +307,8 @@ class Create extends Action
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
+                        $relation = $this->removeReadonlyAttributes($relation);
+
                         $current = Authorization::skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
