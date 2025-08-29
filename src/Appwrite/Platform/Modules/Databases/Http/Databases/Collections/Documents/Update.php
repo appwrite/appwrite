@@ -109,16 +109,6 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        // Allowing to add createdAt and updatedAt timestamps if server side(api key)
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            if (isset($data['$createdAt'])) {
-                throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-            }
-
-            if (isset($data['$updatedAt'])) {
-                throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-            }
-        }
         // Read permission should not be required for update
         /** @var Document $document */
         $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
@@ -161,12 +151,12 @@ class Update extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
-        $data = $this->removeReadonlyAttributes($data);
+        $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $newDocument = new Document($data);
 
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations) {
             $operations++;
 
             $relationships = \array_filter(
@@ -205,7 +195,7 @@ class Update extends Action
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $relation = $this->removeReadonlyAttributes($relation);
+                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
                         $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),

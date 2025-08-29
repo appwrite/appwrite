@@ -254,7 +254,7 @@ class Create extends Action
 
         $operations = 0;
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations) {
             $operations++;
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -307,7 +307,7 @@ class Create extends Action
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $relation = $this->removeReadonlyAttributes($relation);
+                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
                         $current = Authorization::skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
@@ -354,20 +354,7 @@ class Create extends Action
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
-
-            // Allowing to add createdAt and updatedAt timestamps if server side(api key
-            if (!$isAPIKey && !$isPrivilegedUser) {
-                if (isset($document['$createdAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-                }
-
-                if (isset($document['$updatedAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-                }
-            }
-
-            $document = $this->removeReadonlyAttributes($document);
-
+            $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);

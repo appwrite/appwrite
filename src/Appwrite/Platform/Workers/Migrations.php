@@ -212,7 +212,6 @@ class Migrations extends Action
         // set the errors back without trace
         $clonedMigrationDocument->setAttribute('errors', $errorMessages);
 
-
         /** Trigger Realtime Events */
         $queueForRealtime
             ->setProject($project)

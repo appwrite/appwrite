@@ -2238,8 +2238,8 @@ trait DatabasesBase
             $update['body']['$sequence'] = 123;
             $update['body']['$databaseId'] = 'random';
             $update['body']['$collectionId'] = 'random';
-            $update['body']['$createdAt'] = '2024-01-01T00:00:00Z';
-            $update['body']['$updatedAt'] = '2024-01-01T00:00:00Z';
+            $update['body']['$createdAt'] = '2024-01-01T00:00:00.000+00:00';
+            $update['body']['$updatedAt'] = '2024-01-01T00:00:00.000+00:00';
 
             $upserted = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
                 'content-type' => 'application/json',
@@ -2253,8 +2253,14 @@ trait DatabasesBase
             $this->assertEquals($personNoPerm['body']['$collectionId'], $upserted['body']['$collectionId']);
             $this->assertEquals($personNoPerm['body']['$databaseId'], $upserted['body']['$databaseId']);
             $this->assertEquals($personNoPerm['body']['$sequence'], $upserted['body']['$sequence']);
-            $this->assertEquals($personNoPerm['body']['$createdAt'], $upserted['body']['$createdAt']);
-            $this->assertNotEquals('2024-01-01T00:00:00Z', $upserted['body']['$updatedAt']);
+
+            if ($this->getSide() === 'client') {
+                $this->assertEquals($personNoPerm['body']['$createdAt'], $upserted['body']['$createdAt']);
+                $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
+            } else {
+                $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$createdAt']);
+                $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
+            }
         }
     }
 
@@ -3055,8 +3061,8 @@ trait DatabasesBase
                 '$sequence' => 9999,
                 '$collectionId' => 'newCollectionId',
                 '$databaseId' => 'newDatabaseId',
-                '$createdAt' => '2024-01-01T00:00:00+00:00',
-                '$updatedAt' => '2024-01-01T00:00:00+00:00',
+                '$createdAt' => '2024-01-01T00:00:00.000+00:00',
+                '$updatedAt' => '2024-01-01T00:00:00.000+00:00',
                 'title' => 'Thor: Ragnarok',
             ],
         ]);
@@ -3065,9 +3071,15 @@ trait DatabasesBase
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals($data['moviesId'], $response['body']['$collectionId']);
         $this->assertEquals($databaseId, $response['body']['$databaseId']);
-        $this->assertNotEquals('2024-01-01T00:00:00+00:00', $response['body']['$createdAt']);
-        $this->assertNotEquals('2024-01-01T00:00:00+00:00', $response['body']['$updatedAt']);
         $this->assertNotEquals(9999, $response['body']['$sequence']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$createdAt']);
+            $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$updatedAt']);
+        } else {
+            $this->assertEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$createdAt']);
+            $this->assertEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$updatedAt']);
+        }
 
         return [];
     }
