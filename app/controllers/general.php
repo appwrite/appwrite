@@ -1065,7 +1065,6 @@ App::init()
          */
         /** @var \Appwrite\SDK\Method $sdk */
         $sdk = $route->getLabel('sdk', false);
-        $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
         $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
         if (!empty($sdkItems) && count($sdkItems) > 0) {
             $allDeprecated = true;
@@ -1076,6 +1075,13 @@ App::init()
                 }
             }
             if ($allDeprecated) {
+                $deprecatedMethod = $sdkItems[0]->getDeprecated();
+                $replaceWith = $deprecatedMethod->getReplaceWith();
+                if ($replaceWith) {
+                    $replaceWith = preg_replace('/\./', '#', $replaceWith, 1);
+                }
+                $deprecatedReplaceWithLink = 'https://appwrite.io/docs/references/cloud/server-rest/' . $replaceWith;
+                $deprecationWarning = 'Route ' . $route->getPath() . ' is deprecated since ' . $deprecatedMethod->getSince() . '. Please use ' . $deprecatedMethod->getReplaceWith() . ' instead. See: ' . $deprecatedReplaceWithLink;
                 $warnings[] = $deprecationWarning;
             }
         }
