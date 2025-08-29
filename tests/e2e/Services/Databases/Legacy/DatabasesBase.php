@@ -4341,7 +4341,9 @@ trait DatabasesBase
             ]
         ]);
         if ($this->getSide() === 'client') {
-            $this->assertEquals($document['headers']['status-code'], 400);
+            $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
+            $this->assertNotEquals($document['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));
+            $this->assertNotEquals($document['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
         } else {
             $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
             $this->assertEquals($document['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));
