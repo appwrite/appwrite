@@ -1082,10 +1082,10 @@ App::init()
                     $replaceWith = preg_replace('/\./', '#', $replaceWith, 1);
                 }
                 $sdkName = $request->getHeader('x-sdk-name', 'rest');
-                $sdkPlatform = $request->getHeader('x-sdk-platform', 'server');
+                $sdkPlatform = !empty($sdkName) ? $request->getHeader('x-sdk-platform', 'server') : 'server';
                 $deprecatedReplaceWithLink = 'https://appwrite.io/docs/references/cloud/' . $sdkPlatform . '-' . strtolower($sdkName) . '/' . $replaceWith;
 
-                $deprecationWarning = (!empty($sdkName) ? 'Route ' . $route->getPath() : 'Method `' . $sdkItems[0]->getNamespace() . '.' . $sdkItems[0]->getMethodName() . '`') . ' is deprecated since ' . $deprecatedMethod->getSince() . '. Please use `' . $deprecatedMethod->getReplaceWith() . '` instead. See: ' . $deprecatedReplaceWithLink;
+                $deprecationWarning = (empty($sdkName) ? 'Route ' . $route->getPath() : 'Method `' . $sdkItems[0]->getNamespace() . '.' . $sdkItems[0]->getMethodName() . '`') . ' is deprecated since ' . $deprecatedMethod->getSince() . '. Please use `' . $deprecatedMethod->getReplaceWith() . '` instead. See: ' . $deprecatedReplaceWithLink;
                 $warnings[] = $deprecationWarning;
             }
         }
