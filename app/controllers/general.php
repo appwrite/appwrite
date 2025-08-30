@@ -1076,13 +1076,16 @@ App::init()
             }
             if ($allDeprecated) {
                 $deprecatedMethod = $sdkItems[0]->getDeprecated();
+
                 $replaceWith = $deprecatedMethod->getReplaceWith();
                 if ($replaceWith) {
                     $replaceWith = preg_replace('/\./', '#', $replaceWith, 1);
                 }
-                $deprecatedReplaceWithLink = 'https://appwrite.io/docs/references/cloud/server-rest/' . $replaceWith;
-                $isSdkUsed = !empty($request->getHeader('x-sdk-name')) || !empty($request->getHeader('x-sdk-version'));
-                $deprecationWarning = (!$isSdkUsed ? 'Route ' . $route->getPath() : 'Method `' . $sdkItems[0]->getNamespace() . '.' . $sdkItems[0]->getMethodName() . '`') . ' is deprecated since ' . $deprecatedMethod->getSince() . '. Please use `' . $deprecatedMethod->getReplaceWith() . '` instead. See: ' . $deprecatedReplaceWithLink;
+                $sdkName = $request->getHeader('x-sdk-name', 'rest');
+                $sdkPlatform = $request->getHeader('x-sdk-platform', 'server');
+                $deprecatedReplaceWithLink = 'https://appwrite.io/docs/references/cloud/' . $sdkPlatform . '-' . strtolower($sdkName) . '/' . $replaceWith;
+
+                $deprecationWarning = (!empty($sdkName) ? 'Route ' . $route->getPath() : 'Method `' . $sdkItems[0]->getNamespace() . '.' . $sdkItems[0]->getMethodName() . '`') . ' is deprecated since ' . $deprecatedMethod->getSince() . '. Please use `' . $deprecatedMethod->getReplaceWith() . '` instead. See: ' . $deprecatedReplaceWithLink;
                 $warnings[] = $deprecationWarning;
             }
         }
