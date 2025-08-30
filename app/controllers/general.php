@@ -1082,14 +1082,14 @@ App::init()
                     $replaceWith = preg_replace('/\./', '#', $replaceWith, 1);
                 }
 
-                $sdkNameHeader = $request->getHeader('x-sdk-name', '');
-                $sdkPlatformHeader = $request->getHeader('x-sdk-platform', '');
+                $sdkNameHeader = strtolower($request->getHeader('x-sdk-name', ''));
+                $sdkPlatformHeader = strtolower($request->getHeader('x-sdk-platform', ''));
 
                 $sdkExists = !empty($sdkNameHeader);
                 $sdkName = $sdkExists ? $sdkNameHeader : 'rest';
                 $sdkPlatform = !empty($sdkPlatformHeader) ? $sdkPlatformHeader : 'server';
 
-                $deprecatedReplaceWithLink = 'https://appwrite.io/docs/references/cloud/' . $sdkPlatform . '-' . strtolower($sdkName) . '/' . $replaceWith;
+                $deprecatedReplaceWithLink = 'https://appwrite.io/docs/references/cloud/' . $sdkPlatform . '-' . $sdkName . '/' . $replaceWith;
 
                 $deprecationWarning = (
                     !$sdkExists
