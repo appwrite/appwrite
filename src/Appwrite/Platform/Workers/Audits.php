@@ -40,8 +40,6 @@ class Audits extends Action
      */
     public function __construct()
     {
-        Console::error('__construct Audits');
-
         $this
             ->desc('Audits worker')
             ->inject('message')
