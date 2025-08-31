@@ -18,7 +18,7 @@ use Utopia\System\System;
 
 class Audits extends Action
 {
-    protected const int BATCH_AGGREGATION_INTERVAL = 60; // in seconds
+    protected const int BATCH_AGGREGATION_INTERVAL = 10000; // in seconds
 
     private int $lastTriggeredTime = 0;
 
@@ -40,6 +40,8 @@ class Audits extends Action
      */
     public function __construct()
     {
+        Console::error('__construct Audits');
+
         $this
             ->desc('Audits worker')
             ->inject('message')
@@ -70,6 +72,9 @@ class Audits extends Action
         }
 
         Console::info('Aggregating audit logs');
+
+        Console::error('project '.$project->getSequence());
+        Console::error('lastTriggeredTime '.$this->lastTriggeredTime);
 
         $event = $payload['event'] ?? '';
 
@@ -121,27 +126,46 @@ class Audits extends Action
 
         // Check if we should process the batch by checking both for the batch size and the elapsed time
         $batchSize = $this->getBatchSize();
+        $batchSize = 3;
+
         $logCount = array_reduce($this->logs, fn (int $current, $logs) => $current + count($logs['logs']), 0);
         $shouldProcessBatch = $logCount >= $batchSize;
+
+        var_dump('$logCount');
+        var_dump($logCount);
+        var_dump('$shouldProcessBatch 1');
+        var_dump($shouldProcessBatch);
+
         if (!$shouldProcessBatch && $logCount > 0) {
             $shouldProcessBatch = (\time() - $this->lastTriggeredTime) >= self::BATCH_AGGREGATION_INTERVAL;
         }
+
+        var_dump('$shouldProcessBatch 2');
+        var_dump($shouldProcessBatch);
+
+        var_dump($this->logs);
 
         if (!$shouldProcessBatch) {
             return new NoCommit();
         }
 
-        try {
-            foreach ($this->logs as $sequence => $projectLogs) {
-                $dbForProject = $getProjectDB($projectLogs['project']);
+        $logs = $this->logs;
+        $this->logs = [];
 
-                Console::log('Processing batch with ' . count($projectLogs['logs']) . ' events');
+        try {
+            foreach ($logs as $projectLogs) {
+                /**
+                 * @var $projectDocument Document
+                 */
+                $projectDocument = $projectLogs['project'];
+                $dbForProject = $getProjectDB($projectDocument);
+
+                Console::log('Processing Project "'.$projectDocument->getSequence().'" batch with ' . count($projectLogs['logs']) . ' events');
+
                 $audit = new Audit($dbForProject);
 
                 $audit->logBatch($projectLogs['logs']);
                 Console::success('Audit logs processed successfully');
-
-                unset($this->logs[$sequence]);
             }
         } catch (Throwable $e) {
             Console::error('Error processing audit logs: ' . $e->getMessage());
