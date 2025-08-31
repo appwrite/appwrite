@@ -153,9 +153,7 @@ class Audits extends Action
         } catch (Throwable $e) {
             Console::error('Error processing audit logs: ' . $e->getMessage());
         }
-
         $this->lastTriggeredTime = time();
-
         return new Commit();
     }
 }
