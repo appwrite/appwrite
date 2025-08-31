@@ -158,9 +158,10 @@ class Audits extends Action
                  * @var $projectDocument Document
                  */
                 $projectDocument = $projectLogs['project'];
-                $dbForProject = $getProjectDB($projectDocument);
 
                 Console::log('Processing Project "'.$projectDocument->getSequence().'" batch with ' . count($projectLogs['logs']) . ' events');
+
+                $dbForProject = $getProjectDB($projectDocument);
 
                 $audit = new Audit($dbForProject);
 
@@ -170,7 +171,9 @@ class Audits extends Action
         } catch (Throwable $e) {
             Console::error('Error processing audit logs: ' . $e->getMessage());
         }
+
         $this->lastTriggeredTime = time();
+
         return new Commit();
     }
 }
