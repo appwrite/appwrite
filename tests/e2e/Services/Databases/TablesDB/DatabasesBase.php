@@ -4269,9 +4269,10 @@ trait DatabasesBase
         ]);
 
         if ($this->getSide() === 'client') {
-            $this->assertEquals($row['headers']['status-code'], 400);
-        } else {
             $this->assertEquals($row['body']['title'], 'Again Updated Date Test');
+            $this->assertNotEquals($row['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));
+            $this->assertNotEquals($row['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
+        } else {
             $this->assertEquals($row['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));
             $this->assertEquals($row['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
 

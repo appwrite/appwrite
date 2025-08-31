@@ -100,6 +100,7 @@ class Upsert extends Action
         }
 
         foreach ($documents as $key => $document) {
+            $document = $this->removeReadonlyAttributes($document, privileged: true);
             $documents[$key] = new Document($document);
         }
 
