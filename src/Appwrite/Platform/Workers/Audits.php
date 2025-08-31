@@ -121,10 +121,8 @@ class Audits extends Action
 
         // Check if we should process the batch by checking both for the batch size and the elapsed time
         $batchSize = $this->getBatchSize();
-
         $logCount = array_reduce($this->logs, fn (int $current, $logs) => $current + count($logs['logs']), 0);
         $shouldProcessBatch = $logCount >= $batchSize;
-
         if (!$shouldProcessBatch && $logCount > 0) {
             $shouldProcessBatch = (\time() - $this->lastTriggeredTime) >= self::BATCH_AGGREGATION_INTERVAL;
         }
