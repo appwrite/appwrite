@@ -370,7 +370,7 @@ class Create extends Base
                         'type' => 'deployment',
                         'trigger' => 'manual',
                         'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => $deployment->getSequence(),
+                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? null : $deployment->getSequence(),
                         'deploymentResourceType' => 'function',
                         'deploymentResourceId' => $function->getId(),
                         'deploymentResourceInternalId' => $function->getSequence(),
