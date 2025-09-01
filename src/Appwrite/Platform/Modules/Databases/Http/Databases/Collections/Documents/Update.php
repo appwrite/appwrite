@@ -231,8 +231,6 @@ class Update extends Action
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
-        \var_dump($newDocument);
-
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
