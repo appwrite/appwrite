@@ -7,6 +7,7 @@ use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 abstract class Scope extends TestCase
 {
@@ -23,6 +24,11 @@ abstract class Scope extends TestCase
     {
         $this->client = new Client();
         $this->client->setEndpoint($this->endpoint);
+
+        $format = System::getEnv('_APP_E2E_RESPONSE_FORMAT');
+        if (!empty($format)) {
+            $this->client->setResponseFormat($format);
+        }
     }
 
     protected function tearDown(): void
