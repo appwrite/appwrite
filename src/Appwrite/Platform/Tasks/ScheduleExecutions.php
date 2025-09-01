@@ -5,11 +5,14 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class ScheduleExecutions extends ScheduleBase
 {
     public const UPDATE_TIMER = 3; // seconds
     public const ENQUEUE_TIMER = 4; // seconds
+
+    protected Func $queueForFunctions;
 
     public static function getName(): string
     {
@@ -26,11 +29,28 @@ class ScheduleExecutions extends ScheduleBase
         return 'executions';
     }
 
+    public function __construct()
+    {
+        $type = static::getSupportedResource();
+
+        $this
+            ->desc("Execute executions scheduled in Appwrite")
+            ->inject('queueForFunctions')
+            ->inject('dbForPlatform')
+            ->inject('getProjectDB')
+            ->inject('telemetry')
+            ->callback($this->action(...));
+    }
+
+    public function action(Func $queueForFunctions, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    {
+        $this->queueForFunctions = $queueForFunctions;
+        $this->schedule($dbForPlatform, $getProjectDB, $telemetry);
+    }
+
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
-
-        $queueForFunctions = new Func($this->publisherFunctions);
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -57,7 +77,8 @@ class ScheduleExecutions extends ScheduleBase
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data) {
+            \go(function () use ($schedule, $scheduledAt, $delay, $data) {
+                $queueForFunctions = clone $this->queueForFunctions;
                 Co::sleep($delay);
 
                 $queueForFunctions->setType('schedule')

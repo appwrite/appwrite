@@ -15,6 +15,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
@@ -84,30 +85,6 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-App::setResource('publisherDatabases', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-App::setResource('publisherFunctions', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-App::setResource('publisherMigrations', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-App::setResource('publisherStatsUsage', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-App::setResource('publisherMails', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-App::setResource('publisherDeletes', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-App::setResource('publisherMessaging', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-App::setResource('publisherWebhooks', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -132,6 +109,9 @@ App::setResource('queueForWebhooks', function (Publisher $publisher) {
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
+App::setResource('queueForStatsResources', function (Publisher $publisher) {
+    return new StatsResources($publisher);
+}, ['publisher']);
 App::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);

@@ -219,4 +219,23 @@ class Func extends Event
             'method' => $this->method,
         ];
     }
+
+    /**
+     * Clone the function event instance.
+     *
+     * Handles deep copying of Func-specific properties
+     * after parent cloning completes.
+     */
+    public function __clone(): void
+    {
+        parent::__clone();
+
+        if ($this->function !== null) {
+            $this->function = clone $this->function;
+        }
+
+        if ($this->execution !== null) {
+            $this->execution = clone $this->execution;
+        }
+    }
 }

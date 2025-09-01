@@ -5,6 +5,7 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
@@ -191,21 +192,6 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 CLI::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-CLI::setResource('publisherDatabases', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-CLI::setResource('publisherFunctions', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-CLI::setResource('publisherMigrations', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-CLI::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-CLI::setResource('publisherMessaging', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
 CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
@@ -217,6 +203,9 @@ CLI::setResource('queueForFunctions', function (Publisher $publisher) {
 }, ['publisher']);
 CLI::setResource('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
+}, ['publisher']);
+CLI::setResource('queueForMessaging', function (Publisher $publisher) {
+    return new Messaging($publisher);
 }, ['publisher']);
 CLI::setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);

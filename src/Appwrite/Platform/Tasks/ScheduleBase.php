@@ -11,7 +11,6 @@ use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Gauge;
@@ -24,10 +23,6 @@ abstract class ScheduleBase extends Action
 
     protected array $schedules = [];
 
-    protected BrokerPool $publisher;
-    protected BrokerPool $publisherMigrations;
-    protected BrokerPool $publisherFunctions;
-    protected BrokerPool $publisherMessaging;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -39,21 +34,6 @@ abstract class ScheduleBase extends Action
     abstract public static function getCollectionId(): string;
     abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
-    public function __construct()
-    {
-        $type = static::getSupportedResource();
-
-        $this
-            ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('publisher')
-            ->inject('publisherMigrations')
-            ->inject('publisherFunctions')
-            ->inject('publisherMessaging')
-            ->inject('dbForPlatform')
-            ->inject('getProjectDB')
-            ->inject('telemetry')
-            ->callback($this->action(...));
-    }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
@@ -71,15 +51,10 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    protected function schedule(Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
-
-        $this->publisher = $publisher;
-        $this->publisherMigrations = $publisherMigrations;
-        $this->publisherFunctions = $publisherFunctions;
-        $this->publisherMessaging = $publisherMessaging;
 
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
@@ -112,7 +87,7 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
+    protected function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
