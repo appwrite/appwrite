@@ -134,25 +134,19 @@ class Audits extends Action
         $logs = $this->logs;
         $this->logs = [];
 
-        try {
-            foreach ($logs as $projectLogs) {
-                /**
-                 * @var $projectDocument Document
-                 */
+        foreach ($logs as $projectLogs) {
+            try {
                 $projectDocument = $projectLogs['project'];
-
-                Console::log('Processing Project "'.$projectDocument->getSequence().'" batch with ' . count($projectLogs['logs']) . ' events');
-
+                Console::log('Processing Project "' . $projectDocument->getSequence() . '" batch with ' . count($projectLogs['logs']) . ' events');
                 $dbForProject = $getProjectDB($projectDocument);
-
                 $audit = new Audit($dbForProject);
-
                 $audit->logBatch($projectLogs['logs']);
                 Console::success('Audit logs processed successfully');
+            } catch (Throwable $e) {
+                Console::error('Error processing audit logs for Project "' . $projectDocument->getSequence() . '": ' . $e->getMessage());
             }
-        } catch (Throwable $e) {
-            Console::error('Error processing audit logs: ' . $e->getMessage());
         }
+
         $this->lastTriggeredTime = time();
         return new Commit();
     }
