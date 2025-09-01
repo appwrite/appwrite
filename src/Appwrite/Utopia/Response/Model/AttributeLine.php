@@ -18,7 +18,7 @@ class AttributeLine extends Attribute
                 'example' => 'route',
             ])
             ->addRule('type', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
                 'example' => 'linestring',

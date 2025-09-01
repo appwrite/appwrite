@@ -24,7 +24,7 @@ class ColumnPoint extends Column
                 'example' => 'point',
             ])
             ->addRule('default', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_JSON,
                 'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,

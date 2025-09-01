@@ -18,7 +18,7 @@ class ColumnLine extends Column
                 'example' => 'route',
             ])
             ->addRule('type', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_JSON,
                 'description' => 'Column type.',
                 'default' => '',
                 'example' => 'linestring',

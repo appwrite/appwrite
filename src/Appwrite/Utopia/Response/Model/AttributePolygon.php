@@ -18,7 +18,7 @@ class AttributePolygon extends Attribute
                 'example' => 'boundary',
             ])
             ->addRule('type', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
                 'example' => 'polygon',
