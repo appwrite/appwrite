@@ -199,12 +199,6 @@ class Create extends Action
         $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
         $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
 
-        if (!$this->isCollectionsAPI()) {
-            // Relax spatial constraints for TablesDB API
-            $supportForSpatialIndexNull = true;
-            $supportForSpatialIndexOrder = true;
-        }
-
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $maxIndexLength,

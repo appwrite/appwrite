@@ -11,24 +11,12 @@ class AttributePolygon extends Attribute
         parent::__construct();
 
         $this
-            ->addRule('key', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
-                'default' => '',
-                'example' => 'boundary',
-            ])
-            ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
-                'default' => '',
-                'example' => 'polygon',
-            ])
             ->addRule('default', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_SPATIAL,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
-                'example' => '[[[0, 0], [0, 10], [10, 10], [0, 0]]]'
+                'example' => '[[[0, 0], [0, 10]], [[10, 10], [0, 0]]]'
             ])
         ;
     }

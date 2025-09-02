@@ -11,20 +11,8 @@ class ColumnPoint extends Column
         parent::__construct();
 
         $this
-            ->addRule('key', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Column Key.',
-                'default' => '',
-                'example' => 'location',
-            ])
-            ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Column type.',
-                'default' => '',
-                'example' => 'point',
-            ])
             ->addRule('default', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_SPATIAL,
                 'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,

@@ -11,20 +11,8 @@ class AttributePoint extends Attribute
         parent::__construct();
 
         $this
-            ->addRule('key', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
-                'default' => '',
-                'example' => 'location',
-            ])
-            ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
-                'default' => '',
-                'example' => 'point',
-            ])
             ->addRule('default', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_SPATIAL,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,

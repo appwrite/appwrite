@@ -11,20 +11,8 @@ class ColumnLine extends Column
         parent::__construct();
 
         $this
-            ->addRule('key', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Column Key.',
-                'default' => '',
-                'example' => 'route',
-            ])
-            ->addRule('type', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Column type.',
-                'default' => '',
-                'example' => 'linestring',
-            ])
             ->addRule('default', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_SPATIAL,
                 'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,

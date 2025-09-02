@@ -11,24 +11,12 @@ class ColumnPolygon extends Column
         parent::__construct();
 
         $this
-            ->addRule('key', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Column Key.',
-                'default' => '',
-                'example' => 'boundary',
-            ])
-            ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Column type.',
-                'default' => '',
-                'example' => 'polygon',
-            ])
             ->addRule('default', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_SPATIAL,
                 'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,
-                'example' => '[[[0, 0], [0, 10], [10, 10], [0, 0]]]'
+                'example' => '[[[0, 0], [0, 10]], [[10, 10], [0, 0]]]'
             ])
         ;
     }

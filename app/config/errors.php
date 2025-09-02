@@ -837,6 +837,12 @@ return [
         'code' => 400,
     ],
 
+    Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED => [
+        'name' => Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED,
+        'description' => "Attribute type not supported by the adapter.",
+        'code' => 400,
+    ],
+
     /** Exists for both Attributes & Columns */
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
@@ -893,6 +899,11 @@ return [
     Exception::COLUMN_INVALID_RESIZE => [
         'name' => Exception::COLUMN_INVALID_RESIZE,
         'description' => "Existing data is too large for new size, truncate your existing data then try again.",
+        'code' => 400,
+    ],
+    Exception::COLUMN_TYPE_NOT_SUPPORTED => [
+        'name' => Exception::COLUMN_TYPE_NOT_SUPPORTED,
+        'description' => "Column type not supported by the adapter.",
         'code' => 400,
     ],
 

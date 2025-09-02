@@ -6658,8 +6658,6 @@ trait DatabasesBase
         $this->assertCount(1, $response['body']['documents']);
         $this->assertEquals('doc1', $response['body']['documents'][0]['$id']);
 
-
-
         // Test 3: Polygon attribute queries
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',

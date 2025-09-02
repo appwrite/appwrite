@@ -210,6 +210,14 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the exception for spatial type attribute not supported by the database adapter
+    */
+    protected function getSpatialTypeNotSupportedException(): string
+    {
+        return $this->isCollectionsAPI() ? Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED : Exception::COLUMN_TYPE_NOT_SUPPORTED;
+    }
+
+    /**
      * Get the correct collections context for Events queue.
      */
     protected function getCollectionsEventsContext(): string
@@ -297,6 +305,10 @@ abstract class Action extends UtopiaAction
         $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
+
+        if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+            throw new Exception($this->getSpatialTypeNotSupportedException());
+        }
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
