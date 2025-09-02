@@ -58,6 +58,7 @@ class Mapper
             'json' => Types::json(),
             'none' => Types::json(),
             'any' => Types::json(),
+            'spatial' => Types::json(),
         ];
 
         foreach ($defaults as $type => $default) {
