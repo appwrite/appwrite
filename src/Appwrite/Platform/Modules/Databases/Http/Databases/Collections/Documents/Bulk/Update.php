@@ -127,8 +127,7 @@ class Update extends Action
             }
         }
 
-        // Remove sequence if set
-        unset($document['$sequence']);
+        $data = $this->removeReadonlyAttributes($data, privileged: true);
 
         $documents = [];
 

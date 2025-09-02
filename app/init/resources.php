@@ -84,25 +84,28 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-App::setResource('publisherDatabases', function (BrokerPool $publisher) {
+App::setResource('publisherDatabases', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherFunctions', function (BrokerPool $publisher) {
+App::setResource('publisherFunctions', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherMigrations', function (BrokerPool $publisher) {
+App::setResource('publisherMigrations', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+App::setResource('publisherStatsUsage', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherMails', function (BrokerPool $publisher) {
+App::setResource('publisherMails', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherDeletes', function (BrokerPool $publisher) {
+App::setResource('publisherDeletes', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherMessaging', function (BrokerPool $publisher) {
+App::setResource('publisherMessaging', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherWebhooks', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {

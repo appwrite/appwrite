@@ -435,6 +435,11 @@ return [
         'description' => 'The requested favicon could not be found.',
         'code' => 404,
     ],
+    Exception::AVATAR_SVG_SANITIZATION_FAILED => [
+        'name' => Exception::AVATAR_SVG_SANITIZATION_FAILED,
+        'description' => 'SVG sanitization failed.',
+        'code' => 400,
+    ],
 
     /** Storage */
     Exception::STORAGE_FILE_ALREADY_EXISTS => [
