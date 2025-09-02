@@ -8284,7 +8284,6 @@ trait DatabasesBase
             'default' => json_encode([0, 0]),
             'required' => false
         ]);
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals([0, 0], $response['body']['default']);
 
