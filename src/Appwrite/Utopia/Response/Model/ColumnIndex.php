@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
@@ -94,7 +93,7 @@ class ColumnIndex extends Model
         return Response::MODEL_COLUMN_INDEX;
     }
 
-    public function filter(Document $document, Request $request): Document
+    public function filter(Document $document): Document
     {
         $columns = $document->getAttribute('attributes', []);
         $document

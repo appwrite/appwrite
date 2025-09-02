@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -341,7 +340,7 @@ class Project extends Model
      *
      * @return Document
      */
-    public function filter(Document $document, Request $request): Document
+    public function filter(Document $document): Document
     {
         // SMTP
         $smtp = $document->getAttribute('smtp', []);

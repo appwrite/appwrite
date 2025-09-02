@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
@@ -157,7 +156,7 @@ class Execution extends Model
      *
      * @return Document
      */
-    public function filter(Document $document, Request $request): Document
+    public function filter(Document $document): Document
     {
         $document->removeAttribute('resourceType');
         $document->setAttribute('functionId', $document->getAttribute('resourceId', ''));

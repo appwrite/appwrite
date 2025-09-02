@@ -403,9 +403,8 @@ class Response extends SwooleResponse
      * Response constructor.
      *
      * @param SwooleHTTPResponse $response Native response to be passed to parent constructor
-     * @param Request $request Relevant request object, useful for some response filters
      */
-    public function __construct(SwooleHTTPResponse $response, protected Request $request)
+    public function __construct(SwooleHTTPResponse $response)
     {
         $this
             // General
@@ -720,7 +719,7 @@ class Response extends SwooleResponse
         $model      = $this->getModel($model);
         $output     = [];
 
-        $data = $model->filter($data, $this->request);
+        $data = $model->filter($data);
 
         if ($model->isAny()) {
             $this->payload = $data->getArrayCopy();

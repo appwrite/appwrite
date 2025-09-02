@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
@@ -110,7 +109,7 @@ class Migration extends Model
         return Response::MODEL_MIGRATION;
     }
 
-    public function filter(Document $document, Request $request): Document
+    public function filter(Document $document): Document
     {
         $errors = $document->getAttribute('errors', []);
         if (empty($errors)) {

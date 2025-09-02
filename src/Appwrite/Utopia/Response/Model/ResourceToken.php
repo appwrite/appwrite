@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
@@ -60,7 +59,7 @@ class ResourceToken extends Model
         ;
     }
 
-    public function filter(Document $document, Request $request): Document
+    public function filter(Document $document): Document
     {
         $expire = $document->getAttribute('expire');
 

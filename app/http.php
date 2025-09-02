@@ -426,7 +426,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
     App::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
-    $response = new Response($swooleResponse, $request);
+    $response = new Response($swooleResponse);
 
     if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
