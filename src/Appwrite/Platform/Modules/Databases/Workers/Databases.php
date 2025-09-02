@@ -64,14 +64,6 @@ class Databases extends Action
         $collection = new Document($payload['table'] ?? $payload['collection'] ?? []);
         $database = new Document($payload['database'] ?? []);
 
-        Console::info("Processing database operation: \n" . \json_encode([
-            'type' => $type,
-            'projectId' => $project->getId(),
-            'databaseId' => $database->getId(),
-            'collectionId' => $collection->getId(),
-            'documentId' => $document->getId(),
-        ], JSON_PRETTY_PRINT));
-
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 

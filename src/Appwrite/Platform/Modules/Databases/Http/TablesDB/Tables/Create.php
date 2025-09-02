@@ -41,7 +41,7 @@ class Create extends CollectionCreate
             ->label('audits.resource', 'database/{request.databaseId}/table/{response.$id}')
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
-                group: null,
+                group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/create-table.md',
                 auth: [AuthType::KEY],
