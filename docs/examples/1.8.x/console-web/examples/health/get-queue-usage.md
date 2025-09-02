@@ -6,8 +6,8 @@ const client = new Client()
 
 const health = new Health(client);
 
-const result = await health.getQueueUsage(
-    null // threshold (optional)
-);
+const result = await health.getQueueUsage({
+    threshold: null // optional
+});
 
 console.log(result);

@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.updateVonageProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name (optional)
-    false, // enabled (optional)
-    '<API_KEY>', // apiKey (optional)
-    '<API_SECRET>', // apiSecret (optional)
-    '<FROM>' // from (optional)
-);
+const result = await messaging.updateVonageProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>', // optional
+    enabled: false, // optional
+    apiKey: '<API_KEY>', // optional
+    apiSecret: '<API_SECRET>', // optional
+    from: '<FROM>' // optional
+});

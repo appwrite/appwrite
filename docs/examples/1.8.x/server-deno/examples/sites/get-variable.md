@@ -7,7 +7,7 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.getVariable(
-    '<SITE_ID>', // siteId
-    '<VARIABLE_ID>' // variableId
-);
+const response = await sites.getVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+});

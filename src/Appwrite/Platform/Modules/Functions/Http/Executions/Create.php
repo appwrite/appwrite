@@ -80,7 +80,7 @@ class Create extends Base
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
-            ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
+            ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true)
             ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
             ->param('scheduledAt', null, new Text(100), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
@@ -221,6 +221,8 @@ class Create extends Base
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -228,8 +230,9 @@ class Create extends Base
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $ip = $request->getIP();
+        $headers['x-appwrite-client-ip'] = $ip;
 
-        $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
             $record = $geodb->get($ip);
 
@@ -249,7 +252,7 @@ class Create extends Base
             }
         }
 
-        $executionId = ID::unique();
+
 
         $status = $async ? 'waiting' : 'processing';
 
@@ -423,13 +426,34 @@ class Create extends Base
                 }
             }
 
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
+            $logs = $executionResponse['logs'] ?? '';
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxLogLength - $warningLength;
+                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+            }
+
+            // Truncate errors if they exceed the limit
+            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
+            $errors = $executionResponse['errors'] ?? '';
+
+            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxErrorLength - $warningLength;
+                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+            }
+
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
-            $execution->setAttribute('logs', $executionResponse['logs']);
-            $execution->setAttribute('errors', $executionResponse['errors']);
+            $execution->setAttribute('logs', $logs);
+            $execution->setAttribute('errors', $errors);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
@@ -459,6 +483,8 @@ class Create extends Base
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
+
+        $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
 
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {

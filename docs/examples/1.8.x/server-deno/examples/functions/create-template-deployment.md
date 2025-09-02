@@ -7,11 +7,11 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.createTemplateDeployment(
-    '<FUNCTION_ID>', // functionId
-    '<REPOSITORY>', // repository
-    '<OWNER>', // owner
-    '<ROOT_DIRECTORY>', // rootDirectory
-    '<VERSION>', // version
-    false // activate (optional)
-);
+const response = await functions.createTemplateDeployment({
+    functionId: '<FUNCTION_ID>',
+    repository: '<REPOSITORY>',
+    owner: '<OWNER>',
+    rootDirectory: '<ROOT_DIRECTORY>',
+    version: '<VERSION>',
+    activate: false // optional
+});

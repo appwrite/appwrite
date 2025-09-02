@@ -65,7 +65,7 @@ class Delete extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.deleteRows',
+                    replaceWith: 'tablesDB.deleteRows',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -176,7 +176,7 @@ class Delete extends Action
 
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage

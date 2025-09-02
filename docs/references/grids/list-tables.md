@@ -1,1 +1,0 @@
-Get a list of all tables that belong to the provided databaseId. You can use the search parameter to filter your results.

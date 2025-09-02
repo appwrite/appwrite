@@ -1,2 +1,1 @@
-appwrite health getCertificate \
-
+appwrite health get-certificate

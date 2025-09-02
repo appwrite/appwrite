@@ -6,8 +6,8 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.deleteProvider(
-    '<PROVIDER_ID>' // providerId
-);
+const result = await messaging.deleteProvider({
+    providerId: '<PROVIDER_ID>'
+});
 
 console.log(result);

@@ -1,3 +1,3 @@
-appwrite users updateLabels \
-        --userId <USER_ID> \
-        --labels one two three
+appwrite users update-labels \
+    --user-id <USER_ID> \
+    --labels one two three

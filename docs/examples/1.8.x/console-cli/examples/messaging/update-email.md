@@ -1,13 +1,2 @@
-appwrite messaging updateEmail \
-        --messageId <MESSAGE_ID> \
-
-
-
-
-
-
-
-
-
-
-
+appwrite messaging update-email \
+    --message-id <MESSAGE_ID>

@@ -71,6 +71,9 @@ services:
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Only needed for tests
+      - ./docker-compose.yml:/usr/src/code/docker-compose.yml # Only needed for tests
+      - ./.env:/usr/src/code/.env # Only needed for tests
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -216,7 +219,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.0.0-qa.8
+    image: appwrite/console:7.0.2
     restart: unless-stopped
     networks:
       - appwrite

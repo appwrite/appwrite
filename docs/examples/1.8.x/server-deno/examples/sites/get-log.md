@@ -7,7 +7,7 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.getLog(
-    '<SITE_ID>', // siteId
-    '<LOG_ID>' // logId
-);
+const response = await sites.getLog({
+    siteId: '<SITE_ID>',
+    logId: '<LOG_ID>'
+});

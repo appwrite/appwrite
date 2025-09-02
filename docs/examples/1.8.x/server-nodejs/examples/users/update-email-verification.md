@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updateEmailVerification(
-    '<USER_ID>', // userId
-    false // emailVerification
-);
+const result = await users.updateEmailVerification({
+    userId: '<USER_ID>',
+    emailVerification: false
+});

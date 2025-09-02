@@ -6,7 +6,6 @@ use Appwrite\Template\Template;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
-use Utopia\CLI\Console;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -148,17 +147,6 @@ class Mails extends Action
         $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
         $mail->AltBody = \strip_tags($mail->AltBody);
         $mail->AltBody = \trim($mail->AltBody);
-
-        if (\str_contains($mail->Body, 'buttonText') || \str_contains($mail->AltBody, 'buttonText')) {
-            Console::warning('Email might contain placeholder. Logs relevant to verify and isolate the issue:');
-            var_dump($mail->Body);
-            var_dump($mail->AltBody);
-            \var_dump($message->getPayload());
-            \var_dump($message->getPid());
-            \var_dump($message->getQueue());
-            \var_dump($message->getTimestamp());
-            Console::warning('End of placeholder detection report.');
-        }
 
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));

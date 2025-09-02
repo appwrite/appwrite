@@ -1,5 +1,5 @@
 mutation {
-    accountCreateMfaAuthenticator(
+    accountCreateMFAAuthenticator(
         type: "totp"
     ) {
         secret

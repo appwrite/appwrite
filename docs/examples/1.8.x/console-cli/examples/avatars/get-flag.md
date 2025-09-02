@@ -1,5 +1,2 @@
-appwrite avatars getFlag \
-        --code af \
-
-
-
+appwrite avatars get-flag \
+    --code af

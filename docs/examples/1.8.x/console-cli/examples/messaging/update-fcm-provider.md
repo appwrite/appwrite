@@ -1,5 +1,2 @@
-appwrite messaging updateFcmProvider \
-        --providerId <PROVIDER_ID> \
-
-
-
+appwrite messaging update-fcm-provider \
+    --provider-id <PROVIDER_ID>

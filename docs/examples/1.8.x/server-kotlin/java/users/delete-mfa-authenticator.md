@@ -10,7 +10,7 @@ Client client = new Client()
 
 Users users = new Users(client);
 
-users.deleteMfaAuthenticator(
+users.deleteMFAAuthenticator(
     "<USER_ID>", // userId
     AuthenticatorType.TOTP, // type
     new CoroutineCallback<>((result, error) -> {

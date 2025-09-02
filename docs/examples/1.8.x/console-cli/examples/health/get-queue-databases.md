@@ -1,3 +1,1 @@
-appwrite health getQueueDatabases \
-
-
+appwrite health get-queue-databases

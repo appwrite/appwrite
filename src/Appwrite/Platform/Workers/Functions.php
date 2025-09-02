@@ -264,6 +264,8 @@ class Functions extends Action
         string $jwt = null,
         string $event = null,
     ): void {
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -276,7 +278,6 @@ class Functions extends Action
             }
         }
 
-        $executionId = ID::unique();
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
@@ -397,6 +398,7 @@ class Functions extends Action
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
@@ -409,6 +411,8 @@ class Functions extends Action
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
+            $executionId = ID::unique();
+            $headers['x-appwrite-execution-id'] = $executionId;
             $headersFiltered = [];
             foreach ($headers as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
@@ -416,7 +420,6 @@ class Functions extends Action
                 }
             }
 
-            $executionId = ID::unique();
             $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
@@ -543,6 +546,8 @@ class Functions extends Action
 
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
+            $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
@@ -550,14 +555,36 @@ class Functions extends Action
                 }
             }
 
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
+            $logs = $executionResponse['logs'] ?? '';
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxLogLength - $warningLength;
+                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+            }
+
+            // Truncate errors if they exceed the limit
+            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
+            $errors = $executionResponse['errors'] ?? '';
+
+            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxErrorLength - $warningLength;
+                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+            }
+
             /** Update execution status */
             $execution
                 ->setAttribute('status', $status)
                 ->setAttribute('responseStatusCode', $executionResponse['statusCode'])
                 ->setAttribute('responseHeaders', $headersFiltered)
-                ->setAttribute('logs', $executionResponse['logs'])
-                ->setAttribute('errors', $executionResponse['errors'])
+                ->setAttribute('logs', $logs)
+                ->setAttribute('errors', $errors)
                 ->setAttribute('duration', $executionResponse['duration']);
+
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
             $execution

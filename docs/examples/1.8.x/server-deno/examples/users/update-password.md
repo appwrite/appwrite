@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.updatePassword(
-    '<USER_ID>', // userId
-    '' // password
-);
+const response = await users.updatePassword({
+    userId: '<USER_ID>',
+    password: ''
+});

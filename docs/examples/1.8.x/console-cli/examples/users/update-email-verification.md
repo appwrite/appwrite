@@ -1,3 +1,3 @@
-appwrite users updateEmailVerification \
-        --userId <USER_ID> \
-        --emailVerification false
+appwrite users update-email-verification \
+    --user-id <USER_ID> \
+    --email-verification false

@@ -10,6 +10,6 @@ $client = (new Client())
 
 $users = new Users($client);
 
-$result = $users->listMfaFactors(
+$result = $users->listMFAFactors(
     userId: '<USER_ID>'
 );

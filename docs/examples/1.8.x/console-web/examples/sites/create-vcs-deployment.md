@@ -6,11 +6,11 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.createVcsDeployment(
-    '<SITE_ID>', // siteId
-    VCSDeploymentType.Branch, // type
-    '<REFERENCE>', // reference
-    false // activate (optional)
-);
+const result = await sites.createVcsDeployment({
+    siteId: '<SITE_ID>',
+    type: VCSDeploymentType.Branch,
+    reference: '<REFERENCE>',
+    activate: false // optional
+});
 
 console.log(result);

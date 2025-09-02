@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.deleteMfaAuthenticator(
-    '<USER_ID>', // userId
-    sdk.AuthenticatorType.Totp // type
-);
+const result = await users.deleteMFAAuthenticator({
+    userId: '<USER_ID>',
+    type: sdk.AuthenticatorType.Totp
+});

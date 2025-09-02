@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateAuthDuration(
-    '<PROJECT_ID>', // projectId
-    0 // duration
-);
+const result = await projects.updateAuthDuration({
+    projectId: '<PROJECT_ID>',
+    duration: 0
+});
 
 console.log(result);

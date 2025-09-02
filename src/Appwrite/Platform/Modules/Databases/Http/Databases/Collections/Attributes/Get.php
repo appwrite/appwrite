@@ -60,7 +60,7 @@ class Get extends Action
                 ],
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.getColumn',
+                    replaceWith: 'tablesDB.getColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

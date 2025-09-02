@@ -84,27 +84,30 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-App::setResource('publisherDatabases', function (BrokerPool $publisher) {
+App::setResource('publisherDatabases', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherMigrations', function (BrokerPool $publisher) {
+App::setResource('publisherFunctions', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+App::setResource('publisherMigrations', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('consumer', function (Group $pools) {
-    return new BrokerPool(consumer: $pools->get('consumer'));
-}, ['pools']);
-App::setResource('consumerDatabases', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-App::setResource('consumerMigrations', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-App::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
+App::setResource('publisherStatsUsage', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMails', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherDeletes', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMessaging', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherWebhooks', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);

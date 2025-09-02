@@ -1,8 +1,2 @@
-appwrite functions createExecution \
-        --functionId <FUNCTION_ID> \
-
-
-
-
-
-
+appwrite functions create-execution \
+    --function-id <FUNCTION_ID>

@@ -1,4 +1,2 @@
-appwrite messaging updateTopic \
-        --topicId <TOPIC_ID> \
-
-
+appwrite messaging update-topic \
+    --topic-id <TOPIC_ID>

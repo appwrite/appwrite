@@ -32,44 +32,7 @@ trait DatabasesBase
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
-        $this->assertEquals('grids', $database['body']['type']);
-
-        // testing to create a database with type
-        $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Test Database with type',
-            'type' => 'mongodb'
-        ]);
-        $this->assertEquals(400, $database2['headers']['status-code']);
-
-        $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Test Database with type',
-            'type' => 'legacy'
-        ]);
-        $this->assertNotEmpty($database2['body']['$id']);
-        $this->assertEquals(201, $database2['headers']['status-code']);
-        $this->assertEquals('Test Database with type', $database2['body']['name']);
-        $this->assertEquals('legacy', $database2['body']['type']);
-
-        // cleanup(for database2)
-        $databaseId = $database2['body']['$id'];
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals('legacy', $database['body']['type']);
 
         return ['databaseId' => $database['body']['$id']];
     }
@@ -1734,6 +1697,7 @@ trait DatabasesBase
         return $data;
     }
 
+
     /**
      * @depends testCreateIndexes
      */
@@ -1741,6 +1705,7 @@ trait DatabasesBase
     {
         $databaseId = $data['databaseId'];
         $documentId = ID::unique();
+
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1758,12 +1723,42 @@ trait DatabasesBase
 
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertCount(3, $document['body']['$permissions']);
+
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+
+        /**
+         * Resubmit same document, nothing to update
+         */
+        $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+                'releaseYear' => 2000,
+                'integers' => [],
+                'birthDay' => null,
+                'duration' => null,
+                'starringActors' => [],
+                'actors' => [],
+                'tagline' => '',
+                'description' => '',
+            ],
+            'permissions' => [
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+        $this->assertCount(3, $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
@@ -2217,6 +2212,55 @@ trait DatabasesBase
             $this->assertArrayHasKey('$permissions', $library3['body']);
             $this->assertCount(3, $library3['body']['$permissions']);
             $this->assertNotEmpty($library3['body']['$permissions']);
+
+            // Readonly attributes are ignored
+            $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    '$id' => 'some-other-id',
+                    '$collectionId' => 'some-other-collection',
+                    '$databaseId' => 'some-other-database',
+                    '$createdAt' => '2024-01-01T00:00:00Z',
+                    '$updatedAt' => '2024-01-01T00:00:00Z',
+                    'library' => [
+                        '$id' => 'library3',
+                        'libraryName' => 'Library 3',
+                        '$createdAt' => '2024-01-01T00:00:00Z',
+                        '$updatedAt' => '2024-01-01T00:00:00Z',
+                    ],
+                ],
+            ]);
+
+            $update = $personNoPerm;
+            $update['body']['$id'] = 'random';
+            $update['body']['$sequence'] = 123;
+            $update['body']['$databaseId'] = 'random';
+            $update['body']['$collectionId'] = 'random';
+            $update['body']['$createdAt'] = '2024-01-01T00:00:00.000+00:00';
+            $update['body']['$updatedAt'] = '2024-01-01T00:00:00.000+00:00';
+
+            $upserted = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => $update['body']
+            ]);
+
+            $this->assertEquals(200, $upserted['headers']['status-code']);
+            $this->assertEquals($personNoPerm['body']['$id'], $upserted['body']['$id']);
+            $this->assertEquals($personNoPerm['body']['$collectionId'], $upserted['body']['$collectionId']);
+            $this->assertEquals($personNoPerm['body']['$databaseId'], $upserted['body']['$databaseId']);
+            $this->assertEquals($personNoPerm['body']['$sequence'], $upserted['body']['$sequence']);
+
+            if ($this->getSide() === 'client') {
+                $this->assertEquals($personNoPerm['body']['$createdAt'], $upserted['body']['$createdAt']);
+                $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
+            } else {
+                $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$createdAt']);
+                $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
+            }
         }
     }
 
@@ -3005,6 +3049,37 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Test readonly attributes are ignored
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-timestamp' => DateTime::formatTz(DateTime::now()),
+        ], $this->getHeaders()), [
+            'data' => [
+                '$id' => 'newId',
+                '$sequence' => 9999,
+                '$collectionId' => 'newCollectionId',
+                '$databaseId' => 'newDatabaseId',
+                '$createdAt' => '2024-01-01T00:00:00.000+00:00',
+                '$updatedAt' => '2024-01-01T00:00:00.000+00:00',
+                'title' => 'Thor: Ragnarok',
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($id, $response['body']['$id']);
+        $this->assertEquals($data['moviesId'], $response['body']['$collectionId']);
+        $this->assertEquals($databaseId, $response['body']['$databaseId']);
+        $this->assertNotEquals(9999, $response['body']['$sequence']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$createdAt']);
+            $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$updatedAt']);
+        } else {
+            $this->assertEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$createdAt']);
+            $this->assertEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$updatedAt']);
+        }
 
         return [];
     }
@@ -4342,7 +4417,9 @@ trait DatabasesBase
             ]
         ]);
         if ($this->getSide() === 'client') {
-            $this->assertEquals($document['headers']['status-code'], 400);
+            $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
+            $this->assertNotEquals($document['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));
+            $this->assertNotEquals($document['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
         } else {
             $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
             $this->assertEquals($document['body']['$createdAt'], DateTime::formatTz('2022-08-01 13:09:23.040'));

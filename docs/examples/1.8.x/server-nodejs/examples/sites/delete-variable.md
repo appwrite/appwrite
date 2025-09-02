@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.deleteVariable(
-    '<SITE_ID>', // siteId
-    '<VARIABLE_ID>' // variableId
-);
+const result = await sites.deleteVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+});

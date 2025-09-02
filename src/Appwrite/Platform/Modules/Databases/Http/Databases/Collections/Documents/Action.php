@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action as UtopiaAction;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends AppwriteAction
 {
     /**
      * @var string|null The current context (either 'row' or 'document')
@@ -21,11 +21,24 @@ abstract class Action extends UtopiaAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): AppwriteAction
     {
-        if (str_contains($path, '/:databaseId/grids/tables')) {
+        if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
         }
+
+        $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
+        $this->removableAttributes = [
+            '*' => [
+                '$sequence',
+                '$databaseId',
+                $contextId,
+            ],
+            'privileged' => [
+                '$createdAt',
+                '$updatedAt',
+            ],
+        ];
 
         return parent::setHttpPath($path);
     }
@@ -73,7 +86,7 @@ abstract class Action extends UtopiaAction
      */
     protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'databases' : 'grids';
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
 
     /**
@@ -193,6 +206,25 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Remove configured removable attributes from a document.
+     * Used for relationship path handling to remove API-specific attributes.
+     */
+    protected function removeReadonlyAttributes(
+        Document|array $document,
+        bool $privileged = false,
+    ): Document|array {
+        foreach ($this->removableAttributes['*'] as $attribute) {
+            unset($document[$attribute]);
+        }
+        if (!$privileged) {
+            foreach ($this->removableAttributes['privileged'] ?? [] as $attribute) {
+                unset($document[$attribute]);
+            }
+        }
+        return $document;
+    }
+
+    /**
      * Resolves relationships in a document and attaches metadata.
      */
     protected function processDocument(
@@ -218,7 +250,7 @@ abstract class Action extends UtopiaAction
         $collectionId = $collection->getId();
         $document->removeAttribute('$collection');
         $document->setAttribute('$databaseId', $database->getId());
-        $document->setAttribute('$collectionId', $collectionId);
+        $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
 
         $relationships = $collectionsCache[$collectionId] ??= \array_filter(
             $collection->getAttribute('attributes', []),

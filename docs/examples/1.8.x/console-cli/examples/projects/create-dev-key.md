@@ -1,4 +1,4 @@
-appwrite projects createDevKey \
-        --projectId <PROJECT_ID> \
-        --name <NAME> \
-        --expire ''
+appwrite projects create-dev-key \
+    --project-id <PROJECT_ID> \
+    --name <NAME> \
+    --expire ''

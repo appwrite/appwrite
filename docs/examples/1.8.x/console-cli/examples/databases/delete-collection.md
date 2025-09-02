@@ -1,3 +1,3 @@
-appwrite databases deleteCollection \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID>
+appwrite databases delete-collection \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID>

@@ -1,2 +1,1 @@
-appwrite health getQueueLogs \
-
+appwrite health get-queue-logs

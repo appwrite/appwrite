@@ -60,6 +60,12 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
+/**
+ * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
+ *
+ * Accounts can be created in many ways beyond `createAccount`
+ * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
+ */
 $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
     // Only trigger events for user creation with the database listener.
     if ($document->getCollection() !== 'users') {
@@ -372,9 +378,9 @@ App::init()
         }
 
         // Do now allow access if scope is not allowed
-        $scope = $route->getLabel('scope', 'none');
-        if (!\in_array($scope, $scopes)) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
+        $allowed = (array)$route->getLabel('scope', 'none');
+        if (empty(\array_intersect($allowed, $scopes))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
 
         // Do not allow access to blocked accounts
@@ -408,6 +414,8 @@ App::init()
     ->inject('project')
     ->inject('user')
     ->inject('publisher')
+    ->inject('publisherFunctions')
+    ->inject('publisherWebhooks')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -423,7 +431,7 @@ App::init()
     ->inject('plan')
     ->inject('devKey')
     ->inject('telemetry')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -535,8 +543,8 @@ App::init()
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
-        $queueForFunctions = new Func($publisher);
-        $queueForWebhooks = new Webhook($publisher);
+        $queueForFunctions = new Func($publisherFunctions);
+        $queueForWebhooks = new Webhook($publisherWebhooks);
         $queueForRealtime = new Realtime();
 
         $dbForProject
@@ -802,12 +810,6 @@ App::shutdown()
         }
 
         if (!empty($queueForDatabase->getType())) {
-            Console::info("Triggering database event: \n" .  \json_encode([
-                'projectId' => $project->getId(),
-                'databaseId' => $queueForDatabase->getDatabase()?->getId(),
-                'tableId' => $queueForDatabase->getTable()?->getId() ?? $queueForDatabase->getCollection()?->getId(),
-                'rowId' => $queueForDatabase->getRow()?->getId() ?? $queueForDatabase->getDocument()?->getId(),
-            ]));
             $queueForDatabase->trigger();
         }
 

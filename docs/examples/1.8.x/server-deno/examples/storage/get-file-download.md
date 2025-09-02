@@ -7,8 +7,8 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const result = storage.getFileDownload(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    '<TOKEN>' // token (optional)
-);
+const result = storage.getFileDownload({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    token: '<TOKEN>' // optional
+});

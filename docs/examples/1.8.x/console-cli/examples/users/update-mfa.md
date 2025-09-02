@@ -1,3 +1,3 @@
-appwrite users updateMfa \
-        --userId <USER_ID> \
-        --mfa false
+appwrite users update-mfa \
+    --user-id <USER_ID> \
+    --mfa false

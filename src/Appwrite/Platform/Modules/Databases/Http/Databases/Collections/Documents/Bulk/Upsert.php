@@ -40,7 +40,7 @@ class Upsert extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents')
-            ->desc('Create or update documents')
+            ->desc('Upsert documents')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
@@ -65,7 +65,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.upsertRows',
+                        replaceWith: 'tablesDB.upsertRows',
                     ),
                 )
             ])
@@ -102,6 +102,7 @@ class Upsert extends Action
         }
 
         foreach ($documents as $key => $document) {
+            $document = $this->removeReadonlyAttributes($document, privileged: true);
             $documents[$key] = new Document($document);
         }
 
@@ -177,7 +178,7 @@ class Upsert extends Action
 
         foreach ($upserted as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage

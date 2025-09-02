@@ -134,6 +134,7 @@ class Exception extends \Exception
     public const AVATAR_IMAGE_NOT_FOUND            = 'avatar_image_not_found';
     public const AVATAR_REMOTE_URL_FAILED          = 'avatar_remote_url_failed';
     public const AVATAR_ICON_NOT_FOUND             = 'avatar_icon_not_found';
+    public const AVATAR_SVG_SANITIZATION_FAILED    = 'avatar_svg_sanitization_failed';
 
     /** Storage */
     public const STORAGE_FILE_ALREADY_EXISTS       = 'storage_file_already_exists';

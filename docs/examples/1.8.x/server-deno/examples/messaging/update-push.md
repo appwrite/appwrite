@@ -7,24 +7,24 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.updatePush(
-    '<MESSAGE_ID>', // messageId
-    [], // topics (optional)
-    [], // users (optional)
-    [], // targets (optional)
-    '<TITLE>', // title (optional)
-    '<BODY>', // body (optional)
-    {}, // data (optional)
-    '<ACTION>', // action (optional)
-    '[ID1:ID2]', // image (optional)
-    '<ICON>', // icon (optional)
-    '<SOUND>', // sound (optional)
-    '<COLOR>', // color (optional)
-    '<TAG>', // tag (optional)
-    null, // badge (optional)
-    false, // draft (optional)
-    '', // scheduledAt (optional)
-    false, // contentAvailable (optional)
-    false, // critical (optional)
-    MessagePriority.Normal // priority (optional)
-);
+const response = await messaging.updatePush({
+    messageId: '<MESSAGE_ID>',
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    title: '<TITLE>', // optional
+    body: '<BODY>', // optional
+    data: {}, // optional
+    action: '<ACTION>', // optional
+    image: '[ID1:ID2]', // optional
+    icon: '<ICON>', // optional
+    sound: '<SOUND>', // optional
+    color: '<COLOR>', // optional
+    tag: '<TAG>', // optional
+    badge: null, // optional
+    draft: false, // optional
+    scheduledAt: '', // optional
+    contentAvailable: false, // optional
+    critical: false, // optional
+    priority: MessagePriority.Normal // optional
+});

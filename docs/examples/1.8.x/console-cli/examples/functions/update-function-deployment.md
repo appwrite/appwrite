@@ -1,3 +1,3 @@
-appwrite functions updateFunctionDeployment \
-        --functionId <FUNCTION_ID> \
-        --deploymentId <DEPLOYMENT_ID>
+appwrite functions update-function-deployment \
+    --function-id <FUNCTION_ID> \
+    --deployment-id <DEPLOYMENT_ID>

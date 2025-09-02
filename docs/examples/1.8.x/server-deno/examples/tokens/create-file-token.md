@@ -7,8 +7,8 @@ const client = new Client()
 
 const tokens = new Tokens(client);
 
-const response = await tokens.createFileToken(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    '' // expire (optional)
-);
+const response = await tokens.createFileToken({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    expire: '' // optional
+});

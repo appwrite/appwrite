@@ -58,7 +58,7 @@ class Decrement extends Action
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/decrement-document-attribute.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -68,7 +68,7 @@ class Decrement extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.decrementRowColumn',
+                    replaceWith: 'tablesDB.decrementRowColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

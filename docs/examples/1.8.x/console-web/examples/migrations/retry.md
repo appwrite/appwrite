@@ -6,8 +6,8 @@ const client = new Client()
 
 const migrations = new Migrations(client);
 
-const result = await migrations.retry(
-    '<MIGRATION_ID>' // migrationId
-);
+const result = await migrations.retry({
+    migrationId: '<MIGRATION_ID>'
+});
 
 console.log(result);

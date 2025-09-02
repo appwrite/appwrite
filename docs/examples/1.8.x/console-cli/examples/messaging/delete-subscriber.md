@@ -1,3 +1,3 @@
-appwrite messaging deleteSubscriber \
-        --topicId <TOPIC_ID> \
-        --subscriberId <SUBSCRIBER_ID>
+appwrite messaging delete-subscriber \
+    --topic-id <TOPIC_ID> \
+    --subscriber-id <SUBSCRIBER_ID>

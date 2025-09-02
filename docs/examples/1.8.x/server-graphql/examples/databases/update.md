@@ -9,5 +9,6 @@ mutation {
         _createdAt
         _updatedAt
         enabled
+        type
     }
 }

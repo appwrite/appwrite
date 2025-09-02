@@ -7,10 +7,10 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const result = await functions.updateVariable(
-    '<FUNCTION_ID>', // functionId
-    '<VARIABLE_ID>', // variableId
-    '<KEY>', // key
-    '<VALUE>', // value (optional)
-    false // secret (optional)
-);
+const result = await functions.updateVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+});

@@ -9,7 +9,7 @@ val client = Client()
 
 val messaging = Messaging(client)
 
-val response = messaging.createFcmProvider(
+val response = messaging.createFCMProvider(
     providerId = "<PROVIDER_ID>",
     name = "<NAME>",
     serviceAccountJSON = mapOf( "a" to "b" ), // optional

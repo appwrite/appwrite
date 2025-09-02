@@ -7,15 +7,15 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.updateMailgunProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name (optional)
-    '<API_KEY>', // apiKey (optional)
-    '<DOMAIN>', // domain (optional)
-    false, // isEuRegion (optional)
-    false, // enabled (optional)
-    '<FROM_NAME>', // fromName (optional)
-    'email@example.com', // fromEmail (optional)
-    '<REPLY_TO_NAME>', // replyToName (optional)
-    '<REPLY_TO_EMAIL>' // replyToEmail (optional)
-);
+const response = await messaging.updateMailgunProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>', // optional
+    apiKey: '<API_KEY>', // optional
+    domain: '<DOMAIN>', // optional
+    isEuRegion: false, // optional
+    enabled: false, // optional
+    fromName: '<FROM_NAME>', // optional
+    fromEmail: 'email@example.com', // optional
+    replyToName: '<REPLY_TO_NAME>', // optional
+    replyToEmail: '<REPLY_TO_EMAIL>' // optional
+});

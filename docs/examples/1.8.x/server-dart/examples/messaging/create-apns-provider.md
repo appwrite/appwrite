@@ -7,7 +7,7 @@ Client client = Client()
 
 Messaging messaging = Messaging(client);
 
-Provider result = await messaging.createApnsProvider(
+Provider result = await messaging.createAPNSProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>',
     authKey: '<AUTH_KEY>', // (optional)

@@ -1,3 +1,3 @@
-appwrite vcs getRepository \
-        --installationId <INSTALLATION_ID> \
-        --providerRepositoryId <PROVIDER_REPOSITORY_ID>
+appwrite vcs get-repository \
+    --installation-id <INSTALLATION_ID> \
+    --provider-repository-id <PROVIDER_REPOSITORY_ID>

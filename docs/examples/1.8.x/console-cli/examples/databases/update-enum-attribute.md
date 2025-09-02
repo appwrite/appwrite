@@ -1,8 +1,7 @@
-appwrite databases updateEnumAttribute \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --key '' \
-        --elements one two three \
-        --required false \
-        --default <DEFAULT> \
-
+appwrite databases update-enum-attribute \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --key '' \
+    --elements one two three \
+    --required false \
+    --default <DEFAULT>

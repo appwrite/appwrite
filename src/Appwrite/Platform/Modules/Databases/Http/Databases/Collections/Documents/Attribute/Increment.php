@@ -58,7 +58,7 @@ class Increment extends Action
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/increment-document-attribute.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -68,7 +68,7 @@ class Increment extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.incrementRowColumn',
+                    replaceWith: 'tablesDB.incrementRowColumn',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')

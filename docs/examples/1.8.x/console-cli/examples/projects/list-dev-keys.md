@@ -1,3 +1,2 @@
-appwrite projects listDevKeys \
-        --projectId <PROJECT_ID> \
-
+appwrite projects list-dev-keys \
+    --project-id <PROJECT_ID>

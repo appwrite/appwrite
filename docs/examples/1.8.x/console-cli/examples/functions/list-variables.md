@@ -1,2 +1,2 @@
-appwrite functions listVariables \
-        --functionId <FUNCTION_ID>
+appwrite functions list-variables \
+    --function-id <FUNCTION_ID>

@@ -67,7 +67,7 @@ class Delete extends Action
                 contentType: ContentType::NONE,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.deleteRow',
+                    replaceWith: 'tablesDB.deleteRow',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -167,6 +167,7 @@ class Delete extends Action
         }
 
         $collectionsCache = [];
+
         $this->processDocument(
             database: $database,
             collection: $collection,

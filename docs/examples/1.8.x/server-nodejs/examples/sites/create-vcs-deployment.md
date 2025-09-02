@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.createVcsDeployment(
-    '<SITE_ID>', // siteId
-    sdk.VCSDeploymentType.Branch, // type
-    '<REFERENCE>', // reference
-    false // activate (optional)
-);
+const result = await sites.createVcsDeployment({
+    siteId: '<SITE_ID>',
+    type: sdk.VCSDeploymentType.Branch,
+    reference: '<REFERENCE>',
+    activate: false // optional
+});

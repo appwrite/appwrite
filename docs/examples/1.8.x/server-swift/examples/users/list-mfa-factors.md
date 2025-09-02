@@ -7,7 +7,7 @@ let client = Client()
 
 let users = Users(client)
 
-let mfaFactors = try await users.listMfaFactors(
+let mfaFactors = try await users.listMFAFactors(
     userId: "<USER_ID>"
 )
 

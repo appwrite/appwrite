@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.updateVerification(
-    '<USER_ID>', // userId
-    '<SECRET>' // secret
-);
+const result = await account.updateVerification({
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});

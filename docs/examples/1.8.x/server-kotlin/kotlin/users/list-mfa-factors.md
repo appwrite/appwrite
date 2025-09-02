@@ -9,6 +9,6 @@ val client = Client()
 
 val users = Users(client)
 
-val response = users.listMfaFactors(
+val response = users.listMFAFactors(
     userId = "<USER_ID>"
 )

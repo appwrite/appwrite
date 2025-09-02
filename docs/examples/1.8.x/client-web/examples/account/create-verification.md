@@ -6,8 +6,8 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.createVerification(
-    'https://example.com' // url
-);
+const result = await account.createVerification({
+    url: 'https://example.com'
+});
 
 console.log(result);

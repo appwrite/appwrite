@@ -1,5 +1,5 @@
 mutation {
-    accountCreateMfaChallenge(
+    accountCreateMFAChallenge(
         factor: "email"
     ) {
         _id

@@ -6,13 +6,13 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.updateDatetimeAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    '', // default
-    '' // newKey (optional)
-);
+const result = await databases.updateDatetimeAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: '',
+    newKey: '' // optional
+});
 
 console.log(result);

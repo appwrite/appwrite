@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updatePrefs(
-    '<USER_ID>', // userId
-    {} // prefs
-);
+const result = await users.updatePrefs({
+    userId: '<USER_ID>',
+    prefs: {}
+});

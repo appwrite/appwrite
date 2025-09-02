@@ -1,3 +1,2 @@
-appwrite health getFailedJobs \
-        --name v1-database \
-
+appwrite health get-failed-jobs \
+    --name v1-database

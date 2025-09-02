@@ -68,7 +68,7 @@ class Update extends Action
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'grids.updateRows',
+                    replaceWith: 'tablesDB.updateRows',
                 ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
@@ -128,6 +128,8 @@ class Update extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
             }
         }
+
+        $data = $this->removeReadonlyAttributes($data, privileged: true);
 
         // Handle transaction staging
         if ($transactionId !== null) {
@@ -202,7 +204,7 @@ class Update extends Action
 
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage

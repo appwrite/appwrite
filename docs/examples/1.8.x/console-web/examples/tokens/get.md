@@ -6,8 +6,8 @@ const client = new Client()
 
 const tokens = new Tokens(client);
 
-const result = await tokens.get(
-    '<TOKEN_ID>' // tokenId
-);
+const result = await tokens.get({
+    tokenId: '<TOKEN_ID>'
+});
 
 console.log(result);

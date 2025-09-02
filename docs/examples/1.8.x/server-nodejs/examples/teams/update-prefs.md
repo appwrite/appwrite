@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const result = await teams.updatePrefs(
-    '<TEAM_ID>', // teamId
-    {} // prefs
-);
+const result = await teams.updatePrefs({
+    teamId: '<TEAM_ID>',
+    prefs: {}
+});

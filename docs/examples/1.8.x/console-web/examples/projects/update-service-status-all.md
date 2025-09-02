@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateServiceStatusAll(
-    '<PROJECT_ID>', // projectId
-    false // status
-);
+const result = await projects.updateServiceStatusAll({
+    projectId: '<PROJECT_ID>',
+    status: false
+});
 
 console.log(result);

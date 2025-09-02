@@ -10,6 +10,6 @@ val client = Client()
 
 val account = Account(client)
 
-val response = account.deleteMfaAuthenticator(
+val response = account.deleteMFAAuthenticator(
     type =  AuthenticatorType.TOTP
 )

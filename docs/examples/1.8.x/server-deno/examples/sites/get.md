@@ -7,6 +7,6 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.get(
-    '<SITE_ID>' // siteId
-);
+const response = await sites.get({
+    siteId: '<SITE_ID>'
+});

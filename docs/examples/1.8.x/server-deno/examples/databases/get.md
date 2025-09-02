@@ -7,6 +7,6 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.get(
-    '<DATABASE_ID>' // databaseId
-);
+const response = await databases.get({
+    databaseId: '<DATABASE_ID>'
+});

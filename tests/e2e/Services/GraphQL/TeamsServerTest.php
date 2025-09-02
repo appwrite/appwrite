@@ -17,7 +17,7 @@ class TeamsServerTest extends Scope
     public function testCreateTeam(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_TEAM);
+        $query = $this->getQuery(self::CREATE_TEAM);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -46,7 +46,7 @@ class TeamsServerTest extends Scope
     public function testCreateTeamMembership($team): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::CREATE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -74,7 +74,7 @@ class TeamsServerTest extends Scope
     public function testGetTeams()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAMS);
+        $query = $this->getQuery(self::GET_TEAMS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -94,7 +94,7 @@ class TeamsServerTest extends Scope
     public function testGetTeam($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM);
+        $query = $this->getQuery(self::GET_TEAM);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -121,7 +121,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeamPrefs($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_TEAM_PREFERENCES);
+        $query = $this->getQuery(self::UPDATE_TEAM_PREFERENCES);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -151,7 +151,7 @@ class TeamsServerTest extends Scope
     public function testGetTeamPreferences($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM_PREFERENCES);
+        $query = $this->getQuery(self::GET_TEAM_PREFERENCES);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -175,7 +175,7 @@ class TeamsServerTest extends Scope
     public function testGetTeamMemberships($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM_MEMBERSHIPS);
+        $query = $this->getQuery(self::GET_TEAM_MEMBERSHIPS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -200,7 +200,7 @@ class TeamsServerTest extends Scope
     public function testGetTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::GET_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -224,7 +224,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeam($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_TEAM_NAME);
+        $query = $this->getQuery(self::UPDATE_TEAM_NAME);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -251,7 +251,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeamMembershipRoles($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::UPDATE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -279,7 +279,7 @@ class TeamsServerTest extends Scope
     public function testDeleteTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::DELETE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -303,7 +303,7 @@ class TeamsServerTest extends Scope
         $team = $this->testCreateTeam();
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_TEAM);
+        $query = $this->getQuery(self::DELETE_TEAM);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

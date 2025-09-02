@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.createTelesignProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '+12065550100', // from (optional)
-    '<CUSTOMER_ID>', // customerId (optional)
-    '<API_KEY>', // apiKey (optional)
-    false // enabled (optional)
-);
+const result = await messaging.createTelesignProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    from: '+12065550100', // optional
+    customerId: '<CUSTOMER_ID>', // optional
+    apiKey: '<API_KEY>', // optional
+    enabled: false // optional
+});

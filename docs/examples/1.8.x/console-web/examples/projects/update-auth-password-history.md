@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateAuthPasswordHistory(
-    '<PROJECT_ID>', // projectId
-    0 // limit
-);
+const result = await projects.updateAuthPasswordHistory({
+    projectId: '<PROJECT_ID>',
+    limit: 0
+});
 
 console.log(result);

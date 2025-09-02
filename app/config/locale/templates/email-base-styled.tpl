@@ -1,9 +1,24 @@
 <!doctype html>
 <html>
     <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap">
+        <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+        <style>
+            @font-face {
+                font-family: 'Inter';
+                src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            @font-face {
+                font-family: 'DM Sans';
+                src: url('https://assets.appwrite.io/fonts/dm-sans/dm-sans-v16-latin-600.woff2') format('woff2');
+                font-weight: 600;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
         <style>
             @media (max-width:500px) {
                 .mobile-full-width {

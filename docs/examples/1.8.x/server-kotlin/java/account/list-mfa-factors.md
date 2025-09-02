@@ -9,7 +9,7 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-account.listMfaFactors(new CoroutineCallback<>((result, error) -> {
+account.listMFAFactors(new CoroutineCallback<>((result, error) -> {
     if (error != null) {
         error.printStackTrace();
         return;

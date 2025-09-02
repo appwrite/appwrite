@@ -405,8 +405,10 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEventually(function () use ($siteId, &$site) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals('ssr', $site['body']['adapter']);
+        });
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -416,6 +418,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testAdapterDetectionAstroStatic(): void
     {
         $siteId = $this->setupSite([
@@ -1051,6 +1054,30 @@ class SitesCustomServerTest extends Scope
 
         $deployments = $this->listDeployments($siteId, [
             'queries' => [
+                Query::select(['status'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        // Extra select query check, for attribute not allowed by filter queries
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
+                Query::select(['buildLogs'])->toString(),
+            ],
+        ]);
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
                 Query::offset(1)->toString(),
             ],
         ]);
@@ -1430,6 +1457,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Index page", $response['body']);
 
+        $this->assertArrayHasKey('x-appwrite-log-id', $response['headers']);
+        $this->assertNotEmpty($response['headers']['x-appwrite-log-id']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1507,6 +1537,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
         $template = $this->getTemplate('playground-for-astro');
@@ -1883,6 +1914,7 @@ class SitesCustomServerTest extends Scope
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
         $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
@@ -1891,6 +1923,24 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+            Query::equal('deploymentId', [$deploymentId])->toString()
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $logs['body']['total']);
+        $this->assertCount(1, $logs['body']['executions']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+            Query::equal('deploymentId', ['some-random-id'])->toString()
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals(0, $logs['body']['total']);
+        $this->assertCount(0, $logs['body']['executions']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1901,6 +1951,7 @@ class SitesCustomServerTest extends Scope
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
         $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
@@ -2690,6 +2741,45 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertStringContainsString('custom error', $deployment['body']['buildLogs']);
         $this->assertStringContainsString('Adapter mismatch', $deployment['body']['buildLogs']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCookieHeader()
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/cookies', [
+            'cookie' => 'custom-session-id=abcd123'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals("abcd123", $response['body']);
 
         $this->cleanupSite($siteId);
     }

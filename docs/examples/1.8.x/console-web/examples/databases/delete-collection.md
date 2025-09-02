@@ -6,9 +6,9 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.deleteCollection(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>' // collectionId
-);
+const result = await databases.deleteCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>'
+});
 
 console.log(result);

@@ -1,4 +1,4 @@
-appwrite databases deleteIndex \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --key ''
+appwrite databases delete-index \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --key ''

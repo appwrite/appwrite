@@ -1,5 +1,5 @@
 mutation {
-    accountUpdateMfaChallenge(
+    accountUpdateMFAChallenge(
         challengeId: "<CHALLENGE_ID>",
         otp: "<OTP>"
     ) {

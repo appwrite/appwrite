@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const avatars = new sdk.Avatars(client);
 
-const result = await avatars.getInitials(
-    '<NAME>', // name (optional)
-    0, // width (optional)
-    0, // height (optional)
-    '' // background (optional)
-);
+const result = await avatars.getInitials({
+    name: '<NAME>', // optional
+    width: 0, // optional
+    height: 0, // optional
+    background: '' // optional
+});

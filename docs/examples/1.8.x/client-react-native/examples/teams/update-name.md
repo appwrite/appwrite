@@ -6,9 +6,9 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const result = await teams.updateName(
-    '<TEAM_ID>', // teamId
-    '<NAME>' // name
-);
+const result = await teams.updateName({
+    teamId: '<TEAM_ID>',
+    name: '<NAME>'
+});
 
 console.log(result);

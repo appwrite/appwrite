@@ -6,8 +6,8 @@ const client = new Client()
 
 const migrations = new Migrations(client);
 
-const result = await migrations.delete(
-    '<MIGRATION_ID>' // migrationId
-);
+const result = await migrations.delete({
+    migrationId: '<MIGRATION_ID>'
+});
 
 console.log(result);

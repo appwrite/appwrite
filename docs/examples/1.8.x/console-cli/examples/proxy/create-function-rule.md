@@ -1,4 +1,3 @@
-appwrite proxy createFunctionRule \
-        --domain '' \
-        --functionId <FUNCTION_ID> \
-
+appwrite proxy create-function-rule \
+    --domain '' \
+    --function-id <FUNCTION_ID>

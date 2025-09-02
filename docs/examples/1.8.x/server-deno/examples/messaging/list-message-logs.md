@@ -7,7 +7,7 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.listMessageLogs(
-    '<MESSAGE_ID>', // messageId
-    [] // queries (optional)
-);
+const response = await messaging.listMessageLogs({
+    messageId: '<MESSAGE_ID>',
+    queries: [] // optional
+});

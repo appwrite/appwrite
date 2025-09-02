@@ -6,11 +6,11 @@ const client = new Client()
 
 const avatars = new Avatars(client);
 
-const result = avatars.getInitials(
-    '<NAME>', // name (optional)
-    0, // width (optional)
-    0, // height (optional)
-    '' // background (optional)
-);
+const result = avatars.getInitials({
+    name: '<NAME>', // optional
+    width: 0, // optional
+    height: 0, // optional
+    background: '' // optional
+});
 
 console.log(result);

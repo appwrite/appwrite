@@ -1,4 +1,2 @@
-appwrite functions listDeployments \
-        --functionId <FUNCTION_ID> \
-
-
+appwrite functions list-deployments \
+    --function-id <FUNCTION_ID>
