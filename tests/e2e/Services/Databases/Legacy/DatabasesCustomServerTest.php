@@ -6406,20 +6406,14 @@ class DatabasesCustomServerTest extends Scope
                 [
                     '$id' => ID::unique(),
                     'name' => 'Invalid Point',
-                    'location' => [1000.0, 2000.0], // Invalid coordinates
-                    'area' => [
-                        [10.0, 20.0],
-                        [11.0, 20.0],
-                        [11.0, 21.0],
-                        [10.0, 21.0],
-                        [10.0, 20.0]
-                    ]
+                    'location' => [1000.0, 2000.0],
+                    'area' => [10.0 , 10.0]
                 ]
             ],
         ]);
 
-        // Coordinates are not validated strictly; creation should succeed
-        $this->assertEquals(201, $response['headers']['status-code']);
+        // invalid polygon
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
@@ -6438,7 +6432,7 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
@@ -6720,8 +6714,7 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        // Single point linestrings are accepted as arrays; creation should succeed
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([

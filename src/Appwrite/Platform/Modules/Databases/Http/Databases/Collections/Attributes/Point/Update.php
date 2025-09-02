@@ -64,7 +64,7 @@ class Update extends Action
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#createCollection).')
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new Nullable(new Spatial(Database::VAR_POINT)), 'Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.',true)
+            ->param('default', null, new Nullable(new Spatial(Database::VAR_POINT)), 'Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.', true)
             ->param('newKey', null, new Key(), 'New attribute key.', true)
             ->inject('response')
             ->inject('dbForProject')

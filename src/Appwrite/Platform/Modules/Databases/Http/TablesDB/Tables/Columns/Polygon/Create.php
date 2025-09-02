@@ -57,7 +57,6 @@ class Create extends PolygonCreate
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POLYGON)), 'Default value for column when not provided, as JSON string. Cannot be set when column is required.', true)
-            ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')

@@ -8106,7 +8106,31 @@ trait DatabasesBase
             'type' => Database::INDEX_SPATIAL,
             'columns' => ['pOptional'],
         ]);
-        $this->assertEquals(202, $badIndex['headers']['status-code']);
+        $this->assertEquals(400, $badIndex['headers']['status-code']);
+
+        // making it required to create index on it
+        $updated = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point/'.'pOptional', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'required' => true,
+            'default' => null
+        ]);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        sleep(2);
+
+        $retriedIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_optional_point',
+            'type' => Database::INDEX_SPATIAL,
+            'columns' => ['pOptional'],
+        ]);
+        $this->assertEquals(202, $retriedIndex['headers']['status-code']);
 
         // Passing orders to spatial index should not throw error (in case of mariadb)
         $ordersIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
@@ -8292,4 +8316,100 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
+    public function testSpatialDistanceInMeter(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial Distance Meters Database'
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        // Create table
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", $headers, [
+            'tableId' => ID::unique(),
+            'name' => 'Spatial Distance Meters Table',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $tableId = $table['body']['$id'];
+
+        // Create point column
+        $resp = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/point", $headers, [
+            'key' => 'loc',
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $resp['headers']['status-code']);
+
+        sleep(2);
+
+        // Create spatial index
+        $indexResp = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/indexes", $headers, [
+            'key' => 'idx_loc',
+            'type' => Database::INDEX_SPATIAL,
+            'columns' => ['loc'],
+        ]);
+        $this->assertEquals(202, $indexResp['headers']['status-code']);
+
+
+        // Insert two points ~1km apart
+        $points = [
+            'p0' => [0.0000, 0.0000],
+            'p1' => [0.0090, 0.0000]
+        ];
+
+        foreach ($points as $id => $loc) {
+            $rowResp = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", $headers, [
+                'rowId' => $id,
+                'data' => ['loc' => $loc]
+            ]);
+            $this->assertEquals(201, $rowResp['headers']['status-code']);
+        }
+
+        // Queries
+        $queries = [
+            'within1_5km' => Query::distanceLessThan('loc', [0.0, 0.0], 1500, true),
+            'within500m' => Query::distanceLessThan('loc', [0.0, 0.0], 500, true),
+            'greater500m' => Query::distanceGreaterThan('loc', [0.0, 0.0], 500, true),
+            'equal0m' => Query::distanceEqual('loc', [0.0, 0.0], 0, true),
+            'notEqual0m' => Query::distanceNotEqual('loc', [0.0, 0.0], 0, true),
+        ];
+
+        // Assertions
+        $results = [
+            'within1_5km' => 2,
+            'within500m' => 1,
+            'greater500m' => 1,
+            'equal0m' => 'p0',
+            'notEqual0m' => 'p1'
+        ];
+
+        foreach ($queries as $key => $query) {
+            $resp = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", $headers, [
+                'queries' => [$query->toString()]
+            ]);
+            $this->assertEquals(200, $resp['headers']['status-code']);
+            if (is_int($results[$key])) {
+                $this->assertCount($results[$key], $resp['body']['rows']);
+            } else {
+                $this->assertEquals($results[$key], $resp['body']['rows'][0]['$id']);
+            }
+        }
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}", $headers);
+        $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}", $headers);
+    }
+
 }

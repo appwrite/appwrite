@@ -6399,7 +6399,7 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test 4c: Missing required location (should fail)
         $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
@@ -6682,8 +6682,7 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        // Single point linestrings are accepted as arrays; creation should succeed
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([

@@ -7572,4 +7572,159 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
+
+    public function testSpatialDistanceInMeter(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial Distance Meters Database'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create collection with spatial attribute
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Spatial Distance Meters Collection',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // Create point attribute
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'loc',
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        sleep(2);
+
+        // Create spatial index
+        $indexResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_loc',
+            'type' => Database::INDEX_SPATIAL,
+            'attributes' => ['loc'],
+        ]);
+
+        sleep(2);
+        $this->assertEquals(202, $indexResponse['headers']['status-code']);
+
+
+        // Two points roughly ~1000 meters apart by latitude delta (~0.009 deg ≈ 1km)
+        $p0 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'p0',
+            'data' => [
+                'loc' => [0.0000, 0.0000]
+            ]
+        ]);
+
+        $p1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'p1',
+            'data' => [
+                'loc' => [0.0090, 0.0000]
+            ]
+        ]);
+
+        $this->assertEquals(201, $p0['headers']['status-code']);
+        $this->assertEquals(201, $p1['headers']['status-code']);
+
+        // distanceLessThan with meters=true: within 1500m should include both
+        $within1_5km = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::distanceLessThan('loc', [0.0000, 0.0000], 1500, true)->toString()]
+        ]);
+
+        $this->assertEquals(200, $within1_5km['headers']['status-code']);
+        $this->assertCount(2, $within1_5km['body']['documents']);
+
+        // Within 500m should include only p0 (exact point)
+        $within500m = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::distanceLessThan('loc', [0.0000, 0.0000], 500, true)->toString()]
+        ]);
+
+        $this->assertEquals(200, $within500m['headers']['status-code']);
+        $this->assertCount(1, $within500m['body']['documents']);
+        $this->assertEquals('p0', $within500m['body']['documents'][0]['$id']);
+
+        // distanceGreaterThan 500m should include only p1
+        $greater500m = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::distanceGreaterThan('loc', [0.0000, 0.0000], 500, true)->toString()]
+        ]);
+
+        $this->assertEquals(200, $greater500m['headers']['status-code']);
+        $this->assertCount(1, $greater500m['body']['documents']);
+        $this->assertEquals('p1', $greater500m['body']['documents'][0]['$id']);
+
+        // distanceEqual with 0m should return exact match p0
+        $equalZero = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::distanceEqual('loc', [0.0000, 0.0000], 0, true)->toString()]
+        ]);
+
+        $this->assertEquals(200, $equalZero['headers']['status-code']);
+        $this->assertEquals('p0', $equalZero['body']['documents'][0]['$id']);
+
+        // distanceNotEqual with 0m should return p1
+        $notEqualZero = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::distanceNotEqual('loc', [0.0000, 0.0000], 0, true)->toString()]
+        ]);
+
+        $this->assertEquals(200, $notEqualZero['headers']['status-code']);
+        $this->assertEquals('p1', $notEqualZero['body']['documents'][0]['$id']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
 }
