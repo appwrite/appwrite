@@ -45,6 +45,7 @@ abstract class Model
 
     /**
      * Filter Document Structure
+     * @param Document $document Document to apply filter on
      *
      * @return Document
      */
@@ -106,7 +107,7 @@ abstract class Model
      * @param string $key
      * @return Model
      */
-    protected function removeRule(string $key): self
+    public function removeRule(string $key): self
     {
         if (isset($this->rules[$key])) {
             unset($this->rules[$key]);
