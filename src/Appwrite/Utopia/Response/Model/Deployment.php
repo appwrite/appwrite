@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Document;
 
 class Deployment extends Model
 {
@@ -189,12 +188,6 @@ class Deployment extends Model
     public function getName(): string
     {
         return 'Deployment';
-    }
-
-    public function filter(Document $document): Document
-    {
-        $this->applySelectQueries($document, $request);
-        return $document;
     }
 
     /**

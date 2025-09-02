@@ -31,7 +31,7 @@ class Base extends Action
      * @param Document $document
      * @return void
      */
-    public function applySelectQueries(Request $request, Response $response, Document $document): void
+    public function applySelectQueries(Request $request, Response $response, string $model): void
     {
         $queries = $request->getParam('queries', []);
 
@@ -50,14 +50,14 @@ class Base extends Action
             }
         }
 
-        // TODO: Apply for all models? pass model as param?
-        foreach ($response->getRules() as $ruleName => $rule) {
+        $responseModel = $response->getModel($model);
+        foreach ($responseModel->getRules() as $ruleName => $rule) {
             if (\str_starts_with($ruleName, '$')) {
                 continue;
             }
 
             if (!\in_array($ruleName, $attributes)) {
-                $response->removeRule($ruleName);
+                $responseModel->removeRule($ruleName);
             }
         }
     }
