@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform;
 
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Swoole\Coroutine as Co;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -155,6 +157,47 @@ class Action extends UtopiaAction
                 break;
             default:
                 Console::info("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+        }
+    }
+
+
+    /**
+     * Helper to apply (request) select queries to response model.
+     *
+     * This prevents default values of rules to be presnet for not-selected attributes
+     *
+     * @param Request $request
+     * @param Document $document
+     * @return void
+     */
+    public function applySelectQueries(Request $request, Response $response, string $model): void
+    {
+        $queries = $request->getParam('queries', []);
+
+        $queries = Query::parseQueries($queries);
+        $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+
+        // No select queries means no filtering out
+        if (empty($selectQueries)) {
+            return;
+        }
+
+        $attributes = [];
+        foreach ($selectQueries as $query) {
+            foreach ($query->getValues() as $attribute) {
+                $attributes[] = $attribute;
+            }
+        }
+
+        $responseModel = $response->getModel($model);
+        foreach ($responseModel->getRules() as $ruleName => $rule) {
+            if (\str_starts_with($ruleName, '$')) {
+                continue;
+            }
+
+            if (!\in_array($ruleName, $attributes)) {
+                $responseModel->removeRule($ruleName);
+            }
         }
     }
 }
