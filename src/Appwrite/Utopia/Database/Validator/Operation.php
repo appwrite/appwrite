@@ -13,7 +13,6 @@ class Operation extends Validator
         'databaseId',
         'collectionId',
         'action',
-        'data',
     ];
 
     /** @var array<string, bool> */
@@ -22,6 +21,8 @@ class Operation extends Validator
         'update' => true,
         'upsert' => true,
         'delete' => true,
+        'increment' => true,
+        'decrement' => true,
     ];
 
     /** @var array<string, bool> */
@@ -30,6 +31,8 @@ class Operation extends Validator
         'update' => true,
         'upsert' => true,
         'delete' => true,
+        'increment' => true,
+        'decrement' => true,
         'bulkCreate' => true,
         'bulkUpdate' => true,
         'bulkUpsert' => true,
@@ -75,7 +78,7 @@ class Operation extends Validator
 
         // Validate action
         if (!isset($this->actions[$value['action']])) {
-            $this->description = "Key 'action' must be one of: " . \implode(', ', $this->actions);
+            $this->description = "Key 'action' must be one of: " . \implode(', ', array_keys($this->actions));
             return false;
         }
 
@@ -88,7 +91,11 @@ class Operation extends Validator
             return false;
         }
 
-        // Data must be array (can be empty)
+        // Data must be present and must be array (can be empty)
+        if (!\array_key_exists('data', $value)) {
+            $this->description = "Missing required key: data";
+            return false;
+        }
         if (!\is_array($value['data'])) {
             $this->description = "Key 'data' must be an array";
             return false;
