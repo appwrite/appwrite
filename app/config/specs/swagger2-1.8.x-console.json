@@ -47166,17 +47166,20 @@
                     "type": "integer",
                     "description": "Row automatically incrementing ID.",
                     "x-example": 1,
-                    "format": "int32"
+                    "format": "int32",
+                    "readOnly": true
                 },
                 "$tableId": {
                     "type": "string",
                     "description": "Table ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$databaseId": {
                     "type": "string",
                     "description": "Database ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$createdAt": {
                     "type": "string",
