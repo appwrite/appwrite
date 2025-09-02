@@ -142,7 +142,7 @@ class Audits extends Action
 
                 Console::success('Audit logs processed successfully');
             } catch (Throwable $e) {
-                Console::error('Error processing audit logs for Project "' . $projectDocument->getSequence() . '": ' . $e->getMessage());
+                Console::error('Error processing audit logs for Project "' . $sequence . '": ' . $e->getMessage());
             } finally {
                 unset($this->logs[$sequence]);
             }
