@@ -88,7 +88,7 @@ class Update extends Action
         }
 
         if ($commit) {
-            $dbForProject->withTransaction(function () use ($dbForProject, $queueForDeletes, $transactionId, $transaction) {
+            $dbForProject->withTransaction(function () use ($dbForProject, $queueForDeletes, $transactionId, &$transaction) {
                 $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'committing',
                 ]));
@@ -113,6 +113,9 @@ class Update extends Action
                         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $queueForDeletes, $action, $collectionId, $documentId, $data) {
                             switch ($action) {
                                 case 'create':
+                                    if ($documentId && !isset($data['$id'])) {
+                                        $data['$id'] = $documentId;
+                                    }
                                     $document = new Document($data);
                                     $dbForProject->createDocument($collectionId, $document);
                                     break;
