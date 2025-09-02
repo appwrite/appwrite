@@ -1060,26 +1060,6 @@ App::init()
             $response->addHeader('Access-Control-Allow-Origin', '*');
         }
 
-        /**
-         * Deprecation Warning
-         */
-        /** @var \Appwrite\SDK\Method $sdk */
-        $sdk = $route->getLabel('sdk', false);
-        $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
-        $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
-        if (!empty($sdkItems) && count($sdkItems) > 0) {
-            $allDeprecated = true;
-            foreach ($sdkItems as $sdkItem) {
-                if (!$sdkItem->isDeprecated()) {
-                    $allDeprecated = false;
-                    break;
-                }
-            }
-            if ($allDeprecated) {
-                $warnings[] = $deprecationWarning;
-            }
-        }
-
         if (!empty($warnings)) {
             $response->addHeader('X-Appwrite-Warning', implode(';', $warnings));
         }
