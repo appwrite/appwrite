@@ -193,6 +193,7 @@ class Update extends Action
                     $queueForDeletes
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($transaction);
+
                 } catch (DuplicateException|ConflictException) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
