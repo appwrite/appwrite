@@ -37,7 +37,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertArrayHasKey('$id', $response['body']);
@@ -53,13 +54,14 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'ttl' => 900
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals('pending', $response['body']['status']);
-        
+
         $expiresAt = new \DateTime($response['body']['expiresAt']);
         $now = new \DateTime();
         $diff = $expiresAt->getTimestamp() - $now->getTimestamp();
@@ -72,7 +74,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'ttl' => 30 // Below minimum
         ]);
 
@@ -81,7 +84,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'ttl' => 4000 // Above maximum
         ]);
 
@@ -142,7 +146,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, "/databases/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'operations' => [
                 [
                     'databaseId' => $databaseId,
@@ -174,7 +179,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, "/databases/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'operations' => [
                 [
                     'databaseId' => $databaseId,
@@ -195,7 +201,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, "/databases/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'operations' => [
                 [
                     'databaseId' => 'invalid_database',
@@ -212,7 +219,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, "/databases/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'operations' => [
                 [
                     'databaseId' => $databaseId,
@@ -243,7 +251,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'commit' => true
         ]);
 
@@ -258,7 +267,7 @@ class DatabasesTransactionsTest extends Scope
 
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(2, $documents['body']['total']);
-        
+
         // Verify the update was applied
         $doc1Found = false;
         foreach ($documents['body']['documents'] as $doc) {
@@ -273,7 +282,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'commit' => true
         ]);
 
@@ -324,7 +334,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, "/databases/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'operations' => [
                 [
                     'databaseId' => $databaseId,
@@ -344,7 +355,8 @@ class DatabasesTransactionsTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'rollback' => true
         ]);
 

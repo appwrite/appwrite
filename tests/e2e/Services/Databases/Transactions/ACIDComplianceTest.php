@@ -7,12 +7,10 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 
 class ACIDComplianceTest extends Scope
 {
@@ -162,7 +160,7 @@ class ACIDComplianceTest extends Scope
             $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
         } else {
             $this->assertEquals(409, $response['headers']['status-code']); // Conflict error
-            
+
             // Verify NO new documents were created (atomicity)
             $documents = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
                 'content-type' => 'application/json',
@@ -577,7 +575,7 @@ class ACIDComplianceTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertGreaterThan(0, $allDocs['body']['total'], 'Should have created documents. Found: ' . json_encode($allDocs['body']));
 
         // Verify documents exist and have correct data

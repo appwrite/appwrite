@@ -93,13 +93,16 @@ class Update extends Action
                     'status' => 'committing',
                 ]));
 
-                // Fetch operations ordered by sequence by default
+                // Fetch operations ordered by sequence by default to
+                // replay operations in exact order they were created
                 $operations = $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                 ]);
 
+                // Track transaction state for cross-operation visibility
+                $state = [];
+
                 try {
-                    // Replay operations in exact order they were created
                     foreach ($operations as $operation) {
                         $databaseInternalId = $operation['databaseInternalId'];
                         $collectionInternalId = $operation['collectionInternalId'];
@@ -109,33 +112,28 @@ class Update extends Action
                         $action = $operation['action'];
                         $data = $operation['data'];
 
-                        // Wrap each operation with the timestamp from when it was logged
-                        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $queueForDeletes, $action, $collectionId, $documentId, $data) {
+                        // Check if this operation depends on documents created in same transaction
+                        $dependent = \in_array($action, ['update', 'increment', 'decrement'])
+                            && isset($state[$collectionId][$documentId]);
+
+                        if ($dependent) {
+                            // Don't use timestamp wrapper for dependent operations
                             switch ($action) {
-                                case 'create':
-                                    if ($documentId && !isset($data['$id'])) {
-                                        $data['$id'] = $documentId;
-                                    }
-                                    $document = new Document($data);
-                                    $dbForProject->createDocument($collectionId, $document);
-                                    break;
-
                                 case 'update':
-                                    $document = new Document($data);
-                                    $dbForProject->updateDocument($collectionId, $documentId, $document);
-                                    break;
-
-                                case 'upsert':
-                                    $document = new Document($data);
-                                    $dbForProject->createOrUpdateDocuments($collectionId, [$document]);
-                                    break;
-
-                                case 'delete':
-                                    $dbForProject->deleteDocument($collectionId, $documentId);
+                                    // Update the state document directly
+                                    $existing = $state[$collectionId][$documentId];
+                                    foreach ($data as $key => $value) {
+                                        $existing->setAttribute($key, $value);
+                                    }
+                                    $state[$collectionId][$documentId] = $dbForProject->updateDocument(
+                                        $collectionId,
+                                        $documentId,
+                                        $existing
+                                    );
                                     break;
 
                                 case 'increment':
-                                    $dbForProject->increaseDocumentAttribute(
+                                    $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                                         collection: $collectionId,
                                         id: $documentId,
                                         attribute: $data['attribute'],
@@ -145,7 +143,7 @@ class Update extends Action
                                     break;
 
                                 case 'decrement':
-                                    $dbForProject->decreaseDocumentAttribute(
+                                    $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                                         collection: $collectionId,
                                         id: $documentId,
                                         attribute: $data['attribute'],
@@ -153,51 +151,126 @@ class Update extends Action
                                         min: $data['min'] ?? null
                                     );
                                     break;
-
-                                case 'bulkCreate':
-                                    $documents = [];
-                                    foreach ($data as $docData) {
-                                        $documents[] = new Document($docData);
-                                    }
-                                    $dbForProject->createDocuments($collectionId, $documents);
-                                    break;
-
-                                case 'bulkUpdate':
-                                    $dbForProject->updateDocuments(
-                                        $collectionId,
-                                        $data['data'] ?? null,
-                                        Query::parseQueries($data['queries'] ?? [])
-                                    );
-                                    break;
-
-                                case 'bulkUpsert':
-                                    $documents = [];
-                                    foreach ($data as $docData) {
-                                        $documents[] = new Document($docData);
-                                    }
-                                    $dbForProject->createOrUpdateDocuments($collectionId, $documents);
-                                    break;
-
-                                case 'bulkDelete':
-                                    $dbForProject->deleteDocuments(
-                                        $collectionId,
-                                        Query::parseQueries($data['queries'] ?? [])
-                                    );
-                                    break;
                             }
-                        });
+                        } else {
+                            // Use timestamp wrapper for independent operations
+                            $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $queueForDeletes, $action, $collectionId, $documentId, $data, &$state) {
+                                switch ($action) {
+                                    case 'create':
+                                        if ($documentId && !isset($data['$id'])) {
+                                            $data['$id'] = $documentId;
+                                        }
+                                        $state[$collectionId][$documentId] = $dbForProject->createDocument(
+                                            $collectionId,
+                                            new Document($data),
+                                        );
+                                        break;
+
+                                    case 'update':
+                                        $document = new Document($data);
+                                        $state[$collectionId][$documentId] = $dbForProject->updateDocument(
+                                            $collectionId,
+                                            $documentId,
+                                            $document,
+                                        );
+                                        break;
+
+                                    case 'upsert':
+                                        $document = new Document($data);
+                                        $dbForProject->createOrUpdateDocuments(
+                                            $collectionId,
+                                            [$document],
+                                            onNext: function (Document $document) use (&$state, $collectionId) {
+                                                $state[$collectionId][$document->getId()] = $document;
+                                            }
+                                        );
+                                        break;
+
+                                    case 'delete':
+                                        $dbForProject->deleteDocument($collectionId, $documentId);
+
+                                        if (isset($state[$collectionId][$documentId])) {
+                                            unset($state[$collectionId][$documentId]);
+                                        }
+                                        break;
+
+                                    case 'increment':
+                                        $dbForProject->increaseDocumentAttribute(
+                                            collection: $collectionId,
+                                            id: $documentId,
+                                            attribute: $data['attribute'],
+                                            value: $data['value'] ?? 1,
+                                            max: $data['max'] ?? null
+                                        );
+                                        break;
+
+                                    case 'decrement':
+                                        $dbForProject->decreaseDocumentAttribute(
+                                            collection: $collectionId,
+                                            id: $documentId,
+                                            attribute: $data['attribute'],
+                                            value: $data['value'] ?? 1,
+                                            min: $data['min'] ?? null
+                                        );
+                                        break;
+
+                                    case 'bulkCreate':
+                                        $dbForProject->createDocuments(
+                                            $collectionId,
+                                            array_map(fn ($data) => new Document($data), $data),
+                                            onNext: function (Document $document) use (&$state, $collectionId) {
+                                                $state[$collectionId][$document->getId()] = $document;
+
+                                            }
+                                        );
+                                        break;
+
+                                    case 'bulkUpdate':
+                                        $dbForProject->updateDocuments(
+                                            $collectionId,
+                                            $data['data'] ?? null,
+                                            Query::parseQueries($data['queries'] ?? [])
+                                        );
+                                        break;
+
+                                    case 'bulkUpsert':
+                                        $dbForProject->createOrUpdateDocuments(
+                                            $collectionId,
+                                            array_map(fn ($data) => new Document($data), $data),
+                                            onNext: function (Document $document) use (&$state, $collectionId) {
+                                                $state[$collectionId][$document->getId()] = $document;
+
+                                            }
+                                        );
+                                        break;
+
+                                    case 'bulkDelete':
+                                        $dbForProject->deleteDocuments(
+                                            $collectionId,
+                                            Query::parseQueries($data['queries'] ?? [])
+                                        );
+                                        break;
+                                }
+                            });
+                        }
                     }
 
-                    $transaction = $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'committed',
-                    ]));
+                    $transaction = $dbForProject->updateDocument(
+                        'transactions',
+                        $transactionId,
+                        new Document(
+                            [
+                                'status' => 'committed',
+                            ]
+                        )
+                    );
 
                     // Clear the transaction logs
                     $queueForDeletes
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($transaction);
 
-                } catch (DuplicateException|ConflictException) {
+                } catch (DuplicateException|ConflictException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
                     ]));

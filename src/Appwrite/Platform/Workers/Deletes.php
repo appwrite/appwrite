@@ -86,8 +86,7 @@ class Deletes extends Action
         string $executionRetention,
         string $auditRetention,
         Log $log
-    ): void
-    {
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -611,7 +610,7 @@ class Deletes extends Action
             );
         } elseif ($sharedTablesV2) {
             $queries = \array_map(
-                fn($id) => Query::notEqual('$id', $id),
+                fn ($id) => Query::notEqual('$id', $id),
                 $projectCollectionIds
             );
 
@@ -955,14 +954,14 @@ class Deletes extends Action
         }
         Console::info("Deleting screenshots for deployment " . $deployment->getId());
 
-        $bucket = ValidatorAuthorization::skip(fn() => $dbForPlatform->getDocument('buckets', 'screenshots'));
+        $bucket = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
         if ($bucket->isEmpty()) {
             Console::error('Failed to get bucket for deployment screenshots');
             return;
         }
 
         foreach ($screenshotIds as $id) {
-            $file = ValidatorAuthorization::skip(fn() => $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $id));
+            $file = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $id));
 
             if ($file->isEmpty()) {
                 Console::error('Failed to get deployment screenshot: ' . $id);
@@ -1119,8 +1118,7 @@ class Deletes extends Action
         array $queries,
         Database $database,
         ?callable $callback = null
-    ): void
-    {
+    ): void {
         $start = \microtime(true);
 
         /**
