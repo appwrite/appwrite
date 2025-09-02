@@ -7529,6 +7529,29 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $badIndex['headers']['status-code']);
 
+        // updating the attribute to required to create index
+        $updated = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/point/'.'pOptional', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'required' => true,
+            'default' => null
+        ]);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        sleep(2);
+        $retriedIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'idx_optional_point',
+            'type' => Database::INDEX_SPATIAL,
+            'attributes' => ['pOptional'],
+        ]);
+        $this->assertEquals(202, $retriedIndex['headers']['status-code']);
+
         // Passing orders to spatial index should not throw error(in case of mariadb)
         $ordersIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
             'content-type' => 'application/json',

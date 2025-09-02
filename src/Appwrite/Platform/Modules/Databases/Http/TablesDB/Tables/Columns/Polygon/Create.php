@@ -6,12 +6,13 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Po
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Spatial;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 
 class Create extends PolygonCreate
@@ -55,7 +56,7 @@ class Create extends PolygonCreate
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/tablesdb#tablesDBCreate).')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new JSON()), 'Default value for column when not provided, as JSON string. Cannot be set when column is required.', true)
+            ->param('default', null, new Nullable(new Spatial(Database::VAR_POLYGON)), 'Default value for column when not provided, as JSON string. Cannot be set when column is required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')
