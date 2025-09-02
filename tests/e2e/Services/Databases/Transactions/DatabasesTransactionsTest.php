@@ -155,7 +155,6 @@ class DatabasesTransactionsTest extends Scope
                     'action' => 'create',
                     'documentId' => 'doc1',
                     'data' => [
-                        '$id' => 'doc1',
                         'name' => 'Test Document 1'
                     ]
                 ],
@@ -165,7 +164,6 @@ class DatabasesTransactionsTest extends Scope
                     'action' => 'create',
                     'documentId' => 'doc2',
                     'data' => [
-                        '$id' => 'doc2',
                         'name' => 'Test Document 2'
                     ]
                 ]
@@ -208,12 +206,13 @@ class DatabasesTransactionsTest extends Scope
                     'databaseId' => 'invalid_database',
                     'collectionId' => $collectionId,
                     'action' => 'create',
+                    'documentId' => ID::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(404, $response['headers']['status-code'], 'Invalid database should return 404. Got: ' . json_encode($response['body']));
 
         // Test invalid collection ID
         $response = $this->client->call(Client::METHOD_POST, "/databases/transactions/{$transactionId}/operations", array_merge([
@@ -226,6 +225,7 @@ class DatabasesTransactionsTest extends Scope
                     'databaseId' => $databaseId,
                     'collectionId' => 'invalid_collection',
                     'action' => 'create',
+                    'documentId' => ID::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
@@ -341,8 +341,8 @@ class DatabasesTransactionsTest extends Scope
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
+                    'documentId' => 'rollback_doc',
                     'data' => [
-                        '$id' => 'rollback_doc',
                         'value' => 'Should not exist'
                     ]
                 ]
