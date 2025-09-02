@@ -4,14 +4,12 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Swoole\Request;
@@ -21,47 +19,6 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
-    /**
-     * Helper to apply select queries
-     *
-     * Method to respect request select queries in response format,
-     * to prevent default rule values from being applied on not-selected attributes
-     *
-     * @param Request $request
-     * @param Document $document
-     * @return void
-     */
-    public function applySelectQueries(Request $request, Response $response, string $model): void
-    {
-        $queries = $request->getParam('queries', []);
-
-        $queries = Query::parseQueries($queries);
-        $selectQueries = Query::groupByType($queries)['selections'] ?? [];
-
-        // No select queries means no filtering out
-        if (empty($selectQueries)) {
-            return;
-        }
-
-        $attributes = [];
-        foreach ($selectQueries as $query) {
-            foreach ($query->getValues() as $attribute) {
-                $attributes[] = $attribute;
-            }
-        }
-
-        $responseModel = $response->getModel($model);
-        foreach ($responseModel->getRules() as $ruleName => $rule) {
-            if (\str_starts_with($ruleName, '$')) {
-                continue;
-            }
-
-            if (!\in_array($ruleName, $attributes)) {
-                $responseModel->removeRule($ruleName);
-            }
-        }
-    }
-
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
