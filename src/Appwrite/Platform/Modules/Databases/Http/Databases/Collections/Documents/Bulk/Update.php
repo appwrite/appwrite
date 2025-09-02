@@ -127,6 +127,8 @@ class Update extends Action
             }
         }
 
+        $data = $this->removeReadonlyAttributes($data, privileged: true);
+
         $documents = [];
 
         try {

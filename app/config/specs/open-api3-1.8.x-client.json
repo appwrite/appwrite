@@ -2316,6 +2316,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.6.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -2525,6 +2529,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.6.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -3900,7 +3908,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, unionpay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3918,7 +3926,7 @@
                                 "mastercard",
                                 "naranja",
                                 "targeta-shopping",
-                                "union-china-pay",
+                                "unionpay",
                                 "visa",
                                 "mir",
                                 "maestro",
@@ -3938,7 +3946,7 @@
                                 "Mastercard",
                                 "Naranja",
                                 "Tarjeta Shopping",
-                                "Union China Pay",
+                                "Union Pay",
                                 "Visa",
                                 "MIR",
                                 "Maestro",
@@ -5138,7 +5146,7 @@
                 ]
             },
             "put": {
-                "summary": "Create or update a document",
+                "summary": "Upsert a document",
                 "operationId": "databasesUpsertDocument",
                 "tags": [
                     "databases"
@@ -5873,7 +5881,7 @@
                                     },
                                     "method": {
                                         "type": "string",
-                                        "description": "HTTP method of execution. Default value is GET.",
+                                        "description": "HTTP method of execution. Default value is POST.",
                                         "x-example": "GET",
                                         "enum": [
                                             "GET",
@@ -5881,7 +5889,8 @@
                                             "PUT",
                                             "PATCH",
                                             "DELETE",
-                                            "OPTIONS"
+                                            "OPTIONS",
+                                            "HEAD"
                                         ],
                                         "x-enum-name": "ExecutionMethod",
                                         "x-enum-keys": []
@@ -7490,7 +7499,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7575,7 +7587,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7610,7 +7625,7 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/create-row.md"
+                            "demo": "tablesdb\/create-row.md"
                         }
                     ],
                     "auth": {
@@ -7717,7 +7732,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7782,7 +7800,7 @@
                 ]
             },
             "put": {
-                "summary": "Create or update a row",
+                "summary": "Upsert a row",
                 "operationId": "tablesDBUpsertRow",
                 "tags": [
                     "tablesDB"
@@ -7812,7 +7830,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7846,7 +7867,7 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-db\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -7948,7 +7969,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8047,7 +8071,10 @@
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8131,7 +8158,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8246,7 +8276,10 @@
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -9915,17 +9948,20 @@
                         "type": "integer",
                         "description": "Row automatically incrementing ID.",
                         "x-example": 1,
-                        "format": "int32"
+                        "format": "int32",
+                        "readOnly": true
                     },
                     "$tableId": {
                         "type": "string",
                         "description": "Table ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readOnly": true
                     },
                     "$databaseId": {
                         "type": "string",
                         "description": "Database ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readOnly": true
                     },
                     "$createdAt": {
                         "type": "string",

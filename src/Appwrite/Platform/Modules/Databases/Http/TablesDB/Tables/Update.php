@@ -33,14 +33,14 @@ class Update extends CollectionUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId')
             ->desc('Update table')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'tables.write')
+            ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].update')
             ->label('audits.event', 'table.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
-                group: null,
+                group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/update-table.md',
                 auth: [AuthType::KEY],

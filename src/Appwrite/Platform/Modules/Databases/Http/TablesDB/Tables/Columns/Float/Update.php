@@ -34,7 +34,7 @@ class Update extends FloatUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/float/:key')
             ->desc('Update float column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'tables.write')
+            ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')

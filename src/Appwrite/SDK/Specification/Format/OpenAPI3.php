@@ -3,7 +3,6 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
@@ -167,7 +166,7 @@ class OpenAPI3 extends Format
                 ],
             ];
 
-            if ($sdk->getDeprecated() instanceof Deprecated) {
+            if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [
                     'since' => $sdk->getDeprecated()->getSince(),
                     'replaceWith' => $sdk->getDeprecated()->getReplaceWith(),
@@ -222,11 +221,11 @@ class OpenAPI3 extends Format
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
-                        'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
+                        'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                     ];
 
                     // add deprecation only if method has it!
-                    if ($methodObj->getDeprecated() instanceof Deprecated) {
+                    if ($methodObj->getDeprecated()) {
                         $additionalMethod['deprecated'] = [
                             'since' => $methodObj->getDeprecated()->getSince(),
                             'replaceWith' => $methodObj->getDeprecated()->getReplaceWith(),

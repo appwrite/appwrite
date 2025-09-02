@@ -42,18 +42,21 @@ class Row extends Any
                 'description' => 'Row automatically incrementing ID.',
                 'default' => 0,
                 'example' => 1,
+                'readOnly' => true,
             ])
             ->addRule('$tableId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Table ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
+                'readOnly' => true,
             ])
             ->addRule('$databaseId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Database ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
+                'readOnly' => true,
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
@@ -80,6 +83,7 @@ class Row extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
+        $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
 
         foreach ($document->getAttributes() as $column) {
             if (\is_array($column)) {
