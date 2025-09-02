@@ -140,6 +140,7 @@ class Audits extends Action
                 $audit = new Audit($dbForProject);
                 $audit->logBatch($projectLogs['logs']);
 
+                Console::success('Audit logs processed successfully');
             } catch (Throwable $e) {
                 Console::error('Error processing audit logs for Project "' . $projectDocument->getSequence() . '": ' . $e->getMessage());
             } finally {
