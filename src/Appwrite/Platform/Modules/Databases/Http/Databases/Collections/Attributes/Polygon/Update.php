@@ -73,7 +73,7 @@ class Update extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
-        $decodedDefault = \is_string($default) ? \json_decode($default, true) : $default;
+        $default = \is_string($default) ? \json_decode($default, true) : $default;
 
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
@@ -82,7 +82,7 @@ class Update extends Action
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
             type: Database::VAR_POLYGON,
-            default: $decodedDefault,
+            default: $default,
             required: $required,
             newKey: $newKey
         );

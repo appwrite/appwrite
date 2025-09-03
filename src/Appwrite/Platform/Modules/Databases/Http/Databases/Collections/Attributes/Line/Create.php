@@ -74,7 +74,7 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
-        $decodedDefault = \is_string($default) ? \json_decode($default, true) : $default;
+        $default = \is_string($default) ? \json_decode($default, true) : $default;
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
