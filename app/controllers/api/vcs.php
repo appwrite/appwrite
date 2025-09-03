@@ -135,11 +135,35 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
 
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+                    $retries = 0;
 
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    while (true) {
+                        $retries++;
+
+                        try {
+                            $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                                '$id' => $latestCommentId
+                            ]));
+                            break;
+                        } catch (\Throwable $err) {
+                            if ($retries >= 9) {
+                                throw $err;
+                            }
+
+                            \sleep(1);
+                        }
+                    }
+
+                    // Wrap in try/finally to ensure lock file gets deleted
+                    try {
+                        $comment = new Comment();
+                        $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+
+                        $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    } finally {
+                        $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                    }
                 } else {
                     $comment = new Comment();
                     $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
@@ -177,11 +201,36 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 foreach ($latestComments as $comment) {
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    $retries = 0;
+
+                    while (true) {
+                        $retries++;
+
+                        try {
+                            $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                                '$id' => $latestCommentId
+                            ]));
+                            break;
+                        } catch (\Throwable $err) {
+                            if ($retries >= 9) {
+                                throw $err;
+                            }
+
+                            \sleep(1);
+                        }
+                    }
+
+                    // Wrap in try/finally to ensure lock file gets deleted
+                    try {
+                        $comment = new Comment();
+                        $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+
+                        $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    } finally {
+                        $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                    }
                 }
             }
 
@@ -364,6 +413,26 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             if ($resource->getCollection() === 'sites' && !empty($latestCommentId) && !empty($previewRuleId)) {
+                $retries = 0;
+
+                while (true) {
+                    $retries++;
+
+                    try {
+                        $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                            '$id' => $latestCommentId
+                        ]));
+                        break;
+                    } catch (\Throwable $err) {
+                        if ($retries >= 9) {
+                            throw $err;
+                        }
+
+                        \sleep(1);
+                    }
+                }
+
+                // Wrap in try/finally to ensure lock file gets deleted
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
 
@@ -376,8 +445,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
                         $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                     }
-                } catch (\Throwable $th) {
-                    // Ignore, rule already exists; will be updated by builds worker
+                } finally {
+                    $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
                 }
             }
 
