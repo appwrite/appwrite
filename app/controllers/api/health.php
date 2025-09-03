@@ -977,17 +977,17 @@ App::get('/v1/health/queue/failed/:name')
         int|string $threshold,
         Response $response,
         Database $queueForDatabase,
-        Database $queueForDeletes,
-        Database $queueForAudits,
-        Database $queueForMails,
-        Database $queueForFunctions,
-        Database $queueForStatsResources,
-        Database $queueForStatsUsage,
-        Database $queueForWebhooks,
-        Database $queueForCertificates,
-        Database $queueForBuilds,
-        Database $queueForMessaging,
-        Database $queueForMigrations
+        Delete $queueForDeletes,
+        Audit $queueForAudits,
+        Mail $queueForMails,
+        Func $queueForFunctions,
+        StatsResources $queueForStatsResources,
+        StatsUsage $queueForStatsUsage,
+        Webhook $queueForWebhooks,
+        Certificate $queueForCertificates,
+        Build $queueForBuilds,
+        Messaging $queueForMessaging,
+        Migration $queueForMigrations
     ) {
         $threshold = \intval($threshold);
 

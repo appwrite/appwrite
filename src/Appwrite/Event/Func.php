@@ -222,9 +222,6 @@ class Func extends Event
 
     /**
      * Clone the function event instance.
-     *
-     * Handles deep copying of Func-specific properties
-     * after parent cloning completes.
      */
     public function __clone(): void
     {

@@ -35,7 +35,7 @@ class ScheduleFunctions extends ScheduleBase
     public function __construct()
     {
         $this
-            ->desc("Execute functions scheduled in Appwrite")
+            ->desc('Execute functions scheduled in Appwrite')
             ->inject('queueForFunctions')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')

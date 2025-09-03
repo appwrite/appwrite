@@ -31,7 +31,7 @@ class ScheduleMessages extends ScheduleBase
     public function __construct()
     {
         $this
-            ->desc("Execute messages scheduled in Appwrite")
+            ->desc('Execute messages scheduled in Appwrite')
             ->inject('queueForMessaging')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')

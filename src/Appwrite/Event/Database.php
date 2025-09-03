@@ -193,4 +193,32 @@ class Database extends Event
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];
     }
+
+    /**
+     * Clone the database event instance.
+     */
+    public function __clone(): void
+    {
+        parent::__clone();
+
+        if ($this->database !== null) {
+            $this->database = clone $this->database;
+        }
+
+        if ($this->row !== null) {
+            $this->row = clone $this->row;
+        }
+
+        if ($this->table !== null) {
+            $this->table = clone $this->table;
+        }
+
+        if ($this->document !== null) {
+            $this->document = clone $this->document;
+        }
+
+        if ($this->collection !== null) {
+            $this->collection = clone $this->collection;
+        }
+    }
 }

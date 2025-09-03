@@ -31,10 +31,8 @@ class ScheduleExecutions extends ScheduleBase
 
     public function __construct()
     {
-        $type = static::getSupportedResource();
-
         $this
-            ->desc("Execute executions scheduled in Appwrite")
+            ->desc('Execute executions scheduled in Appwrite')
             ->inject('queueForFunctions')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
