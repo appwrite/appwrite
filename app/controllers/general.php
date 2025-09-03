@@ -711,6 +711,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         foreach ($executionResponse['headers'] as $name => $values) {
             if (\strtolower($name) === 'content-type') {
                 $contentType = $values[0] ?? 'text/plain';
+                continue;
             }
 
             if (\strtolower($name) === 'transfer-encoding') {
