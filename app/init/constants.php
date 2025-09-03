@@ -56,6 +56,7 @@ const APP_DATABASE_ENCRYPT_SIZE_MIN = 150;
 const APP_DATABASE_TXN_TTL_MIN = 60; // 1 minute
 const APP_DATABASE_TXN_TTL_MAX = 3600; // 1 hour
 const APP_DATABASE_TXN_TTL_DEFAULT = 300; // 5 minutes
+const APP_DATABASE_TXN_MAX_OPERATIONS = 100; // Maximum operations per transaction
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';

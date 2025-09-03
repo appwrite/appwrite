@@ -270,6 +270,12 @@ class Update extends Action
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($transaction);
 
+                } catch (NotFoundException $e) {
+                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                        'status' => 'failed',
+                    ]));
+
+                    throw new Exception(Exception::DOCUMENT_NOT_FOUND);
                 } catch (DuplicateException|ConflictException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',

@@ -988,8 +988,8 @@ return [
     ],
     Exception::TRANSACTION_LIMIT_EXCEEDED => [
         'name' => Exception::TRANSACTION_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of transactions has been reached.',
-        'code' => 400,
+        'description' => 'The maximum number of operations per transaction has been exceeded.',
+        'code' => 422,
     ],
     Exception::TRANSACTION_NOT_READY => [
         'name' => Exception::TRANSACTION_NOT_READY,
