@@ -1,0 +1,5 @@
+mutation {
+    accountUpdateMFARecoveryCodes {
+        recoveryCodes
+    }
+}

@@ -24,6 +24,7 @@ abstract class Format
     protected array $services;
     protected array $keys;
     protected int $authCount;
+    protected string $platform;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -50,7 +51,7 @@ abstract class Format
         ]
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
         $this->app = $app;
         $this->services = $services;
@@ -58,6 +59,7 @@ abstract class Format
         $this->models = $models;
         $this->keys = $keys;
         $this->authCount = $authCount;
+        $this->platform = $platform;
     }
 
     /**
@@ -112,6 +114,7 @@ abstract class Format
 
     protected function getEnumName(string $service, string $method, string $param): ?string
     {
+        /* `$service` is `$namespace` */
         switch ($service) {
             case 'proxy':
                 switch ($method) {
@@ -173,11 +176,11 @@ abstract class Format
             case 'databases':
                 switch ($method) {
                     case 'getUsage':
+                    case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
                         switch ($param) {
                             case 'range':
-                                return 'DatabaseUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createRelationshipAttribute':
@@ -203,13 +206,46 @@ abstract class Format
                         }
                 }
                 break;
+            case 'tablesDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getTableUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createRelationshipColumn':
+                        switch ($param) {
+                            case 'type':
+                                return 'RelationshipType';
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'updateRelationshipColumn':
+                        switch ($param) {
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'IndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
             case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'FunctionUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createExecution':
@@ -244,7 +280,7 @@ abstract class Format
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'SiteUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createVcsDeployment':
@@ -367,7 +403,7 @@ abstract class Format
                     case 'getBucketUsage':
                         switch ($param) {
                             case 'range':
-                                return 'StorageUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'getFilePreview':
@@ -385,7 +421,7 @@ abstract class Format
                     case 'getUsage':
                         switch ($param) {
                             case 'range':
-                                return 'UserUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createMfaAuthenticator':
@@ -413,6 +449,7 @@ abstract class Format
         }
         return null;
     }
+
     public function getEnumKeys(string $service, string $method, string $param): array
     {
         $values = [];
@@ -442,8 +479,17 @@ abstract class Format
             case 'databases':
                 switch ($method) {
                     case 'getUsage':
+                    case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
+                        // Range Enum Keys
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
+            case 'tablesDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getTableUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
@@ -460,15 +506,8 @@ abstract class Format
                         break;
                 }
                 break;
-            case 'functions':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
             case 'sites':
+            case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':

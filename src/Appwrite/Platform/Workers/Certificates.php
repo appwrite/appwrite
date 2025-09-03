@@ -337,6 +337,19 @@ class Certificates extends Action
 
                 throw new Exception('Failed to verify domain DNS records.');
             }
+
+            // Ensure CAA won't block certificate issuance
+            if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
+                $validationStart = \microtime(true);
+                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+                if (!$validator->isValid($domain->get())) {
+                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
+                    $log->addTag('dnsDomain', $domain->get());
+                    $error = $validator->getDescription();
+                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+                    throw new Exception('Failed to verify domain DNS records. CAA records do not allow Appwrite\'s certificate issuer.');
+                }
+            }
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
@@ -360,6 +373,7 @@ class Certificates extends Action
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 
         // Send mail to administrator mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
@@ -367,27 +381,29 @@ class Certificates extends Action
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
 
-        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
-        $template->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR);
-        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
-        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
-        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
-        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
-        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
-
         $body = $template->render();
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
+            'domain' => $domain,
+            'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+            'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+            'twitterUrl' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+            'discordUrl' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+            'githubUrl' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+            'privacyUrl' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
         ];
 
-        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
+        $subject = $locale->getText("emails.certificate.subject");
+        $preview = $locale->getText("emails.certificate.preview");
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setName('Appwrite Administrator')
-            ->setbodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
+            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
             ->setVariables($emailVariables)
             ->setRecipient(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')))
             ->trigger();

@@ -16,7 +16,7 @@ class HealthTest extends Scope
     public function testGetHTTPHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_HTTP_HEALTH);
+        $query = $this->getQuery(self::GET_HTTP_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -37,7 +37,7 @@ class HealthTest extends Scope
     public function testGetDBHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DB_HEALTH);
+        $query = $this->getQuery(self::GET_DB_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -58,7 +58,7 @@ class HealthTest extends Scope
     public function testGetCacheHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_CACHE_HEALTH);
+        $query = $this->getQuery(self::GET_CACHE_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -79,7 +79,7 @@ class HealthTest extends Scope
     public function testGetTimeHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TIME_HEALTH);
+        $query = $this->getQuery(self::GET_TIME_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -100,7 +100,7 @@ class HealthTest extends Scope
     public function testGetWebhooksQueueHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_WEBHOOKS_QUEUE_HEALTH);
+        $query = $this->getQuery(self::GET_WEBHOOKS_QUEUE_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -121,7 +121,7 @@ class HealthTest extends Scope
     public function testGetLogsQueueHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_LOGS_QUEUE_HEALTH);
+        $query = $this->getQuery(self::GET_LOGS_QUEUE_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -142,7 +142,7 @@ class HealthTest extends Scope
     public function testGetCertificatesQueueHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_CERTIFICATES_QUEUE_HEALTH);
+        $query = $this->getQuery(self::GET_CERTIFICATES_QUEUE_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -163,7 +163,7 @@ class HealthTest extends Scope
     public function testGetFunctionsQueueHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FUNCTION_QUEUE_HEALTH);
+        $query = $this->getQuery(self::GET_FUNCTION_QUEUE_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -184,7 +184,7 @@ class HealthTest extends Scope
     public function testGetLocalStorageHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_LOCAL_STORAGE_HEALTH);
+        $query = $this->getQuery(self::GET_LOCAL_STORAGE_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -205,7 +205,7 @@ class HealthTest extends Scope
     public function testGetAntiVirusHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ANITVIRUS_HEALTH);
+        $query = $this->getQuery(self::GET_ANITVIRUS_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];

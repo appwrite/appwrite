@@ -657,7 +657,8 @@ App::post('/v1/teams/:teamId/memberships')
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
                 $body = $locale->getText("emails.invitation.body");
-                $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+                $preview = $locale->getText("emails.invitation.preview");
+                $subject = $locale->getText("emails.invitation.subject");
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
@@ -729,6 +730,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $queueForMails
                     ->setSubject($subject)
                     ->setBody($body)
+                    ->setPreview($preview)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)

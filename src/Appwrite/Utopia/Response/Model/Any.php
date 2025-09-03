@@ -31,4 +31,14 @@ class Any extends Model
     {
         return Response::MODEL_ANY;
     }
+
+    /**
+     * Get sample data
+     *
+     * @return array
+     */
+    public function getSampleData(): array
+    {
+        return [];
+    }
 }

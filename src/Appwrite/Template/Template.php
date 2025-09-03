@@ -63,7 +63,7 @@ class Template extends View
      *
      * @throws Exception
      */
-    public function render($minify = true): string
+    public function render($minify = true, $useContent = false): string
     {
         if ($this->rendered) { // Don't render any template
             return '';
@@ -72,7 +72,7 @@ class Template extends View
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
         } elseif (!empty($this->content)) {
-            $template = $this->print($this->content, self::FILTER_NL2P);
+            $template = !$useContent ? $this->print($this->content, self::FILTER_NL2P) : $this->content;
         } else {
             throw new Exception('"' . $this->path . '" template is not readable or not found');
         }
@@ -173,6 +173,6 @@ class Template extends View
      */
     public static function fromCamelCaseToDash($input): string
     {
-        return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
+        return \str_replace([' ', '_'], '', \strtolower(\preg_replace('/(?<!^)([A-Z][a-z]|(?<=[a-z])[^a-z\s]|(?<=[A-Z])[0-9_])/', '-$1', $input)));
     }
 }

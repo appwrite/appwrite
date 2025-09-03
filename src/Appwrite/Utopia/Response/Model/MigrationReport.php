@@ -29,9 +29,9 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
-            ->addRule(Resource::TYPE_DOCUMENT, [
+            ->addRule(Resource::TYPE_ROW, [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Number of documents to be migrated.',
+                'description' => 'Number of rows to be migrated.',
                 'default' => 0,
                 'example' => 20,
             ])

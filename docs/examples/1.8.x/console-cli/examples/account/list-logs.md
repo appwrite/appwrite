@@ -1,0 +1,1 @@
+appwrite account list-logs

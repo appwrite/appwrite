@@ -1,0 +1,1 @@
+appwrite proxy list-rules

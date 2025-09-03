@@ -18,7 +18,7 @@ class ScopeTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $apiKey = $this->getNewKey(['databases.read']);
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -33,7 +33,7 @@ class ScopeTest extends Scope
             'x-appwrite-key' => $apiKey,
         ], $gqlPayload);
 
-        $message = "app.{$projectId}@service.localhost (role: applications) missing scope (databases.write)";
+        $message = "app.{$projectId}@service.localhost (role: applications) missing scopes ([\"databases.write\"])";
         $this->assertArrayHasKey('errors', $database['body']);
         $this->assertEquals($message, $database['body']['errors'][0]['message']);
     }
@@ -42,7 +42,7 @@ class ScopeTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $apiKey = $this->getNewKey(['databases.read', 'databases.write']);
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

@@ -17,7 +17,7 @@ func main() {
     response, error := service.UpsertDocuments(
         "<DATABASE_ID>",
         "<COLLECTION_ID>",
-        databases.WithUpsertDocumentsDocuments([]interface{}{}),
+        []interface{}{},
     )
 
     if error != nil {

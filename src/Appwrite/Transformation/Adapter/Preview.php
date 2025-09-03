@@ -32,9 +32,24 @@ class Preview extends Adapter
         $this->output = $this->input;
 
         $banner = <<<EOT
+        <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
         <style>
-            @import url(https://fonts.bunny.net/css?family=fira-code:400|inter:400);
-            
+            @font-face {
+                font-family: 'Inter';
+                src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: 'Inter';
+                src: url('https://assets.appwrite.io/fonts/inter/Inter-Medium.woff2') format('woff2');
+                font-weight: 500;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
+        <style>
             #appwrite-preview {
                 min-width: auto;
                 min-height: auto;

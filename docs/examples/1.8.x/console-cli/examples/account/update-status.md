@@ -1,0 +1,1 @@
+appwrite account update-status

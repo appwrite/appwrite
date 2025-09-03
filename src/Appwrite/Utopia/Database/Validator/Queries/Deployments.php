@@ -22,4 +22,9 @@ class Deployments extends Base
     {
         parent::__construct('deployments', self::ALLOWED_ATTRIBUTES);
     }
+
+    public function isSelectQueryAllowed(): bool
+    {
+        return true;
+    }
 }

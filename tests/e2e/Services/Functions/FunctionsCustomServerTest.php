@@ -723,6 +723,30 @@ class FunctionsCustomServerTest extends Scope
 
         $deployments = $this->listDeployments($functionId, [
             'queries' => [
+                Query::select(['status'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        // Extra select query check, for attribute not allowed by filter queries
+        $deployments = $this->listDeployments($functionId, [
+            'queries' => [
+                Query::select(['buildLogs'])->toString(),
+            ],
+        ]);
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        $deployments = $this->listDeployments($functionId, [
+            'queries' => [
                 Query::offset(1)->toString(),
             ],
         ]);
@@ -892,6 +916,19 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
+
+        $this->assertNotEmpty($execution['body']['responseHeaders']);
+
+        $executionIdHeader = null;
+        foreach ($execution['body']['responseHeaders'] as $header) {
+            if ($header['name'] === 'x-appwrite-execution-id') {
+                $executionIdHeader = $header['value'];
+                break;
+            }
+        }
+        $this->assertNotEmpty($executionIdHeader);
+        $this->assertEquals($execution['body']['$id'], $executionIdHeader);
+
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
@@ -912,6 +949,26 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
+        /** Test create execution with HEAD method */
+        $execution = $this->createExecution($data['functionId'], [
+            'async' => 'false',
+            'method' => 'HEAD',
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertIsArray($execution['body']['responseHeaders']);
+        $this->assertEmpty($execution['body']['responseBody']); // For HEAD requests, response body is empty
+
+        /** Delete execution */
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(204, $execution['headers']['status-code']);
+
+        /** Test create execution with 400 status code */
         $execution = $this->createExecution($data['functionId'], [
             'async' => 'false',
             'path' => '/?code=400'
@@ -921,11 +978,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(400, $execution['body']['responseStatusCode']);
 
+        /** Delete execution */
         $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-
         $this->assertEquals(204, $execution['headers']['status-code']);
 
         return array_merge($data, ['executionId' => $executionId]);
@@ -945,6 +1002,29 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(1, $executions['body']['total']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
+        $this->assertEquals($data['deploymentId'], $executions['body']['executions'][0]['deploymentId']);
+
+        $executions = $this->listExecutions($data['functionId'], [
+            'queries' => [
+                Query::equal('deploymentId', [$data['deploymentId']])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals(1, $executions['body']['total']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertCount(1, $executions['body']['executions']);
+
+        $executions = $this->listExecutions($data['functionId'], [
+            'queries' => [
+                Query::equal('deploymentId', ['some-random-id'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals(0, $executions['body']['total']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertCount(0, $executions['body']['executions']);
 
         $executions = $this->listExecutions($data['functionId'], [
             'queries' => [
@@ -1034,8 +1114,9 @@ class FunctionsCustomServerTest extends Scope
          */
         $execution = $this->getExecution($data['functionId'], $data['executionId']);
 
-        $this->assertEquals($execution['headers']['status-code'], 200);
-        $this->assertEquals($execution['body']['$id'], $data['executionId']);
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals($data['executionId'], $execution['body']['$id']);
+        $this->assertEquals($data['deploymentId'], $execution['body']['deploymentId']);
 
         /**
          * Test for FAILURE
@@ -1135,6 +1216,12 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
+
+        // Test execution ID and client IP
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertEquals($executionId, $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_CLIENT_IP']);
 
         // Change the specs to 1vcpu 512mb
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
@@ -1508,7 +1595,10 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
             $this->assertStringContainsString($userId, $lastExecution['logs']);
             $this->assertStringContainsString('Event User', $lastExecution['logs']);
-        }, 10000, 500);
+            $this->assertNotEmpty($lastExecution['$id']);
+            $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
+            $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
+        }, 20_000, 500);
 
         $this->cleanupFunction($functionId);
 
@@ -1651,6 +1741,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($cookie, $response['body']);
+
+        $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
+        $this->assertNotEmpty($response['headers']['x-appwrite-execution-id']);
 
         // Async execution document creation
         $this->assertEventually(function () use ($functionId) {
@@ -2279,6 +2372,47 @@ class FunctionsCustomServerTest extends Scope
         ]));
         $this->assertEquals(500, $response['headers']['status-code']);
         $this->assertStringContainsString('CustomError500', $response['body']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testLogAndErrorTruncation(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Log Truncation',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('log-error-truncation'),
+            'activate' => true
+        ]);
+
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false'
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+
+        // Verify logs are truncated and warning message is present at the beginning
+        $logs = $execution['body']['logs'];
+        $this->assertLessThanOrEqual(APP_FUNCTION_LOG_LENGTH_LIMIT, strlen($logs));
+        $this->assertStringStartsWith('[WARNING] Logs truncated', $logs);
+
+        $this->assertStringNotContainsString('z', $logs);
+        $this->assertStringContainsString('a', $logs);
+
+        // Verify errors are truncated and warning message is present at the beginning
+        $errors = $execution['body']['errors'];
+        $this->assertLessThanOrEqual(APP_FUNCTION_ERROR_LENGTH_LIMIT, strlen($errors));
+        $this->assertStringStartsWith('[WARNING] Errors truncated', $errors);
+
+        $this->assertStringNotContainsString('z', $errors);
+        $this->assertStringContainsString('a', $errors);
 
         $this->cleanupFunction($functionId);
     }

@@ -13,6 +13,7 @@ use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
@@ -238,19 +239,38 @@ App::post('/v1/messaging/providers/smtp')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'providers',
-        name: 'createSmtpProvider',
-        description: '/docs/references/messaging/create-smtp-provider.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_PROVIDER,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'createSmtpProvider',
+            description: '/docs/references/messaging/create-smtp-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.createSMTPProvider',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'createSMTPProvider',
+            description: '/docs/references/messaging/create-smtp-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.')
@@ -752,19 +772,38 @@ App::post('/v1/messaging/providers/fcm')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'providers',
-        name: 'createFcmProvider',
-        description: '/docs/references/messaging/create-fcm-provider.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_PROVIDER,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'createFcmProvider',
+            description: '/docs/references/messaging/create-fcm-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.createFCMProvider',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'createFCMProvider',
+            description: '/docs/references/messaging/create-fcm-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
@@ -822,19 +861,38 @@ App::post('/v1/messaging/providers/apns')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'providers',
-        name: 'createApnsProvider',
-        description: '/docs/references/messaging/create-apns-provider.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_PROVIDER,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'createApnsProvider',
+            description: '/docs/references/messaging/create-apns-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.createAPNSProvider',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'createAPNSProvider',
+            description: '/docs/references/messaging/create-apns-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
@@ -1322,19 +1380,38 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'providers',
-        name: 'updateSmtpProvider',
-        description: '/docs/references/messaging/update-smtp-provider.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'updateSmtpProvider',
+            description: '/docs/references/messaging/update-smtp-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.updateSMTPProvider',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'updateSMTPProvider',
+            description: '/docs/references/messaging/update-smtp-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
@@ -1894,19 +1971,38 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'providers',
-        name: 'updateFcmProvider',
-        description: '/docs/references/messaging/update-fcm-provider.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'updateFcmProvider',
+            description: '/docs/references/messaging/update-fcm-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.updateFCMProvider',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'updateFCMProvider',
+            description: '/docs/references/messaging/update-fcm-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1970,19 +2066,38 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'providers',
-        name: 'updateApnsProvider',
-        description: '/docs/references/messaging/update-apns-provider.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'updateApnsProvider',
+            description: '/docs/references/messaging/update-apns-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.updateAPNSProvider',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'updateAPNSProvider',
+            description: '/docs/references/messaging/update-apns-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -2896,7 +3011,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3024,19 +3139,38 @@ App::post('/v1/messaging/messages/sms')
     ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'messages',
-        name: 'createSms',
-        description: '/docs/references/messaging/create-sms.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_MESSAGE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'messages',
+            name: 'createSms',
+            description: '/docs/references/messaging/create-sms.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MESSAGE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.createSMS',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'messages',
+            name: 'createSMS',
+            description: '/docs/references/messaging/create-sms.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MESSAGE,
+                )
+            ]
+        )
+    ])
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('content', '', new Text(64230), 'SMS Content.')
     ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
@@ -3050,7 +3184,7 @@ App::post('/v1/messaging/messages/sms')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, ?array $topics, ?array $users, ?array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3185,7 +3319,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3851,19 +3985,38 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
-    ->label('sdk', new Method(
-        namespace: 'messaging',
-        group: 'messages',
-        name: 'updateSms',
-        description: '/docs/references/messaging/update-sms.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MESSAGE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'messages',
+            name: 'updateSms',
+            description: '/docs/references/messaging/update-sms.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MESSAGE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'messaging.updateSMS',
+            ),
+        ),
+        new Method(
+            namespace: 'messaging',
+            group: 'messages',
+            name: 'updateSMS',
+            description: '/docs/references/messaging/update-sms.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MESSAGE,
+                )
+            ]
+        )
+    ])
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
