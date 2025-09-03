@@ -411,6 +411,8 @@ class Response extends SwooleResponse
      */
     protected static bool $showSensitive = false;
 
+    protected SwooleHTTPResponse $swoole;
+
     /**
      * Response constructor.
      *
@@ -418,6 +420,8 @@ class Response extends SwooleResponse
      */
     public function __construct(SwooleHTTPResponse $response)
     {
+        $this->swoole = $response;
+
         $this
             // General
             ->setModel(new None())
@@ -955,12 +959,18 @@ class Response extends SwooleResponse
      * Set Header
      *
      * @param  string  $key
-     * @param  string  $value
+     * @param  string|array<string>  $value
      * @return void
      */
-    public function setHeader(string $key, string $value): void
+    public function setHeader(string $key, mixed $value): void
     {
-        $this->sendHeader($key, $value);
+        if (is_array($value)) {
+            // Temporary solution to support proxying Set-cookie (2 cookies, 1 name)
+            // Ideally this would live in http library, supporting array of values in all adapters
+            $this->swoole->header($key, $value);
+        } else {
+            $this->sendHeader($key, $value);
+        }
     }
 
     /**
