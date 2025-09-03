@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
-use Utopia\Database\Validator\Spatial as SpatialVaildator;
+use Utopia\Database\Validator\Spatial as SpatialValidator;
 use Utopia\Validator\JSON;
 
 class Spatial extends JSON
@@ -36,7 +36,7 @@ class Spatial extends JSON
             return false;
         }
         $value = \json_decode($value, true);
-        $validator = new SpatialVaildator($this->spatialAttributeType);
+        $validator = new SpatialValidator($this->spatialAttributeType);
         return $validator->isValid($value);
     }
 }
