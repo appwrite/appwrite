@@ -85,6 +85,30 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
+App::setResource('publisherDatabases', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherFunctions', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMigrations', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherStatsUsage', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMails', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherDeletes', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMessaging', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherWebhooks', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -109,9 +133,6 @@ App::setResource('queueForWebhooks', function (Publisher $publisher) {
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
-App::setResource('queueForStatsResources', function (Publisher $publisher) {
-    return new StatsResources($publisher);
-}, ['publisher']);
 App::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
@@ -126,6 +147,9 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 }, ['publisher']);
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
+}, ['publisher']);
+App::setResource('queueForStatsResources', function (Publisher $publisher) {
+    return new StatsResources($publisher);
 }, ['publisher']);
 App::setResource('platforms', function (Request $request, Document $console, Document $project) {
     $console->setAttribute('platforms', [ // Always allow current host

@@ -7,7 +7,7 @@ use Cron\CronExpression;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Pools\Group;
 
 class ScheduleFunctions extends ScheduleBase
 {
@@ -15,7 +15,6 @@ class ScheduleFunctions extends ScheduleBase
     public const ENQUEUE_TIMER = 60; // seconds
 
     private ?float $lastEnqueueUpdate = null;
-    protected Func $queueForFunctions;
 
     public static function getName(): string
     {
@@ -30,23 +29,6 @@ class ScheduleFunctions extends ScheduleBase
     public static function getCollectionId(): string
     {
         return 'functions';
-    }
-
-    public function __construct()
-    {
-        $this
-            ->desc('Execute functions scheduled in Appwrite')
-            ->inject('queueForFunctions')
-            ->inject('dbForPlatform')
-            ->inject('getProjectDB')
-            ->inject('telemetry')
-            ->callback($this->action(...));
-    }
-
-    public function action(Func $queueForFunctions, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
-    {
-        $this->queueForFunctions = $queueForFunctions;
-        $this->schedule($dbForPlatform, $getProjectDB, $telemetry);
     }
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
@@ -95,8 +77,6 @@ class ScheduleFunctions extends ScheduleBase
 
         foreach ($delayedExecutions as $delay => $schedules) {
             \go(function () use ($delay, $schedules, $dbForPlatform) {
-                $queueForFunctions = clone $this->queueForFunctions;
-
                 \sleep($delay); // in seconds
 
                 foreach ($schedules as $delayConfig) {
@@ -109,6 +89,8 @@ class ScheduleFunctions extends ScheduleBase
                     $schedule = $this->schedules[$scheduleKey];
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+
+                    $queueForFunctions = new Func($this->publisherFunctions);
 
                     $queueForFunctions
                         ->setType('schedule')

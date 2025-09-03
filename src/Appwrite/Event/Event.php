@@ -640,29 +640,6 @@ class Event
     }
 
     /**
-     * Clone the event instance.
-     *
-     * Creates a deep copy of the event with all properties,
-     * including nested objects and arrays.
-     */
-    public function __clone(): void
-    {
-        if ($this->project !== null) {
-            $this->project = clone $this->project;
-        }
-
-        if ($this->user !== null) {
-            $this->user = clone $this->user;
-        }
-
-        $clonedContext = [];
-        foreach ($this->context as $key => $document) {
-            $clonedContext[$key] = clone $document;
-        }
-        $this->context = $clonedContext;
-    }
-
-    /**
      * Returns the size of the queue.
      *
      * @param bool $failed Whether to include failed events in the count.

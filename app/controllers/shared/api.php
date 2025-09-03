@@ -29,6 +29,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
@@ -412,6 +413,9 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('publisher')
+    ->inject('publisherFunctions')
+    ->inject('publisherWebhooks')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -419,9 +423,6 @@ App::init()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForStatsUsage')
-    ->inject('queueForFunctions')
-    ->inject('queueForWebhooks')
-    ->inject('queueForRealtime')
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('resourceToken')
@@ -430,7 +431,7 @@ App::init()
     ->inject('plan')
     ->inject('devKey')
     ->inject('telemetry')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -538,9 +539,13 @@ App::init()
         $queueForDatabase->setProject($project);
         $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
-        $queueForFunctions->setProject($project);
-        $queueForWebhooks->setProject($project);
-        $queueForRealtime->setProject($project);
+
+        // Clone the queues, to prevent events triggered by the database listener
+        // from overwriting the events that are supposed to be triggered in the shutdown hook.
+        $queueForEventsClone = new Event($publisher);
+        $queueForFunctions = new Func($publisherFunctions);
+        $queueForWebhooks = new Webhook($publisherWebhooks);
+        $queueForRealtime = new Realtime();
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
@@ -552,12 +557,10 @@ App::init()
                 $project,
                 $document,
                 $response,
-                // Clone the queues used by database, to prevent overwriting the events that are supposed to be triggered in the shutdown hook.
-                // This is a hack, we should define this listener in the domain layer and allow it to inject it's own dependencies.
-                clone $queueForEvents,
-                clone $queueForFunctions,
-                clone $queueForWebhooks,
-                clone $queueForRealtime
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
             ));
 
         $useCache = $route->getLabel('cache', false);
