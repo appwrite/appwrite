@@ -710,7 +710,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $contentType = 'text/plain';
         foreach ($executionResponse['headers'] as $name => $values) {
             if (\strtolower($name) === 'content-type') {
-                $contentType = $values[0] ?? 'text/plain';
+                $contentType = \is_array($values) ? $values[0] : $values;
                 continue;
             }
 
