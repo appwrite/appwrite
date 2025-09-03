@@ -15,6 +15,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 
 class Update extends Action
@@ -62,7 +63,7 @@ class Update extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#createCollection).')
             ->param('key', '', new Key(), 'Attribute Key.')
-            ->param('required', null, new \Utopia\Validator\Boolean(), 'Is attribute required?')
+            ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POLYGON)), 'Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.', true)
             ->param('newKey', null, new Key(), 'New attribute key.', true)
             ->inject('response')
