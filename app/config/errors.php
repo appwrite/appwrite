@@ -844,7 +844,7 @@ return [
 
     Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED => [
         'name' => Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED,
-        'description' => "Attribute type not supported by the adapter.",
+        'description' => 'Attribute type is not supported.',
         'code' => 400,
     ],
 
