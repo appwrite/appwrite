@@ -1208,7 +1208,6 @@ class RealtimeCustomClientTest extends Scope
         ]);
 
         $response = json_decode($client->receive(), true);
-        $response = json_decode($client->receive(), true);
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
