@@ -908,7 +908,7 @@ return [
     ],
     Exception::COLUMN_TYPE_NOT_SUPPORTED => [
         'name' => Exception::COLUMN_TYPE_NOT_SUPPORTED,
-        'description' => "Column type not supported by the adapter.",
+        'description' => 'Column type is not supported.',
         'code' => 400,
     ],
 
