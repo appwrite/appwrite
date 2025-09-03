@@ -80,7 +80,7 @@ class Create extends Action
             'key' => $key,
             'type' => Database::VAR_LINESTRING,
             'required' => $required,
-            'default' => $decodedDefault
+            'default' => $default
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
         $response
