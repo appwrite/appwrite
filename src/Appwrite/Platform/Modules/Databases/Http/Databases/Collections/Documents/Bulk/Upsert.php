@@ -151,7 +151,7 @@ class Upsert extends Action
             'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert',
             $database,
             $collection,
-            $documents,
+            $upserted,
             $queueForEvents,
             $queueForRealtime,
             $queueForFunctions,
