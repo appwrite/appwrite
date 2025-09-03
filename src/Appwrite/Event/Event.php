@@ -638,4 +638,16 @@ class Event
 
         return $events;
     }
+
+    /**
+     * Returns the size of the queue.
+     *
+     * @param bool $failed Whether to include failed events in the count.
+     * @return int The size of the queue.
+     */
+    public function getSize(bool $failed = false): int
+    {
+        $queue = new Queue($this->getQueue());
+        return $this->publisher->getQueueSize($queue, $failed);
+    }
 }

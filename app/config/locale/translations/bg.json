@@ -2,7 +2,7 @@
     "settings.inspire": "\"Изкуството да бъдеш мъдър е изкуството да знаеш какво да пренебрегнеш.\"",
     "settings.locale": "bg",
     "settings.direction": "ltr",
-    "emails.sender": "%s Екип",
+    "emails.sender": "{{project}} Екип",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",

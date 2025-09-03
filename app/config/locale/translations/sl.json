@@ -2,7 +2,7 @@
     "settings.inspire": "\"Srčika modrosti je umetnost védenja, kaj spregledati.\"",
     "settings.locale": "sl",
     "settings.direction": "ltr",
-    "emails.sender": "%s Ekipa",
+    "emails.sender": "{{project}} Ekipa",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",

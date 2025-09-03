@@ -235,6 +235,8 @@ class Exception extends \Exception
     public const string ATTRIBUTE_TYPE_INVALID = 'attribute_type_invalid';
     public const string ATTRIBUTE_INVALID_RESIZE = 'attribute_invalid_resize';
 
+    public const ATTRIBUTE_TYPE_NOT_SUPPORTED              = 'ATTRIBUTE_TYPE_NOT_SUPPORTED';
+
     /** Columns */
     public const string COLUMN_NOT_FOUND = 'column_not_found';
     public const string COLUMN_UNKNOWN = 'column_unknown';
@@ -246,6 +248,8 @@ class Exception extends \Exception
     public const string COLUMN_VALUE_INVALID = 'column_value_invalid';
     public const string COLUMN_TYPE_INVALID = 'column_type_invalid';
     public const string COLUMN_INVALID_RESIZE = 'column_invalid_resize';
+
+    public const COLUMN_TYPE_NOT_SUPPORTED              = 'COLUMN_TYPE_NOT_SUPPORTED';
 
     /** Relationship */
     public const string RELATIONSHIP_VALUE_INVALID = 'relationship_value_invalid';
