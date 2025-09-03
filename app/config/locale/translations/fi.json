@@ -2,7 +2,7 @@
     "settings.inspire": "\"The art of being wise is the art of knowing what to overlook.\"",
     "settings.locale": "fi",
     "settings.direction": "ltr",
-    "emails.sender": "%s Tiimi",
+    "emails.sender": "{{project}} Tiimi",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",
