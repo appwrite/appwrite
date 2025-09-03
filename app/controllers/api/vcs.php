@@ -15,6 +15,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -147,7 +148,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                             break;
                         } catch (\Throwable $err) {
                             if ($retries >= 9) {
-                                throw $err;
+                                Console::warning("Error creating vcs comment lock for " . $latestCommentId . ": " . $err->getMessage());
                             }
 
                             \sleep(1);
@@ -214,7 +215,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                             break;
                         } catch (\Throwable $err) {
                             if ($retries >= 9) {
-                                throw $err;
+                                Console::warning("Error creating vcs comment lock for " . $latestCommentId . ": " . $err->getMessage());
                             }
 
                             \sleep(1);
@@ -425,7 +426,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         break;
                     } catch (\Throwable $err) {
                         if ($retries >= 9) {
-                            throw $err;
+                            Console::warning("Error creating vcs comment lock for " . $latestCommentId . ": " . $err->getMessage());
                         }
 
                         \sleep(1);
