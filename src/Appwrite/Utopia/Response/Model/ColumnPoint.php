@@ -21,10 +21,6 @@ class ColumnPoint extends Column
         ;
     }
 
-    public array $conditions = [
-        'type' => 'point'
-    ];
-
     /**
      * Get Name
      *

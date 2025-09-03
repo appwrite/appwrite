@@ -190,8 +190,6 @@ class Create extends Action
             'orders' => $orders,
         ]);
 
-        // Determine adapter capabilities. For TablesDB, be permissive to accept requests
-        // and let the background worker enforce engine-specific constraints.
         $maxIndexLength = $dbForProject->getAdapter()->getMaxIndexLength();
         $internalIndexesKeys = $dbForProject->getAdapter()->getInternalIndexesKeys();
         $supportForIndexArray = $dbForProject->getAdapter()->getSupportForIndexArray();

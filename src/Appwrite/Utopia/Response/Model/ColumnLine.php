@@ -21,10 +21,6 @@ class ColumnLine extends Column
         ;
     }
 
-    public array $conditions = [
-        'type' => 'linestring'
-    ];
-
     /**
      * Get Name
      *
