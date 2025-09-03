@@ -32,7 +32,6 @@ class Spatial extends JSON
      */
     public function isValid($value): bool
     {
-
         if (!parent::isValid($value)) {
             return false;
         }
