@@ -402,7 +402,7 @@ class Response extends SwooleResponse
     /**
      * Response constructor.
      *
-     * @param float $time
+     * @param SwooleHTTPResponse $response Native response to be passed to parent constructor
      */
     public function __construct(SwooleHTTPResponse $response)
     {

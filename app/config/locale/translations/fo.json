@@ -2,7 +2,7 @@
     "settings.inspire": "\"Kunstin om at vera vís er at vita hvat man skal misrøkja.\"",
     "settings.locale": "fo",
     "settings.direction": "ltr",
-    "emails.sender": "%s Lið",
+    "emails.sender": "{{project}} Lið",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",
