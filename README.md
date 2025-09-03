@@ -1,4 +1,4 @@
-> We just announced Opt-in relationship loading for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-opt-in-relationship-loading)
+> We just announced time helper queries for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-time-helper-queries)
 
 > Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
