@@ -12,7 +12,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class ACIDComplianceTest extends Scope
+class ACIDTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -20,7 +20,7 @@ class ACIDComplianceTest extends Scope
     /**
      * Test atomicity - all operations succeed or all fail
      */
-    public function testTransactionAtomicity(): void
+    public function testAtomicity(): void
     {
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
@@ -175,7 +175,7 @@ class ACIDComplianceTest extends Scope
     /**
      * Test consistency - schema validation and constraints
      */
-    public function testTransactionConsistency(): void
+    public function testConsistency(): void
     {
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
@@ -306,7 +306,7 @@ class ACIDComplianceTest extends Scope
     /**
      * Test isolation - concurrent transactions on same data
      */
-    public function testTransactionIsolation(): void
+    public function testIsolation(): void
     {
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
@@ -463,7 +463,7 @@ class ACIDComplianceTest extends Scope
     /**
      * Test durability - committed data persists
      */
-    public function testTransactionDurability(): void
+    public function testDurability(): void
     {
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([

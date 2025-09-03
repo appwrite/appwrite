@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
@@ -167,12 +168,17 @@ class Update extends Action
                                         break;
 
                                     case 'update':
-                                        $document = new Document($data);
-                                        $state[$collectionId][$documentId] = $dbForProject->updateDocument(
+                                        $document = $dbForProject->updateDocument(
                                             $collectionId,
                                             $documentId,
-                                            $document,
+                                            new Document($data),
                                         );
+
+                                        if ($document->isEmpty()) {
+                                            throw new ConflictException('');
+                                        }
+
+                                        $state[$collectionId][$documentId] = $document;
                                         break;
 
                                     case 'upsert':
@@ -258,11 +264,7 @@ class Update extends Action
                     $transaction = $dbForProject->updateDocument(
                         'transactions',
                         $transactionId,
-                        new Document(
-                            [
-                                'status' => 'committed',
-                            ]
-                        )
+                        new Document(['status' => 'committed'])
                     );
 
                     // Clear the transaction logs
@@ -270,23 +272,20 @@ class Update extends Action
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($transaction);
 
-                } catch (NotFoundException $e) {
+                } catch (NotFoundException) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
                     ]));
-
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-                } catch (DuplicateException|ConflictException $e) {
+                } catch (DuplicateException|ConflictException) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
                     ]));
-
                     throw new Exception(Exception::TRANSACTION_CONFLICT);
                 } catch (TransactionException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
                     ]));
-
                     throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
                 }
             });

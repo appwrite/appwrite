@@ -384,8 +384,7 @@ class Exception extends \Exception
         int|string $code = null,
         \Throwable $previous = null,
         ?string $view = null
-    )
-    {
+    ) {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
         $this->view = $view;
