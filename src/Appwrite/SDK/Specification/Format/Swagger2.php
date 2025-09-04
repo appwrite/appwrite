@@ -467,7 +467,10 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Assoc':
                         $node['type'] = 'object';
                         $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
-                        $node['x-example'] = '{}';
+
+                        $example = $param['example'] ?? '{}';
+                        $decodedExample = json_decode($example, true);
+                        $node['schema']['x-example'] = json_last_error() === JSON_ERROR_NONE ? $decodedExample : $example;
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];

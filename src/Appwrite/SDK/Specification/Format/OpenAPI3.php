@@ -433,7 +433,10 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Assoc':
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
-                        $node['schema']['x-example'] = '{}';
+
+                        $example = $param['example'] ?? '{}';
+                        $decodedExample = json_decode($example, true);
+                        $node['schema']['x-example'] = json_last_error() === JSON_ERROR_NONE ? $decodedExample : $example;
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
