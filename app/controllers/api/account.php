@@ -152,13 +152,12 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->setVariables($emailVariables)
         ->setRecipient($email)
         ->trigger();
-};
-
+}
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
 
     /** @var Utopia\Database\Document $user */
-    $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+    $userFromRequest = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
     if ($userFromRequest->isEmpty()) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -197,7 +196,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'ip' => $request->getIP(),
             'factors' => [$factor],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+            'expire' => DateTime::addSeconds(new \DateTime(), $duration),
         ],
         $detector->getOS(),
         $detector->getClient(),
@@ -213,7 +212,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-    Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+    Authorization::skip(fn() => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP
@@ -242,8 +241,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $isSessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
 
     $isNotFirstSession = $dbForProject->count('sessions', [
-        Query::equal('userId', [$user->getId()]),
-    ]) !== 1;
+            Query::equal('userId', [$user->getId()]),
+        ]) !== 1;
 
     if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
         sendSessionAlert($locale, $user, $project, $session, $queueForMails);
@@ -271,8 +270,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('current', true)
         ->setAttribute('countryName', $countryName)
         ->setAttribute('expire', $expire)
-        ->setAttribute('secret', Auth::encodeSession($user->getId(), $sessionSecret))
-    ;
+        ->setAttribute('secret', Auth::encodeSession($user->getId(), $sessionSecret));
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
@@ -295,14 +293,14 @@ App::post('/v1/account')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -344,7 +342,8 @@ App::post('/v1/account')
             Query::equal('providerEmail', [$email]),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
@@ -388,9 +387,9 @@ App::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$sequence');
-            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
             try {
-                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -439,7 +438,7 @@ App::get('/v1/account')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -469,7 +468,7 @@ App::delete('/v1/account')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -522,7 +521,7 @@ App::get('/v1/account/sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION_LIST,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -532,11 +531,11 @@ App::get('/v1/account/sessions')
     ->inject('project')
     ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
-
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($sessions as $key => $session) {/** @var Document $session */
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
@@ -569,7 +568,7 @@ App::delete('/v1/account/sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -586,7 +585,8 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) {/** @var Document $session */
+        foreach ($sessions as $session) {
+            /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
             if (!Config::getParam('domainVerification')) {
@@ -639,7 +639,7 @@ App::get('/v1/account/sessions/:sessionId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -655,15 +655,15 @@ App::get('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
-        foreach ($sessions as $session) {/** @var Document $session */
+        foreach ($sessions as $session) {
+            /** @var Document $session */
             if ($sessionId === $session->getId()) {
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('secret', $session->getAttribute('secret', ''))
-                ;
+                    ->setAttribute('secret', $session->getAttribute('secret', ''));
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
@@ -689,7 +689,7 @@ App::delete('/v1/account/sessions/:sessionId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -776,7 +776,7 @@ App::patch('/v1/account/sessions/:sessionId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -835,8 +835,7 @@ App::patch('/v1/account/sessions/:sessionId')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
-        ;
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
 
         return $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -861,13 +860,13 @@ App::post('/v1/account/sessions/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('request')
     ->inject('response')
@@ -892,7 +891,7 @@ App::post('/v1/account/sessions/email')
         }
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
+            throw new Exception(Exception::USER_BLOCKED);     // User is in status blocked
         }
 
         $user->setAttributes($profile->getArrayCopy());
@@ -915,7 +914,7 @@ App::post('/v1/account/sessions/email')
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration),
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -943,8 +942,7 @@ App::post('/v1/account/sessions/email')
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
@@ -952,26 +950,23 @@ App::post('/v1/account/sessions/email')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
-        ;
+            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
             if ($dbForProject->count('sessions', [
-                Query::equal('userId', [$user->getId()]),
-            ]) !== 1) {
+                    Query::equal('userId', [$user->getId()]),
+                ]) !== 1) {
                 sendSessionAlert($locale, $user, $project, $session, $queueForMails);
             }
         }
@@ -998,7 +993,7 @@ App::post('/v1/account/sessions/anonymous')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -1057,7 +1052,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$sequence');
-        Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+        Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -1076,7 +1071,7 @@ App::post('/v1/account/sessions/anonymous')
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration),
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1085,7 +1080,7 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
+        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
@@ -1095,8 +1090,7 @@ App::post('/v1/account/sessions/anonymous')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
@@ -1107,16 +1101,14 @@ App::post('/v1/account/sessions/anonymous')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
-        ;
+            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret));
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1139,7 +1131,7 @@ App::post('/v1/account/sessions/token')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -1174,16 +1166,16 @@ App::get('/v1/account/sessions/oauth2/:provider')
             new SDKResponse(
                 code: Response::STATUS_CODE_MOVED_PERMANENTLY,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::HTML,
         hide: [APP_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
-    ->param('failure', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('success', '', fn($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('failure', '', fn($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
@@ -1557,7 +1549,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('providerEmail', [$email]),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
-                    $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -1589,7 +1582,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$sequence');
-                    $userDoc = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+                    $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
@@ -1612,7 +1605,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         Authorization::setRole(Role::users()->toString());
 
         if (false === $user->getAttribute('status')) { // Account is blocked
-            $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
+            $failureRedirect(Exception::USER_BLOCKED);     // User is in status blocked
         }
 
         $identity = $dbForProject->findOne('identities', [
@@ -1629,7 +1622,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
-                $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $dbForProject->createDocument('identities', new Document([
@@ -1702,8 +1696,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setEvent('users.[userId].tokens.[tokenId].create')
                 ->setParam('userId', $user->getId())
-                ->setParam('tokenId', $token->getId())
-            ;
+                ->setParam('tokenId', $token->getId());
 
             $query['secret'] = $secret;
             $query['userId'] = $user->getId();
@@ -1728,7 +1721,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration),
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
@@ -1746,8 +1739,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION))
-            ;
+                ->setPayload($response->output($session, Response::MODEL_SESSION));
 
             // TODO: Remove this deprecated workaround - support only token
             if ($state['success']['path'] == $oauthDefaultSuccess) {
@@ -1784,8 +1776,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($state['success'])
-        ;
+            ->redirect($state['success']);
     });
 
 App::get('/v1/account/tokens/oauth2/:provider')
@@ -1803,16 +1794,16 @@ App::get('/v1/account/tokens/oauth2/:provider')
             new SDKResponse(
                 code: Response::STATUS_CODE_MOVED_PERMANENTLY,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::HTML,
         type: MethodType::WEBAUTH,
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
-    ->param('failure', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('success', '', fn($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('failure', '', fn($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
@@ -1899,15 +1890,15 @@ App::post('/v1/account/tokens/magic-url')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 60)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.')
-    ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('url', '', fn($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
@@ -1926,7 +1917,6 @@ App::post('/v1/account/tokens/magic-url')
         if ($phrase === true) {
             $phrase = Phrase::generate();
         }
-
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
         if (!$result->isEmpty()) {
@@ -1979,7 +1969,7 @@ App::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
         }
 
         $tokenSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_MAGIC_URL);
@@ -2150,14 +2140,14 @@ App::post('/v1/account/tokens/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
@@ -2195,7 +2185,8 @@ App::post('/v1/account/tokens/email')
                 Query::equal('providerEmail', [$email]),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -2225,7 +2216,7 @@ App::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
         }
 
         $tokenSecret = Auth::codeGenerator(6);
@@ -2376,7 +2367,7 @@ App::put('/v1/account/sessions/magic-url')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
         deprecated: true,
@@ -2414,7 +2405,7 @@ App::put('/v1/account/sessions/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
         deprecated: true,
@@ -2453,7 +2444,7 @@ App::post('/v1/account/tokens/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -2517,9 +2508,9 @@ App::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
             try {
-                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -2657,7 +2648,7 @@ App::post('/v1/account/jwts')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_JWT,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -2668,11 +2659,11 @@ App::post('/v1/account/jwts')
     ->inject('dbForProject')
     ->action(function (Response $response, Document $user, Database $dbForProject) {
 
-
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
 
-        foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
+        foreach ($sessions as $session) {
+            /** @var Utopia\Database\Document $session */
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                 $current = $session;
             }
@@ -2706,7 +2697,7 @@ App::get('/v1/account/prefs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PREFERENCES,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -2733,7 +2724,7 @@ App::get('/v1/account/logs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOG_LIST,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -2810,7 +2801,7 @@ App::patch('/v1/account/name')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -2849,12 +2840,12 @@ App::patch('/v1/account/password')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('requestTimestamp')
     ->inject('response')
@@ -2923,11 +2914,11 @@ App::patch('/v1/account/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false)), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -2959,7 +2950,8 @@ App::patch('/v1/account/email')
             Query::notEqual('userInternalId', $user->getSequence()),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $user
@@ -2975,7 +2967,7 @@ App::patch('/v1/account/email')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+        $target = Authorization::skip(fn() => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$email]),
         ]));
 
@@ -2991,11 +2983,12 @@ App::patch('/v1/account/email')
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+                Authorization::skip(fn() => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $queueForEvents->setParam('userId', $user->getId());
@@ -3020,7 +3013,7 @@ App::patch('/v1/account/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3046,7 +3039,7 @@ App::patch('/v1/account/phone')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+        $target = Authorization::skip(fn() => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
         ]));
 
@@ -3077,7 +3070,7 @@ App::patch('/v1/account/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                Authorization::skip(fn() => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
@@ -3106,7 +3099,7 @@ App::patch('/v1/account/prefs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3144,7 +3137,7 @@ App::patch('/v1/account/status')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -3171,8 +3164,7 @@ App::patch('/v1/account/status')
         $protocol = $request->getProtocol();
         $response
             ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -3195,14 +3187,14 @@ App::post('/v1/account/recovery')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
-    ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey'])
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false)), 'User email.', false, ['project', 'disposableDomains'])
+    ->param('url', '', fn($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3330,7 +3322,7 @@ App::post('/v1/account/recovery')
             'redirect' => $url,
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
-            'team' => ''
+            'team' => '',
         ];
 
         $queueForMails
@@ -3347,7 +3339,7 @@ App::post('/v1/account/recovery')
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
-            ->setPayload(Response::showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3372,7 +3364,7 @@ App::put('/v1/account/recovery')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3380,7 +3372,7 @@ App::put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -3420,12 +3412,12 @@ App::put('/v1/account/recovery')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', $newPassword)
-                ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now())
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('emailVerification', true));
+            ->setAttribute('password', $newPassword)
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordUpdate', DateTime::now())
+            ->setAttribute('hash', Auth::DEFAULT_ALGO)
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+            ->setAttribute('emailVerification', true));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -3441,7 +3433,7 @@ App::put('/v1/account/recovery')
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recoveryDocument->getId())
-            ->setPayload(Response::showSensitive(fn () => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
@@ -3463,13 +3455,13 @@ App::post('/v1/account/verification')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey']) // TODO add built-in confirm page
+    ->param('url', '', fn($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -3603,7 +3595,7 @@ App::post('/v1/account/verification')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
-            ->setPayload(Response::showSensitive(fn () => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3627,7 +3619,7 @@ App::put('/v1/account/verification')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3641,7 +3633,7 @@ App::put('/v1/account/verification')
     ->inject('queueForEvents')
     ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3672,7 +3664,7 @@ App::put('/v1/account/verification')
         $queueForEvents
             ->setParam('userId', $userId)
             ->setParam('tokenId', $verification->getId())
-            ->setPayload(Response::showSensitive(fn () => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
@@ -3695,7 +3687,7 @@ App::post('/v1/account/verification/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -3843,7 +3835,7 @@ App::put('/v1/account/verification/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3857,7 +3849,7 @@ App::put('/v1/account/verification/phone')
     ->inject('queueForEvents')
     ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3885,8 +3877,7 @@ App::put('/v1/account/verification/phone')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setParam('tokenId', $verificationDocument->getId());
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
@@ -3909,7 +3900,7 @@ App::patch('/v1/account/mfa')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3963,7 +3954,7 @@ App::get('/v1/account/mfa/factors')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MFA_FACTORS,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3980,7 +3971,7 @@ App::get('/v1/account/mfa/factors')
             Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
             Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
-            Type::RECOVERY_CODE => $recoveryCodeEnabled
+            Type::RECOVERY_CODE => $recoveryCodeEnabled,
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
@@ -4004,7 +3995,7 @@ App::post('/v1/account/mfa/authenticators/:type')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MFA_TYPE,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4047,12 +4038,12 @@ App::post('/v1/account/mfa/authenticators/:type')
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
-            ]
+            ],
         ]);
 
         $model = new Document([
             'secret' => $otp->getSecret(),
-            'uri' => $otp->getProvisioningUri()
+            'uri' => $otp->getProvisioningUri(),
         ]);
 
         $authenticator = $dbForProject->createDocument('authenticators', $authenticator);
@@ -4081,7 +4072,7 @@ App::put('/v1/account/mfa/authenticators/:type')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4151,7 +4142,7 @@ App::post('/v1/account/mfa/recovery-codes')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4174,7 +4165,7 @@ App::post('/v1/account/mfa/recovery-codes')
         $queueForEvents->setParam('userId', $user->getId());
 
         $document = new Document([
-            'recoveryCodes' => $mfaRecoveryCodes
+            'recoveryCodes' => $mfaRecoveryCodes,
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
@@ -4198,7 +4189,7 @@ App::patch('/v1/account/mfa/recovery-codes')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4220,7 +4211,7 @@ App::patch('/v1/account/mfa/recovery-codes')
         $queueForEvents->setParam('userId', $user->getId());
 
         $document = new Document([
-            'recoveryCodes' => $mfaRecoveryCodes
+            'recoveryCodes' => $mfaRecoveryCodes,
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
@@ -4240,7 +4231,7 @@ App::get('/v1/account/mfa/recovery-codes')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4255,7 +4246,7 @@ App::get('/v1/account/mfa/recovery-codes')
         }
 
         $document = new Document([
-            'recoveryCodes' => $mfaRecoveryCodes
+            'recoveryCodes' => $mfaRecoveryCodes,
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
@@ -4279,7 +4270,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -4325,7 +4316,7 @@ App::post('/v1/account/mfa/challenge')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_MFA_CHALLENGE,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -4508,7 +4499,7 @@ App::post('/v1/account/mfa/challenge')
                     'otp' => $code,
                     'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
                 ];
 
                 $queueForMails
@@ -4545,7 +4536,7 @@ App::put('/v1/account/mfa/challenge')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4616,8 +4607,8 @@ App::put('/v1/account/mfa/challenge')
         $dbForProject->updateDocument('sessions', $session->getId(), $session);
 
         $queueForEvents
-                    ->setParam('userId', $user->getId())
-                    ->setParam('sessionId', $session->getId());
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -4639,7 +4630,7 @@ App::post('/v1/account/targets/push')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TARGET,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4654,9 +4645,9 @@ App::post('/v1/account/targets/push')
     ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+        $provider = Authorization::skip(fn() => $dbForProject->getDocument('providers', $providerId));
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = Authorization::skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4680,13 +4671,13 @@ App::post('/v1/account/targets/push')
                 ],
                 'providerId' => !empty($providerId) ? $providerId : null,
                 'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
-                'providerType' =>  MESSAGE_TYPE_PUSH,
+                'providerType' => MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'sessionId' => $session->getId(),
                 'sessionInternalId' => $session->getSequence(),
                 'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
+                'name' => "{$device['deviceBrand']} {$device['deviceModel']}",
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4720,7 +4711,7 @@ App::put('/v1/account/targets/:targetId/push')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TARGET,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4733,7 +4724,7 @@ App::put('/v1/account/targets/:targetId/push')
     ->inject('dbForProject')
     ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = Authorization::skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4785,7 +4776,7 @@ App::delete('/v1/account/targets/:targetId/push')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -4797,7 +4788,7 @@ App::delete('/v1/account/targets/:targetId/push')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject) {
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = Authorization::skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4836,7 +4827,7 @@ App::get('/v1/account/identities')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_IDENTITY_LIST,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4855,8 +4846,8 @@ App::get('/v1/account/identities')
         $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 
         /**
-            * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-            */
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -4911,7 +4902,7 @@ App::delete('/v1/account/identities/:identityId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))

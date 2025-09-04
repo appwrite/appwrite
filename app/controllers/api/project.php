@@ -285,7 +285,7 @@ App::get('/v1/project/usage')
         }, $dbForProject->find('functions'));
 
         // This total is includes free and paid SMS usage
-        $authPhoneTotal = Authorization::skip(fn () => $dbForProject->sum('stats', 'value', [
+        $authPhoneTotal = Authorization::skip(fn() => $dbForProject->sum('stats', 'value', [
             Query::equal('metric', [METRIC_AUTH_METHOD_PHONE]),
             Query::equal('period', ['1d']),
             Query::greaterThanEqual('time', $firstDay),
@@ -293,7 +293,7 @@ App::get('/v1/project/usage')
         ]));
 
         // This estimate is only for paid SMS usage
-        $authPhoneMetrics = Authorization::skip(fn () => $dbForProject->find('stats', [
+        $authPhoneMetrics = Authorization::skip(fn() => $dbForProject->find('stats', [
             Query::startsWith('metric', METRIC_AUTH_METHOD_PHONE . '.'),
             Query::equal('period', ['1d']),
             Query::greaterThanEqual('time', $firstDay),
@@ -400,7 +400,7 @@ App::post('/v1/project/variables')
             )
         ]
     ))
-    ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
+    ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
     ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
     ->inject('project')
