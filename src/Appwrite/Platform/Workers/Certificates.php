@@ -171,6 +171,9 @@ class Certificates extends Action
         $success = false;
 
         try {
+            $date = \date('H:i:s');
+            $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
+
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
                 $mainDomain = $this->getMainDomain();
@@ -198,9 +201,11 @@ class Certificates extends Action
             $success = true;
         } catch (Throwable $e) {
             $logs = $e->getMessage();
+            $currentLogs = $certificate->getAttribute('logs', '');
+            $date = \date('H:i:s');
+            $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
 
-            // Set exception as log in certificate document
-            $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
+            $certificate->setAttribute('logs', $currentLogs . $errorMessage . \mb_strcut($logs, 0, 1000000));// Limit to 1MB
 
             // Increase attempts count
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
