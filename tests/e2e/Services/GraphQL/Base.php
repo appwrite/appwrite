@@ -45,6 +45,9 @@ trait Base
     public const string CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
     public const string CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
     public const string CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
+    public const string CREATE_POINT_ATTRIBUTE = 'create_point_attribute';
+    public const string CREATE_LINE_ATTRIBUTE = 'create_line_attribute';
+    public const string CREATE_POLYGON_ATTRIBUTE = 'create_polygon_attribute';
 
     public const string CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
     public const string UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
@@ -56,6 +59,9 @@ trait Base
     public const string UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
     public const string UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
     public const string UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
+    public const string UPDATE_POINT_ATTRIBUTE = 'update_point_attribute';
+    public const string UPDATE_LINE_ATTRIBUTE = 'update_line_attribute';
+    public const string UPDATE_POLYGON_ATTRIBUTE = 'update_polygon_attribute';
 
     public const string UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
     public const string GET_ATTRIBUTES = 'get_attributes';
@@ -72,6 +78,9 @@ trait Base
     public const string CREATE_IP_COLUMN = 'create_ip_column';
     public const string CREATE_ENUM_COLUMN = 'create_enum_column';
     public const string CREATE_DATETIME_COLUMN = 'create_datetime_column';
+    public const string CREATE_POINT_COLUMN = 'create_point_column';
+    public const string CREATE_LINE_COLUMN = 'create_line_column';
+    public const string CREATE_POLYGON_COLUMN = 'create_polygon_column';
 
     public const string CREATE_RELATIONSHIP_COLUMN = 'create_relationship_column';
     public const string UPDATE_STRING_COLUMN = 'update_string_column';
@@ -83,6 +92,9 @@ trait Base
     public const string UPDATE_IP_COLUMN = 'update_ip_column';
     public const string UPDATE_ENUM_COLUMN = 'update_enum_column';
     public const string UPDATE_DATETIME_COLUMN = 'update_datetime_column';
+    public const string UPDATE_POINT_COLUMN = 'update_point_column';
+    public const string UPDATE_LINE_COLUMN = 'update_line_column';
+    public const string UPDATE_POLYGON_COLUMN = 'update_polygon_column';
 
     public const string UPDATE_RELATIONSHIP_COLUMN = 'update_relationship_column';
     public const string GET_COLUMNS = 'get_columns';
@@ -930,6 +942,35 @@ trait Base
                         array
                     }
                 }';
+            case self::CREATE_POINT_COLUMN:
+                return 'mutation createPointColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $array: Boolean){
+                    tablesDBCreatePointColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, array: $array) {
+                        key
+                        required
+                        array
+                        status
+                    }
+                }';
+
+            case self::CREATE_LINE_COLUMN:
+                return 'mutation createLineColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $array: Boolean){
+                    tablesDBCreateLineColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, array: $array) {
+                        key
+                        required
+                        array
+                        status
+                    }
+                }';
+
+            case self::CREATE_POLYGON_COLUMN:
+                return 'mutation createPolygonColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!, $array: Boolean){
+                    tablesDBCreatePolygonColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required, array: $array) {
+                        key
+                        required
+                        array
+                        status
+                    }
+                }';
             case self::CREATE_RELATIONSHIP_COLUMN:
                 return 'mutation createRelationshipColumn($databaseId: String!, $tableId: String!, $relatedTableId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
                     tablesDBCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
@@ -1009,6 +1050,27 @@ trait Base
                         default
                     }
                 }';
+            case self::UPDATE_POINT_COLUMN:
+                return 'mutation updatePointColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!){
+                    tablesDBUpdatePointColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required) {
+                        required
+                    }
+                }';
+
+            case self::UPDATE_LINE_COLUMN:
+                return 'mutation updateLineColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!){
+                    tablesDBUpdateLineColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required) {
+                        required
+                    }
+                }';
+
+            case self::UPDATE_POLYGON_COLUMN:
+                return 'mutation updatePolygonColumn($databaseId: String!, $tableId: String!, $key: String!, $required: Boolean!){
+                    tablesDBUpdatePolygonColumn(databaseId: $databaseId, tableId: $tableId, key: $key, required: $required) {
+                        required
+                    }
+                }';
+
             case self::UPDATE_RELATIONSHIP_COLUMN:
                 return 'mutation updateRelationshipColumn($databaseId: String!, $tableId: String!, $key: String!, $onDelete: String){
                     tablesDBUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
