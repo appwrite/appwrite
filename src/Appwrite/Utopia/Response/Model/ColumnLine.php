@@ -12,7 +12,7 @@ class ColumnLine extends Column
 
         $this
             ->addRule('default', [
-                'type' => self::TYPE_SPATIAL,
+                'type' => self::TYPE_JSON,
                 'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,

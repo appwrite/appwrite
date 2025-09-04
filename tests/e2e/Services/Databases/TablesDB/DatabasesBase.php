@@ -6347,6 +6347,192 @@ trait DatabasesBase
      * @throws \Utopia\Database\Exception
      * @throws \Utopia\Database\Exception\Query
      */
+    public function testCreatedBetween(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'CreatedBetween test'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('CreatedBetween test', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create Collection
+        $articles = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Articles',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $articles['headers']['status-code']);
+        $this->assertEquals($articles['body']['name'], 'Articles');
+
+        // Create Attributes
+        $title = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $title['headers']['status-code']);
+
+        $content = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'content',
+            'size' => 5000,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $content['headers']['status-code']);
+
+        // Wait for attributes to be available
+        sleep(2);
+
+        // Create first article
+        $row1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'title' => 'First Article',
+                'content' => 'This is the first article content',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row1['headers']['status-code']);
+        $firstArticleCreatedAt = $row1['body']['$createdAt'];
+
+        // Sleep to ensure different timestamps
+        sleep(1);
+
+        // Create second article
+        $row2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'title' => 'Second Article',
+                'content' => 'This is the second article content',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row2['headers']['status-code']);
+        $secondArticleCreatedAt = $row2['body']['$createdAt'];
+
+        // Sleep again
+        sleep(1);
+
+        // Create third article
+        $row3 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'title' => 'Third Article',
+                'content' => 'This is the third article content',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row3['headers']['status-code']);
+        $thirdArticleCreatedAt = $row3['body']['$createdAt'];
+
+        // Sleep again
+        sleep(1);
+
+        // Create fourth article
+        $row4 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'title' => 'Fourth Article',
+                'content' => 'This is the fourth article content',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row4['headers']['status-code']);
+
+        // Test createdBetween query - should return articles created between first and third (inclusive)
+        $rows = $this->client->call(
+            Client::METHOD_GET,
+            '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/rows',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::createdBetween($firstArticleCreatedAt, $thirdArticleCreatedAt)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertCount(3, $rows['body']['rows']);
+
+        // Verify the returned articles are the correct ones
+        $titles = array_column($rows['body']['rows'], 'title');
+        $this->assertContains('First Article', $titles);
+        $this->assertContains('Second Article', $titles);
+        $this->assertContains('Third Article', $titles);
+        $this->assertNotContains('Fourth Article', $titles);
+
+        // Test createdBetween query - should return only the second article when using its timestamp for both bounds
+        $rows = $this->client->call(
+            Client::METHOD_GET,
+            '/tablesdb/' . $databaseId . '/tables/' . $articles['body']['$id'] . '/rows',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::createdBetween($secondArticleCreatedAt, $secondArticleCreatedAt)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertCount(1, $rows['body']['rows']);
+        $this->assertEquals('Second Article', $rows['body']['rows'][0]['title']);
+    }
+
+    /**
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Query
+     */
     public function testUpdatedBefore(): void
     {
         // Create database
@@ -6687,6 +6873,249 @@ trait DatabasesBase
         $this->assertCount(1, $rows['body']['rows']);
         $this->assertEquals('ORD-003', $rows['body']['rows'][0]['orderNumber']);
         $this->assertEquals('delivered', $rows['body']['rows'][0]['status']);
+    }
+
+    /**
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Query
+     */
+    public function testUpdatedBetween(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'UpdatedBetween test'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('UpdatedBetween test', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create Collection
+        $products = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Products',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $products['headers']['status-code']);
+        $this->assertEquals($products['body']['name'], 'Products');
+
+        // Create Attributes
+        $name = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $name['headers']['status-code']);
+
+        $price = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/columns/float', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'price',
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $price['headers']['status-code']);
+
+        // Wait for attributes to be available
+        sleep(2);
+
+        // Create first product
+        $row1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Product A',
+                'price' => 99.99,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row1['headers']['status-code']);
+
+        // Sleep to ensure different timestamps
+        sleep(1);
+
+        // Create second product
+        $row2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Product B',
+                'price' => 149.99,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row2['headers']['status-code']);
+
+        // Sleep again
+        sleep(1);
+
+        // Create third product
+        $row3 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Product C',
+                'price' => 199.99,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row3['headers']['status-code']);
+
+        // Sleep again
+        sleep(1);
+
+        // Create fourth product
+        $row4 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Product D',
+                'price' => 249.99,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row4['headers']['status-code']);
+
+        // Now update products in sequence to get different updatedAt timestamps
+        sleep(1);
+
+        // Update first product
+        $update1 = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows/' . $row1['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'price' => 89.99,
+            ]
+        ]);
+        $this->assertEquals(200, $update1['headers']['status-code']);
+        $firstProductUpdatedAt = $update1['body']['$updatedAt'];
+
+        sleep(1);
+
+        // Update second product
+        $update2 = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows/' . $row2['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'price' => 139.99,
+            ]
+        ]);
+        $this->assertEquals(200, $update2['headers']['status-code']);
+        $secondProductUpdatedAt = $update2['body']['$updatedAt'];
+
+        sleep(1);
+
+        // Update third product
+        $update3 = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows/' . $row3['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'price' => 189.99,
+            ]
+        ]);
+        $this->assertEquals(200, $update3['headers']['status-code']);
+        $thirdProductUpdatedAt = $update3['body']['$updatedAt'];
+
+        sleep(1);
+
+        // Update fourth product
+        $update4 = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows/' . $row4['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'price' => 239.99,
+            ]
+        ]);
+        $this->assertEquals(200, $update4['headers']['status-code']);
+
+        // Test updatedBetween query - should return products updated between first and third (inclusive)
+        $rows = $this->client->call(
+            Client::METHOD_GET,
+            '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::updatedBetween($firstProductUpdatedAt, $thirdProductUpdatedAt)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertCount(3, $rows['body']['rows']);
+
+        // Verify the returned products are the correct ones
+        $names = array_column($rows['body']['rows'], 'name');
+        $this->assertContains('Product A', $names);
+        $this->assertContains('Product B', $names);
+        $this->assertContains('Product C', $names);
+        $this->assertNotContains('Product D', $names);
+
+        // Test updatedBetween query - should return only the second product when using its timestamp for both bounds
+        $rows = $this->client->call(
+            Client::METHOD_GET,
+            '/tablesdb/' . $databaseId . '/tables/' . $products['body']['$id'] . '/rows',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::updatedBetween($secondProductUpdatedAt, $secondProductUpdatedAt)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertCount(1, $rows['body']['rows']);
+        $this->assertEquals('Product B', $rows['body']['rows'][0]['name']);
+        $this->assertEquals(139.99, $rows['body']['rows'][0]['price']);
     }
 
     /**

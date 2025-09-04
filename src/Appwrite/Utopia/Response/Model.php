@@ -15,7 +15,6 @@ abstract class Model
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
     public const TYPE_RELATIONSHIP = 'relationship';
     public const TYPE_PAYLOAD = 'payload';
-    public const TYPE_SPATIAL = 'spatial';
 
     /**
      * @var bool
