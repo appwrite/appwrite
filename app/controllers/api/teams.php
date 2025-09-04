@@ -36,6 +36,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -357,6 +358,11 @@ App::put('/v1/teams/:teamId/prefs')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
+        try {
+            $prefs = new Document($prefs);
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -368,7 +374,7 @@ App::put('/v1/teams/:teamId/prefs')
 
         $queueForEvents->setParam('teamId', $team->getId());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
