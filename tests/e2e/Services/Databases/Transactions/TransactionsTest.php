@@ -1044,6 +1044,8 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
+        sleep(2);
+
         // Create unique index on email
         $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", array_merge([
             'content-type' => 'application/json',
@@ -1055,7 +1057,7 @@ class TransactionsTest extends Scope
             'attributes' => ['email'],
         ]);
 
-        sleep(3);
+        sleep(2);
 
         // Create an existing document
         $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
