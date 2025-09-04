@@ -94,7 +94,8 @@
         "phpstan/phpstan": "1.8.*",
         "textalk/websocket": "1.5.*",
         "laravel/pint": "1.*",
-        "phpbench/phpbench": "1.*"
+        "phpbench/phpbench": "1.*",
+        "brianium/paratest": "^6.11"
     },
     "provide": {
         "ext-phpiredis": "*"

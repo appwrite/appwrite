@@ -193,7 +193,6 @@ class Create extends Action
         $maxIndexLength = $dbForProject->getAdapter()->getMaxIndexLength();
         $internalIndexesKeys = $dbForProject->getAdapter()->getInternalIndexesKeys();
         $supportForIndexArray = $dbForProject->getAdapter()->getSupportForIndexArray();
-        $supportForSpatialAttributes = $dbForProject->getAdapter()->getSupportForSpatialAttributes();
         $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
         $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
 
@@ -202,7 +201,6 @@ class Create extends Action
             $maxIndexLength,
             $internalIndexesKeys,
             $supportForIndexArray,
-            $supportForSpatialAttributes,
             $supportForSpatialIndexNull,
             $supportForSpatialIndexOrder
         );
