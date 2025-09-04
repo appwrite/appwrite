@@ -12,7 +12,7 @@ class AttributePolygon extends Attribute
 
         $this
             ->addRule('default', [
-                'type' => self::TYPE_SPATIAL,
+                'type' => self::TYPE_JSON,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
