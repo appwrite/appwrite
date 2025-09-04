@@ -15150,7 +15150,7 @@
         },
         "\/health\/queue\/stats-resources": {
             "get": {
-                "summary": "Get stats  resources queue",
+                "summary": "Get stats resources queue",
                 "operationId": "healthGetQueueStatsResources",
                 "tags": [
                     "health"
