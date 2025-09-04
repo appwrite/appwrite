@@ -381,22 +381,22 @@ class Certificates extends Action
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
 
-        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
-        $template->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR);
-        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
-        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
-        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
-        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
-        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
-
         $body = $template->render();
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
+            'domain' => $domain,
+            'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+            'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+            'twitterUrl' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+            'discordUrl' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+            'githubUrl' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+            'privacyUrl' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
         ];
 
-        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-        $preview = \sprintf($locale->getText("emails.certificate.preview"), $domain);
+        $subject = $locale->getText("emails.certificate.subject");
+        $preview = $locale->getText("emails.certificate.preview");
 
         $queueForMails
             ->setSubject($subject)

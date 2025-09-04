@@ -2775,11 +2775,13 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/cookies', [
-            'cookie' => 'custom-session-id=abcd123'
+            'cookie' => 'custom-session-id=abcd123; custom-user-id=efgh456'
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals("abcd123", $response['body']);
+        $this->assertEquals("abcd123;efgh456", $response['body']);
+        $this->assertEquals("value-one", $response['cookies']['my-cookie-one']);
+        $this->assertEquals("value-two", $response['cookies']['my-cookie-two']);
 
         $this->cleanupSite($siteId);
     }
