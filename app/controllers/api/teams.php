@@ -283,7 +283,13 @@ App::get('/v1/teams/:teamId/prefs')
 
         $prefs = $team->getAttribute('prefs', []);
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        try {
+            $prefs = new Document($prefs);
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
+
+        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
 App::put('/v1/teams/:teamId')
