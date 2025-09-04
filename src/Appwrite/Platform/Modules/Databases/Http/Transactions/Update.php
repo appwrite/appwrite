@@ -222,8 +222,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         if ($documentId && !isset($data['$id'])) {
             $data['$id'] = $documentId;
         }
@@ -247,8 +246,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -286,8 +284,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -317,8 +314,7 @@ class Update extends Action
         string $documentId,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -347,8 +343,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -385,8 +380,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -422,8 +416,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
             $dbForProject->createDocuments(
                 $collectionId,
@@ -447,8 +440,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->updateDocuments(
@@ -458,7 +450,7 @@ class Update extends Action
             onNext: function (Document $updated, Document $old) use (&$state, $collectionId, $createdAt) {
                 // Check if this document was created/modified in this transaction
                 $dependent = isset($state[$collectionId][$updated->getId()]);
-                    
+
                 // If not in transaction state, check for timestamp conflicts
                 if (!$dependent) {
                     $oldUpdatedAt = new \DateTime($old->getUpdatedAt());
@@ -466,7 +458,7 @@ class Update extends Action
                         throw new ConflictException('Document was updated after the request timestamp');
                     }
                 }
-                
+
                 $state[$collectionId][$updated->getId()] = $updated;
             }
         );
@@ -482,8 +474,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         // Run bulk upsert without timestamp wrapper, checking manually in callback
         $dbForProject->upsertDocuments(
             $collectionId,
@@ -492,7 +483,7 @@ class Update extends Action
                 if ($old !== null) {
                     // This is an update - check if document was created/modified in this transaction
                     $dependent = isset($state[$collectionId][$upserted->getId()]);
-                    
+
                     // If not in transaction state, check for timestamp conflicts
                     if (!$dependent) {
                         $oldUpdatedAt = new \DateTime($old->getUpdatedAt());
@@ -519,8 +510,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->deleteDocuments(
@@ -536,7 +526,7 @@ class Update extends Action
                         throw new ConflictException('Document was updated after the transaction operation');
                     }
                 }
-                
+
                 // Remove from state after successful deletion
                 if (isset($state[$collectionId][$deleted->getId()])) {
                     unset($state[$collectionId][$deleted->getId()]);
