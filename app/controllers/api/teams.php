@@ -365,7 +365,7 @@ App::put('/v1/teams/:teamId/prefs')
     ->inject('queueForEvents')
     ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
         try {
-            $prefsDocument = new Document($prefs);
+            $prefs = new Document($prefs);
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         }
@@ -376,11 +376,12 @@ App::put('/v1/teams/:teamId/prefs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
+        $team->setAttribute('prefs', $prefs->getArrayCopy());
+        $team = $dbForProject->updateDocument('teams', $team->getId(), $team);
 
         $queueForEvents->setParam('teamId', $team->getId());
 
-        $response->dynamic($prefsDocument, Response::MODEL_PREFERENCES);
+        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
