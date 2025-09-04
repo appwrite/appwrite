@@ -966,7 +966,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.8.1
+    image: openruntimes/executor:0.11.0
     restart: unless-stopped
     networks:
       - appwrite
