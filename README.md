@@ -1,4 +1,4 @@
-> We just announced time helper queries for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-time-helper-queries)
+> We just announced inversion queries for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-inversion-queries)
 
 > Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
