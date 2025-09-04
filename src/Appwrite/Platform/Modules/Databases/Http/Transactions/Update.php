@@ -223,10 +223,9 @@ class Update extends Action
                                     case 'bulkCreate':
                                         $dbForProject->createDocuments(
                                             $collectionId,
-                                            array_map(fn ($data) => new Document($data), $data),
+                                            $data,
                                             onNext: function (Document $document) use (&$state, $collectionId) {
                                                 $state[$collectionId][$document->getId()] = $document;
-
                                             }
                                         );
                                         break;
@@ -234,7 +233,7 @@ class Update extends Action
                                     case 'bulkUpdate':
                                         $dbForProject->updateDocuments(
                                             $collectionId,
-                                            $data['data'] ?? null,
+                                            new Document($data['data']),
                                             Query::parseQueries($data['queries'] ?? [])
                                         );
                                         break;
@@ -242,10 +241,9 @@ class Update extends Action
                                     case 'bulkUpsert':
                                         $dbForProject->createOrUpdateDocuments(
                                             $collectionId,
-                                            array_map(fn ($data) => new Document($data), $data),
+                                            $data,
                                             onNext: function (Document $document) use (&$state, $collectionId) {
                                                 $state[$collectionId][$document->getId()] = $document;
-
                                             }
                                         );
                                         break;
@@ -272,16 +270,16 @@ class Update extends Action
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($transaction);
 
-                } catch (NotFoundException) {
+                } catch (NotFoundException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
                     ]));
-                    throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-                } catch (DuplicateException|ConflictException) {
+                    throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e);
+                } catch (DuplicateException|ConflictException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
                     ]));
-                    throw new Exception(Exception::TRANSACTION_CONFLICT);
+                    throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
                 } catch (TransactionException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
