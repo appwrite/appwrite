@@ -376,9 +376,9 @@ App::put('/v1/teams/:teamId/prefs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $team->setAttribute('prefs', $prefs->getArrayCopy());
-
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team);
+        $team = $dbForProject->updateDocument('teams', $team->getId(), new Document([
+            'prefs' => $prefs->getArrayCopy()
+        ]));
 
         $queueForEvents->setParam('teamId', $team->getId());
 
