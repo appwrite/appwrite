@@ -6501,7 +6501,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $rows['headers']['status-code']);
         $this->assertCount(3, $rows['body']['rows']);
-        
+
         // Verify the returned articles are the correct ones
         $titles = array_column($rows['body']['rows'], 'title');
         $this->assertContains('First Article', $titles);
@@ -7089,7 +7089,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $rows['headers']['status-code']);
         $this->assertCount(3, $rows['body']['rows']);
-        
+
         // Verify the returned products are the correct ones
         $names = array_column($rows['body']['rows'], 'name');
         $this->assertContains('Product A', $names);
