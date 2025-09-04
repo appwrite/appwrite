@@ -2,7 +2,7 @@
     "settings.inspire": "\"Искусство быть мудрым — это искусство знать, чем можно пренебречь.\"",
     "settings.locale": "ru",
     "settings.direction": "ltr",
-    "emails.sender": "Թիմ %s",
+    "emails.sender": "Թիմ {{project}}",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",

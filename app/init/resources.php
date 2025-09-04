@@ -15,6 +15,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
@@ -146,6 +147,9 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 }, ['publisher']);
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
+}, ['publisher']);
+App::setResource('queueForStatsResources', function (Publisher $publisher) {
+    return new StatsResources($publisher);
 }, ['publisher']);
 App::setResource('platforms', function (Request $request, Document $console, Document $project) {
     $console->setAttribute('platforms', [ // Always allow current host
