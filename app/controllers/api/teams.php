@@ -377,6 +377,7 @@ App::put('/v1/teams/:teamId/prefs')
         }
 
         $team->setAttribute('prefs', $prefs->getArrayCopy());
+
         $team = $dbForProject->updateDocument('teams', $team->getId(), $team);
 
         $queueForEvents->setParam('teamId', $team->getId());
