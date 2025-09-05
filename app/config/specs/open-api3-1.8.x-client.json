@@ -7675,7 +7675,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"john.doe\",\"email\":\"john.doe@example.com\",\"fullName\":\"John Doe\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
