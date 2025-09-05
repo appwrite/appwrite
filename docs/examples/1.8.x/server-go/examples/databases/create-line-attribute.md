@@ -19,5 +19,5 @@ response, error := service.CreateLineAttribute(
     "<COLLECTION_ID>",
     "",
     false,
-    databases.WithCreateLineAttributeDefault(""),
+    databases.WithCreateLineAttributeDefault(interface{}{[1,2], [3, 4]}),
 )

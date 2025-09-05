@@ -15,5 +15,5 @@ $result = $databases->createPointAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
     required: false,
-    default: '' // optional
+    default: [[1,2], [3, 4]] // optional
 );

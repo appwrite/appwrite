@@ -19,6 +19,6 @@ response, error := service.UpdateLineAttribute(
     "<COLLECTION_ID>",
     "",
     false,
-    databases.WithUpdateLineAttributeDefault(""),
+    databases.WithUpdateLineAttributeDefault(interface{}{[1,2], [3, 4]}),
     databases.WithUpdateLineAttributeNewKey(""),
 )

@@ -19,5 +19,5 @@ response, error := service.CreateLineColumn(
     "<TABLE_ID>",
     "",
     false,
-    tablesdb.WithCreateLineColumnDefault(""),
+    tablesdb.WithCreateLineColumnDefault(interface{}{[1,2], [3, 4]}),
 )

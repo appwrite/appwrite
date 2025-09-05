@@ -12,5 +12,5 @@ AttributeLine result = await databases.createLineAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
     xrequired: false,
-    xdefault: '', // (optional)
+    xdefault: [[1,2], [3, 4]], // (optional)
 );

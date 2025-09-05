@@ -12,6 +12,6 @@ ColumnLine result = await tablesDB.updateLineColumn(
     tableId: '<TABLE_ID>',
     key: '',
     xrequired: false,
-    xdefault: '', // (optional)
+    xdefault: [[1,2], [3, 4]], // (optional)
     newKey: '', // (optional)
 );

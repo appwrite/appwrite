@@ -13,5 +13,5 @@ result = databases.create_point_attribute(
     collection_id = '<COLLECTION_ID>',
     key = '',
     required = False,
-    default = '' # optional
+    default = [[1,2], [3, 4]] # optional
 )

@@ -19,6 +19,6 @@ response, error := service.UpdateLineColumn(
     "<TABLE_ID>",
     "",
     false,
-    tablesdb.WithUpdateLineColumnDefault(""),
+    tablesdb.WithUpdateLineColumnDefault(interface{}{[1,2], [3, 4]}),
     tablesdb.WithUpdateLineColumnNewKey(""),
 )

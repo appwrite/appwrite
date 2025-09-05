@@ -14,6 +14,6 @@ val response = databases.updateLineAttribute(
     collectionId = "<COLLECTION_ID>",
     key = "",
     required = false,
-    default = "", // optional
+    default = listOf([1,2], [3, 4]), // optional
     newKey = "" // optional
 )

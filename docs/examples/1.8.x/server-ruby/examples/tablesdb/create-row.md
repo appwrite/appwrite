@@ -13,6 +13,12 @@ result = tables_db.create_row(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
     row_id: '<ROW_ID>',
-    data: {},
+    data: {
+        "username" => "walter.obrien",
+        "email" => "walter.obrien@example.com",
+        "fullName" => "Walter O'Brien",
+        "age" => 30,
+        "isAdmin" => false
+    },
     permissions: ["read("any")"] # optional
 )

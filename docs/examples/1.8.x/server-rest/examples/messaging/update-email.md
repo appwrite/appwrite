@@ -15,6 +15,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "html": false,
   "cc": [],
   "bcc": [],
-  "scheduledAt": ,
+  "scheduledAt": "",
   "attachments": []
 }

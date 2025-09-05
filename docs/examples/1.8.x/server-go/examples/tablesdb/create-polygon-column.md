@@ -19,5 +19,5 @@ response, error := service.CreatePolygonColumn(
     "<TABLE_ID>",
     "",
     false,
-    tablesdb.WithCreatePolygonColumnDefault(""),
+    tablesdb.WithCreatePolygonColumnDefault(interface{}{[1,2], [3, 4]}),
 )

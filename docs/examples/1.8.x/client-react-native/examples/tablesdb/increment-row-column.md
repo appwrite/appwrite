@@ -11,8 +11,8 @@ const result = await tablesDB.incrementRowColumn({
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
     column: '',
-    value: null, // optional
-    max: null // optional
+    value: 0, // optional
+    max: 0 // optional
 });
 
 console.log(result);

@@ -19,6 +19,6 @@ response, error := service.UpdatePointAttribute(
     "<COLLECTION_ID>",
     "",
     false,
-    databases.WithUpdatePointAttributeDefault(""),
+    databases.WithUpdatePointAttributeDefault(interface{}{[1,2], [3, 4]}),
     databases.WithUpdatePointAttributeNewKey(""),
 )

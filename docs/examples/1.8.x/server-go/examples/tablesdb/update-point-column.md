@@ -19,6 +19,6 @@ response, error := service.UpdatePointColumn(
     "<TABLE_ID>",
     "",
     false,
-    tablesdb.WithUpdatePointColumnDefault(""),
+    tablesdb.WithUpdatePointColumnDefault(interface{}{[1,2], [3, 4]}),
     tablesdb.WithUpdatePointColumnNewKey(""),
 )

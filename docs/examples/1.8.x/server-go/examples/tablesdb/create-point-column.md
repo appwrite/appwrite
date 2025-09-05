@@ -19,5 +19,5 @@ response, error := service.CreatePointColumn(
     "<TABLE_ID>",
     "",
     false,
-    tablesdb.WithCreatePointColumnDefault(""),
+    tablesdb.WithCreatePointColumnDefault(interface{}{[1,2], [3, 4]}),
 )
