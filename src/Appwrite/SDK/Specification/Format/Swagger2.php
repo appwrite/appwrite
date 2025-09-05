@@ -462,11 +462,12 @@ class Swagger2 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\Spatial':
+                    case 'Utopia\Database\Validator\Spatial':
                         $node['type'] = 'array';
                         $node['items'] = [
                             'type' => '{}',
                         ];
+                        $node['x-example'] = [[1,2], [3, 4]];
                         break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
@@ -678,10 +679,6 @@ class Swagger2 extends Format
                     case 'string':
                     case 'datetime':
                         $type = 'string';
-                        break;
-
-                    case 'array':
-                        $type = 'array';
                         break;
 
                     case 'json':

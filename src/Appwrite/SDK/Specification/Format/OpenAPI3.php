@@ -447,11 +447,12 @@ class OpenAPI3 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\Spatial':
+                    case 'Utopia\Database\Validator\Spatial':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => '{}',
                         ];
+                        $node['schema']['x-example'] = [[1,2], [3, 4]];
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
@@ -670,10 +671,6 @@ class OpenAPI3 extends Format
                     case 'datetime':
                     case 'payload':
                         $type = 'string';
-                        break;
-
-                    case 'array':
-                        $type = 'array';
                         break;
 
                     case 'json':
