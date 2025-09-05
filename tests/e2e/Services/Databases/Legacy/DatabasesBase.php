@@ -6769,7 +6769,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::contains('lineAttr', [[1.0, 1.0]])->toString()]
+            'queries' => [Query::contains('lineAttr', [[1.1, 1.1]])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['documents']);
