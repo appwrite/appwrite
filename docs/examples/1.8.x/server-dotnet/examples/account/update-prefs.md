@@ -11,8 +11,8 @@ Account account = new Account(client);
 
 User result = await account.UpdatePrefs(
     prefs: new {
-        "language": "en",
-        "timezone": "UTC",
-        "darkTheme": true
+        language = "en",
+        timezone = "UTC",
+        darkTheme = true
     }
 );

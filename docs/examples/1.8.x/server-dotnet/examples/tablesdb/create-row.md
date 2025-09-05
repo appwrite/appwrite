@@ -14,11 +14,11 @@ Row result = await tablesDB.CreateRow(
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
     data: new {
-        "username": "walter.obrien",
-        "email": "walter.obrien@example.com",
-        "fullName": "Walter O'Brien",
-        "age": 30,
-        "isAdmin": false
+        username = "walter.obrien",
+        email = "walter.obrien@example.com",
+        fullName = "Walter O'Brien",
+        age = 30,
+        isAdmin = false
     },
     permissions: ["read("any")"] // optional
 );

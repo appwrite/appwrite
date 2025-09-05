@@ -1,10 +1,6 @@
 mutation {
     accountUpdatePrefs(
-        prefs: {
-            "language": "en",
-            "timezone": "UTC",
-            "darkTheme": true
-        }
+        prefs: "{\"language\":\"en\",\"timezone\":\"UTC\",\"darkTheme\":true}"
     ) {
         _id
         _createdAt

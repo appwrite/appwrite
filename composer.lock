@@ -5023,12 +5023,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9bab7463d00df6faea5d55fb63cab81bf3fb0a3f"
+                "reference": "3fe3c9b0e8b32f7b466362b09ad1d3664ef0b394"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9bab7463d00df6faea5d55fb63cab81bf3fb0a3f",
-                "reference": "9bab7463d00df6faea5d55fb63cab81bf3fb0a3f",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3fe3c9b0e8b32f7b466362b09ad1d3664ef0b394",
+                "reference": "3fe3c9b0e8b32f7b466362b09ad1d3664ef0b394",
                 "shasum": ""
             },
             "require": {
@@ -5066,7 +5066,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-object-example-handling"
             },
-            "time": "2025-09-05T14:12:05+00:00"
+            "time": "2025-09-05T14:30:22+00:00"
         },
         {
             "name": "doctrine/annotations",

@@ -3,13 +3,7 @@ mutation {
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         rowId: "<ROW_ID>",
-        data: {
-            "username": "walter.obrien",
-            "email": "walter.obrien@example.com",
-            "fullName": "Walter O'Brien",
-            "age": 30,
-            "isAdmin": false
-        },
+        data: "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}",
         permissions: ["read("any")"]
     ) {
         _id
