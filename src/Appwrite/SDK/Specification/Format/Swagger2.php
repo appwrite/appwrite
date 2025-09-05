@@ -462,6 +462,15 @@ class Swagger2 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         break;
+                    case 'Utopia\Database\Validator\Spatial':
+                        $node['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'oneOf' => [
+                                ['type' => 'array']
+                            ]
+                        ];
+                        $node['x-example'] = '[[1,2], [3, 4]]';
+                        break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
@@ -676,6 +685,10 @@ class Swagger2 extends Format
 
                     case 'json':
                         $type = 'object';
+                        break;
+
+                    case 'array':
+                        $type = 'array';
                         break;
 
                     case 'integer':

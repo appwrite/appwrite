@@ -9,10 +9,10 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Spatial;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Spatial;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
@@ -64,7 +64,7 @@ class Update extends Action
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#createCollection).')
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new Nullable(new Spatial(Database::VAR_LINESTRING)), 'Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.', true)
+            ->param('default', null, new Nullable(new Spatial(Database::VAR_LINESTRING)), 'Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], …], listing the vertices of the line in order. Cannot be set when attribute is required.', true)
             ->param('newKey', null, new Key(), 'New attribute key.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -72,10 +72,8 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
-        $default = \is_string($default) ? \json_decode($default, true) : $default;
-
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
