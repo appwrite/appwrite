@@ -164,7 +164,7 @@ class Update extends Base
         $enabled ??= $function->getAttribute('enabled', true);
 
         $repositoryId = $function->getAttribute('repositoryId', '');
-        $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
+        $repositoryInternalId = $function->getAttribute('repositoryInternalId');
 
         if (empty($entrypoint)) {
             $entrypoint = $function->getAttribute('entrypoint', '');
@@ -191,7 +191,7 @@ class Update extends Base
             $providerRootDirectory = '';
             $providerSilentMode = true;
             $repositoryId = '';
-            $repositoryInternalId = '';
+            $repositoryInternalId = null;
         }
 
         // Git connect logic
