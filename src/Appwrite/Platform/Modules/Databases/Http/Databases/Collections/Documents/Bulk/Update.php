@@ -116,13 +116,15 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk update is not supported for ' . $this->getSdkNamespace() . ' with relationship attributes');
         }
 
+        $originalQueries = $queries;
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if ($data['$permissions']) {
+        if (isset($data['$permissions'])) {
             $validator = new Permissions();
             if (!$validator->isValid($data['$permissions'])) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
@@ -157,7 +159,7 @@ class Update extends Action
                 'action' => 'bulkUpdate',
                 'data' => [
                     'data' => $data,
-                    'queries' => $queries,
+                    'queries' => $originalQueries,
                 ],
             ]);
 
@@ -167,7 +169,6 @@ class Update extends Action
                     'transactions',
                     $transactionId,
                     'operations',
-                    1
                 );
             });
 

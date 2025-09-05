@@ -104,6 +104,8 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk delete is not supported for ' . $this->getSdkNamespace() . ' with relationship attributes');
         }
 
+        $originalQueries = $queries;
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -135,7 +137,7 @@ class Delete extends Action
                 'transactionInternalId' => $transaction->getSequence(),
                 'action' => 'bulkDelete',
                 'data' => [
-                    'queries' => $queries,
+                    'queries' => $originalQueries,
                 ],
             ]);
 
