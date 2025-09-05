@@ -1926,7 +1926,7 @@
                                     "prefs": {
                                         "type": "object",
                                         "description": "Prefs key-value JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"language\":\"en\",\"timezone\":\"UTC\",\"darkTheme\":true}"
                                     }
                                 },
                                 "required": [
@@ -9057,7 +9057,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -13887,7 +13887,7 @@
         },
         "\/health\/queue\/stats-resources": {
             "get": {
-                "summary": "Get stats  resources queue",
+                "summary": "Get stats resources queue",
                 "operationId": "healthGetQueueStatsResources",
                 "tags": [
                     "health"
@@ -27845,7 +27845,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
