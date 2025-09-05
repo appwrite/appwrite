@@ -9,5 +9,5 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 graphql = Graphql(client)
 
 result = graphql.mutation(
-    query = []
+    query = {}
 )

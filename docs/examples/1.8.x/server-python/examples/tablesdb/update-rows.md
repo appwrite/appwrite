@@ -11,6 +11,6 @@ tables_db = TablesDB(client)
 result = tables_db.update_rows(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
-    data = [], # optional
+    data = {}, # optional
     queries = [] # optional
 )

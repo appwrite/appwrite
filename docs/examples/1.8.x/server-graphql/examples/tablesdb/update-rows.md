@@ -2,7 +2,7 @@ mutation {
     tablesDBUpdateRows(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
-        data: {},
+        data: "{}",
         queries: []
     ) {
         total

@@ -12,5 +12,5 @@ result = messaging.update_fcm_provider(
     provider_id = '<PROVIDER_ID>',
     name = '<NAME>', # optional
     enabled = False, # optional
-    service_account_json = [] # optional
+    service_account_json = {} # optional
 )

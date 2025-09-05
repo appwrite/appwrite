@@ -8,7 +8,7 @@ const sites = new Sites(client);
 
 const result = await sites.createDeployment({
     siteId: '<SITE_ID>',
-    code: document.getElementById('uploader/').files[0],
+    code: document.getElementById('uploader').files[0],
     activate: false,
     installCommand: '<INSTALL_COMMAND>', // optional
     buildCommand: '<BUILD_COMMAND>', // optional

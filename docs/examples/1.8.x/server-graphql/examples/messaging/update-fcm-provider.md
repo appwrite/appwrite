@@ -3,7 +3,7 @@ mutation {
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
         enabled: false,
-        serviceAccountJSON: {}
+        serviceAccountJSON: "{}"
     ) {
         _id
         _createdAt

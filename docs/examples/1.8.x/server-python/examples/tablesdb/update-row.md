@@ -12,6 +12,6 @@ result = tables_db.update_row(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
     row_id = '<ROW_ID>',
-    data = [], # optional
+    data = {}, # optional
     permissions = ["read("any")"] # optional
 )

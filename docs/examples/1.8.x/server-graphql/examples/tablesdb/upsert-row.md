@@ -3,7 +3,7 @@ mutation {
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         rowId: "<ROW_ID>",
-        data: {},
+        data: "{}",
         permissions: ["read("any")"]
     ) {
         _id

@@ -11,6 +11,6 @@ databases = Databases(client)
 result = databases.update_documents(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
-    data = [], # optional
+    data = {}, # optional
     queries = [] # optional
 )

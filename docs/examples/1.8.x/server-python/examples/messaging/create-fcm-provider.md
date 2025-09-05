@@ -11,6 +11,6 @@ messaging = Messaging(client)
 result = messaging.create_fcm_provider(
     provider_id = '<PROVIDER_ID>',
     name = '<NAME>',
-    service_account_json = [], # optional
+    service_account_json = {}, # optional
     enabled = False # optional
 )

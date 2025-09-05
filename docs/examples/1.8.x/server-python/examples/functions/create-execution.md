@@ -14,6 +14,6 @@ result = functions.create_execution(
     async = False, # optional
     path = '<PATH>', # optional
     method = ExecutionMethod.GET, # optional
-    headers = [], # optional
+    headers = {}, # optional
     scheduled_at = '<SCHEDULED_AT>' # optional
 )

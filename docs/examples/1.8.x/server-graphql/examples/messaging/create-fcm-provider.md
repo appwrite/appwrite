@@ -2,7 +2,7 @@ mutation {
     messagingCreateFCMProvider(
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
-        serviceAccountJSON: {},
+        serviceAccountJSON: "{}",
         enabled: false
     ) {
         _id

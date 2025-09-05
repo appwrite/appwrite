@@ -3650,16 +3650,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "1.4.0",
+            "version": "1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d32bd6160d55cab0cbe4b070e1c56e4c2a03c7a0"
+                "reference": "b5ea4d133a1a4e747b7522e61e072289129a06f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d32bd6160d55cab0cbe4b070e1c56e4c2a03c7a0",
-                "reference": "d32bd6160d55cab0cbe4b070e1c56e4c2a03c7a0",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5ea4d133a1a4e747b7522e61e072289129a06f4",
+                "reference": "b5ea4d133a1a4e747b7522e61e072289129a06f4",
                 "shasum": ""
             },
             "require": {
@@ -3700,9 +3700,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/1.4.0"
+                "source": "https://github.com/utopia-php/database/tree/1.4.1"
             },
-            "time": "2025-09-04T11:45:26+00:00"
+            "time": "2025-09-05T13:23:52+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5023,12 +5023,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "89fe10be25bcd355baaf46676691ddc8171b06f8"
+                "reference": "7d0705a8e7f0056a3220fac5977058c55a05b69a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/89fe10be25bcd355baaf46676691ddc8171b06f8",
-                "reference": "89fe10be25bcd355baaf46676691ddc8171b06f8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/7d0705a8e7f0056a3220fac5977058c55a05b69a",
+                "reference": "7d0705a8e7f0056a3220fac5977058c55a05b69a",
                 "shasum": ""
             },
             "require": {
@@ -5066,7 +5066,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-object-example-handling"
             },
-            "time": "2025-09-05T12:11:28+00:00"
+            "time": "2025-09-05T13:41:26+00:00"
         },
         {
             "name": "doctrine/annotations",

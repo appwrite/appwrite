@@ -2,7 +2,7 @@ mutation {
     databasesUpdateDocuments(
         databaseId: "<DATABASE_ID>",
         collectionId: "<COLLECTION_ID>",
-        data: {},
+        data: "{}",
         queries: []
     ) {
         total

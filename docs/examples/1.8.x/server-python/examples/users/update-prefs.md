@@ -10,5 +10,5 @@ users = Users(client)
 
 result = users.update_prefs(
     user_id = '<USER_ID>',
-    prefs = []
+    prefs = {}
 )
