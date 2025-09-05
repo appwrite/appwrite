@@ -683,6 +683,10 @@ class Swagger2 extends Format
                         $type = 'object';
                         break;
 
+                    case 'array':
+                        $type = 'array';
+                        break;
+    
                     case 'integer':
                         $type = 'integer';
                         $format = 'int32';

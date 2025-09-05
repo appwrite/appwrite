@@ -675,7 +675,11 @@ class OpenAPI3 extends Format
                         $type = 'object';
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
-
+                    
+                    case 'array':
+                        $type = 'array';
+                        break;
+                    
                     case 'integer':
                         $type = 'integer';
                         $format = 'int32';

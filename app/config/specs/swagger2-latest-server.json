@@ -36367,16 +36367,12 @@
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "default": {
-                    "type": "object",
+                    "type": "array",
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": [
                         0,
                         0
                     ],
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/array"
-                    },
                     "x-nullable": true
                 }
             },
@@ -36450,7 +36446,7 @@
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "default": {
-                    "type": "object",
+                    "type": "array",
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": [
                         [
@@ -36462,10 +36458,6 @@
                             1
                         ]
                     ],
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/array"
-                    },
                     "x-nullable": true
                 }
             },
@@ -36545,7 +36537,7 @@
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "default": {
-                    "type": "object",
+                    "type": "array",
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": [
                         [
@@ -36569,10 +36561,6 @@
                             ]
                         ]
                     ],
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/array"
-                    },
                     "x-nullable": true
                 }
             },
@@ -37725,16 +37713,12 @@
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "default": {
-                    "type": "object",
+                    "type": "array",
                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": [
                         0,
                         0
                     ],
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/array"
-                    },
                     "x-nullable": true
                 }
             },
@@ -37808,7 +37792,7 @@
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "default": {
-                    "type": "object",
+                    "type": "array",
                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": [
                         [
@@ -37820,10 +37804,6 @@
                             1
                         ]
                     ],
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/array"
-                    },
                     "x-nullable": true
                 }
             },
@@ -37903,7 +37883,7 @@
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
                 "default": {
-                    "type": "object",
+                    "type": "array",
                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": [
                         [
@@ -37927,10 +37907,6 @@
                             ]
                         ]
                     ],
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/array"
-                    },
                     "x-nullable": true
                 }
             },
