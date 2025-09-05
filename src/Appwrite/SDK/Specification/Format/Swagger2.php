@@ -427,7 +427,6 @@ class Swagger2 extends Format
                         $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Validator\Boolean':
-                    case 'Appwrite\Utopia\Database\Validator\Spatial':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = false;
                         break;
@@ -461,6 +460,12 @@ class Swagger2 extends Format
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [
                             'type' => $validator->getValidator()->getType(),
+                        ];
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Spatial':
+                        $node['type'] = 'array';
+                        $node['items'] = [
+                            'type' => '{}',
                         ];
                         break;
                     case 'Utopia\Validator\JSON':

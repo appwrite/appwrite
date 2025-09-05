@@ -401,7 +401,6 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Validator\Boolean':
-                    case 'Appwrite\Utopia\Database\Validator\Spatial':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = false;
                         break;
@@ -446,6 +445,12 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => $validator->getValidator()->getType(),
+                        ];
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Spatial':
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'type' => '{}',
                         ];
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
