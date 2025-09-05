@@ -6,10 +6,10 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Li
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Utopia\Database\Validator\Spatial;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Spatial;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
