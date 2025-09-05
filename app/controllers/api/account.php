@@ -3168,7 +3168,7 @@ App::patch('/v1/account/prefs')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
+    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.', example: '{"language":"en","timezone":"UTC","darkTheme":true}')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0da713ee5642eba1d30bc51c1a04a723",
+    "content-hash": "afc8b2b314887779f507fd6a101ef6af",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -66,6 +66,99 @@
                 }
             ],
             "time": "2025-02-18T01:00:50+00:00"
+        },
+        {
+            "name": "appwrite-labs/php-amqplib",
+            "version": "0.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/appwrite-labs/php-amqplib.git",
+                "reference": "c8e043045388ddad5ddab5f48df2b9046ca6873f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite-labs/php-amqplib/zipball/c8e043045388ddad5ddab5f48df2b9046ca6873f",
+                "reference": "c8e043045388ddad5ddab5f48df2b9046ca6873f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "ext-sockets": "*",
+                "php": "^7.2||^8.0",
+                "phpseclib/phpseclib": "^2.0|^3.0"
+            },
+            "conflict": {
+                "php": "7.4.0 - 7.4.1"
+            },
+            "replace": {
+                "php-amqplib/php-amqplib": "self.version",
+                "videlalvaro/php-amqplib": "self.version"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "nategood/httpful": "^0.2.20",
+                "phpunit/phpunit": "^7.5|^9.5",
+                "squizlabs/php_codesniffer": "^3.6",
+                "swoole/ide-helper": "^5.0"
+            },
+            "suggest": {
+                "ext-swoole": "For Swoole coroutine support"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PhpAmqpLib\\": "PhpAmqpLib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-2.1-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite Labs",
+                    "email": "team@appwrite.io",
+                    "role": "Fork Maintainer"
+                },
+                {
+                    "name": "Alvaro Videla",
+                    "role": "Original Maintainer"
+                },
+                {
+                    "name": "Raúl Araya",
+                    "email": "nubeiro@gmail.com",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Luke Bakken",
+                    "email": "luke@bakken.io",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Ramūnas Dronga",
+                    "email": "github@ramuno.lt",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Fork of php-amqplib with Swoole coroutine support. A pure PHP implementation of the AMQP protocol tested against RabbitMQ.",
+            "homepage": "https://github.com/appwrite-labs/php-amqplib/",
+            "keywords": [
+                "async",
+                "coroutine",
+                "message",
+                "queue",
+                "rabbitmq",
+                "swoole"
+            ],
+            "support": {
+                "source": "https://github.com/appwrite-labs/php-amqplib/tree/0.1.2"
+            },
+            "time": "2025-07-04T20:54:22+00:00"
         },
         {
             "name": "appwrite/appwrite",
@@ -1686,87 +1779,6 @@
                 "source": "https://github.com/paragonie/random_compat"
             },
             "time": "2020-10-15T08:29:30+00:00"
-        },
-        {
-            "name": "php-amqplib/php-amqplib",
-            "version": "v3.7.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-amqplib/php-amqplib.git",
-                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-amqplib/php-amqplib/zipball/9f50fe69a9f1a19e2cb25596a354d705de36fe59",
-                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "ext-sockets": "*",
-                "php": "^7.2||^8.0",
-                "phpseclib/phpseclib": "^2.0|^3.0"
-            },
-            "conflict": {
-                "php": "7.4.0 - 7.4.1"
-            },
-            "replace": {
-                "videlalvaro/php-amqplib": "self.version"
-            },
-            "require-dev": {
-                "ext-curl": "*",
-                "nategood/httpful": "^0.2.20",
-                "phpunit/phpunit": "^7.5|^9.5",
-                "squizlabs/php_codesniffer": "^3.6"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "PhpAmqpLib\\": "PhpAmqpLib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Alvaro Videla",
-                    "role": "Original Maintainer"
-                },
-                {
-                    "name": "Raúl Araya",
-                    "email": "nubeiro@gmail.com",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Luke Bakken",
-                    "email": "luke@bakken.io",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Ramūnas Dronga",
-                    "email": "github@ramuno.lt",
-                    "role": "Maintainer"
-                }
-            ],
-            "description": "Formerly videlalvaro/php-amqplib.  This library is a pure PHP implementation of the AMQP protocol. It's been tested against RabbitMQ.",
-            "homepage": "https://github.com/php-amqplib/php-amqplib/",
-            "keywords": [
-                "message",
-                "queue",
-                "rabbitmq"
-            ],
-            "support": {
-                "issues": "https://github.com/php-amqplib/php-amqplib/issues",
-                "source": "https://github.com/php-amqplib/php-amqplib/tree/v3.7.3"
-            },
-            "time": "2025-02-18T20:11:13+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -4296,16 +4308,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.7.8",
+            "version": "0.7.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "e3a4536c46f10988b1a446ec6b8dd8a9914be854"
+                "reference": "f3341d1ef82e0b0f9d5f2c61829c947d86f8c850"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/e3a4536c46f10988b1a446ec6b8dd8a9914be854",
-                "reference": "e3a4536c46f10988b1a446ec6b8dd8a9914be854",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/f3341d1ef82e0b0f9d5f2c61829c947d86f8c850",
+                "reference": "f3341d1ef82e0b0f9d5f2c61829c947d86f8c850",
                 "shasum": ""
             },
             "require": {
@@ -4314,7 +4326,7 @@
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
                 "utopia-php/framework": "0.33.*",
-                "utopia-php/queue": "0.11.*"
+                "utopia-php/queue": "^0.12.0"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -4340,9 +4352,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.7.8"
+                "source": "https://github.com/utopia-php/platform/tree/0.7.11"
             },
-            "time": "2025-05-30T10:05:43+00:00"
+            "time": "2025-09-04T04:38:38+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4451,21 +4463,21 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.11.0",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5"
+                "reference": "3a7603ee712c592bfc54af4a76f0426c428b5574"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5",
-                "reference": "06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/3a7603ee712c592bfc54af4a76f0426c428b5574",
+                "reference": "3a7603ee712c592bfc54af4a76f0426c428b5574",
                 "shasum": ""
             },
             "require": {
+                "appwrite-labs/php-amqplib": "^0.1",
                 "php": ">=8.3",
-                "php-amqplib/php-amqplib": "^3.7",
                 "utopia-php/cli": "0.15.*",
                 "utopia-php/fetch": "0.4.*",
                 "utopia-php/framework": "0.33.*",
@@ -4511,9 +4523,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.11.0"
+                "source": "https://github.com/utopia-php/queue/tree/0.12.0"
             },
-            "time": "2025-05-30T09:52:38+00:00"
+            "time": "2025-06-24T18:58:38+00:00"
         },
         {
             "name": "utopia-php/registry",
