@@ -15,5 +15,9 @@ client := client.New(
 service := account.New(client)
 
 response, error := service.UpdatePrefs(
-    map[string]interface{}{},
+    map[string]interface{}{
+        "language": "en",
+        "timezone": "UTC",
+        "darkTheme": true
+    },
 )
