@@ -12,11 +12,11 @@ class AttributeLine extends Attribute
 
         $this
             ->addRule('default', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_ARRAY,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
-                'example' => '[[0, 0], [1, 1]]'
+                'example' => [[0, 0], [1, 1]]
             ])
         ;
     }
