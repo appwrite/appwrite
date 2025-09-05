@@ -27,14 +27,14 @@ class XList extends Action
     {
         return 'listProjects';
     }
-    
+
     // Stored as property intentionally for extensibility
     protected Validator $queriesValidator;
 
     public function __construct()
     {
         $this->queriesValidator = new Projects();
-        
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/projects')
