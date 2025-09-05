@@ -8670,7 +8670,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'required' => false,
-            'default' => json_encode([[0, 0], [1, 1]]),
+            'default' => [[0, 0], [1, 1]],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8697,7 +8697,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'default' => json_encode([0, 0]),
+            'default' => [0, 0],
             'required' => false
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
