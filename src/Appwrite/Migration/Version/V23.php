@@ -6,6 +6,7 @@ use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -29,6 +30,9 @@ class V23 extends Migration
 
         Console::info('Migrating databases');
         $this->migrateDatabases();
+
+        Console::info('Migrating migration collection');
+        $this->updateMigrateErrorSize();
     }
 
     /**
@@ -49,4 +53,26 @@ class V23 extends Migration
         $this->dbForProject->updateDocuments('databases', new Document(['type' => 'legacy']));
     }
 
+    /**
+     * Update migration collection error attribute
+     *
+     * @return void
+     * @throws Exception|Throwable
+     */
+
+    private function updateMigrateErrorSize(): void
+    {
+        if ($this->project->getId() === 'console') {
+            return;
+        }
+
+        $collection = Config::getParam('collections', [])['projects'] ?? [];
+        $migrationAttributes = $collection['migrations']['attributes'];
+        $attributeKey = \array_search('errors', \array_column($migrationAttributes, '$id'));
+        $migrationAttributes[$attributeKey]['size'] = 131070;
+        $migration = $this->dbForProject->getCollection('migrations');
+        $migration->setAttribute('attributes', $migrationAttributes);
+        $this->dbForProject->updateDocument($migration->getCollection(), $migration->getId(), $migration);
+        $this->dbForProject->purgeCachedCollection('migrations');
+    }
 }
