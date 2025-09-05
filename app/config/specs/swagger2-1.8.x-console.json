@@ -8009,9 +8009,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 }
                             },
                             "required": [
@@ -8127,9 +8125,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 },
                                 "newKey": {
                                     "type": "string",
@@ -8249,9 +8245,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 }
                             },
                             "required": [
@@ -8367,9 +8361,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 },
                                 "newKey": {
                                     "type": "string",
@@ -8489,9 +8481,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 }
                             },
                             "required": [
@@ -8607,9 +8597,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 },
                                 "newKey": {
                                     "type": "string",
@@ -35553,9 +35541,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 }
                             },
                             "required": [
@@ -35670,9 +35656,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 },
                                 "newKey": {
                                     "type": "string",
@@ -35791,9 +35775,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 }
                             },
                             "required": [
@@ -35908,9 +35890,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 },
                                 "newKey": {
                                     "type": "string",
@@ -36029,9 +36009,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 }
                             },
                             "required": [
@@ -36146,9 +36124,7 @@
                                         ]
                                     ],
                                     "x-nullable": true,
-                                    "items": {
-                                        "type": "{}"
-                                    }
+                                    "items": {}
                                 },
                                 "newKey": {
                                     "type": "string",

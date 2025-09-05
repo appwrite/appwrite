@@ -449,9 +449,7 @@ class OpenAPI3 extends Format
                         break;
                     case 'Utopia\Database\Validator\Spatial':
                         $node['schema']['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'type' => '{}',
-                        ];
+                        $node['schema']['items'] = new \stdClass();
                         $node['schema']['x-example'] = [[1,2], [3, 4]];
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
