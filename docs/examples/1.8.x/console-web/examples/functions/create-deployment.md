@@ -8,7 +8,7 @@ const functions = new Functions(client);
 
 const result = await functions.createDeployment({
     functionId: '<FUNCTION_ID>',
-    code: document.getElementById('uploader').files[0],
+    code: document.getElementById('uploader/').files[0],
     activate: false,
     entrypoint: '<ENTRYPOINT>', // optional
     commands: '<COMMANDS>' // optional

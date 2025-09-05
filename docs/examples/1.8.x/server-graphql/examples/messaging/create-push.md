@@ -6,7 +6,7 @@ mutation {
         topics: [],
         users: [],
         targets: [],
-        data: "{}",
+        data: {},
         action: "<ACTION>",
         image: "[ID1:ID2]",
         icon: "<ICON>",

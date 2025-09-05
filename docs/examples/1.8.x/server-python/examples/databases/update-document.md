@@ -12,6 +12,6 @@ result = databases.update_document(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
     document_id = '<DOCUMENT_ID>',
-    data = {}, # optional
+    data = [], # optional
     permissions = ["read("any")"] # optional
 )

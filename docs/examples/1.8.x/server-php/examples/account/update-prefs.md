@@ -11,5 +11,9 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->updatePrefs(
-    prefs: []
+    prefs: [
+        'language' => 'en',
+        'timezone' => 'UTC',
+        'darkTheme' => true
+    ]
 );

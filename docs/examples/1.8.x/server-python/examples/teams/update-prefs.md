@@ -10,5 +10,5 @@ teams = Teams(client)
 
 result = teams.update_prefs(
     team_id = '<TEAM_ID>',
-    prefs = {}
+    prefs = []
 )

@@ -9,7 +9,7 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "relatedCollectionId": "<RELATED_COLLECTION_ID>",
   "type": "oneToOne",
   "twoWay": false,
-  "key": ,
-  "twoWayKey": ,
+  "key": "",
+  "twoWayKey": "",
   "onDelete": "cascade"
 }

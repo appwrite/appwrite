@@ -5,7 +5,7 @@ mutation {
         async: false,
         path: "<PATH>",
         method: "GET",
-        headers: "{}",
+        headers: {},
         scheduledAt: "<SCHEDULED_AT>"
     ) {
         _id

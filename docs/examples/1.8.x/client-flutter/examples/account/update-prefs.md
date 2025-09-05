@@ -7,5 +7,9 @@ Client client = Client()
 Account account = Account(client);
 
 User result = await account.updatePrefs(
-    prefs: {},
+    prefs: {
+        "language": "en",
+        "timezone": "UTC",
+        "darkTheme": true
+    },
 );
