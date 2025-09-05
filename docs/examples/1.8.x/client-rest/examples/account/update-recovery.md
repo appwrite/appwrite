@@ -9,5 +9,5 @@ X-Appwrite-JWT: <YOUR_JWT>
 {
   "userId": "<USER_ID>",
   "secret": "<SECRET>",
-  "password": 
+  "password": ""
 }

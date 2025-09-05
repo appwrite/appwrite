@@ -12,5 +12,5 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "users": [],
   "targets": [],
   "draft": false,
-  "scheduledAt": 
+  "scheduledAt": ""
 }

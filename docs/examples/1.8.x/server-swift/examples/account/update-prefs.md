@@ -8,6 +8,10 @@ let client = Client()
 let account = Account(client)
 
 let user = try await account.updatePrefs(
-    prefs: [:]
+    prefs: [
+        "language": "en",
+        "timezone": "UTC",
+        "darkTheme": true
+    ]
 )
 

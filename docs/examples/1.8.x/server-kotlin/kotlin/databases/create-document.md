@@ -13,6 +13,12 @@ val response = databases.createDocument(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     documentId = "<DOCUMENT_ID>",
-    data = mapOf( "a" to "b" ),
+    data = mapOf(
+        "username" to "walter.obrien",
+        "email" to "walter.obrien@example.com",
+        "fullName" to "Walter O'Brien",
+        "age" to 30,
+        "isAdmin" to false
+    ),
     permissions = listOf("read("any")") // optional
 )

@@ -10,5 +10,9 @@ val client = Client()
 val account = Account(client)
 
 val response = account.updatePrefs(
-    prefs = mapOf( "a" to "b" )
+    prefs = mapOf(
+        "language" to "en",
+        "timezone" to "UTC",
+        "darkTheme" to true
+    )
 )

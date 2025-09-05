@@ -13,7 +13,13 @@ tablesDB.createRow(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "<ROW_ID>", // rowId
-    mapOf( "a" to "b" ), // data
+    mapOf(
+        "username" to "walter.obrien",
+        "email" to "walter.obrien@example.com",
+        "fullName" to "Walter O'Brien",
+        "age" to 30,
+        "isAdmin" to false
+    ), // data
     listOf("read("any")"), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
