@@ -1,1 +1,1 @@
-Create a geometric point attribute.
+Create a geometric point column.

@@ -1,1 +1,1 @@
-Create a geometric 2d point attribute.
+Create a geometric point attribute.
