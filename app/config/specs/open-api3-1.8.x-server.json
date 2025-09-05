@@ -9057,7 +9057,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object.",
-                                        "x-example": "{\"username\":\"john.doe\",\"email\":\"john.doe@example.com\",\"fullName\":\"John Doe\",\"age\":30,\"isAdmin\":false}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -27845,7 +27845,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object.",
-                                        "x-example": "{\"username\":\"john.doe\",\"email\":\"john.doe@example.com\",\"fullName\":\"John Doe\",\"age\":30,\"isAdmin\":false}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
