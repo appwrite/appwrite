@@ -450,7 +450,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Database\Validator\Spatial':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = new \stdClass();
-                        $node['schema']['x-example'] = [[1,2], [3, 4]];
+                        $node['schema']['x-example'] = '[[1,2], [3, 4]]';
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
@@ -675,11 +675,11 @@ class OpenAPI3 extends Format
                         $type = 'object';
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
-                    
+
                     case 'array':
                         $type = 'array';
                         break;
-                    
+
                     case 'integer':
                         $type = 'integer';
                         $format = 'int32';

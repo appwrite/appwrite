@@ -7451,16 +7451,7 @@
                                     "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 }
@@ -7568,16 +7559,7 @@
                                     "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 },
@@ -7689,16 +7671,7 @@
                                     "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 }
@@ -7806,16 +7779,7 @@
                                     "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 },
@@ -7927,16 +7891,7 @@
                                     "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 }
@@ -8044,16 +7999,7 @@
                                     "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 },
@@ -26019,16 +25965,7 @@
                                     "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 }
@@ -26135,16 +26072,7 @@
                                     "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 },
@@ -26255,16 +26183,7 @@
                                     "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 }
@@ -26371,16 +26290,7 @@
                                     "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 },
@@ -26491,16 +26401,7 @@
                                     "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 }
@@ -26607,16 +26508,7 @@
                                     "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": [
-                                        [
-                                            1,
-                                            2
-                                        ],
-                                        [
-                                            3,
-                                            4
-                                        ]
-                                    ],
+                                    "x-example": "[[1,2], [3, 4]]",
                                     "x-nullable": true,
                                     "items": {}
                                 },
