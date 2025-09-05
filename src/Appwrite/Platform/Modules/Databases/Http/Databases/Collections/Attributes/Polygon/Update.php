@@ -72,10 +72,8 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
-        $default = \is_string($default) ? \json_decode($default, true) : $default;
-
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,

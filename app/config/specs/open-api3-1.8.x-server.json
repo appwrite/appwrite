@@ -13887,7 +13887,7 @@
         },
         "\/health\/queue\/stats-resources": {
             "get": {
-                "summary": "Get stats  resources queue",
+                "summary": "Get stats resources queue",
                 "operationId": "healthGetQueueStatsResources",
                 "tags": [
                     "health"
@@ -37414,7 +37414,7 @@
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "default": {
-                        "type": "object",
+                        "type": "array",
                         "description": "Default value for column when not provided. Cannot be set when column is required.",
                         "x-example": "[0, 0]",
                         "nullable": true

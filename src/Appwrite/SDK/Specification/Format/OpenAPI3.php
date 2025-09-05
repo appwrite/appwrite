@@ -666,6 +666,10 @@ class OpenAPI3 extends Format
                         $type = 'string';
                         break;
 
+                    case 'array':
+                        $type = 'array';
+                        break;
+
                     case 'json':
                         $type = 'object';
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;

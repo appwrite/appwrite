@@ -21,6 +21,10 @@ class AttributeLine extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => 'linestring',
+    ];
+
     /**
      * Get Name
      *

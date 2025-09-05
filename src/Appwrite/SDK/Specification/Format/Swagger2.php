@@ -674,6 +674,10 @@ class Swagger2 extends Format
                         $type = 'string';
                         break;
 
+                    case 'array':
+                        $type = 'array';
+                        break;
+
                     case 'json':
                         $type = 'object';
                         break;

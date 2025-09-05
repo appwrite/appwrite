@@ -21,6 +21,10 @@ class ColumnPolygon extends Column
         ;
     }
 
+    public array $conditions = [
+        'type' => 'polygon',
+    ];
+
     /**
      * Get Name
      *

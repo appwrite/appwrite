@@ -21,6 +21,10 @@ class AttributePolygon extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => 'polygon',
+    ];
+
     /**
      * Get Name
      *

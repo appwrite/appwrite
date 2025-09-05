@@ -21,6 +21,10 @@ class AttributePoint extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => 'point',
+    ];
+
     /**
      * Get Name
      *

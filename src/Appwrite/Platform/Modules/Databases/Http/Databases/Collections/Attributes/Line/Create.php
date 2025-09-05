@@ -72,10 +72,8 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
-        $default = \is_string($default) ? \json_decode($default, true) : $default;
-
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_LINESTRING,
