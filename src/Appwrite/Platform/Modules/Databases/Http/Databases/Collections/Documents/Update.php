@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Databases\TransactionManager;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -83,13 +84,13 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('transactionManager')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionManager $transactionManager, array $plan): void
     {
-
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -113,7 +114,14 @@ class Update extends Action
 
         // Read permission should not be required for update
         /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
+        if ($transactionId !== null) {
+            // Use transaction-aware document retrieval to see changes from same transaction
+            $document = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId);
+        } else {
+            $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+        }
 
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException());

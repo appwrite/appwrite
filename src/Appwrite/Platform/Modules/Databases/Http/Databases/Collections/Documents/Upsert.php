@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Databases\TransactionManager;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -87,11 +88,12 @@ class Upsert extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('transactionManager')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionManager $transactionManager, array $plan): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -124,9 +126,16 @@ class Upsert extends Action
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
 
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
         // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
-            $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            if ($transactionId !== null) {
+                // Use transaction-aware document retrieval to see changes from same transaction
+                $oldDocument = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId);
+            } else {
+                $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            }
             if ($oldDocument->isEmpty()) {
                 if (!empty($user->getId())) {
                     $defaultPermissions = [];
@@ -320,7 +329,12 @@ class Upsert extends Action
         $collectionsCache = [];
 
         if (empty($upserted[0])) {
-            $upserted[0] = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+            if ($transactionId !== null) {
+                // For transactions, get the document with transaction changes applied
+                $upserted[0] = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId);
+            } else {
+                $upserted[0] = $dbForProject->getDocument($collectionTableId, $documentId);
+            }
         }
 
         $document = $upserted[0];

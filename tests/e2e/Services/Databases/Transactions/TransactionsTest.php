@@ -1554,7 +1554,7 @@ class TransactionsTest extends Scope
         foreach ($attributes as $attr) {
             $type = $attr['type'];
             unset($attr['type']);
-            
+
             $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/{$type}", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1874,7 +1874,7 @@ class TransactionsTest extends Scope
         ]), [
             'commit' => true
         ]);
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Document should now exist with updated values
@@ -1982,7 +1982,7 @@ class TransactionsTest extends Scope
         ]), [
             'commit' => true
         ]);
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Document should no longer exist
@@ -2112,7 +2112,7 @@ class TransactionsTest extends Scope
         ]), [
             'commit' => true
         ]);
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now exist
@@ -2249,7 +2249,7 @@ class TransactionsTest extends Scope
         ]), [
             'commit' => true
         ]);
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now have updated category
@@ -2389,7 +2389,7 @@ class TransactionsTest extends Scope
         ]), [
             'commit' => true
         ]);
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Check both documents exist with updated values
@@ -2520,7 +2520,7 @@ class TransactionsTest extends Scope
         ]), [
             'commit' => true
         ]);
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now be deleted
@@ -2936,7 +2936,7 @@ class TransactionsTest extends Scope
         ]), [
             'commit' => true
         ]);
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Both documents should now exist
