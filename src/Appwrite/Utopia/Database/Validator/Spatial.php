@@ -43,7 +43,7 @@ class Spatial extends Validator
     */
     public function getType(): string
     {
-        return self::TYPE_FLOAT;
+        return self::TYPE_ARRAY;
     }
 
     /**

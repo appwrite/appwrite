@@ -427,6 +427,7 @@ class Swagger2 extends Format
                         $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Validator\Boolean':
+                    case 'Appwrite\Utopia\Database\Validator\Spatial':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = false;
                         break;

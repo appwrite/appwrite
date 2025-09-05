@@ -7448,10 +7448,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 }
                             },
@@ -7555,10 +7555,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -7666,10 +7666,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 }
                             },
@@ -7773,10 +7773,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -7884,10 +7884,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 }
                             },
@@ -7991,10 +7991,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -25956,10 +25956,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 }
                             },
@@ -26062,10 +26062,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -26172,10 +26172,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 }
                             },
@@ -26278,10 +26278,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -26388,10 +26388,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 }
                             },
@@ -26494,10 +26494,10 @@
                                     "x-example": false
                                 },
                                 "default": {
-                                    "type": "string",
+                                    "type": "array",
                                     "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null,
+                                    "x-example": false,
                                     "x-nullable": true
                                 },
                                 "newKey": {
