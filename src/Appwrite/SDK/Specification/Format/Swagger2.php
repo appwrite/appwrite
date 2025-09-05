@@ -464,7 +464,11 @@ class Swagger2 extends Format
                         break;
                     case 'Utopia\Database\Validator\Spatial':
                         $node['type'] = 'array';
-                        $node['items'] = new \stdClass();
+                        $node['schema']['items'] = [
+                            'oneOf' => [
+                                ['type' => 'array']
+                            ]
+                        ];
                         $node['x-example'] = '[[1,2], [3, 4]]';
                         break;
                     case 'Utopia\Validator\JSON':

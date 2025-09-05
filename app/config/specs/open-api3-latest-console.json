@@ -7861,7 +7861,13 @@
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -7972,7 +7978,13 @@
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -8083,7 +8095,13 @@
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -8194,7 +8212,13 @@
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -8305,7 +8329,13 @@
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -8416,7 +8446,13 @@
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -35329,7 +35365,13 @@
                                         "type": "array",
                                         "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -35439,7 +35481,13 @@
                                         "type": "array",
                                         "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -35549,7 +35597,13 @@
                                         "type": "array",
                                         "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -35659,7 +35713,13 @@
                                         "type": "array",
                                         "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -35769,7 +35829,13 @@
                                         "type": "array",
                                         "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -35879,7 +35945,13 @@
                                         "type": "array",
                                         "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
                                         "x-example": "[[1,2], [3, 4]]",
-                                        "items": {},
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
