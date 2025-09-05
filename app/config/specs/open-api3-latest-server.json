@@ -1926,7 +1926,7 @@
                                     "prefs": {
                                         "type": "object",
                                         "description": "Prefs key-value JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"language\":\"en\",\"timezone\":\"UTC\",\"darkTheme\":true}"
                                     }
                                 },
                                 "required": [
@@ -7321,9 +7321,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when attribute is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -7432,9 +7439,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when attribute is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -7543,9 +7557,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for attribute when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when attribute is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -7654,9 +7675,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for attribute when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when attribute is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -7765,9 +7793,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for attribute when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when attribute is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -7876,9 +7911,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for attribute when not provided, as JSON string. Cannot be set when attribute is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for attribute when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when attribute is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -9057,7 +9099,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -25754,9 +25796,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for column when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when column is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -25864,9 +25913,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for column when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when column is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -25974,9 +26030,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for column when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when column is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -26084,9 +26147,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for column when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when column is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -26194,9 +26264,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for column when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when column is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     }
                                 },
@@ -26304,9 +26381,16 @@
                                         "x-example": false
                                     },
                                     "default": {
-                                        "type": "string",
-                                        "description": "Default value for column when not provided, as JSON string. Cannot be set when column is required.",
-                                        "x-example": null,
+                                        "type": "array",
+                                        "description": "Default value for column when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when column is required.",
+                                        "x-example": "[[1,2], [3, 4]]",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -27845,7 +27929,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -36135,9 +36219,12 @@
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "default": {
-                        "type": "object",
+                        "type": "array",
                         "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
-                        "x-example": "[0, 0]",
+                        "x-example": [
+                            0,
+                            0
+                        ],
                         "nullable": true
                     }
                 },
@@ -36159,7 +36246,10 @@
                     "array": false,
                     "$createdAt": "2020-10-15T06:38:00.000+00:00",
                     "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                    "default": "[0, 0]"
+                    "default": [
+                        0,
+                        0
+                    ]
                 }
             },
             "attributeLine": {
@@ -36208,9 +36298,18 @@
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "default": {
-                        "type": "object",
+                        "type": "array",
                         "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
-                        "x-example": "[[0, 0], [1, 1]]",
+                        "x-example": [
+                            [
+                                0,
+                                0
+                            ],
+                            [
+                                1,
+                                1
+                            ]
+                        ],
                         "nullable": true
                     }
                 },
@@ -36232,7 +36331,16 @@
                     "array": false,
                     "$createdAt": "2020-10-15T06:38:00.000+00:00",
                     "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                    "default": "[[0, 0], [1, 1]]"
+                    "default": [
+                        [
+                            0,
+                            0
+                        ],
+                        [
+                            1,
+                            1
+                        ]
+                    ]
                 }
             },
             "attributePolygon": {
@@ -36281,9 +36389,30 @@
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "default": {
-                        "type": "object",
+                        "type": "array",
                         "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
-                        "x-example": "[[[0, 0], [0, 10]], [[10, 10], [0, 0]]]",
+                        "x-example": [
+                            [
+                                [
+                                    0,
+                                    0
+                                ],
+                                [
+                                    0,
+                                    10
+                                ]
+                            ],
+                            [
+                                [
+                                    10,
+                                    10
+                                ],
+                                [
+                                    0,
+                                    0
+                                ]
+                            ]
+                        ],
                         "nullable": true
                     }
                 },
@@ -36305,7 +36434,28 @@
                     "array": false,
                     "$createdAt": "2020-10-15T06:38:00.000+00:00",
                     "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                    "default": "[[[0, 0], [0, 10]], [[10, 10], [0, 0]]]"
+                    "default": [
+                        [
+                            [
+                                0,
+                                0
+                            ],
+                            [
+                                0,
+                                10
+                            ]
+                        ],
+                        [
+                            [
+                                10,
+                                10
+                            ],
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ]
                 }
             },
             "table": {
@@ -37414,9 +37564,12 @@
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "default": {
-                        "type": "object",
+                        "type": "array",
                         "description": "Default value for column when not provided. Cannot be set when column is required.",
-                        "x-example": "[0, 0]",
+                        "x-example": [
+                            0,
+                            0
+                        ],
                         "nullable": true
                     }
                 },
@@ -37438,7 +37591,10 @@
                     "array": false,
                     "$createdAt": "2020-10-15T06:38:00.000+00:00",
                     "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                    "default": "[0, 0]"
+                    "default": [
+                        0,
+                        0
+                    ]
                 }
             },
             "columnLine": {
@@ -37487,9 +37643,18 @@
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "default": {
-                        "type": "object",
+                        "type": "array",
                         "description": "Default value for column when not provided. Cannot be set when column is required.",
-                        "x-example": "[[0, 0], [1, 1]]",
+                        "x-example": [
+                            [
+                                0,
+                                0
+                            ],
+                            [
+                                1,
+                                1
+                            ]
+                        ],
                         "nullable": true
                     }
                 },
@@ -37511,7 +37676,16 @@
                     "array": false,
                     "$createdAt": "2020-10-15T06:38:00.000+00:00",
                     "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                    "default": "[[0, 0], [1, 1]]"
+                    "default": [
+                        [
+                            0,
+                            0
+                        ],
+                        [
+                            1,
+                            1
+                        ]
+                    ]
                 }
             },
             "columnPolygon": {
@@ -37560,9 +37734,30 @@
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "default": {
-                        "type": "object",
+                        "type": "array",
                         "description": "Default value for column when not provided. Cannot be set when column is required.",
-                        "x-example": "[[[0, 0], [0, 10]], [[10, 10], [0, 0]]]",
+                        "x-example": [
+                            [
+                                [
+                                    0,
+                                    0
+                                ],
+                                [
+                                    0,
+                                    10
+                                ]
+                            ],
+                            [
+                                [
+                                    10,
+                                    10
+                                ],
+                                [
+                                    0,
+                                    0
+                                ]
+                            ]
+                        ],
                         "nullable": true
                     }
                 },
@@ -37584,7 +37779,28 @@
                     "array": false,
                     "$createdAt": "2020-10-15T06:38:00.000+00:00",
                     "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                    "default": "[[[0, 0], [0, 10]], [[10, 10], [0, 0]]]"
+                    "default": [
+                        [
+                            [
+                                0,
+                                0
+                            ],
+                            [
+                                0,
+                                10
+                            ]
+                        ],
+                        [
+                            [
+                                10,
+                                10
+                            ],
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ]
                 }
             },
             "index": {

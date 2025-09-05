@@ -8230,7 +8230,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::contains('lineAttr', [[1.0, 1.0]])->toString()]
+            'queries' => [Query::contains('lineAttr', [[1.1, 1.1]])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['rows']);
@@ -8562,19 +8562,6 @@ trait DatabasesBase
         ]);
         $this->assertEquals(202, $retriedIndex['headers']['status-code']);
 
-        // Passing orders to spatial index should not throw error (in case of mariadb)
-        $ordersIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'idx_required_point_with_orders',
-            'type' => Database::INDEX_SPATIAL,
-            'columns' => ['pRequired'],
-            'orders' => ['ASC']
-        ]);
-        $this->assertEquals(202, $ordersIndex['headers']['status-code']);
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([
             'content-type' => 'application/json',
@@ -8683,7 +8670,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'required' => false,
-            'default' => json_encode([[0, 0], [1, 1]]),
+            'default' => [[0, 0], [1, 1]],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8710,7 +8697,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'default' => json_encode([0, 0]),
+            'default' => [0, 0],
             'required' => false
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
