@@ -1244,7 +1244,7 @@ App::error()
         }
 
         /**
-         * If its not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
+         * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
@@ -1346,6 +1346,7 @@ App::error()
             case 409: // Error allowed publicly
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
+            case 422: // Error allowed publicly
             case 429: // Error allowed publicly
             case 451: // Error allowed publicly
             case 501: // Error allowed publicly

@@ -432,7 +432,7 @@ class StatsResources extends Action
 
     protected function writeDocuments(Database $dbForLogs, Document $project): void
     {
-        $dbForLogs->createOrUpdateDocuments(
+        $dbForLogs->upsertDocuments(
             'stats',
             $this->documents
         );
