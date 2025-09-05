@@ -132,6 +132,10 @@ class Update extends Action
                         $action = $operation['action'];
                         $data = $operation['data'];
 
+                        if ($data instanceof Document) {
+                            $data = $data->getArrayCopy();
+                        }
+
                         // Execute the operation based on its type
                         switch ($action) {
                             case 'create':
@@ -197,9 +201,11 @@ class Update extends Action
         }
 
         if ($rollback) {
-            $transaction = $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                'status' => 'rolledBack',
-            ]));
+            $transaction = $dbForProject->updateDocument(
+                'transactions',
+                $transactionId,
+                new Document(['status' => 'rolledBack'])
+            );
 
             $queueForDeletes
                 ->setType(DELETE_TYPE_DOCUMENT)
@@ -441,6 +447,8 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        \var_dump($data);
+
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->updateDocuments(
