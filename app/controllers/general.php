@@ -718,7 +718,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 continue;
             }
 
-            $response->setHeader($name, $values);
+            if (\is_array($values)) {
+                foreach ($values as $value) {
+                    $response->addHeader($name, $value);
+                }
+            } else {
+                $response->addHeader($name, $values);
+            }
         }
 
         $response
