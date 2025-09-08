@@ -144,7 +144,7 @@
                 </tr>
             </table>
 
-            <table style="margin-top: 32px">
+            <table style="margin-top: 16px">
                 <tr>
                     <td>
 {{body}}
