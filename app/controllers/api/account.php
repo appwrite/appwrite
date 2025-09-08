@@ -1534,7 +1534,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
              * Is verified is not used yet, since we don't know after an account is created anymore if it was verified or not.
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
-            
+
             $identity = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
