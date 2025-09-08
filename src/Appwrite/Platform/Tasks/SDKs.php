@@ -62,6 +62,9 @@ class SDKs extends Action
             $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
             $production = $production === 'Appwrite';
             $message ??= Console::confirm('Please enter your commit message:');
+
+            $createPr = Console::confirm('Should we create pull request automatically? (yes/no)');
+            $createPr = $createPr === 'yes';
         }
 
         if (!\in_array($version, [
@@ -314,6 +317,47 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
+
+                    if ($createPr) {
+                        $prTitle = "feat: {$language['name']} SDK update for version {$version}";
+                        $prBody = "This PR contains updates to the {$language['name']} SDK for Appwrite version {$version}.\\n\\nCommit: {$message}";
+
+                        $repoName = $language['gitRepoName'];
+                        if (!$production) {
+                            $repoName = 'aw-tests/' . $language['gitRepoName'];
+                        } else {
+                            $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
+                        }
+
+                        Console::info("Creating pull request for {$language['name']} SDK...");
+
+                        $prCommand = 'cd ' . $target . ' && \
+                            gh pr create \
+                            --repo "' . $repoName . '" \
+                            --title "' . $prTitle . '" \
+                            --body "' . $prBody . '" \
+                            --base "' . $repoBranch . '" \
+                            --head "' . $gitBranch . '" \
+                            2>&1';
+
+                        $prOutput = [];
+                        $prReturnCode = 0;
+                        \exec($prCommand, $prOutput, $prReturnCode);
+
+                        if ($prReturnCode === 0) {
+                            Console::success("Successfully created pull request for {$language['name']} SDK");
+                            if (!empty($prOutput)) {
+                                Console::info("PR URL: " . end($prOutput));
+                            }
+                        } else {
+                            $errorMessage = implode("\n", $prOutput);
+                            if (strpos($errorMessage, 'already exists') !== false) {
+                                Console::warning("Pull request already exists for {$language['name']} SDK");
+                            } else {
+                                Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
+                            }
+                        }
+                    }
 
                     \exec('rm -rf ' . $target);
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
