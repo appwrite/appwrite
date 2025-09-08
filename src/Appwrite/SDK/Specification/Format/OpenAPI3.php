@@ -433,7 +433,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Assoc':
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
-                        $node['schema']['x-example'] = '{}';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
@@ -446,6 +446,15 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => $validator->getValidator()->getType(),
                         ];
+                        break;
+                    case 'Utopia\Database\Validator\Spatial':
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'oneOf' => [
+                                ['type' => 'array']
+                            ]
+                        ];
+                        $node['schema']['x-example'] = '[[1,2], [3, 4]]';
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
@@ -669,6 +678,10 @@ class OpenAPI3 extends Format
                     case 'json':
                         $type = 'object';
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
+                        break;
+
+                    case 'array':
+                        $type = 'array';
                         break;
 
                     case 'integer':

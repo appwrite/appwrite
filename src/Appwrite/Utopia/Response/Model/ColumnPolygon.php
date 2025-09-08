@@ -12,14 +12,18 @@ class ColumnPolygon extends Column
 
         $this
             ->addRule('default', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_ARRAY,
                 'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,
-                'example' => '[[[0, 0], [0, 10]], [[10, 10], [0, 0]]]'
+                'example' => [[[0, 0], [0, 10]], [[10, 10], [0, 0]]]
             ])
         ;
     }
+
+    public array $conditions = [
+        'type' => 'polygon',
+    ];
 
     /**
      * Get Name
