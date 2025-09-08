@@ -2956,4 +2956,683 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Via normal route', $response['body']['name']);
     }
+
+    /**
+     * Test bulk update with queries that should match documents created in the same transaction
+     */
+    public function testBulkUpdateWithTransactionAwareQueries(): void
+    {
+        // Create database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkTxnAwareDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // Create attributes
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'age',
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(3); // Wait for attributes to be created
+
+        // Create some existing documents
+        for ($i = 1; $i <= 3; $i++) {
+            $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'documentId' => 'existing_' . $i,
+                'data' => [
+                    'name' => 'Existing ' . $i,
+                    'age' => 20 + $i,
+                    'status' => 'inactive'
+                ]
+            ]);
+        }
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Step 1: Create new documents with age > 25 in transaction
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'txn_doc_1',
+            'data' => [
+                'name' => 'Transaction Doc 1',
+                'age' => 30,
+                'status' => 'inactive'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'txn_doc_2',
+            'data' => [
+                'name' => 'Transaction Doc 2',
+                'age' => 35,
+                'status' => 'inactive'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Step 2: Bulk update all documents with age > 25 to have status 'active'
+        // This should match both existing_3 (age=23 doesn't match, age=24 doesn't match, but existing documents have age 21,22,23)
+        // Wait, let me fix the ages - existing docs have ages 21, 22, 23, so only txn docs should match
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'status' => 'active'
+            ],
+            'queries' => [Query::greaterThan('age', 25)->toString()],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify that documents created in the transaction were updated by the bulk update
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/txn_doc_1", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('active', $response['body']['status'], 'Document created in transaction should be updated by bulk update query');
+
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/txn_doc_2", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('active', $response['body']['status'], 'Document created in transaction should be updated by bulk update query');
+
+        // Verify existing documents were not affected
+        for ($i = 1; $i <= 3; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/existing_{$i}", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('inactive', $response['body']['status'], "Existing document {$i} should remain inactive (age <= 25)");
+        }
+    }
+
+    /**
+     * Test bulk update with queries that should match documents updated in the same transaction
+     */
+    public function testBulkUpdateMatchingUpdatedDocuments(): void
+    {
+        // Create database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkUpdateTxnDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // Create attributes
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'category',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'priority',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(3); // Wait for attributes to be created
+
+        // Create existing documents
+        for ($i = 1; $i <= 4; $i++) {
+            $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'documentId' => 'doc_' . $i,
+                'data' => [
+                    'name' => 'Document ' . $i,
+                    'category' => 'normal',
+                    'priority' => 'low'
+                ]
+            ]);
+        }
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Step 1: Update some documents to have category 'special' in transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_1", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'category' => 'special'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_2", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'category' => 'special'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Step 2: Bulk update all documents with category 'special' to have priority 'high'
+        // This should match the documents we just updated in the transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'priority' => 'high'
+            ],
+            'queries' => [Query::equal('category', ['special'])->toString()],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify that the updated documents were matched by bulk update
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_1", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('special', $response['body']['category']);
+        $this->assertEquals('high', $response['body']['priority'], 'Document updated in transaction should be matched by bulk update query');
+
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_2", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('special', $response['body']['category']);
+        $this->assertEquals('high', $response['body']['priority'], 'Document updated in transaction should be matched by bulk update query');
+
+        // Verify other documents were not affected
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_3", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('normal', $response['body']['category']);
+        $this->assertEquals('low', $response['body']['priority']);
+    }
+
+    /**
+     * Test bulk delete with queries that should match documents created in the same transaction
+     */
+    public function testBulkDeleteMatchingCreatedDocuments(): void
+    {
+        // Create database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkDeleteTxnDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // Create attributes
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'type',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(3); // Wait for attributes to be created
+
+        // Create existing documents
+        for ($i = 1; $i <= 3; $i++) {
+            $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'documentId' => 'existing_' . $i,
+                'data' => [
+                    'name' => 'Existing ' . $i,
+                    'type' => 'permanent'
+                ]
+            ]);
+        }
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Step 1: Create temporary documents in transaction
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'temp_1',
+            'data' => [
+                'name' => 'Temporary 1',
+                'type' => 'temporary'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'temp_2',
+            'data' => [
+                'name' => 'Temporary 2',
+                'type' => 'temporary'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Step 2: Bulk delete all documents with type 'temporary'
+        // This should delete the documents we just created in the transaction
+        $response = $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'queries' => [Query::equal('type', ['temporary'])->toString()],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify temporary documents were deleted (should not exist)
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/temp_1", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code'], 'Temporary document created and deleted in transaction should not exist');
+
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/temp_2", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code'], 'Temporary document created and deleted in transaction should not exist');
+
+        // Verify existing documents were not affected
+        for ($i = 1; $i <= 3; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/existing_{$i}", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $response['headers']['status-code'], "Permanent document {$i} should still exist");
+            $this->assertEquals('permanent', $response['body']['type']);
+        }
+    }
+
+    /**
+     * Test bulk delete with queries that should match documents updated in the same transaction
+     */
+    public function testBulkDeleteMatchingUpdatedDocuments(): void
+    {
+        // Create database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkDeleteUpdateTxnDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // Create attributes
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(3); // Wait for attributes to be created
+
+        // Create existing documents
+        for ($i = 1; $i <= 5; $i++) {
+            $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'documentId' => 'doc_' . $i,
+                'data' => [
+                    'name' => 'Document ' . $i,
+                    'status' => 'active'
+                ]
+            ]);
+        }
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Step 1: Mark some documents for deletion by updating their status
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_2", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'status' => 'marked_for_deletion'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_4", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'status' => 'marked_for_deletion'
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Step 2: Bulk delete all documents with status 'marked_for_deletion'
+        // This should delete the documents we just updated in the transaction
+        $response = $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'queries' => [Query::equal('status', ['marked_for_deletion'])->toString()],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify marked documents were deleted
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_2", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code'], 'Document marked for deletion should have been deleted');
+
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_4", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code'], 'Document marked for deletion should have been deleted');
+
+        // Verify other documents still exist
+        foreach ([1, 3, 5] as $i) {
+            $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/doc_{$i}", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $response['headers']['status-code'], "Document {$i} should still exist");
+            $this->assertEquals('active', $response['body']['status']);
+        }
+    }
 }
