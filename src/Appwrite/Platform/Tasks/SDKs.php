@@ -319,8 +319,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
 
                     if ($createPr) {
-                        $prTitle = "feat: {$language['name']} SDK update for version {$version}";
-                        $prBody = "This PR contains updates to the {$language['name']} SDK for Appwrite version {$version}.\\n\\nCommit: {$message}";
+                        $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
+                        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
 
                         $repoName = $language['gitRepoName'];
                         if (!$production) {
