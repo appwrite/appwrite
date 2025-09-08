@@ -10,7 +10,7 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "runtime": "node-14.5",
   "execute": ["any"],
   "events": [],
-  "schedule": ,
+  "schedule": "",
   "timeout": 1,
   "enabled": false,
   "logging": false,
@@ -22,5 +22,5 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "providerBranch": "<PROVIDER_BRANCH>",
   "providerSilentMode": false,
   "providerRootDirectory": "<PROVIDER_ROOT_DIRECTORY>",
-  "specification": 
+  "specification": ""
 }
