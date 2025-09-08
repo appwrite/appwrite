@@ -738,11 +738,17 @@ App::post('/v1/teams/:teamId/memberships')
                     'user' => $name,
                     'team' => $team->getAttribute('name'),
                     'redirect' => $url,
-                    'project' => $projectName
+                    'project' => $projectName,
+                    'twitterUrl' => APP_SOCIAL_TWITTER,
+                    'discordUrl' => APP_SOCIAL_DISCORD,
+                    'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+                    'termsUrl' => APP_EMAIL_TERMS_URL,
+                    'privacyUrl' => APP_EMAIL_PRIVACY_URL,
                 ];
 
                 $queueForMails
                     ->setSubject($subject)
+                    ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-auth.tpl')
                     ->setBody($body)
                     ->setPreview($preview)
                     ->setRecipient($invitee->getAttribute('email'))

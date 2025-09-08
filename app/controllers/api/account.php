@@ -154,6 +154,11 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         'device' => $session->getAttribute('clientName'),
         'ipAddress' => $session->getAttribute('ip'),
         'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
+        'twitterUrl' => APP_SOCIAL_TWITTER,
+        'discordUrl' => APP_SOCIAL_DISCORD,
+        'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+        'termsUrl' => APP_EMAIL_TERMS_URL,
+        'privacyUrl' => APP_EMAIL_PRIVACY_URL,
     ];
 
     $email = $user->getAttribute('email');
@@ -161,6 +166,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
     $queueForMails
         ->setSubject($subject)
         ->setPreview($preview)
+        ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-auth.tpl')
         ->setBody($body)
         ->setVariables($emailVariables)
         ->setRecipient($email)
@@ -2058,8 +2064,10 @@ App::post('/v1/account/tokens/magic-url')
 
         if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.magicSession.securityPhrase"));
+            $message->setParam('{{securityPhraseDividerDisplay}}', 'block');
         } else {
             $message->setParam('{{securityPhrase}}', '');
+            $message->setParam('{{securityPhraseDividerDisplay}}', 'none');
         }
 
         $body = $message->render();
@@ -2123,11 +2131,17 @@ App::post('/v1/account/tokens/magic-url')
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setSubject($subject)
             ->setPreview($preview)
+            ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-auth.tpl')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
@@ -2310,8 +2324,10 @@ App::post('/v1/account/tokens/email')
 
         if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.otpSession.securityPhrase"));
+            $message->setParam('{{securityPhraseDividerDisplay}}', "block");
         } else {
             $message->setParam('{{securityPhrase}}', '');
+            $message->setParam('{{securityPhraseDividerDisplay}}', "none");
         }
 
         $body = $message->render();
@@ -2374,11 +2390,17 @@ App::post('/v1/account/tokens/email')
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setSubject($subject)
             ->setPreview($preview)
+            ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-auth.tpl')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
@@ -3389,12 +3411,18 @@ App::post('/v1/account/recovery')
             'redirect' => $url,
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
-            'team' => ''
+            'team' => '',
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name', ''))
+            ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-auth.tpl')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)
@@ -3649,11 +3677,17 @@ App::post('/v1/account/verification')
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
             'team' => '',
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setSubject($subject)
             ->setPreview($preview)
+            ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-auth.tpl')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
@@ -4731,12 +4765,18 @@ App::post('/v1/account/mfa/challenge')
                     'otp' => $code,
                     'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+                    'twitterUrl' => APP_SOCIAL_TWITTER,
+                    'discordUrl' => APP_SOCIAL_DISCORD,
+                    'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+                    'termsUrl' => APP_EMAIL_TERMS_URL,
+                    'privacyUrl' => APP_EMAIL_PRIVACY_URL,
                 ];
 
                 $queueForMails
                     ->setSubject($subject)
                     ->setPreview($preview)
+                    ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-auth.tpl')
                     ->setBody($body)
                     ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))
