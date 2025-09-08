@@ -169,7 +169,6 @@ jobs:
           Console,
           Databases/Legacy,
           Databases/TablesDB,
-          Databases/Transactions,
           Functions,
           FunctionsSchedule,
           GraphQL,

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Transactions;
+namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
@@ -73,7 +73,7 @@ class Update extends Action
      * @param bool $rollback
      * @param UtopiaResponse $response
      * @param Database $dbForProject
-     * @param Delete $queueForDeletes
+     * @param \Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete $queueForDeletes
      * @return void
      * @throws ConflictException
      * @throws Exception

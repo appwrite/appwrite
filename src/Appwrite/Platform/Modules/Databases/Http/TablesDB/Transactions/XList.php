@@ -1,22 +1,17 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Transactions;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions;
 
-use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\XList as TransactionsList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Transactions;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Query;
 use Utopia\Swoole\Response as SwooleResponse;
 
-class XList extends Action
+class XList extends TransactionsList
 {
     public static function getName(): string
     {
@@ -32,16 +27,16 @@ class XList extends Action
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/databases/transactions')
+            ->setHttpPath('/v1/tablesdb/transactions')
             ->desc('List transactions')
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'transactions.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'databases',
+                namespace: 'tablesDB',
                 group: 'transactions',
                 name: 'listTransactions',
-                description: '/docs/references/databases/list-transactions.md',
+                description: '/docs/references/tablesdb/list-transactions.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -55,19 +50,5 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
-    }
-
-    public function action(array $queries, UtopiaResponse $response, Database $dbForProject): void
-    {
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $response->dynamic(new Document([
-            'transactions' => $dbForProject->find('transactions', $queries),
-            'total' => $dbForProject->count('transactions', $queries),
-        ]), UtopiaResponse::MODEL_TRANSACTION_LIST);
     }
 }

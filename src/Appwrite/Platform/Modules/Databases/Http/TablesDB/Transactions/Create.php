@@ -1,21 +1,17 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Transactions;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions;
 
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Create as TransactionsCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
-class Create extends Action
+class Create extends TransactionsCreate
 {
     public static function getName(): string
     {
@@ -31,16 +27,16 @@ class Create extends Action
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/databases/transactions')
+            ->setHttpPath('/v1/tablesdb/transactions')
             ->desc('Create transaction')
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'transactions.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'databases',
+                namespace: 'tablesDB',
                 group: 'transactions',
                 name: 'createTransaction',
-                description: '/docs/references/databases/create-transaction.md',
+                description: '/docs/references/tablesdb/create-transaction.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -54,19 +50,5 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
-    }
-
-    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject): void
-    {
-        $transaction = $dbForProject->createDocument('transactions', new Document([
-            '$id' => ID::unique(),
-            'status' => 'pending',
-            'operations' => 0,
-            'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),
-        ]));
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
-            ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
     }
 }

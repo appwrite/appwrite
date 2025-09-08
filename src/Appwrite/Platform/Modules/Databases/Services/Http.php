@@ -19,7 +19,6 @@ class Http extends Service
         foreach ([
             LegacyRegistry::class,
             TablesDBRegistry::class,
-            TransactionsRegistry::class,
         ] as $registrar) {
             new $registrar($this);
         }

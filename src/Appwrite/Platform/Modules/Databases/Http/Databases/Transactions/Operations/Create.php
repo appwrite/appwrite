@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Transactions\Operations;
+namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -53,7 +53,7 @@ class Create extends Action
                 contentType: ContentType::JSON
             ))
             ->param('transactionId', '', new UID(), 'Transaction ID.')
-            ->param('operations', [], new ArrayList(new Operation()), 'Array of staged operations.', true)
+            ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('plan')

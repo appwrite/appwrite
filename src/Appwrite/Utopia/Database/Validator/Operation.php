@@ -11,7 +11,6 @@ class Operation extends Validator
     /** @var array<string> */
     private array $required = [
         'databaseId',
-        'collectionId',
         'action',
     ];
 
@@ -38,6 +37,27 @@ class Operation extends Validator
         'bulkUpsert' => true,
         'bulkDelete' => true,
     ];
+
+    private string $collectionIdName = '';
+    private string $documentIdName = '';
+
+    public function __construct(private readonly string $type)
+    {
+        switch ($this->type) {
+            case 'legacy':
+                $this->collectionIdName = 'collectionId';
+                $this->documentIdName = 'documentId';
+                break;
+            case 'tablesdb':
+                $this->collectionIdName = 'tableId';
+                $this->documentIdName = 'rowId';
+                break;
+            default:
+                throw new \InvalidArgumentException('Invalid type provided.');
+        }
+
+        $this->required[] = $this->collectionIdName;
+    }
 
     public function getDescription(): string
     {
@@ -85,9 +105,9 @@ class Operation extends Validator
         // If action requires documentId, it must be present
         if (
             isset($this->requiresDocumentId[$value['action']]) &&
-            !\array_key_exists('documentId', $value)
+            !\array_key_exists($this->documentIdName, $value)
         ) {
-            $this->description = "Key 'documentId' is required for action '{$value['action']}'";
+            $this->description = "Key '$this->documentIdName' is required for action '{$value['action']}'";
             return false;
         }
 

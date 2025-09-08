@@ -58,6 +58,12 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Create as CreateDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Create as CreateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete as DeleteTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Get as GetTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations\Create as CreateOperations;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Update as UpdateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\Get as GetDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\XList as ListDatabaseUsage;
@@ -82,6 +88,7 @@ class Legacy extends Base
         $this->registerDocumentActions($service);
         $this->registerAttributeActions($service);
         $this->registerIndexActions($service);
+        $this->registerTransactionActions($service);
     }
 
     public function registerDatabaseActions(Service $service): void
@@ -190,5 +197,15 @@ class Legacy extends Base
         $service->addAction(GetIndex::getName(), new GetIndex());
         $service->addAction(DeleteIndex::getName(), new DeleteIndex());
         $service->addAction(ListIndexes::getName(), new ListIndexes());
+    }
+
+    private function registerTransactionActions(Service $service): void
+    {
+        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
+        $service->addAction(GetTransaction::getName(), new GetTransaction());
+        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
+        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
+        $service->addAction(ListTransactions::getName(), new ListTransactions());
+        $service->addAction(CreateOperations::getName(), new CreateOperations());
     }
 }

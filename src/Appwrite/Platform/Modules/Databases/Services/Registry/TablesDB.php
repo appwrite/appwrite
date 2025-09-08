@@ -57,6 +57,12 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\XList as ListR
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Update as UpdateTable;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Usage\Get as GetTableUsage;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\XList as ListTables;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Create as CreateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Delete as DeleteTransaction;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Get as GetTransaction;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Operations\Create as CreateOperations;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Update as UpdateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Update as UpdateTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Usage\Get as GetTablesDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Usage\XList as ListTablesDatabaseUsage;
@@ -81,6 +87,7 @@ class TablesDB extends Base
         $this->registerColumnActions($service);
         $this->registerIndexActions($service);
         $this->registerRowActions($service);
+        $this->registerTransactionActions($service);
     }
 
     private function registerDatabaseActions(Service $service): void
@@ -187,5 +194,15 @@ class TablesDB extends Base
         $service->addAction(ListRowLogs::getName(), new ListRowLogs());
         $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn());
         $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn());
+    }
+
+    private function registerTransactionActions(Service $service): void
+    {
+        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
+        $service->addAction(GetTransaction::getName(), new GetTransaction());
+        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
+        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
+        $service->addAction(ListTransactions::getName(), new ListTransactions());
+        $service->addAction(CreateOperations::getName(), new CreateOperations());
     }
 }
