@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Databases\TransactionManager;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -84,12 +84,12 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->inject('transactionManager')
+            ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionManager $transactionManager, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -118,7 +118,7 @@ class Update extends Action
 
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $document = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId);
+            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
             $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
         }

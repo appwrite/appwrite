@@ -9,7 +9,7 @@ use Utopia\Database\Query;
 /**
  * Service for managing transaction state and providing transaction-aware document operations
  */
-class TransactionManager
+class TransactionState
 {
     private Database $dbForProject;
 

@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Databases\TransactionManager;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -70,11 +70,11 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
-            ->inject('transactionManager')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionManager $transactionManager): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -128,7 +128,7 @@ class XList extends Action
 
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $documents = $transactionManager->listDocuments($collectionTableId, $transactionId, $queries);
+                $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
                 $total = count($documents); // For transaction-aware queries, we count the actual results
             } elseif (! empty($selectQueries)) {
                 // has selects, allow relationship on documents

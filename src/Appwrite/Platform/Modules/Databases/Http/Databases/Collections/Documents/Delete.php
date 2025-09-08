@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Databases\TransactionManager;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -80,7 +80,7 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->inject('transactionManager')
+            ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -95,7 +95,7 @@ class Delete extends Action
         Database $dbForProject,
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
-        TransactionManager $transactionManager,
+        TransactionState $transactionState,
         array $plan
     ): void {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -118,7 +118,7 @@ class Delete extends Action
 
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $document = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId);
+            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
             $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
         }

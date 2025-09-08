@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Databases\TransactionManager;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -88,12 +88,12 @@ class Upsert extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->inject('transactionManager')
+            ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionManager $transactionManager, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -132,7 +132,7 @@ class Upsert extends Action
         if (\is_null($permissions)) {
             if ($transactionId !== null) {
                 // Use transaction-aware document retrieval to see changes from same transaction
-                $oldDocument = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId);
+                $oldDocument = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
             } else {
                 $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
             }
@@ -331,7 +331,7 @@ class Upsert extends Action
         if (empty($upserted[0])) {
             if ($transactionId !== null) {
                 // For transactions, get the document with transaction changes applied
-                $upserted[0] = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId);
+                $upserted[0] = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
             } else {
                 $upserted[0] = $dbForProject->getDocument($collectionTableId, $documentId);
             }

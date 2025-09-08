@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Databases\TransactionManager;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -68,11 +68,11 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
-            ->inject('transactionManager')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionManager $transactionManager): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -100,7 +100,7 @@ class Get extends Action
 
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $document = $transactionManager->getDocument($collectionTableId, $documentId, $transactionId, $queries);
+                $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId, $queries);
             } elseif (! empty($selects)) {
                 // has selects, allow relationship on documents!
                 $document = $dbForProject->getDocument($collectionTableId, $documentId, $queries);
