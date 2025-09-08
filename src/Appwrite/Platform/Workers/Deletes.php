@@ -1192,7 +1192,7 @@ class Deletes extends Action
      * @param Document $document rule document
      * @return void
      */
-    private function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates): void
+    protected function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates): void
     {
         $domain = $document->getAttribute('domain');
         $certificates->deleteCertificate($domain);
