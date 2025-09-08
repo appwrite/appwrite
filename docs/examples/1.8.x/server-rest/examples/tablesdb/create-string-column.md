@@ -6,7 +6,7 @@ X-Appwrite-Project: <YOUR_PROJECT_ID>
 X-Appwrite-Key: <YOUR_API_KEY>
 
 {
-  "key": ,
+  "key": "",
   "size": 1,
   "required": false,
   "default": "<DEFAULT>",

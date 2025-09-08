@@ -7,6 +7,6 @@ X-Appwrite-Session:
 X-Appwrite-JWT: <YOUR_JWT>
 
 {
-  "password": ,
+  "password": "",
   "oldPassword": "password"
 }

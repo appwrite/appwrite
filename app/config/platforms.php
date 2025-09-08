@@ -245,6 +245,7 @@ return [
                 'exclude' => [
                     'services' => [
                         ['name' => 'assistant'],
+                        ['name' => 'avatars'],
                     ],
                 ],
             ],

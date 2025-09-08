@@ -963,24 +963,6 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Set Header
-     *
-     * @param  string  $key
-     * @param  string|array<string>  $value
-     * @return void
-     */
-    public function setHeader(string $key, mixed $value): void
-    {
-        if (is_array($value)) {
-            // Temporary solution to support proxying Set-cookie (2 cookies, 1 name)
-            // Ideally this would live in http library, supporting array of values in all adapters
-            $this->swoole->header($key, $value);
-        } else {
-            $this->sendHeader($key, $value);
-        }
-    }
-
-    /**
      * Static wrapper to show sensitive data in response
      *
      * @param callable The callback to show sensitive information for
