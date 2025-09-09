@@ -486,6 +486,8 @@ class Functions extends Action
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        \var_dump($vars);
+
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_DOMAIN');
         $endpoint = $protocol . '://' . $hostname . "/v1";
