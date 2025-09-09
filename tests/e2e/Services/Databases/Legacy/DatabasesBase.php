@@ -6790,7 +6790,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::intersects('polyAttr', [[5.0, 5.0]])->toString()]
+            'queries' => [Query::intersects('polyAttr', [5.0, 5.0])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -6801,7 +6801,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notIntersects('polyAttr', [[60.0, 60.0]])->toString()]
+            'queries' => [Query::notIntersects('polyAttr', [60.0, 60.0])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -6812,7 +6812,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::overlaps('polyAttr', [$overlapPoly])->toString()]
+            'queries' => [Query::overlaps('polyAttr', $overlapPoly)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -6824,7 +6824,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notOverlaps('polyAttr', [$noOverlapPoly])->toString()]
+            'queries' => [Query::notOverlaps('polyAttr', $noOverlapPoly)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -6876,7 +6876,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::crosses('lineAttr', [$crossLine])->toString()]
+            'queries' => [Query::crosses('lineAttr', $crossLine)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -6888,7 +6888,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notCrosses('lineAttr', [$nonCrossLine])->toString()]
+            'queries' => [Query::notCrosses('lineAttr', $nonCrossLine)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -6899,7 +6899,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::touches('polyAttr', [$touchPoly])->toString()]
+            'queries' => [Query::touches('polyAttr', $touchPoly)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
@@ -6911,7 +6911,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notTouches('polyAttr', [$farPoly])->toString()]
+            'queries' => [Query::notTouches('polyAttr', $farPoly)->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
