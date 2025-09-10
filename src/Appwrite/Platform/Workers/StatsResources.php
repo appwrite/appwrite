@@ -434,7 +434,7 @@ class StatsResources extends Action
     {
         $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
 
-        // sort by unique index key to make
+        // sort by unique index key reduce locks
         usort($this->documents, function($a, $b) {
             // metric DESC
             $cmp = strcmp($b['metric'], $a['metric']);
@@ -444,10 +444,15 @@ class StatsResources extends Action
             $cmp = strcmp($a['period'], $b['period']);
             if ($cmp !== 0) return $cmp;
 
-            // time ASC (string comparison is fine)
+            // time ASC, NULLs first
+            if ($a['time'] === null && $b['time'] === null) return 0;
+            if ($a['time'] === null) return -1;
+            if ($b['time'] === null) return 1;
+
             return strcmp($a['time'], $b['time']);
         });
 
+var_dump($this->documents);
         try {
             $dbForLogs->createOrUpdateDocuments(
                 'stats',
