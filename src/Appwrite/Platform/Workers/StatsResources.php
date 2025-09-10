@@ -206,6 +206,8 @@ class StatsResources extends Action
             $this->writeDocuments($dbForLogs, $project);
         } catch (Throwable $th) {
             call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
+        } finally {
+            $this->documents = [];
         }
 
         Console::info('End of count for: ' . $project->getId());
