@@ -18,6 +18,12 @@ response, error := service.CreateDocument(
     "<DATABASE_ID>",
     "<COLLECTION_ID>",
     "<DOCUMENT_ID>",
-    map[string]interface{}{},
+    map[string]interface{}{
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 30,
+        "isAdmin": false
+    },
     databases.WithCreateDocumentPermissions(interface{}{"read("any")"}),
 )

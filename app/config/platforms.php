@@ -245,6 +245,7 @@ return [
                 'exclude' => [
                     'services' => [
                         ['name' => 'assistant'],
+                        ['name' => 'avatars'],
                     ],
                 ],
             ],
@@ -276,25 +277,6 @@ return [
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/nodejs/CHANGELOG.md'),
-            ],
-            [
-                'key' => 'deno',
-                'name' => 'Deno',
-                'version' => '16.0.0',
-                'url' => 'https://github.com/appwrite/sdk-for-deno',
-                'package' => 'https://deno.land/x/appwrite',
-                'enabled' => true,
-                'beta' => false,
-                'dev' => false,
-                'hidden' => false,
-                'family' => APP_PLATFORM_SERVER,
-                'prism' => 'typescript',
-                'source' => \realpath(__DIR__ . '/../sdks/server-deno'),
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-deno.git',
-                'gitRepoName' => 'sdk-for-deno',
-                'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev',
-                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/deno/CHANGELOG.md'),
             ],
             [
                 'key' => 'php',

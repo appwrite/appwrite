@@ -10,5 +10,9 @@ Client client = new Client()
 Account account = new Account(client);
 
 User result = await account.UpdatePrefs(
-    prefs: [object]
+    prefs: new {
+        language = "en",
+        timezone = "UTC",
+        darkTheme = true
+    }
 );

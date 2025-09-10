@@ -3638,16 +3638,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "1.4.1",
+            "version": "1.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b5ea4d133a1a4e747b7522e61e072289129a06f4"
+                "reference": "16f96e5d9784dae87d4f6b864e87da8e3be15507"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5ea4d133a1a4e747b7522e61e072289129a06f4",
-                "reference": "b5ea4d133a1a4e747b7522e61e072289129a06f4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/16f96e5d9784dae87d4f6b864e87da8e3be15507",
+                "reference": "16f96e5d9784dae87d4f6b864e87da8e3be15507",
                 "shasum": ""
             },
             "require": {
@@ -3688,9 +3688,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/1.4.1"
+                "source": "https://github.com/utopia-php/database/tree/1.4.4"
             },
-            "time": "2025-09-05T13:23:52+00:00"
+            "time": "2025-09-10T00:50:05+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4190,16 +4190,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.0.1",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "38171023efd3abe650d2abc5ac65f5df52311da6"
+                "reference": "c42935a6a4ee3701c68d24244e82ecb39e945ec4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/38171023efd3abe650d2abc5ac65f5df52311da6",
-                "reference": "38171023efd3abe650d2abc5ac65f5df52311da6",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c42935a6a4ee3701c68d24244e82ecb39e945ec4",
+                "reference": "c42935a6a4ee3701c68d24244e82ecb39e945ec4",
                 "shasum": ""
             },
             "require": {
@@ -4240,9 +4240,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.0.1"
+                "source": "https://github.com/utopia-php/migration/tree/1.1.1"
             },
-            "time": "2025-08-28T13:41:25+00:00"
+            "time": "2025-09-10T06:17:20+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -5007,16 +5007,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.3.2",
+            "version": "1.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "375a6c9b168db6fdf58fbe0d49d2261d80700b4a"
+                "reference": "d3b420dced42f1eec1f6d0aa98b7bbf8de4042ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/375a6c9b168db6fdf58fbe0d49d2261d80700b4a",
-                "reference": "375a6c9b168db6fdf58fbe0d49d2261d80700b4a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d3b420dced42f1eec1f6d0aa98b7bbf8de4042ac",
+                "reference": "d3b420dced42f1eec1f6d0aa98b7bbf8de4042ac",
                 "shasum": ""
             },
             "require": {
@@ -5052,9 +5052,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.3.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.3.4"
             },
-            "time": "2025-09-05T15:50:35+00:00"
+            "time": "2025-09-08T11:56:04+00:00"
         },
         {
             "name": "doctrine/annotations",
