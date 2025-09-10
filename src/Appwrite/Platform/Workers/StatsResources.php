@@ -444,9 +444,8 @@ class StatsResources extends Action
             $cmp = strcmp($a['period'], $b['period']);
             if ($cmp !== 0) return $cmp;
 
-            // time ASC
-            if ($a['time'] === $b['time']) return 0;
-            return ($a['time'] < $b['time']) ? -1 : 1;
+            // time ASC (string comparison is fine)
+            return strcmp($a['time'], $b['time']);
         });
 
         try {
