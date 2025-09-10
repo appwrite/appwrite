@@ -809,6 +809,9 @@ class Builds extends Action
                                     }
 
                                     if ($affected) {
+                                        \var_dump($currentLogs);
+                                        Console::info('buildLogs updated: ' . $currentLogs);
+
                                         $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
                                         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -854,6 +857,7 @@ class Builds extends Action
 
             $logs = '';
             foreach ($response['output'] as $log) {
+                \var_dump($log['content']);
                 $logs .= $log['content'];
             }
 
