@@ -1257,7 +1257,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $user->getAttribute('email'),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak

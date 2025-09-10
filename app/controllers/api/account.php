@@ -1110,7 +1110,7 @@ App::post('/v1/account/sessions/anonymous')
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_ANONYMOUS,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -1726,7 +1726,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $token = new Document([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'type' => TOKEN_TYPE_OAUTH2,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
@@ -2039,7 +2039,7 @@ App::post('/v1/account/tokens/magic-url')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_MAGIC_URL,
             'secret' => $proofForToken->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -2312,7 +2312,7 @@ App::post('/v1/account/tokens/email')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_EMAIL,
             'secret' => $proofForCode->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -2652,7 +2652,7 @@ App::post('/v1/account/tokens/phone')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_PHONE,
             'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
@@ -3354,7 +3354,7 @@ App::post('/v1/account/recovery')
         $recovery = new Document([
             '$id' => ID::unique(),
             'userId' => $profile->getId(),
-            'userInternalId' => $profile->getInternalId(),
+            'userInternalId' => $profile->getSequence(),
             'type' => TOKEN_TYPE_RECOVERY,
             'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -3617,7 +3617,7 @@ App::post('/v1/account/verification')
         $verification = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_VERIFICATION,
             'secret' => $proofForToken->hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -3869,7 +3869,7 @@ App::post('/v1/account/verification/phone')
         $verification = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_PHONE,
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,

@@ -2239,7 +2239,7 @@ App::post('/v1/users/:userId/sessions')
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
+                'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_SERVER,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -2327,7 +2327,7 @@ App::post('/v1/users/:userId/tokens')
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
+            'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_GENERIC,
             'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
