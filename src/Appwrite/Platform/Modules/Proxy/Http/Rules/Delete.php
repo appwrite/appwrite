@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -17,7 +16,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Delete extends Base
+class Delete extends Action
 {
     use HTTP;
 

@@ -6,7 +6,6 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -22,7 +21,7 @@ use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\IP;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 
