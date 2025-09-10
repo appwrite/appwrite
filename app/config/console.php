@@ -4,8 +4,6 @@
  * Initializes console project document.
  */
 
-use Appwrite\Network\Validator\Origin;
-use Appwrite\Auth\Auth;
 use Appwrite\Network\Platform;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
