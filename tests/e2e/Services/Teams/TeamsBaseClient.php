@@ -718,7 +718,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(4, $response['body']['total']);
+        $this->assertEquals(3, $response['body']['total']);
 
         $ownerMembershipUid = $response['body']['memberships'][0]['$id'];
 
@@ -773,7 +773,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(3, $response['body']['total']);
+        $this->assertEquals(2, $response['body']['total']);
 
         /**
          * Test for when the owner tries to delete their membership
