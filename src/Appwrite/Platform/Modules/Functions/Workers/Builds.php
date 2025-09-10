@@ -793,9 +793,9 @@ class Builds extends Action
 
                                     $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
                                     foreach (\explode("\n", $streamLogs) as $streamLog) {
-                                        if (empty($streamLog)) {
-                                            continue;
-                                        }
+                                        // if (empty($streamLog)) {
+                                        //     continue;
+                                        // }
 
                                         $streamLog = \str_replace("{APPWRITE_LINEBREAK_PLACEHOLDER}", "\n", $streamLog);
                                         $streamParts = \explode(" ", $streamLog, 2);
