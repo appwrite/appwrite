@@ -2956,8 +2956,9 @@ App::patch('/v1/account/password')
     ->inject('hooks')
     ->inject('store')
     ->inject('proofForPassword')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword) {
-
+    ->inject('proofForToken')
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+        var_dump('updating password ' . $oldPassword . ':' . $password);
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -2997,9 +2998,8 @@ App::patch('/v1/account/password')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        $proofsToken = new ProofsToken();
+        $current = Auth::sessionVerify($sessions, $store->getProperty('secret', ''), $proofForToken);
 
-        $current = Auth::sessionVerify($sessions, $store->getProperty('secret', ''), $proofsToken);
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
         if ($invalidate && !empty($current)) {
             foreach ($sessions as $session) {
