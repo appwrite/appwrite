@@ -206,8 +206,6 @@ class StatsResources extends Action
             $this->writeDocuments($dbForLogs, $project);
         } catch (Throwable $th) {
             call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
-        } finally {
-            $this->documents = [];
         }
 
         Console::info('End of count for: ' . $project->getId());
@@ -436,18 +434,32 @@ class StatsResources extends Action
     {
         $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
 
+        // sort by unique index key to make
+        usort($this->documents, function($a, $b) {
+            // metric DESC
+            $cmp = strcmp($b['metric'], $a['metric']);
+            if ($cmp !== 0) return $cmp;
+
+            // period ASC
+            $cmp = strcmp($a['period'], $b['period']);
+            if ($cmp !== 0) return $cmp;
+
+            // time ASC
+            if ($a['time'] === $b['time']) return 0;
+            return ($a['time'] < $b['time']) ? -1 : 1;
+        });
+
         try {
             $dbForLogs->createOrUpdateDocuments(
                 'stats',
-                $this->documents
+                $this->documents,
+                10 // See if this make an effect
             );
 
             Console::success($message . ' | Documents: ' . count($this->documents));
         } catch (\Throwable $e) {
             Console::error('Error: ' . $message . ' | Exception: ' . $e->getMessage());
             throw $e;
-        } finally {
-            $this->documents = [];
         }
     }
 }
