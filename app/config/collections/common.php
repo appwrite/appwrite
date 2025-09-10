@@ -1115,7 +1115,7 @@ return [
                 '$id' => ID::custom('expire'),
                 'type' => Database::VAR_DATETIME,
                 'size' => 0,
-                'required' => true,
+                'required' => false,
                 'format' => '',
                 'signed' => false,
                 'default' => null,
