@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec php /usr/src/code/app/cli.php install $@
+php /usr/src/code/app/cli.php install $@

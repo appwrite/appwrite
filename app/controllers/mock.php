@@ -13,6 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
@@ -33,6 +34,25 @@ App::get('/v1/mock/tests/general/oauth2')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
 
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
+    });
+
+App::get('/v1/mock/tests/locale')
+    ->desc('Mock locale translation key')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('locale')
+    ->inject('localeCodes')
+    ->inject('request')
+    ->inject('response')
+    ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
+        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        if (\in_array($localeParam, $localeCodes)) {
+            $locale->setDefault($localeParam);
+        }
+
+        $response->send($locale->getText('mock'));
     });
 
 App::get('/v1/mock/tests/general/oauth2/token')
@@ -127,32 +147,6 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ->json([
                 'result' => 'failure',
             ]);
-    });
-
-App::patch('/v1/mock/functions-v2')
-    ->desc('Update Function Version to V2 (outdated code syntax)')
-    ->groups(['mock', 'api', 'functions'])
-    ->label('scope', 'functions.write')
-    ->label('docs', false)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $functionId, Response $response, Database $dbForProject) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-
-        if (!$isDevelopment) {
-            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-        }
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
-
-        $response->noContent();
     });
 
 App::post('/v1/mock/api-key-unprefixed')

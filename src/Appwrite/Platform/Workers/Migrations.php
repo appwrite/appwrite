@@ -69,7 +69,7 @@ class Migrations extends Action
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -204,7 +204,6 @@ class Migrations extends Action
         // set the errors back without trace
         $clonedMigrationDocument->setAttribute('errors', $errorMessages);
 
-
         /** Trigger Realtime Events */
         $queueForRealtime
             ->setProject($project)
@@ -246,8 +245,11 @@ class Migrations extends Action
                 'functions.write',
                 'databases.read',
                 'collections.read',
+                'tables.read',
                 'documents.read',
                 'documents.write',
+                'rows.read',
+                'rows.write',
                 'tokens.read',
                 'tokens.write',
             ]
@@ -314,6 +316,7 @@ class Migrations extends Action
                     $migration->getAttribute('resourceType')
                 );
             }
+
             $destination->shutDown();
             $source->shutDown();
 

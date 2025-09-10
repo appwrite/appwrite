@@ -29,7 +29,7 @@ class Maintenance extends Action
             ->inject('console')
             ->inject('queueForCertificates')
             ->inject('queueForDeletes')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
@@ -122,6 +122,19 @@ class Maintenance extends Action
             Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
 
             foreach ($certificates as $certificate) {
+                $domain = $certificate->getAttribute('domain');
+                if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+                    $rule = $dbForPlatform->getDocument('rules', md5($domain));
+                } else {
+                    $rule = $dbForPlatform->findOne('rules', [
+                        Query::equal('domain', [$domain]),
+                    ]);
+                }
+
+                if ($rule->isEmpty() || $rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
+                    continue;
+                }
+
                 $queueForCertificate
                     ->setDomain(new Document([
                         'domain' => $certificate->getAttribute('domain')

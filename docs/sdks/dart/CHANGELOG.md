@@ -1,5 +1,41 @@
 # Change Log
 
+## 17.0.0
+
+* Support for Appwrite 1.8
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
+* Deprecated `updateMagicURLSession`
+* Deprecated `updatePhoneSession`
+* Deprecated Databases service
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
+  
+
+## 16.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `encrypt` support to string attribute model
+* Add `sequence` support to `Document` model
+
+## 16.1.0
+
+* Add `gif` support to `ImageFormat` enum
+* Add support for `dart38` and `flutter332` runtimes
+* Add `upsertDocument()` method to Databases service
+* Fix `convertTo()` method in `Document` and `Preferences` models to correctly accept `Map<String, dynamic>`
+* Fix `upsertDocuments()` method to have `documents` attribute as required parameter
+
 ## 16.0.0
 
 * Add `<REGION>` to doc examples due to the new multi region endpoints

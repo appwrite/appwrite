@@ -31,7 +31,7 @@ class ScheduleFunctions extends ScheduleBase
         return 'functions';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
@@ -90,7 +90,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($this->publisher);
+                    $queueForFunctions = new Func($this->publisherFunctions);
 
                     $queueForFunctions
                         ->setType('schedule')

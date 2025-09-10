@@ -15,10 +15,12 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
@@ -75,7 +77,11 @@ App::setResource('hooks', function ($register) {
 }, ['register']);
 
 App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+App::setResource('locale', function () {
+    $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+    $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+    return $locale;
+});
 
 App::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
@@ -85,9 +91,30 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-App::setResource('consumer', function (Group $pools) {
-    return new BrokerPool(consumer: $pools->get('consumer'));
-}, ['pools']);
+App::setResource('publisherDatabases', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherFunctions', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMigrations', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherStatsUsage', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMails', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherDeletes', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMessaging', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherWebhooks', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -127,11 +154,14 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('clients', function ($request, $console, $project) {
+App::setResource('queueForStatsResources', function (Publisher $publisher) {
+    return new StatsResources($publisher);
+}, ['publisher']);
+App::setResource('platforms', function (Request $request, Document $console, Document $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
-        'type' => Origin::CLIENT_TYPE_WEB,
+        'type' => Platform::TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
@@ -144,39 +174,32 @@ App::setResource('clients', function ($request, $console, $project) {
         }
         $console->setAttribute('platforms', [
             '$collection' => ID::custom('platforms'),
-            'type' => Origin::CLIENT_TYPE_WEB,
+            'type' => Platform::TYPE_WEB,
             'name' => $hostname,
             'hostname' => $hostname,
         ], Document::SET_TYPE_APPEND);
     }
 
-    /**
-     * Get All verified client URLs for both console and current projects
-     * + Filter for duplicated entries
-     */
-    $clientsConsole = \array_map(
-        fn ($node) => $node['hostname'],
-        \array_filter(
-            $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
-        )
-    );
-
-    $clients = $clientsConsole;
-    $platforms = $project->getAttribute('platforms', []);
-
-    foreach ($platforms as $node) {
-        if (
-            isset($node['type']) &&
-            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
-            !empty($node['hostname'])
-        ) {
-            $clients[] = $node['hostname'];
-        }
+    // Add `exp` and `appwrite-callback-{projectId}` schemes
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $project->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Platform::TYPE_SCHEME,
+            'name' => 'Expo',
+            'key' => 'exp',
+        ], Document::SET_TYPE_APPEND);
+        $project->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Platform::TYPE_SCHEME,
+            'name' => 'Appwrite Callback',
+            'key' => 'appwrite-callback-' . $project->getId(),
+        ], Document::SET_TYPE_APPEND);
     }
 
-    return \array_unique($clients);
+    return [
+        ...$console->getAttribute('platforms', []),
+        ...$project->getAttribute('platforms', []),
+    ];
 }, ['request', 'console', 'project']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform, Store $store, Token $proofForToken) {
@@ -287,7 +310,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtUserId = $payload['userId'] ?? '';
         if (!empty($jwtUserId)) {
-            $user = $dbForProject->getDocument('users', $jwtUserId);
+            if ($mode === APP_MODE_ADMIN) {
+                $user = $dbForPlatform->getDocument('users', $jwtUserId);
+            } else {
+                $user = $dbForProject->getDocument('users', $jwtUserId);
+            }
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
@@ -707,6 +734,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         },
     ];
 
+    // NOTE: `params` and `urls` are not used internally in the `Schema::build` function below!
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
             return [ 'queries' => $args['queries']];
@@ -855,9 +883,18 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
+
+            if (empty($teamId)) {
+                return new Document([]);
+            }
+
             $team = Authorization::skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
         }
+    }
+
+    if (empty($teamInternalId)) {
+        return new Document([]);
     }
 
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
@@ -998,3 +1035,52 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
     }
     return new Document([]);
 }, ['project', 'dbForProject', 'request']);
+
+App::setResource('httpReferrer', function (Request $request): string {
+    $referrer = $request->getReferer();
+    return $referrer;
+}, ['request']);
+
+App::setResource('httpReferrerSafe', function (Request $request, string $httpReferrer, array $platforms, Database $dbForPlatform, Document $project, App $utopia): string {
+    $origin = \parse_url($request->getOrigin($httpReferrer), PHP_URL_HOST);
+    $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
+    $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
+
+    // Safe if route is publicly accessible
+    $route = $utopia->getRoute();
+    if ($route->getLabel('origin', false)) {
+        return $referrer;
+    }
+
+    // Safe if added as web platform
+    $originValidator = new Origin($platforms);
+    if ($originValidator->isValid($request->getOrigin($httpReferrer))) {
+        return $referrer;
+    }
+
+    // Safe if rule with same project ID exists
+    if (!empty($origin)) {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
+        } else {
+            $rule = Authorization::skip(
+                fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', [$origin]),
+                    Query::limit(1)
+                ])
+            )[0] ?? new Document();
+        }
+
+        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
+            return $referrer;
+        }
+    }
+
+    // Unsafe; Localhost is always safe for ease of local development
+    $origin = 'localhost';
+    $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
+    $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
+    return $referrer;
+}, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);

@@ -1,0 +1,1 @@
+appwrite messaging list-topics

@@ -5,6 +5,8 @@
  */
 
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Auth\Auth;
+use Appwrite\Network\Platform;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
@@ -22,7 +24,7 @@ $console = [
         [
             '$collection' => ID::custom('platforms'),
             'name' => 'Localhost',
-            'type' => Origin::CLIENT_TYPE_WEB,
+            'type' => Platform::TYPE_WEB,
             'hostname' => 'localhost',
         ], // Current host is added on app init
     ],
@@ -38,7 +40,8 @@ $console = [
         'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
         'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
         'duration' => TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
-        'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
+        'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled',
+        'invalidateSessions' => true
     ],
     'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
     'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],

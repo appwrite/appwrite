@@ -21,9 +21,11 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
@@ -64,7 +66,6 @@ use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -75,6 +76,7 @@ $oauthDefaultFailure = '/console/auth/oauth2/failure';
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
+    $preview = $locale->getText("emails.sessionAlert.preview");
     $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
 
     $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
@@ -136,6 +138,16 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
             ->setSmtpSenderName($senderName);
     }
 
+    // session alerts should always have a client name!
+    $clientName = $session->getAttribute('clientName');
+    if (empty($clientName)) {
+        // fallback to the user agent and then unknown!
+        $userAgent = $session->getAttribute('userAgent');
+        $clientName = !empty($userAgent) ? $userAgent : 'UNKNOWN';
+
+        $session->setAttribute('clientName', $clientName);
+    }
+
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
         'date' => (new \DateTime())->format('F j'),
@@ -152,6 +164,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $queueForMails
         ->setSubject($subject)
+        ->setPreview($preview)
         ->setBody($body)
         ->setVariables($emailVariables)
         ->setRecipient($email)
@@ -1217,16 +1230,23 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
-    ->param('failure', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('success', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('failure', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -1251,12 +1271,20 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
+        $host = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $redirectBase = $protocol . '://' . $host;
+        if ($protocol === 'https' && $port !== '443') {
+            $redirectBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $redirectBase .= ':' . $port;
+        }
+
         if (empty($success)) {
-            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+            $success = $redirectBase . $oauthDefaultSuccess;
         }
 
         if (empty($failure)) {
-            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
+            $failure = $redirectBase . $oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
@@ -1286,9 +1314,14 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
-
-        $domain = $request->getHostname();
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
         $params = $request->getParams();
         $params['project'] = $projectId;
@@ -1297,7 +1330,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+            ->redirect($callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
                 . \http_build_query($params));
     });
 
@@ -1317,9 +1350,14 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
-
-        $domain = $request->getHostname();
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
         $params = $request->getParams();
         $params['project'] = $projectId;
@@ -1328,7 +1366,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+            ->redirect($callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
                 . \http_build_query($params));
     });
 
@@ -1352,6 +1390,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('platforms')
+    ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('geodb')
@@ -1359,11 +1399,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, array $platforms, Document $devKey, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
-        $validateURL = new URL();
+        $redirect = new Redirect($platforms);
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
@@ -1390,11 +1430,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $state = $defaultState;
         }
 
-        if (!$validateURL->isValid($state['success'])) {
+        if ($devKey->isEmpty() && !$redirect->isValid($state['success'])) {
             throw new Exception(Exception::PROJECT_INVALID_SUCCESS_URL);
         }
 
-        if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
+        if ($devKey->isEmpty() && !empty($state['failure']) && !$redirect->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
         $failure = [];
@@ -1464,10 +1504,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $userParam = \json_decode($request->getParam('user', '{}'), true); // only valid for Apple OAuth2 which returns a user param in the request
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
-        } elseif (is_array($userParam)) {
-            $nameParam = $userParam['name'];
-            if (is_array($nameParam) && isset($nameParam['firstName']) && isset($nameParam['lastName'])) {
-                $name = $nameParam['firstName'] . ' ' . $nameParam['lastName'];
+        } elseif ($userParam !== null) {
+            $userDecoded = \json_decode($userParam, true);
+            if (isset($userDecoded['name']['firstName']) && isset($userDecoded['name']['lastName'])) {
+                $name = $userDecoded['name']['firstName'] . ' ' . $userDecoded['name']['lastName'];
             }
         }
         $email = $oauth2->getUserEmail($accessToken);
@@ -1526,22 +1566,22 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            $userWithEmail = $dbForProject->findOne('users', [
-                Query::equal('email', [$email]),
+            $identity = $dbForProject->findOne('identities', [
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
             ]);
-            if (!$userWithEmail->isEmpty()) {
-                $user->setAttributes($userWithEmail->getArrayCopy());
+
+            if (!$identity->isEmpty()) {
+                $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
             // If user is not found, check if there is an identity with the same provider user ID
             if ($user === false || $user->isEmpty()) {
-                $identity = $dbForProject->findOne('identities', [
-                    Query::equal('provider', [$provider]),
-                    Query::equal('providerUid', [$oauth2ID]),
+                $userWithEmail = $dbForProject->findOne('users', [
+                    Query::equal('email', [$email]),
                 ]);
-
-                if (!$identity->isEmpty()) {
-                    $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
+                if (!$userWithEmail->isEmpty()) {
+                    $user->setAttributes($userWithEmail->getArrayCopy());
                 }
             }
 
@@ -1790,8 +1830,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
@@ -1822,16 +1860,23 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
-    ->param('failure', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('success', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
+    ->param('failure', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        $protocol = $request->getProtocol();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
 
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -1856,12 +1901,20 @@ App::get('/v1/account/tokens/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
+        $host = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $redirectBase = $protocol . '://' . $host;
+        if ($protocol === 'https' && $port !== '443') {
+            $redirectBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $redirectBase .= ':' . $port;
+        }
+
         if (empty($success)) {
-            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+            $success = $redirectBase . $oauthDefaultSuccess;
         }
 
         if (empty($failure)) {
-            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
+            $failure = $redirectBase . $oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
@@ -1901,9 +1954,9 @@ App::post('/v1/account/tokens/magic-url')
     ))
     ->label('abuse-limit', 60)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey'])
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
@@ -2006,7 +2059,16 @@ App::post('/v1/account/tokens/magic-url')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if (empty($url)) {
-            $url = $request->getProtocol() . '://' . $request->getHostname() . '/console/auth/magic-url';
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $host = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+            $port = $request->getPort();
+            $callbackBase = $protocol . '://' . $host;
+            if ($protocol === 'https' && $port !== '443') {
+                $callbackBase .= ':' . $port;
+            } elseif ($protocol === 'http' && $port !== '80') {
+                $callbackBase .= ':' . $port;
+            }
+            $url = $callbackBase . '/console/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
@@ -2014,6 +2076,7 @@ App::post('/v1/account/tokens/magic-url')
         $url = Template::unParseURL($url);
 
         $subject = $locale->getText("emails.magicSession.subject");
+        $preview = $locale->getText("emails.magicSession.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -2102,6 +2165,7 @@ App::post('/v1/account/tokens/magic-url')
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
@@ -2145,7 +2209,7 @@ App::post('/v1/account/tokens/email')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
-    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.')
     ->param('email', '', new Email(), 'User email.')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
@@ -2216,7 +2280,30 @@ App::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'providerType' => MESSAGE_TYPE_EMAIL,
+                    'identifier' => $email,
+                ])));
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+            } catch (Duplicate) {
+                $existingTarget = $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$email]),
+                ]);
+                if (!$existingTarget->isEmpty()) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
         $tokenSecret = $proofForCode->generate();
@@ -2245,6 +2332,7 @@ App::post('/v1/account/tokens/email')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
+        $preview = $locale->getText("emails.otpSession.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -2330,6 +2418,7 @@ App::post('/v1/account/tokens/email')
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
@@ -2370,7 +2459,10 @@ App::put('/v1/account/sessions/magic-url')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -2410,7 +2502,10 @@ App::put('/v1/account/sessions/phone')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -2454,7 +2549,7 @@ App::post('/v1/account/tokens/phone')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
     ->inject('response')
@@ -2899,6 +2994,18 @@ App::patch('/v1/account/password')
             ->setAttribute('hash', $proofForPassword->getHash()->getName())
             ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
 
+        $sessions = $user->getAttribute('sessions', []);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate && !empty($current)) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                if ($session->getId() !== $current) {
+                    $dbForProject->deleteDocument('sessions', $session->getId());
+                }
+            }
+        }
+
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
@@ -3116,7 +3223,7 @@ App::patch('/v1/account/prefs')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
+    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.', example: '{"language":"en","timezone":"UTC","darkTheme":true}')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
@@ -3209,7 +3316,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients', 'devKey'])
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3273,6 +3380,7 @@ App::post('/v1/account/recovery')
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
+        $preview = $locale->getText("emails.recovery.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
@@ -3281,6 +3389,7 @@ App::post('/v1/account/recovery')
             ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
+            ->setParam('{{buttonText}}', $locale->getText("emails.recovery.buttonText"))
             ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"));
         $body = $message->render();
 
@@ -3346,6 +3455,7 @@ App::post('/v1/account/recovery')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)
+            ->setPreview($preview)
             ->trigger();
 
         $recovery->setAttribute('secret', $secret);
@@ -3480,7 +3590,7 @@ App::post('/v1/account/verification')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients', 'devKey']) // TODO add built-in confirm page
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -3532,6 +3642,7 @@ App::post('/v1/account/verification')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.verification.body");
+        $preview = $locale->getText("emails.verification.preview");
         $subject = $locale->getText("emails.verification.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
 
@@ -3541,6 +3652,7 @@ App::post('/v1/account/verification')
             ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
+            ->setParam('{{buttonText}}', $locale->getText("emails.verification.buttonText"))
             ->setParam('{{signature}}', $locale->getText("emails.verification.signature"));
 
         $body = $message->render();
@@ -3603,6 +3715,7 @@ App::post('/v1/account/verification')
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
@@ -3967,20 +4080,40 @@ App::get('/v1/account/mfa/factors')
     ->desc('List factors')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'listMfaFactors',
-        description: '/docs/references/account/list-mfa-factors.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_FACTORS,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'listMfaFactors',
+            description: '/docs/references/account/list-mfa-factors.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_FACTORS,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.listMFAFactors',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'listMFAFactors',
+            description: '/docs/references/account/list-mfa-factors.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_FACTORS,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
@@ -4008,20 +4141,40 @@ App::post('/v1/account/mfa/authenticators/:type')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'createMfaAuthenticator',
-        description: '/docs/references/account/create-mfa-authenticator.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_TYPE,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMfaAuthenticator',
+            description: '/docs/references/account/create-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_TYPE,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.createMFAAuthenticator',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMFAAuthenticator',
+            description: '/docs/references/account/create-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_TYPE,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -4085,20 +4238,40 @@ App::put('/v1/account/mfa/authenticators/:type')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'updateMfaAuthenticator',
-        description: '/docs/references/account/update-mfa-authenticator.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USER,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMfaAuthenticator',
+            description: '/docs/references/account/update-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_USER,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.updateMFAAuthenticator',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMFAAuthenticator',
+            description: '/docs/references/account/update-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_USER,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
@@ -4155,20 +4328,40 @@ App::post('/v1/account/mfa/recovery-codes')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'createMfaRecoveryCodes',
-        description: '/docs/references/account/create-mfa-recovery-codes.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMfaRecoveryCodes',
+            description: '/docs/references/account/create-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.createMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMFARecoveryCodes',
+            description: '/docs/references/account/create-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -4202,20 +4395,40 @@ App::patch('/v1/account/mfa/recovery-codes')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'updateMfaRecoveryCodes',
-        description: '/docs/references/account/update-mfa-recovery-codes.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMfaRecoveryCodes',
+            description: '/docs/references/account/update-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.updateMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMFARecoveryCodes',
+            description: '/docs/references/account/update-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('dbForProject')
     ->inject('response')
     ->inject('user')
@@ -4244,20 +4457,40 @@ App::get('/v1/account/mfa/recovery-codes')
     ->desc('List MFA recovery codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'getMfaRecoveryCodes',
-        description: '/docs/references/account/get-mfa-recovery-codes.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'getMfaRecoveryCodes',
+            description: '/docs/references/account/get-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.getMFARecoveryCodes',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'getMFARecoveryCodes',
+            description: '/docs/references/account/get-mfa-recovery-codes.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_MFA_RECOVERY_CODES,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
@@ -4283,20 +4516,40 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'deleteMfaAuthenticator',
-        description: '/docs/references/account/delete-mfa-authenticator.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::NONE
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'deleteMfaAuthenticator',
+            description: '/docs/references/account/delete-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            contentType: ContentType::NONE,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.deleteMFAAuthenticator',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'deleteMFAAuthenticator',
+            description: '/docs/references/account/delete-mfa-authenticator.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            contentType: ContentType::NONE
+        )
+    ])
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
     ->inject('user')
@@ -4329,20 +4582,40 @@ App::post('/v1/account/mfa/challenge')
     ->label('audits.event', 'challenge.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'createMfaChallenge',
-        description: '/docs/references/account/create-mfa-challenge.md',
-        auth: [],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_MFA_CHALLENGE,
-            )
-        ],
-        contentType: ContentType::JSON,
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMfaChallenge',
+            description: '/docs/references/account/create-mfa-challenge.md',
+            auth: [],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_CHALLENGE,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.createMFAChallenge',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'createMFAChallenge',
+            description: '/docs/references/account/create-mfa-challenge.md',
+            auth: [],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_MFA_CHALLENGE,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
@@ -4454,6 +4727,7 @@ App::post('/v1/account/mfa/challenge')
                 }
 
                 $subject = $locale->getText("emails.mfaChallenge.subject");
+                $preview = $locale->getText("emails.mfaChallenge.preview");
                 $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
 
                 $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -4530,6 +4804,7 @@ App::post('/v1/account/mfa/challenge')
 
                 $queueForMails
                     ->setSubject($subject)
+                    ->setPreview($preview)
                     ->setBody($body)
                     ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))
@@ -4552,20 +4827,40 @@ App::put('/v1/account/mfa/challenge')
     ->label('audits.event', 'challenges.update')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'mfa',
-        name: 'updateMfaChallenge',
-        description: '/docs/references/account/update-mfa-challenge.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SESSION,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMfaChallenge',
+            description: '/docs/references/account/update-mfa-challenge.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SESSION,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.updateMFAChallenge',
+            ),
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'mfa',
+            name: 'updateMFAChallenge',
+            description: '/docs/references/account/update-mfa-challenge.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SESSION,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
     ->param('challengeId', '', new Text(256), 'ID of the challenge.')

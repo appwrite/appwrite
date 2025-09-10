@@ -635,7 +635,7 @@ return [
                 'type' => 'url'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write']
     ],
     [
         'icon' => 'icon-algolia',
@@ -717,7 +717,7 @@ return [
                 'type' => 'password'
             ],
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-meilisearch',
@@ -811,7 +811,7 @@ return [
                 'type' => 'text'
             ],
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-vonage',
@@ -1139,7 +1139,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write']
     ],
     [
         'icon' => 'icon-chat',
@@ -1268,7 +1268,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-eye',
@@ -1327,7 +1327,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-text',
@@ -1386,7 +1386,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-chat',
@@ -1395,7 +1395,10 @@ return [
         'score' => 5,
         'tagline' => 'Convert text to speech using the Hugging Face inference API.',
         'permissions' => ['any'],
-        'events' => ['databases.*.collections.*.documents.*.create'],
+        'events' => [
+            'databases.*.tables.*.rows.*.create',
+            'databases.*.collections.*.documents.*.create',
+        ],
         'cron' => '',
         'timeout' => 15,
         'useCases' => ['ai'],
@@ -1666,7 +1669,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-chip',
@@ -1730,7 +1733,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-chat',
@@ -2075,6 +2078,61 @@ return [
                 'placeholder' => 'abcd...',
                 'required' => true,
                 'type' => 'text'
+            ]
+        ],
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+    ],
+    [
+        'icon' => 'icon-apple',
+        'id' => 'sign-in-with-apple',
+        'name' => 'Sign in with Apple',
+        'score' => 6,
+        'tagline' => 'Use native Apple sign-in APIs on Apple devices with Appwrite Auth',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => ['auth'],
+        'runtimes' => [
+            ...getRuntimes($templateRuntimes['DART'], 'dart pub get', 'lib/main.dart', 'dart/sign_in_with_apple')
+        ],
+        'instructions' => 'For documentation and instructions, check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/dart/sign_in_with_apple">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [
+            [
+                'name' => 'BUNDLE_ID',
+                'description' => 'Bundle ID of the app. <a class="u-bold" target="_blank" href="https://developer.apple.com/documentation/xcode/preparing-your-app-for-distribution/#Set-the-bundle-ID">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'com.companyname.appname',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'TEAM_ID',
+                'description' => 'Team ID of the Apple Developer account.',
+                'value' => '',
+                'placeholder' => '6K3...5PH',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'KEY_ID',
+                'description' => 'Key ID required to communicate with Apple Developer services. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/get-a-key-identifier/">Learn more</a>.',
+                'value' => '',
+                'placeholder' => '9G8...6YF',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'KEY_CONTENTS_ENCODED',
+                'description' => 'Contents of Key required to communicated with Apple Developer services, encoded in Base64. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/revoke-edit-and-download-keys">Learn more</a>.',
+                'value' => '',
+                'placeholder' => '7x8aA...Ab7c',
+                'required' => true,
+                'type' => 'password'
             ]
         ],
         'scopes' => ['users.read', 'users.write']

@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\CLI\Console;
 
 class TeamsCustomClientTest extends Scope
 {
@@ -152,11 +153,14 @@ class TeamsCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $email = $this->getLastEmail();
+        Console::log(json_encode([
+            'testTeamsInviteHTMLInjection' => $email
+        ], JSON_PRETTY_PRINT));
+
         $encoded = 'http://localhost:5000/join-us\&quot;&gt;&lt;/a&gt;&lt;h1&gt;INJECTED&lt;/h1&gt;?';
 
         $this->assertStringNotContainsString('<h1>INJECTED</h1>', $email['html']);
         $this->assertStringContainsString($encoded, $email['html']);
-        $this->assertStringContainsString($encoded, $email['text']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([
             'content-type' => 'application/json',

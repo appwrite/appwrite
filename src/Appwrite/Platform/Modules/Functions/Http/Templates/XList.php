@@ -53,7 +53,7 @@ class XList extends Base
             ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)
             ->param('offset', 0, new Range(0, 5000), 'Offset the list of returned templates. Maximum offset is 5000.', true)
             ->inject('response')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(array $runtimes, array $usecases, int $limit, int $offset, Response $response)

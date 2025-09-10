@@ -15,6 +15,7 @@ abstract class Model
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
     public const TYPE_RELATIONSHIP = 'relationship';
     public const TYPE_PAYLOAD = 'payload';
+    public const TYPE_ARRAY = 'array';
 
     /**
      * @var bool
@@ -44,6 +45,7 @@ abstract class Model
 
     /**
      * Filter Document Structure
+     * @param Document $document Document to apply filter on
      *
      * @return Document
      */
@@ -91,7 +93,8 @@ abstract class Model
             'array' => false,
             'description' => '',
             'example' => '',
-            'sensitive' => false
+            'sensitive' => false,
+            'readOnly' => false
         ], $options);
 
         return $this;
@@ -104,7 +107,7 @@ abstract class Model
      * @param string $key
      * @return Model
      */
-    protected function removeRule(string $key): self
+    public function removeRule(string $key): self
     {
         if (isset($this->rules[$key])) {
             unset($this->rules[$key]);
@@ -122,6 +125,27 @@ abstract class Model
 
         foreach ($this->rules as $key => $rule) {
             if ($rule['required'] ?? false) {
+                $list[] = $key;
+            }
+        }
+
+        return $list;
+    }
+
+    /**
+     * Get Readonly Fields
+     *
+     * Returns list of field names that are marked as readOnly
+     * and should not be allowed in create/update payloads
+     *
+     * @return array
+     */
+    public function getReadonlyFields(): array
+    {
+        $list = [];
+
+        foreach ($this->rules as $key => $rule) {
+            if ($rule['readOnly'] ?? false) {
                 $list[] = $key;
             }
         }
