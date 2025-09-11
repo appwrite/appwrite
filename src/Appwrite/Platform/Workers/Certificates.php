@@ -202,6 +202,8 @@ class Certificates extends Action
             $date = \date('H:i:s');
             $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
 
+            $certificate = $this->upsertCertificate($domain->get(), $certificate, $dbForPlatform);
+
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
                 $mainDomain = $this->getMainDomain();
@@ -279,7 +281,10 @@ class Certificates extends Action
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
-            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
+            $certificate = $this->upsertCertificate($domain->get(), $certificate, $dbForPlatform);
+
+            // Synchronize new status to all rules
+            $this->updateDomainDocuments($certificate->getId(), $domain->get(), $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
     }
 
@@ -288,27 +293,18 @@ class Certificates extends Action
      *
      * @param string $domain Domain name that certificate is for
      * @param Document $certificate Certificate document that we need to save
-     * @param bool $success
      * @param Database $dbForPlatform Database connection for console
-     * @param Event $queueForEvents
-     * @param Func $queueForFunctions
-     * @param Realtime $queueForRealtime
-     * @return void
+     * @return Document
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Conflict
      * @throws Structure
      */
-    private function saveCertificateDocument(
+    private function upsertCertificate(
         string $domain,
         Document $certificate,
-        bool $success,
         Database $dbForPlatform,
-        Event $queueForEvents,
-        Webhook $queueForWebhooks,
-        Func $queueForFunctions,
-        Realtime $queueForRealtime
-    ): void {
+    ): Document {
         // Check if update or insert required
         $certificateDocument = $dbForPlatform->findOne('certificates', [Query::equal('domain', [$domain])]);
         if (!$certificateDocument->isEmpty()) {
@@ -320,8 +316,7 @@ class Certificates extends Action
             $certificate = $dbForPlatform->createDocument('certificates', $certificate);
         }
 
-        $certificateId = $certificate->getId();
-        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
+        return $certificate;
     }
 
     /**

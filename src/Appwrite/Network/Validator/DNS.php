@@ -80,10 +80,10 @@ class DNS extends Validator
      * @param mixed $domain
      * @return bool
      */
-    public function isValid($value): bool
+    public function isValid(mixed $value): bool
     {
         $this->count = 0;
-        $this->domain = $value;
+        $this->domain = \is_string($value) ? $value : \strval($value);
         $this->reason = self::FAILURE_REASON_UNKNOWN;
         $this->recordValues = [];
 
