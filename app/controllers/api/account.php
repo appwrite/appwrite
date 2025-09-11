@@ -1117,7 +1117,7 @@ App::post('/v1/account/sessions/anonymous')
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1772,7 +1772,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
