@@ -954,7 +954,7 @@ class TransactionsTest extends Scope
             'commit' => true
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']); // Conflict
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     /**

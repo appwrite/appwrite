@@ -271,7 +271,7 @@ class Update extends Action
                 new Document($data),
             );
             if ($document->isEmpty()) {
-                throw new ConflictException('');
+                throw new NotFoundException('');
             }
             $state[$collectionId][$documentId] = $document;
         });
@@ -330,7 +330,10 @@ class Update extends Action
 
         // Use timestamp wrapper for independent operations
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, &$state) {
-            $dbForProject->deleteDocument($collectionId, $documentId);
+            $deleted = $dbForProject->deleteDocument($collectionId, $documentId);
+            if (!$deleted) {
+                throw new NotFoundException('');
+            }
             if (isset($state[$collectionId][$documentId])) {
                 unset($state[$collectionId][$documentId]);
             }
