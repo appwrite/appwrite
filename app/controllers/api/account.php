@@ -838,7 +838,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
         // Extend session
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $authDuration)));
+        $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
 
         // Refresh OAuth access token
         $provider = $session->getAttribute('provider', '');
