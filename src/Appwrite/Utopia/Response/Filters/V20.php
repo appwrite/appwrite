@@ -12,18 +12,15 @@ class V20 extends Filter
     {
         $parsedResponse = $content;
 
-        $parsedResponse = match($model) {
+        return match($model) {
             Response::MODEL_DOCUMENT => $this->parseDocument($content),
             Response::MODEL_DOCUMENT_LIST => $this->handleList($content, 'documents', fn ($item) => $this->parseDocument($item)),
             default => $parsedResponse,
         };
-
-        return $parsedResponse;
     }
 
     protected function parseDocument(array $content): array
     {
-        unset($content['$sequence']);
         return $content;
     }
 }

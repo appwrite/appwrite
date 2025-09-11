@@ -109,6 +109,20 @@ class Client
     }
 
     /**
+     * Set Response Format
+     *
+     * @param string $value
+     *
+     * @return self $this
+     */
+    public function setResponseFormat(string $value): self
+    {
+        $this->addHeader('X-Appwrite-Response-Format', $value);
+
+        return $this;
+    }
+
+    /**
      * @param bool $status true
      * @return self $this
      */

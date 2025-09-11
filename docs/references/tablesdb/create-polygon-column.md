@@ -1,0 +1,1 @@
+Create a geometric polygon column.

@@ -41,7 +41,7 @@ class Get extends AttributesGet
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/:key')
             ->desc('Get column')
             ->groups(['api', 'database'])
-            ->label('scope', 'tables.read')
+            ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),

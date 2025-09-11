@@ -1054,6 +1054,30 @@ class SitesCustomServerTest extends Scope
 
         $deployments = $this->listDeployments($siteId, [
             'queries' => [
+                Query::select(['status'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        // Extra select query check, for attribute not allowed by filter queries
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
+                Query::select(['buildLogs'])->toString(),
+            ],
+        ]);
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
                 Query::offset(1)->toString(),
             ],
         ]);
@@ -1432,6 +1456,9 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Index page", $response['body']);
+
+        $this->assertArrayHasKey('x-appwrite-log-id', $response['headers']);
+        $this->assertNotEmpty($response['headers']['x-appwrite-log-id']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
             'content-type' => 'application/json',
@@ -2748,11 +2775,13 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/cookies', [
-            'cookie' => 'custom-session-id=abcd123'
+            'cookie' => 'custom-session-id=abcd123; custom-user-id=efgh456'
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals("abcd123", $response['body']);
+        $this->assertEquals("abcd123;efgh456", $response['body']);
+        $this->assertEquals("value-one", $response['cookies']['my-cookie-one']);
+        $this->assertEquals("value-two", $response['cookies']['my-cookie-two']);
 
         $this->cleanupSite($siteId);
     }

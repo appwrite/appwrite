@@ -117,6 +117,7 @@ class Delete extends Action
         }
 
         $collectionsCache = [];
+
         $this->processDocument(
             database: $database,
             collection: $collection,

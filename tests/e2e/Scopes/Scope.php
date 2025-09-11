@@ -28,6 +28,17 @@ abstract class Scope extends TestCase
     {
         $this->client = new Client();
         $this->client->setEndpoint($this->endpoint);
+
+        $format = System::getEnv('_APP_E2E_RESPONSE_FORMAT');
+        if (!empty($format)) {
+            if (
+                !\preg_match('/^\d+\.\d+\.\d+$/', $format) ||
+                !\version_compare($format, APP_VERSION_STABLE, '<=')
+            ) {
+                throw new \Exception('E2E response format must be ' . APP_VERSION_STABLE . ' or lower.');
+            }
+            $this->client->setResponseFormat($format);
+        }
     }
 
     protected function tearDown(): void

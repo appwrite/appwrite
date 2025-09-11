@@ -1540,22 +1540,22 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            $userWithEmail = $dbForProject->findOne('users', [
-                Query::equal('email', [$email]),
+            $identity = $dbForProject->findOne('identities', [
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
             ]);
-            if (!$userWithEmail->isEmpty()) {
-                $user->setAttributes($userWithEmail->getArrayCopy());
+
+            if (!$identity->isEmpty()) {
+                $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
             // If user is not found, check if there is an identity with the same provider user ID
             if ($user === false || $user->isEmpty()) {
-                $identity = $dbForProject->findOne('identities', [
-                    Query::equal('provider', [$provider]),
-                    Query::equal('providerUid', [$oauth2ID]),
+                $userWithEmail = $dbForProject->findOne('users', [
+                    Query::equal('email', [$email]),
                 ]);
-
-                if (!$identity->isEmpty()) {
-                    $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
+                if (!$userWithEmail->isEmpty()) {
+                    $user->setAttributes($userWithEmail->getArrayCopy());
                 }
             }
 
@@ -2424,7 +2424,10 @@ App::put('/v1/account/sessions/magic-url')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -2462,7 +2465,10 @@ App::put('/v1/account/sessions/phone')
             )
         ],
         contentType: ContentType::JSON,
-        deprecated: true,
+        deprecated: new Deprecated(
+            since: '1.6.0',
+            replaceWith: 'account.createSession'
+        ),
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -3167,7 +3173,7 @@ App::patch('/v1/account/prefs')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
+    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.', example: '{"language":"en","timezone":"UTC","darkTheme":true}')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')

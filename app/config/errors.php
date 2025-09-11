@@ -435,6 +435,11 @@ return [
         'description' => 'The requested favicon could not be found.',
         'code' => 404,
     ],
+    Exception::AVATAR_SVG_SANITIZATION_FAILED => [
+        'name' => Exception::AVATAR_SVG_SANITIZATION_FAILED,
+        'description' => 'SVG sanitization failed.',
+        'code' => 400,
+    ],
 
     /** Storage */
     Exception::STORAGE_FILE_ALREADY_EXISTS => [
@@ -837,6 +842,12 @@ return [
         'code' => 400,
     ],
 
+    Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED => [
+        'name' => Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED,
+        'description' => 'Attribute type is not supported.',
+        'code' => 400,
+    ],
+
     /** Exists for both Attributes & Columns */
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
@@ -893,6 +904,11 @@ return [
     Exception::COLUMN_INVALID_RESIZE => [
         'name' => Exception::COLUMN_INVALID_RESIZE,
         'description' => "Existing data is too large for new size, truncate your existing data then try again.",
+        'code' => 400,
+    ],
+    Exception::COLUMN_TYPE_NOT_SUPPORTED => [
+        'name' => Exception::COLUMN_TYPE_NOT_SUPPORTED,
+        'description' => 'Column type is not supported.',
         'code' => 400,
     ],
 

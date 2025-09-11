@@ -32,11 +32,11 @@ class XList extends CollectionXList
             ->setHttpPath('/v1/tablesdb/:databaseId/tables')
             ->desc('List tables')
             ->groups(['api', 'database'])
-            ->label('scope', 'tables.read')
+            ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
-                group: null,
+                group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/list-tables.md',
                 auth: [AuthType::KEY],

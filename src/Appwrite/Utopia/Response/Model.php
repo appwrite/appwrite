@@ -15,6 +15,7 @@ abstract class Model
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
     public const TYPE_RELATIONSHIP = 'relationship';
     public const TYPE_PAYLOAD = 'payload';
+    public const TYPE_ARRAY = 'array';
 
     /**
      * @var bool
@@ -44,6 +45,7 @@ abstract class Model
 
     /**
      * Filter Document Structure
+     * @param Document $document Document to apply filter on
      *
      * @return Document
      */
@@ -105,7 +107,7 @@ abstract class Model
      * @param string $key
      * @return Model
      */
-    protected function removeRule(string $key): self
+    public function removeRule(string $key): self
     {
         if (isset($this->rules[$key])) {
             unset($this->rules[$key]);
