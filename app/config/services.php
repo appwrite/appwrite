@@ -214,7 +214,7 @@ return [
         'name' => 'Proxy',
         'subtitle' => 'The Proxy Service allows you to configure actions for your domains beyond DNS configuration.',
         'description' => '/docs/services/proxy.md',
-        'controller' => 'api/proxy.php',
+        'controller' => '',  // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/proxy',

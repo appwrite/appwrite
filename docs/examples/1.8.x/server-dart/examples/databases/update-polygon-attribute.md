@@ -12,6 +12,6 @@ AttributePolygon result = await databases.updatePolygonAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
     xrequired: false,
-    xdefault: '', // (optional)
+    xdefault: [[[1, 2], [3, 4], [5, 6], [1, 2]]], // (optional)
     newKey: '', // (optional)
 );
