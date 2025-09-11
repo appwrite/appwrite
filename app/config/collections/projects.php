@@ -2530,7 +2530,7 @@ return [
             [
                 '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
-                'size' => 16, // pending | committing | committed | rolled_back | failed
+                'size' => 16, // pending | committing | committed | failed
                 'signed' => true,
                 'required' => false,
                 'default' => 'pending',
@@ -2560,14 +2560,7 @@ return [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_status'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['status'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_expires'),
+                '$id' => ID::custom('_key_expiresAt'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['expiresAt'],
                 'lengths' => [],
@@ -2624,7 +2617,7 @@ return [
             [
                 '$id' => ID::custom('action'),
                 'type' => Database::VAR_STRING,
-                'size' => 32, // create | update | upsert | increment | decrement | delete
+                'size' => 32, // create | update | upsert | increment | decrement | delete | bulkCreate | bulkUpdate | bulkUpsert | bulkDelete
                 'signed' => true,
                 'required' => true,
                 'default' => null,
@@ -2634,7 +2627,7 @@ return [
             [
                 '$id' => ID::custom('data'),
                 'type' => Database::VAR_STRING,
-                'size' => 65535,
+                'size' => 5_000_000, // Allow large payloads for bulk operations
                 'signed' => false,
                 'required' => true,
                 'default' => null,
@@ -2647,13 +2640,6 @@ return [
                 '$id' => ID::custom('_key_transaction'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['transactionInternalId'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => ID::custom('_key_internal_path'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['databaseInternalId', 'collectionInternalId'],
                 'lengths' => [],
                 'orders' => [],
             ],

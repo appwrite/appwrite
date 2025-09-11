@@ -1310,9 +1310,9 @@ class Deletes extends Action
             $dbForProject->deleteDocuments('transactionLogs', [
                 Query::equal('transactionInternalId', [$transactionInternalId]),
             ]);
-            Console::info("Transaction logs for {$transactionId} deleted.");
+            Console::info("Transaction logs for transaction {$transactionId} deleted.");
         } catch (Throwable $th) {
-            Console::error("Failed to delete transaction logs for {$transactionId}: " . $th->getMessage());
+            Console::error("Failed to delete transaction logs for transaction {$transactionId}: " . $th->getMessage());
         }
     }
 
@@ -1323,7 +1323,6 @@ class Deletes extends Action
 
         try {
             $dbForProject->deleteDocuments('transactions', [
-                Query::equal('status', ['pending']),
                 Query::lessThan('expiresAt', DateTime::format(new \DateTime())),
             ], onNext: function (Document $transaction) use ($dbForProject, $project, &$transactionInternalIds) {
                 $transactionInternalIds[] = $transaction->getSequence();
