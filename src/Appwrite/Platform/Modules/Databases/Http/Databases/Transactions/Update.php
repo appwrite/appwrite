@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -63,6 +65,11 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDeletes')
+            ->inject('queueForEvents')
+            ->inject('queueForStatsUsage')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
 
@@ -73,6 +80,11 @@ class Update extends Action
      * @param UtopiaResponse $response
      * @param Database $dbForProject
      * @param Delete $queueForDeletes
+     * @param Event $queueForEvents
+     * @param StatsUsage $queueForStatsUsage
+     * @param Event $queueForRealtime
+     * @param Event $queueForFunctions
+     * @param Event $queueForWebhooks
      * @return void
      * @throws ConflictException
      * @throws Exception
@@ -82,7 +94,7 @@ class Update extends Action
      * @throws Structure
      * @throws \Utopia\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Delete $queueForDeletes): void
+    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -106,13 +118,18 @@ class Update extends Action
         }
 
         if ($commit) {
-            $dbForProject->withTransaction(function () use ($dbForProject, $queueForDeletes, $transactionId, &$transaction) {
+            $operations = [];
+
+            // Track metrics for usage stats
+            $totalOperations = 0;
+            $databaseOperations = [];
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks) {
                 $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'committing',
                 ]));
 
-                // Fetch operations ordered by sequence by default to
-                // replay operations in exact order they were created
+                // Fetch operations ordered by sequence by default to replay operations in exact order they were created
                 $operations = $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                 ]);
@@ -129,6 +146,10 @@ class Update extends Action
                         $createdAt = new \DateTime($operation['$createdAt']);
                         $action = $operation['action'];
                         $data = $operation['data'];
+
+                        // Track operations for stats
+                        $totalOperations++;
+                        $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + 1;
 
                         if ($data instanceof Document) {
                             $data = $data->getArrayCopy();
@@ -196,13 +217,99 @@ class Update extends Action
                     throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
                 }
             });
+
+            $queueForStatsUsage
+                ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $totalOperations);
+
+            // Add per-database metrics
+            foreach ($databaseOperations as $sequence => $count) {
+                $queueForStatsUsage->addMetric(
+                    str_replace('{databaseInternalId}', $sequence, METRIC_DATABASE_ID_OPERATIONS_WRITES),
+                    $count
+                );
+            }
+
+            // Trigger realtime events for each operation
+            foreach ($operations as $operation) {
+                $databaseInternalId = $operation['databaseInternalId'];
+                $collectionInternalId = $operation['collectionInternalId'];
+                $action = $operation['action'];
+                $documentId = $operation['documentId'];
+                $data = $operation['data'];
+
+                if ($data instanceof Document) {
+                    $data = $data->getArrayCopy();
+                }
+
+                $database = $dbForProject->findOne('databases', [
+                    Query::equal('$sequence', [$databaseInternalId])
+                ]);
+                $collection = $dbForProject->findOne('database_' . $databaseInternalId, [
+                    Query::equal('$sequence', [$collectionInternalId])
+                ]);
+
+                $queueForEvents
+                    ->setParam('databaseId', $database->getId())
+                    ->setContext('database', $database)
+                    ->setParam('collectionId', $collection->getId())
+                    ->setParam('tableId', $collection->getId())
+                    ->setContext('collection', $collection);
+
+                $eventAction = '';
+                $documents = [];
+
+                switch ($action) {
+                    case 'create':
+                        $eventAction = 'create';
+                        $documents[] = $documentId ?? $data['$id'] ?? null;
+                        break;
+                    case 'update':
+                    case 'increment':
+                    case 'decrement':
+                        $eventAction = 'update';
+                        $documents[] = $documentId;
+                        break;
+                    case 'delete':
+                        $eventAction = 'delete';
+                        $documents[] = $documentId;
+                        break;
+                    case 'upsert':
+                        $eventAction = 'upsert';
+                        $documents[] = $documentId ?? $data['$id'] ?? null;
+                        break;
+                    case 'bulkCreate':
+                    case 'bulkUpdate':
+                    case 'bulkUpsert':
+                    case 'bulkDelete':
+                        break;
+                }
+
+                // Trigger events for each document
+                foreach ($documents as $docId) {
+                    if ($docId) {
+                        $queueForEvents
+                            ->setParam('documentId', $docId)
+                            ->setParam('rowId', $docId)
+                            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].' . $eventAction);
+
+                        $queueForRealtime->from($queueForEvents)->trigger();
+                        $queueForFunctions->from($queueForEvents)->trigger();
+                        $queueForWebhooks->from($queueForEvents)->trigger();
+
+                        $queueForEvents->reset();
+                        $queueForRealtime->reset();
+                        $queueForFunctions->reset();
+                        $queueForWebhooks->reset();
+                    }
+                }
+            }
         }
 
         if ($rollback) {
             $transaction = $dbForProject->updateDocument(
                 'transactions',
                 $transactionId,
-                new Document(['status' => 'rolledBack'])
+                new Document(['status' => 'failed'])
             );
 
             $queueForDeletes
@@ -226,7 +333,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         if ($documentId && !isset($data['$id'])) {
             $data['$id'] = $documentId;
         }
@@ -250,7 +358,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -288,7 +397,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -318,7 +428,8 @@ class Update extends Action
         string $documentId,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -350,7 +461,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -387,7 +499,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -423,7 +536,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
             $dbForProject->createDocuments(
                 $collectionId,
@@ -447,7 +561,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->updateDocuments(
@@ -481,7 +596,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         // Run bulk upsert without timestamp wrapper, checking manually in callback
         $dbForProject->upsertDocuments(
             $collectionId,
@@ -517,7 +633,8 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): void
+    {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->deleteDocuments(

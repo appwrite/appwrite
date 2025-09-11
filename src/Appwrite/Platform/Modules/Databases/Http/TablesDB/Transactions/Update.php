@@ -53,6 +53,11 @@ class Update extends TransactionsUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDeletes')
+            ->inject('queueForEvents')
+            ->inject('queueForStatsUsage')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->callback($this->action(...));
     }
 }

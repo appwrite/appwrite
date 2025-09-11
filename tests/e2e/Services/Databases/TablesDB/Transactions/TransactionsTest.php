@@ -485,7 +485,7 @@ class TransactionsTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('rolledBack', $response['body']['status']);
+        $this->assertEquals('failed', $response['body']['status']);
 
         // Verify no rows were created
         $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
