@@ -12,7 +12,7 @@ let columnPolygon = try await tablesDB.updatePolygonColumn(
     tableId: "<TABLE_ID>",
     key: "",
     required: false,
-    default: [[1,2], [3, 4]], // optional
+    default: [[[1, 2], [3, 4], [5, 6], [1, 2]]], // optional
     newKey: "" // optional
 )
 

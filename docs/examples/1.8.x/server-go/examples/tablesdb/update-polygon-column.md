@@ -19,6 +19,6 @@ response, error := service.UpdatePolygonColumn(
     "<TABLE_ID>",
     "",
     false,
-    tablesdb.WithUpdatePolygonColumnDefault(interface{}{[1,2], [3, 4]}),
+    tablesdb.WithUpdatePolygonColumnDefault(interface{}{[[1, 2], [3, 4], [5, 6], [1, 2]]}),
     tablesdb.WithUpdatePolygonColumnNewKey(""),
 )

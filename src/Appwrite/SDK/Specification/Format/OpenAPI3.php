@@ -9,8 +9,10 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Spatial;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -448,13 +450,18 @@ class OpenAPI3 extends Format
                         ];
                         break;
                     case 'Utopia\Database\Validator\Spatial':
+                        /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'oneOf' => [
                                 ['type' => 'array']
                             ]
                         ];
-                        $node['schema']['x-example'] = '[[1,2], [3, 4]]';
+                        $node['schema']['x-example'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => '[1, 2]',
+                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
+                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                        };
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':

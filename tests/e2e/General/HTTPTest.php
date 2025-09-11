@@ -153,7 +153,6 @@ class HTTPTest extends Scope
         $this->assertIsString($body['client-flutter']);
         $this->assertIsString($body['console-web']);
         $this->assertIsString($body['server-nodejs']);
-        $this->assertIsString($body['server-deno']);
         $this->assertIsString($body['server-php']);
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);

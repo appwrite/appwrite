@@ -14,6 +14,6 @@ result = databases.update_polygon_attribute(
     collection_id: '<COLLECTION_ID>',
     key: '',
     required: false,
-    default: [[1,2], [3, 4]], # optional
+    default: [[[1, 2], [3, 4], [5, 6], [1, 2]]], # optional
     new_key: '' # optional
 )

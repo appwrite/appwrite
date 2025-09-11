@@ -11,7 +11,7 @@ const result = await databases.createPolygonAttribute({
     collectionId: '<COLLECTION_ID>',
     key: '',
     required: false,
-    default: [[1,2], [3, 4]] // optional
+    default: [[[1, 2], [3, 4], [5, 6], [1, 2]]] // optional
 });
 
 console.log(result);

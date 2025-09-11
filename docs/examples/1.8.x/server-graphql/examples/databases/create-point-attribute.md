@@ -4,7 +4,7 @@ mutation {
         collectionId: "<COLLECTION_ID>",
         key: "",
         required: false,
-        default: [[1,2], [3, 4]]
+        default: [1, 2]
     ) {
         key
         type

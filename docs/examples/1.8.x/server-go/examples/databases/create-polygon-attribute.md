@@ -19,5 +19,5 @@ response, error := service.CreatePolygonAttribute(
     "<COLLECTION_ID>",
     "",
     false,
-    databases.WithCreatePolygonAttributeDefault(interface{}{[1,2], [3, 4]}),
+    databases.WithCreatePolygonAttributeDefault(interface{}{[[1, 2], [3, 4], [5, 6], [1, 2]]}),
 )

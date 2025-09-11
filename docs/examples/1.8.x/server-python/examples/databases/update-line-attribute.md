@@ -13,6 +13,6 @@ result = databases.update_line_attribute(
     collection_id = '<COLLECTION_ID>',
     key = '',
     required = False,
-    default = [[1,2], [3, 4]], # optional
+    default = [[1, 2], [3, 4], [5, 6]], # optional
     new_key = '' # optional
 )

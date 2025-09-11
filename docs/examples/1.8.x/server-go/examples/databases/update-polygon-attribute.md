@@ -19,6 +19,6 @@ response, error := service.UpdatePolygonAttribute(
     "<COLLECTION_ID>",
     "",
     false,
-    databases.WithUpdatePolygonAttributeDefault(interface{}{[1,2], [3, 4]}),
+    databases.WithUpdatePolygonAttributeDefault(interface{}{[[1, 2], [3, 4], [5, 6], [1, 2]]}),
     databases.WithUpdatePolygonAttributeNewKey(""),
 )

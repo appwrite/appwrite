@@ -12,5 +12,5 @@ ColumnLine result = await tablesDB.createLineColumn(
     tableId: '<TABLE_ID>',
     key: '',
     xrequired: false,
-    xdefault: [[1,2], [3, 4]], // (optional)
+    xdefault: [[1, 2], [3, 4], [5, 6]], // (optional)
 );

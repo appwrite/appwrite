@@ -12,6 +12,6 @@ const result = await tablesDB.updatePointColumn({
     tableId: '<TABLE_ID>',
     key: '',
     required: false,
-    default: [[1,2], [3, 4]], // optional
+    default: [1, 2], // optional
     newKey: '' // optional
 });

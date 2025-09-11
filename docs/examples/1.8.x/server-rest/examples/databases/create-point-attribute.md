@@ -8,5 +8,5 @@ X-Appwrite-Key: <YOUR_API_KEY>
 {
   "key": "",
   "required": false,
-  "default": [[1,2], [3, 4]]
+  "default": [1, 2]
 }
