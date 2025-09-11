@@ -4197,69 +4197,13 @@ trait DatabasesBase
         $this->assertCount(1, $documentsUser2['body']['documents']);
     }
 
-    public function testUniqueIndexDuplicate(): void
+    /**
+     * @depends testDefaultPermissions
+     */
+    public function testUniqueIndexDuplicate(array $data): array
     {
-        // Setup: create database, collection, attribute, and initial document
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'databaseId' => ID::unique(),
-            'name' => 'Unique Index DB',
-        ]);
-        $databaseId = $database['body']['$id'];
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Movies',
-            'permissions' => [
-                Permission::create(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ],
-            'documentSecurity' => true,
-        ]);
-        $moviesId = $movies['body']['$id'];
-        $title = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $title['headers']['status-code']);
-        sleep(2);
-        // Insert initial document
-        $doc1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'title' => 'Captain America',
-                'releaseYear' => 1944,
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
-            ],
-            'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
-        ]);
-        $this->assertEquals(201, $doc1['headers']['status-code']);
-
-        // Create unique index
-        $uniqueIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/indexes', array_merge([
+        $databaseId = $data['databaseId'];
+        $uniqueIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -4268,11 +4212,13 @@ trait DatabasesBase
             'type' => 'unique',
             'attributes' => ['title'],
         ]);
+
         $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
+
         sleep(2);
 
-        // test for failure (duplicate title)
-        $duplicate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
+        // test for failure
+        $duplicate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -4291,10 +4237,11 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
+
         $this->assertEquals(409, $duplicate['headers']['status-code']);
 
         // Test for exception when updating document to conflict
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -4313,9 +4260,11 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
+
         $this->assertEquals(201, $document['headers']['status-code']);
 
-        $duplicate = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $document['body']['$id'], array_merge([
+        // Test for exception when updating document to conflict
+        $duplicate = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $document['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -4334,48 +4283,17 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
+
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+
+        return $data;
     }
 
-    public function testPersistentCreatedAt(): void
+    /**
+     * @depends testUniqueIndexDuplicate
+     */
+    public function testPersistentCreatedAt(array $data): array
     {
-        // Setup: create database, collection, attribute
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'databaseId' => ID::unique(),
-            'name' => 'CreatedAtDB',
-        ]);
-        $databaseId = $database['body']['$id'];
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Movies',
-            'permissions' => [
-                Permission::create(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ],
-            'documentSecurity' => true,
-        ]);
-        $moviesId = $movies['body']['$id'];
-        $title = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $title['headers']['status-code']);
-        sleep(2);
         $headers = $this->getSide() === 'client' ? array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4385,31 +4303,37 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ];
 
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', $headers, [
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', $headers, [
             'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Creation Date Test',
                 'releaseYear' => 2000
             ]
         ]);
+
         $this->assertEquals($document['body']['title'], 'Creation Date Test');
+
         $documentId = $document['body']['$id'];
         $createdAt = $document['body']['$createdAt'];
         $updatedAt = $document['body']['$updatedAt'];
 
         \sleep(1);
-        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $documentId, $headers, [
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Updated Date Test',
             ]
         ]);
+
         $updatedAtSecond = $document['body']['$updatedAt'];
+
         $this->assertEquals($document['body']['title'], 'Updated Date Test');
         $this->assertEquals($document['body']['$createdAt'], $createdAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
 
         \sleep(1);
-        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $documentId, $headers, [
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Again Updated Date Test',
                 '$createdAt' => '2022-08-01 13:09:23.040',
@@ -4426,6 +4350,8 @@ trait DatabasesBase
             $this->assertEquals($document['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
 
         }
+
+        return $data;
     }
 
     public function testUpdatePermissionsWithEmptyPayload(): array
