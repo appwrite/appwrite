@@ -7860,7 +7860,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when attribute is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[1, 2], [3, 4], [5, 6]]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -7977,7 +7977,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when attribute is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[1, 2], [3, 4], [5, 6]]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -8094,7 +8094,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when attribute is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[1, 2]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -8211,7 +8211,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when attribute is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[1, 2]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -8328,7 +8328,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when attribute is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[[1, 2], [3, 4], [5, 6], [1, 2]]]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -8445,7 +8445,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for attribute when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when attribute is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[[1, 2], [3, 4], [5, 6], [1, 2]]]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -35364,7 +35364,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for column when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when column is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[1, 2], [3, 4], [5, 6]]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -35480,7 +35480,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for column when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], \u2026], listing the vertices of the line in order. Cannot be set when column is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[1, 2], [3, 4], [5, 6]]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -35596,7 +35596,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for column when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when column is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[1, 2]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -35712,7 +35712,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for column when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when column is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[1, 2]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -35828,7 +35828,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for column when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when column is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[[1, 2], [3, 4], [5, 6], [1, 2]]]",
                                         "items": {
                                             "oneOf": [
                                                 {
@@ -35944,7 +35944,7 @@
                                     "default": {
                                         "type": "array",
                                         "description": "Default value for column when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], \u2026], \u2026], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when column is required.",
-                                        "x-example": "[[1,2], [3, 4]]",
+                                        "x-example": "[[[1, 2], [3, 4], [5, 6], [1, 2]]]",
                                         "items": {
                                             "oneOf": [
                                                 {
