@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Appwrite\Extend\Exception;
 use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
