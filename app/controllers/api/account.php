@@ -213,7 +213,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'ip' => $request->getIP(),
             'factors' => [$factor],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+            'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
         ],
         $detector->getOS(),
         $detector->getClient(),
@@ -838,7 +838,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
         // Extend session
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
+        $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $authDuration)));
 
         // Refresh OAuth access token
         $provider = $session->getAttribute('provider', '');
@@ -950,7 +950,7 @@ App::post('/v1/account/sessions/email')
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1117,7 +1117,7 @@ App::post('/v1/account/sessions/anonymous')
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1772,7 +1772,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
@@ -3352,7 +3352,7 @@ App::post('/v1/account/recovery')
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
 
         $secret = $proofForToken->generate();
         $recovery = new Document([
@@ -3616,7 +3616,7 @@ App::post('/v1/account/verification')
         }
 
         $verificationSecret = $proofForToken->generate();
-        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -3868,7 +3868,7 @@ App::post('/v1/account/verification/phone')
         }
 
         $secret ??= $proofForCode->generate();
-        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -4639,7 +4639,7 @@ App::post('/v1/account/mfa/challenge')
     ->inject('proofForCode')
     ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsToken $proofForToken, ProofsCode $proofForCode) {
 
-        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $code = $proofForCode->generate();
         $challenge = new Document([
