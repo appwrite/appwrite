@@ -10,5 +10,5 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "min": 0,
   "max": 0,
   "default": 0,
-  "newKey": 
+  "newKey": ""
 }
