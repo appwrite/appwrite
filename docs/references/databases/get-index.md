@@ -1,1 +1,1 @@
-Get index by ID.
+Get an index by its unique ID.

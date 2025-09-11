@@ -48,7 +48,7 @@ class Update extends Action
                 group: 'transactions',
                 name: 'updateTransaction',
                 description: '/docs/references/databases/update-transaction.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

@@ -40,7 +40,7 @@ class Create extends Action
                 group: 'transactions',
                 name: 'createTransaction',
                 description: '/docs/references/databases/create-transaction.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
