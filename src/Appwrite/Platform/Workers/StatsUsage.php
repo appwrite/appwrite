@@ -538,7 +538,7 @@ class StatsUsage extends Action
                 $this->statDocuments
             );
             Console::success('Usage logs pushed to Logs DB');
-            
+
             /**
              * todo: Do we need to unset $this->statDocuments?
              */
