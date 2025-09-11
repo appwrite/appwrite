@@ -492,12 +492,9 @@ trait DatabasesBase
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
 
-        $maxLengthMeg = 76;
-        if($this->isMongoDB()){ 
-            $maxLengthMeg = 1024;
-        }
+        $maxLength = $this->isMongoDB() ? 1024 : 768;
 
-        $this->assertStringContainsString('Index length is longer than the maximum: '.$maxLengthMeg, $attribute['body']['message']);
+        $this->assertStringContainsString('Index length is longer than the maximum: '.$maxLength, $attribute['body']['message']);
     }
 
     public function testUpdateAttributeEnum(): void
