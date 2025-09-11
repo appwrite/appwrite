@@ -454,10 +454,10 @@ class StatsUsage extends Action
 
                 $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
                 Console::success('Batch successfully written to DB');
-
-                unset($this->projects[$sequence]);
             } catch (Throwable $e) {
                 Console::error('Error processing stats: ' . $e->getMessage());
+            } finally {
+                unset($this->projects[$sequence]);
             }
         }
 
@@ -538,6 +538,11 @@ class StatsUsage extends Action
                 $this->statDocuments
             );
             Console::success('Usage logs pushed to Logs DB');
+            
+            /**
+             * todo: Do we need to unset $this->statDocuments?
+             */
+
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }
