@@ -434,9 +434,9 @@ App::init()
         }
 
         // Step 9: Validate scope permissions
-        $scope = $route->getLabel('scope', 'none');
-        if (!\in_array($scope, $scopes)) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
+        $allowed = (array)$route->getLabel('scope', 'none');
+        if (empty(\array_intersect($allowed, $scopes))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
 
         // Step 10: Check if user is blocked
