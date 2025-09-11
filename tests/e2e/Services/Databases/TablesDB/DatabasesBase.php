@@ -8251,7 +8251,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::intersects('polyAttr', [[5.0, 5.0]])->toString()]
+            'queries' => [Query::intersects('polyAttr', [5.0, 5.0])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -8262,7 +8262,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notIntersects('polyAttr', [[60.0, 60.0]])->toString()]
+            'queries' => [Query::notIntersects('polyAttr', [60.0, 60.0])->toString()]
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
