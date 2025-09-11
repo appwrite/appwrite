@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Legacy\Transactions;
+namespace Tests\E2E\Services\Databases\TablesDB\Transactions;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
