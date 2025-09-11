@@ -35,7 +35,8 @@ class Base extends Action
                 if (!\is_null($log)) {
                     $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
                     $log->addTag('dnsDomain', $domain->get());
-                    $error = $validator->getDescription();
+
+                    $error = $validator->getLogs();
                     $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
                 }
 
@@ -122,7 +123,6 @@ class Base extends Action
                         $errors[] = $validator->getLogs();
                     }
                 }
-
                 $error = \implode("\n", $errors);
                 $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
             }

@@ -182,10 +182,10 @@ class Create extends Base
             'region' => $project->getAttribute('region')
         ]);
 
-        if ($status === 'created') {
+        if ($rule->getAttribute('status', '') === 'created') {
             try {
                 self::verifyRule($rule, $log);
-                $status = 'verifying';
+                $rule->setAttribute('status', 'verifying');
             } catch (Exception $err) {
                 $rule->setAttribute('verificationLogs', $err->getMessage());
             }

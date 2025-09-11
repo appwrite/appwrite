@@ -87,6 +87,7 @@ class Update extends Base
             $rule = $rule->setAttribute('verificationLogs', '');
         } catch (Exception $err) {
             $rule = $rule->setAttribute('verificationLogs', $err->getMessage());
+            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
             throw $err;
         }
 

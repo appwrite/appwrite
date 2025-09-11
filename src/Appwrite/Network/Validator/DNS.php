@@ -66,9 +66,9 @@ class DNS extends Validator
         $msg = "Domain {$this->domain} has {$this->count} {$this->type} {$record} with wrong {$value}: {$recordValuesVerbose}.";
 
         if ($this->type === self::RECORD_CAA) {
-            $msg .= ' You can resolve this by adding our record too (recommended), or removing all other records.';
+            $msg .= ' You can resolve this by adding our record (recommended), or removing all other records.';
         } elseif ($this->type === self::RECORD_A || $this->type === self::RECORD_AAAA || $this->type === self::RECORD_CNAME) {
-            $msg .= ' You can resolve this by changing the record to haveour value.';
+            $msg .= ' You can resolve this by changing the record to have our value.';
         }
 
         return $msg;
@@ -90,15 +90,15 @@ class DNS extends Validator
      */
     public function isValid(mixed $value): bool
     {
-        $this->count = 0;
-        $this->domain = \is_string($value) ? $value : \strval($value);
-        $this->reason = self::FAILURE_REASON_UNKNOWN;
-        $this->recordValues = [];
-
-        if (!is_string($value)) {
+        if (!\is_string($value)) {
             $this->reason = self::FAILURE_REASON_INTERNAL;
             return false;
         }
+
+        $this->count = 0;
+        $this->domain = \strval($value);
+        $this->reason = self::FAILURE_REASON_UNKNOWN;
+        $this->recordValues = [];
 
         $dns = new Client($this->dnsServer);
 
