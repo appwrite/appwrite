@@ -213,7 +213,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'ip' => $request->getIP(),
             'factors' => [$factor],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
+            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $detector->getOS(),
         $detector->getClient(),
