@@ -440,25 +440,31 @@ class StatsResources extends Action
         usort($this->documents, function ($a, $b) {
             // Metric DESC
             $cmp = strcmp($b['metric'], $a['metric']);
-            if ($cmp !== 0) return $cmp;
+            if ($cmp !== 0) {
+                return $cmp;
+            }
 
             // Period ASC
             $cmp = strcmp($a['period'], $b['period']);
-            if ($cmp !== 0) return $cmp;
+            if ($cmp !== 0) {
+                return $cmp;
+            }
 
             // Time ASC, NULLs first
-            if ($a['time'] === null) return ($b['time'] === null) ? 0 : -1;
-            if ($b['time'] === null) return 1;
+            if ($a['time'] === null) {
+                return ($b['time'] === null) ? 0 : -1;
+            }
+            if ($b['time'] === null) {
+                return 1;
+            }
 
             return strcmp($a['time'], $b['time']);
         });
 
-        var_dump($this->documents);
         try {
             $dbForLogs->createOrUpdateDocuments(
                 'stats',
                 $this->documents,
-                10 // See if this make an effect
             );
 
             Console::success($message . ' | Documents: ' . count($this->documents));
