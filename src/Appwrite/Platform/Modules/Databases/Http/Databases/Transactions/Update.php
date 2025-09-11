@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -27,7 +26,7 @@ class Update extends Action
 {
     public static function getName(): string
     {
-        return 'updateTransaction';
+        return 'updateDatabasesTransaction';
     }
 
     protected function getResponseModel(): string
@@ -73,11 +72,10 @@ class Update extends Action
      * @param bool $rollback
      * @param UtopiaResponse $response
      * @param Database $dbForProject
-     * @param \Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete $queueForDeletes
+     * @param Delete $queueForDeletes
      * @return void
      * @throws ConflictException
      * @throws Exception
-     * @throws \DateMalformedStringException
      * @throws \Throwable
      * @throws \Utopia\Database\Exception
      * @throws Authorization
@@ -357,7 +355,7 @@ class Update extends Action
             $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data['attribute'],
+                attribute: $data[$this->getAttributeKey()],
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
@@ -369,7 +367,7 @@ class Update extends Action
             $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data['attribute'],
+                attribute: $data[$this->getAttributeKey()],
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
@@ -394,7 +392,7 @@ class Update extends Action
             $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data['attribute'],
+                attribute: $data[$this->getAttributeKey()],
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );
@@ -406,7 +404,7 @@ class Update extends Action
             $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data['attribute'],
+                attribute: $data[$this->getAttributeKey()],
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );
@@ -447,8 +445,6 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
-        \var_dump($data);
-
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->updateDocuments(

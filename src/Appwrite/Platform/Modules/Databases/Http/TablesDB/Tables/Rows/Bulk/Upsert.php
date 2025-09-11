@@ -41,8 +41,8 @@ class Upsert extends DocumentsUpsert
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/tablesdb/upsert-rows.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],

@@ -121,15 +121,15 @@ class TransactionsTest extends Scope
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
 
-        // Create a collection for testing
-        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+        // Create a table for testing
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TransactionOperationsTest',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -138,11 +138,11 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $this->assertEquals(201, $collection['headers']['status-code']);
-        $collectionId = $collection['body']['$id'];
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
 
         // Add columns
-        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/string', array_merge([
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -166,18 +166,18 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'doc1',
+                    'rowId' => 'doc1',
                     'data' => [
                         'name' => 'Test Document 1'
                     ]
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'doc2',
+                    'rowId' => 'doc2',
                     'data' => [
                         'name' => 'Test Document 2'
                     ]
@@ -197,9 +197,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'update',
-                    'documentId' => 'doc1',
+                    'rowId' => 'doc1',
                     'data' => [
                         'name' => 'Updated Document 1'
                     ]
@@ -219,9 +219,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => 'invalid_database',
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
@@ -229,7 +229,7 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code'], 'Invalid database should return 404. Got: ' . json_encode($response['body']));
 
-        // Test invalid collection ID
+        // Test invalid table ID
         $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -238,9 +238,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => 'invalid_collection',
+                    'tableId' => 'invalid_table',
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
@@ -267,15 +267,15 @@ class TransactionsTest extends Scope
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
-        // Create collection
-        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+        // Create table
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TransactionCommitTest',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -284,11 +284,11 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $this->assertEquals(201, $collection['headers']['status-code']);
-        $collectionId = $collection['body']['$id'];
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
 
         // Add columns
-        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/string', array_merge([
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -320,27 +320,27 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'doc1',
+                    'rowId' => 'doc1',
                     'data' => [
                         'name' => 'Test Document 1'
                     ]
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'doc2',
+                    'rowId' => 'doc2',
                     'data' => [
                         'name' => 'Test Document 2'
                     ]
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'update',
-                    'documentId' => 'doc1',
+                    'rowId' => 'doc1',
                     'data' => [
                         'name' => 'Updated Document 1'
                     ]
@@ -363,18 +363,18 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('committed', $response['body']['status']);
 
-        // Verify documents were created
-        $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Verify rows were created
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals(2, $documents['body']['total']);
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertEquals(2, $rows['body']['total']);
 
         // Verify the update was applied
         $doc1Found = false;
-        foreach ($documents['body']['documents'] as $doc) {
+        foreach ($rows['body']['rows'] as $doc) {
             if ($doc['$id'] === 'doc1') {
                 $this->assertEquals('Updated Document 1', $doc['name']);
                 $doc1Found = true;
@@ -422,15 +422,15 @@ class TransactionsTest extends Scope
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
 
-        // Create a collection for rollback test
-        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+        // Create a table for rollback test
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TransactionRollbackTest',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -439,10 +439,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Add column
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -463,9 +463,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'rollback_doc',
+                    'rowId' => 'rollback_doc',
                     'data' => [
                         'value' => 'Should not exist'
                     ]
@@ -487,14 +487,14 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('rolledBack', $response['body']['status']);
 
-        // Verify no documents were created
-        $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Verify no rows were created
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals(0, $documents['body']['total']);
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertEquals(0, $rows['body']['total']);
     }
 
     /**
@@ -502,7 +502,7 @@ class TransactionsTest extends Scope
      */
     public function testTransactionExpiration(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -514,12 +514,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -529,10 +529,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -565,9 +565,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['data' => 'Should expire']
                 ]
             ]
@@ -598,7 +598,7 @@ class TransactionsTest extends Scope
      */
     public function testTransactionSizeLimit(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -610,20 +610,20 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [Permission::create(Role::any())],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -650,9 +650,9 @@ class TransactionsTest extends Scope
         for ($i = 0; $i < 50; $i++) {
             $operations[] = [
                 'databaseId' => $databaseId,
-                'collectionId' => $collectionId,
+                'tableId' => $tableId,
                 'action' => 'create',
-                'documentId' => 'doc_' . $i,
+                'rowId' => 'doc_' . $i,
                 'data' => ['value' => 'Test ' . $i]
             ];
         }
@@ -674,8 +674,8 @@ class TransactionsTest extends Scope
         for ($i = 50; $i < 100; $i++) {
             $operations[] = [
                 'databaseId' => $databaseId,
-                'collectionId' => $collectionId,
-                'documentId' => 'doc_' . $i,
+                'tableId' => $tableId,
+                'rowId' => 'doc_' . $i,
                 'action' => 'create',
                 'data' => ['value' => 'Test ' . $i]
             ];
@@ -701,9 +701,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'doc_overflow',
+                    'rowId' => 'doc_overflow',
                     'data' => ['value' => 'This should fail']
                 ]
             ]
@@ -717,7 +717,7 @@ class TransactionsTest extends Scope
      */
     public function testConcurrentTransactionConflicts(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -729,12 +729,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -743,10 +743,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/integer", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -759,13 +759,13 @@ class TransactionsTest extends Scope
 
         sleep(2);
 
-        // Create initial document
-        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create initial row
+        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'shared_doc',
+            'rowId' => 'shared_doc',
             'data' => ['counter' => 100]
         ]);
 
@@ -787,7 +787,7 @@ class TransactionsTest extends Scope
         $transactionId1 = $txn1['body']['$id'];
         $transactionId2 = $txn2['body']['$id'];
 
-        // Both transactions try to update the same document
+        // Both transactions try to update the same row
         $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId1}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -796,9 +796,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'update',
-                    'documentId' => 'shared_doc',
+                    'rowId' => 'shared_doc',
                     'data' => ['counter' => 200]
                 ]
             ]
@@ -812,9 +812,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'update',
-                    'documentId' => 'shared_doc',
+                    'rowId' => 'shared_doc',
                     'data' => ['counter' => 300]
                 ]
             ]
@@ -842,8 +842,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(409, $response2['headers']['status-code']); // Conflict
 
-        // Verify the document has the value from first transaction
-        $doc = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/shared_doc", array_merge([
+        // Verify the row has the value from first transaction
+        $doc = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/shared_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -852,11 +852,11 @@ class TransactionsTest extends Scope
     }
 
     /**
-     * Test deleting a document that's being updated in a transaction
+     * Test deleting a row that's being updated in a transaction
      */
     public function testDeleteDocumentDuringTransaction(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -868,12 +868,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -883,10 +883,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -898,13 +898,13 @@ class TransactionsTest extends Scope
 
         sleep(2);
 
-        // Create document
-        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create row
+        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'target_doc',
+            'rowId' => 'target_doc',
             'data' => ['data' => 'Original']
         ]);
 
@@ -928,16 +928,16 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'update',
-                    'documentId' => 'target_doc',
+                    'rowId' => 'target_doc',
                     'data' => ['data' => 'Updated in transaction']
                 ]
             ]
         ]);
 
-        // Delete the document outside of transaction
-        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/target_doc", array_merge([
+        // Delete the row outside of transaction
+        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/target_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -945,7 +945,7 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        // Try to commit transaction - should fail because document no longer exists
+        // Try to commit transaction - should fail because row no longer exists
         $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -962,7 +962,7 @@ class TransactionsTest extends Scope
      */
     public function testBulkOperations(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -974,12 +974,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -989,10 +989,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1002,7 +1002,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1014,14 +1014,14 @@ class TransactionsTest extends Scope
 
         sleep(3);
 
-        // Create some initial documents
+        // Create some initial rows
         for ($i = 1; $i <= 5; $i++) {
-            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'documentId' => 'existing_' . $i,
+                'rowId' => 'existing_' . $i,
                 'data' => [
                     'name' => 'Existing ' . $i,
                     'category' => 'old'
@@ -1048,7 +1048,7 @@ class TransactionsTest extends Scope
                 // Bulk create
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'bulkCreate',
                     'data' => [
                         ['$id' => 'bulk_1', 'name' => 'Bulk 1', 'category' => 'new'],
@@ -1059,7 +1059,7 @@ class TransactionsTest extends Scope
                 // Bulk update
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'bulkUpdate',
                     'data' => [
                         'queries' => [Query::equal('category', ['old'])->toString()],
@@ -1069,7 +1069,7 @@ class TransactionsTest extends Scope
                 // Bulk delete
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'bulkDelete',
                     'data' => [
                         'queries' => [Query::equal('name', ['Existing 5'])->toString()]
@@ -1092,20 +1092,20 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Verify results
-        $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        // Should have 7 documents (5 existing - 1 deleted + 3 new)
-        $this->assertEquals(7, $documents['body']['total']);
+        // Should have 7 rows (5 existing - 1 deleted + 3 new)
+        $this->assertEquals(7, $rows['body']['total']);
 
         // Check categories were updated
         $oldCategoryCount = 0;
         $updatedCategoryCount = 0;
         $newCategoryCount = 0;
 
-        foreach ($documents['body']['documents'] as $doc) {
+        foreach ($rows['body']['rows'] as $doc) {
             switch ($doc['category']) {
                 case 'old':
                     $oldCategoryCount++;
@@ -1129,7 +1129,7 @@ class TransactionsTest extends Scope
      */
     public function testPartialFailureRollback(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1141,12 +1141,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1154,10 +1154,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns with constraints
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1170,7 +1170,7 @@ class TransactionsTest extends Scope
         sleep(2);
 
         // Create unique index on email
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/indexes", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/indexes", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1182,13 +1182,13 @@ class TransactionsTest extends Scope
 
         sleep(2);
 
-        // Create an existing document
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create an existing row
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => ['email' => 'existing@example.com']
         ]);
 
@@ -1210,30 +1210,30 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['email' => 'valid1@example.com'] // Valid
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['email' => 'valid2@example.com'] // Valid
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['email' => 'existing@example.com'] // Will fail - duplicate
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['email' => 'valid3@example.com'] // Would be valid but should rollback
                 ],
             ]
@@ -1252,14 +1252,14 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']); // Conflict due to duplicate
 
-        // Verify NO new documents were created (atomicity)
-        $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Verify NO new rows were created (atomicity)
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(1, $documents['body']['total']); // Only the original document
-        $this->assertEquals('existing@example.com', $documents['body']['documents'][0]['email']);
+        $this->assertEquals(1, $rows['body']['total']); // Only the original row
+        $this->assertEquals('existing@example.com', $rows['body']['rows'][0]['email']);
     }
 
     /**
@@ -1267,7 +1267,7 @@ class TransactionsTest extends Scope
      */
     public function testDoubleCommitRollback(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1279,20 +1279,20 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [Permission::create(Role::any())],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1322,9 +1322,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => ['data' => 'Test']
                 ]
             ]
@@ -1385,11 +1385,11 @@ class TransactionsTest extends Scope
     }
 
     /**
-     * Test operations on non-existent documents
+     * Test operations on non-existent rows
      */
     public function testOperationsOnNonExistentDocuments(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1401,12 +1401,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -1415,10 +1415,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1439,7 +1439,7 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Try to update non-existent document
+        // Try to update non-existent row
         $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1448,9 +1448,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'update',
-                    'documentId' => 'non_existent_doc',
+                    'rowId' => 'non_existent_doc',
                     'data' => ['data' => 'Should fail']
                 ]
             ]
@@ -1469,7 +1469,7 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']); // Document not found
 
-        // Test delete non-existent document
+        // Test delete non-existent row
         $transaction2 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1486,9 +1486,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'delete',
-                    'documentId' => 'non_existent_doc',
+                    'rowId' => 'non_existent_doc',
                     'data' => []
                 ]
             ]
@@ -1513,7 +1513,7 @@ class TransactionsTest extends Scope
      */
     public function testCreateDocument(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1525,14 +1525,14 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -1541,7 +1541,7 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
         $columns = [
@@ -1555,7 +1555,7 @@ class TransactionsTest extends Scope
             $type = $attr['type'];
             unset($attr['type']);
 
-            $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/{$type}", array_merge([
+            $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/{$type}", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1576,13 +1576,13 @@ class TransactionsTest extends Scope
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
 
-        // Create document via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create row via normal route with transactionId
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'doc_from_route',
+            'rowId' => 'doc_from_route',
             'data' => [
                 'name' => 'Created via normal route',
                 'counter' => 100,
@@ -1594,7 +1594,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // Document should not exist outside transaction yet
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_from_route", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_from_route", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1613,7 +1613,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Document should now exist
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_from_route", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_from_route", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1627,7 +1627,7 @@ class TransactionsTest extends Scope
      */
     public function testUpdateDocument(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1639,12 +1639,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -1653,10 +1653,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1666,7 +1666,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/integer", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1677,7 +1677,7 @@ class TransactionsTest extends Scope
             'max' => 10000,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1689,13 +1689,13 @@ class TransactionsTest extends Scope
 
         sleep(3);
 
-        // Create document outside transaction
-        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create row outside transaction
+        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'doc_to_update',
+            'rowId' => 'doc_to_update',
             'data' => [
                 'name' => 'Original name',
                 'counter' => 50,
@@ -1714,8 +1714,8 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Update document via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_to_update", array_merge([
+        // Update row via normal route with transactionId
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_to_update", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1731,7 +1731,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Document should still have original values outside transaction
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_to_update", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_to_update", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1751,7 +1751,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Document should now have updated values
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_to_update", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_to_update", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1765,7 +1765,7 @@ class TransactionsTest extends Scope
      */
     public function testUpsertDocument(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1777,12 +1777,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -1791,10 +1791,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1804,7 +1804,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/integer", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1826,13 +1826,13 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Upsert document (create) via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_upsert", array_merge([
+        // Upsert row (create) via normal route with transactionId
+        $response = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_upsert", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'doc_upsert',
+            'rowId' => 'doc_upsert',
             'data' => [
                 'name' => 'Created by upsert',
                 'counter' => 25
@@ -1843,20 +1843,20 @@ class TransactionsTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // Document should not exist outside transaction yet
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_upsert", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_upsert", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        // Upsert same document (update) in same transaction
-        $response = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_upsert", array_merge([
+        // Upsert same row (update) in same transaction
+        $response = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_upsert", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'doc_upsert',
+            'rowId' => 'doc_upsert',
             'data' => [
                 'name' => 'Updated by upsert',
                 'counter' => 75
@@ -1878,7 +1878,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Document should now exist with updated values
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_upsert", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_upsert", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1893,7 +1893,7 @@ class TransactionsTest extends Scope
      */
     public function testDeleteDocument(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1905,12 +1905,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -1919,10 +1919,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1934,13 +1934,13 @@ class TransactionsTest extends Scope
 
         sleep(2);
 
-        // Create document outside transaction
-        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create row outside transaction
+        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'doc_to_delete',
+            'rowId' => 'doc_to_delete',
             'data' => ['name' => 'Will be deleted']
         ]);
 
@@ -1955,8 +1955,8 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Delete document via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_to_delete", array_merge([
+        // Delete row via normal route with transactionId
+        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_to_delete", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1967,7 +1967,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
 
         // Document should still exist outside transaction
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_to_delete", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_to_delete", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1986,7 +1986,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Document should no longer exist
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_to_delete", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_to_delete", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1999,7 +1999,7 @@ class TransactionsTest extends Scope
      */
     public function testBulkCreate(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2011,12 +2011,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -2024,10 +2024,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2037,7 +2037,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2059,12 +2059,12 @@ class TransactionsTest extends Scope
         $transactionId = $transaction['body']['$id'];
 
         // Bulk create via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documents' => [
+            'rows' => [
                 [
                     '$id' => 'bulk_create_1',
                     'name' => 'Bulk created 1',
@@ -2087,7 +2087,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']); // Bulk operations return 200
 
         // Documents should not exist outside transaction yet
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2096,8 +2096,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(0, $response['body']['total']);
 
-        // Individual document check
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/bulk_create_1", array_merge([
+        // Individual row check
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/bulk_create_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2116,7 +2116,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now exist
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2125,9 +2125,9 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(3, $response['body']['total']);
 
-        // Verify individual documents
+        // Verify individual rows
         for ($i = 1; $i <= 3; $i++) {
-            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/bulk_create_{$i}", array_merge([
+            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/bulk_create_{$i}", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
@@ -2143,7 +2143,7 @@ class TransactionsTest extends Scope
      */
     public function testBulkUpdate(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2155,12 +2155,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -2169,10 +2169,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2182,7 +2182,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2194,14 +2194,14 @@ class TransactionsTest extends Scope
 
         sleep(3);
 
-        // Create documents for bulk testing
+        // Create rows for bulk testing
         for ($i = 1; $i <= 3; $i++) {
-            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'documentId' => 'bulk_update_' . $i,
+                'rowId' => 'bulk_update_' . $i,
                 'data' => [
                     'name' => 'Bulk doc ' . $i,
                     'category' => 'bulk_test'
@@ -2219,7 +2219,7 @@ class TransactionsTest extends Scope
         $transactionId = $transaction['body']['$id'];
 
         // Bulk update via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2232,7 +2232,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should still have original category outside transaction
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2253,7 +2253,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now have updated category
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2268,7 +2268,7 @@ class TransactionsTest extends Scope
      */
     public function testBulkUpsert(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2280,12 +2280,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -2294,10 +2294,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2307,7 +2307,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/integer", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2320,13 +2320,13 @@ class TransactionsTest extends Scope
 
         sleep(3);
 
-        // Create one document outside transaction
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create one row outside transaction
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'bulk_upsert_existing',
+            'rowId' => 'bulk_upsert_existing',
             'data' => [
                 'name' => 'Existing doc',
                 'counter' => 10
@@ -2343,12 +2343,12 @@ class TransactionsTest extends Scope
         $transactionId = $transaction['body']['$id'];
 
         // Bulk upsert via normal route with transactionId (updates existing, creates new)
-        $response = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documents' => [
+            'rows' => [
                 [
                     '$id' => 'bulk_upsert_existing',
                     'name' => 'Updated existing',
@@ -2365,8 +2365,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Original document should be unchanged, new document shouldn't exist outside transaction
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/bulk_upsert_existing", array_merge([
+        // Original row should be unchanged, new row shouldn't exist outside transaction
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/bulk_upsert_existing", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2374,7 +2374,7 @@ class TransactionsTest extends Scope
         $this->assertEquals('Existing doc', $response['body']['name']);
         $this->assertEquals(10, $response['body']['counter']);
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/bulk_upsert_new", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/bulk_upsert_new", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2392,8 +2392,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Check both documents exist with updated values
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/bulk_upsert_existing", array_merge([
+        // Check both rows exist with updated values
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/bulk_upsert_existing", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2401,7 +2401,7 @@ class TransactionsTest extends Scope
         $this->assertEquals('Updated existing', $response['body']['name']);
         $this->assertEquals(20, $response['body']['counter']);
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/bulk_upsert_new", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/bulk_upsert_new", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2415,7 +2415,7 @@ class TransactionsTest extends Scope
      */
     public function testBulkDelete(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2427,12 +2427,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -2441,10 +2441,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2454,7 +2454,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2466,14 +2466,14 @@ class TransactionsTest extends Scope
 
         sleep(3);
 
-        // Create documents for bulk testing
+        // Create rows for bulk testing
         for ($i = 1; $i <= 3; $i++) {
-            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'documentId' => 'bulk_delete_' . $i,
+                'rowId' => 'bulk_delete_' . $i,
                 'data' => [
                     'name' => 'Delete doc ' . $i,
                     'category' => 'bulk_delete_test'
@@ -2491,7 +2491,7 @@ class TransactionsTest extends Scope
         $transactionId = $transaction['body']['$id'];
 
         // Bulk delete via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2503,7 +2503,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']); // Bulk delete with transaction returns 200
 
         // Documents should still exist outside transaction
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2524,7 +2524,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now be deleted
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2539,7 +2539,7 @@ class TransactionsTest extends Scope
      */
     public function testMixedSingleOperations(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2551,12 +2551,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -2566,10 +2566,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2579,7 +2579,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2589,7 +2589,7 @@ class TransactionsTest extends Scope
             'required' => false,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/integer", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2602,13 +2602,13 @@ class TransactionsTest extends Scope
 
         sleep(3);
 
-        // Create an existing document outside transaction for testing
-        $existingDoc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create an existing row outside transaction for testing
+        $existingDoc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'existing_doc',
+            'rowId' => 'existing_doc',
             'data' => [
                 'name' => 'Existing Document',
                 'status' => 'active',
@@ -2628,13 +2628,13 @@ class TransactionsTest extends Scope
         $transactionId = $transaction['body']['$id'];
         $this->assertEquals(201, $transaction['headers']['status-code']);
 
-        // 1. Create new document via normal route with transactionId
-        $response1 = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // 1. Create new row via normal route with transactionId
+        $response1 = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'new_doc_1',
+            'rowId' => 'new_doc_1',
             'data' => [
                 'name' => 'New Document 1',
                 'status' => 'pending',
@@ -2645,13 +2645,13 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(201, $response1['headers']['status-code']);
 
-        // 2. Create another document via normal route with transactionId
-        $response2 = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // 2. Create another row via normal route with transactionId
+        $response2 = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'new_doc_2',
+            'rowId' => 'new_doc_2',
             'data' => [
                 'name' => 'New Document 2',
                 'status' => 'pending',
@@ -2662,8 +2662,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(201, $response2['headers']['status-code']);
 
-        // 3. Update existing document via normal route with transactionId
-        $response3 = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/existing_doc", array_merge([
+        // 3. Update existing row via normal route with transactionId
+        $response3 = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/existing_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2677,8 +2677,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response3['headers']['status-code']);
 
-        // 4. Update the first new document (created in same transaction)
-        $response4 = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/new_doc_1", array_merge([
+        // 4. Update the first new row (created in same transaction)
+        $response4 = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/new_doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2692,8 +2692,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response4['headers']['status-code']);
 
-        // 5. Delete the second new document (created in same transaction)
-        $response5 = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/new_doc_2", array_merge([
+        // 5. Delete the second new row (created in same transaction)
+        $response5 = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/new_doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2703,13 +2703,13 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(204, $response5['headers']['status-code']);
 
-        // 6. Upsert a new document via normal route with transactionId
-        $response6 = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/upserted_doc", array_merge([
+        // 6. Upsert a new row via normal route with transactionId
+        $response6 = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/upserted_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'upserted_doc',
+            'rowId' => 'upserted_doc',
             'data' => [
                 'name' => 'Upserted Document',
                 'status' => 'new',
@@ -2731,14 +2731,14 @@ class TransactionsTest extends Scope
         $this->assertEquals(6, $txnDetails['body']['operations']); // 6 operations total
 
         // Verify nothing exists outside transaction yet
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/new_doc_1", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/new_doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/upserted_doc", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/upserted_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2746,7 +2746,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         // Existing doc should still have original values
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/existing_doc", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/existing_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2768,7 +2768,7 @@ class TransactionsTest extends Scope
 
         // Verify final state after commit
         // new_doc_1 should exist with updated values
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/new_doc_1", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/new_doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2779,7 +2779,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(8, $response['body']['priority']);
 
         // new_doc_2 should not exist (was deleted in transaction)
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/new_doc_2", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/new_doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2787,7 +2787,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         // existing_doc should have updated values
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/existing_doc", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/existing_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2796,7 +2796,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(10, $response['body']['priority']);
 
         // upserted_doc should exist
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/upserted_doc", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/upserted_doc", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2806,13 +2806,13 @@ class TransactionsTest extends Scope
         $this->assertEquals('new', $response['body']['status']);
         $this->assertEquals(3, $response['body']['priority']);
 
-        // Verify total document count
-        $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Verify total row count
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(3, $documents['body']['total']); // existing_doc, new_doc_1, upserted_doc
+        $this->assertEquals(3, $rows['body']['total']); // existing_doc, new_doc_1, upserted_doc
     }
 
     /**
@@ -2820,7 +2820,7 @@ class TransactionsTest extends Scope
      */
     public function testMixedOperations(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2832,12 +2832,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -2847,10 +2847,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create column
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2880,9 +2880,9 @@ class TransactionsTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'mixed_doc1',
+                    'rowId' => 'mixed_doc1',
                     'data' => ['name' => 'Via Operations Add']
                 ]
             ]
@@ -2892,12 +2892,12 @@ class TransactionsTest extends Scope
         $this->assertEquals(1, $response['body']['operations']);
 
         // Add operation via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'mixed_doc2',
+            'rowId' => 'mixed_doc2',
             'data' => ['name' => 'Via normal route'],
             'transactionId' => $transactionId
         ]);
@@ -2913,15 +2913,15 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(2, $txnDetails['body']['operations']);
 
-        // Both documents shouldn't exist yet
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/mixed_doc1", array_merge([
+        // Both rows shouldn't exist yet
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/mixed_doc1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/mixed_doc2", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/mixed_doc2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2939,8 +2939,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Both documents should now exist
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/mixed_doc1", array_merge([
+        // Both rows should now exist
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/mixed_doc1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2948,7 +2948,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Via Operations Add', $response['body']['name']);
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/mixed_doc2", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/mixed_doc2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -2958,11 +2958,11 @@ class TransactionsTest extends Scope
     }
 
     /**
-     * Test bulk update with queries that should match documents created in the same transaction
+     * Test bulk update with queries that should match rows created in the same transaction
      */
     public function testBulkUpdateWithTransactionAwareQueries(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2974,12 +2974,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2989,10 +2989,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3002,7 +3002,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/integer", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3011,7 +3011,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3023,14 +3023,14 @@ class TransactionsTest extends Scope
 
         sleep(3); // Wait for columns to be created
 
-        // Create some existing documents
+        // Create some existing rows
         for ($i = 1; $i <= 3; $i++) {
-            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'documentId' => 'existing_' . $i,
+                'rowId' => 'existing_' . $i,
                 'data' => [
                     'name' => 'Existing ' . $i,
                     'age' => 20 + $i,
@@ -3048,13 +3048,13 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Step 1: Create new documents with age > 25 in transaction
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Step 1: Create new rows with age > 25 in transaction
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'txn_doc_1',
+            'rowId' => 'txn_doc_1',
             'data' => [
                 'name' => 'Transaction Doc 1',
                 'age' => 30,
@@ -3065,12 +3065,12 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'txn_doc_2',
+            'rowId' => 'txn_doc_2',
             'data' => [
                 'name' => 'Transaction Doc 2',
                 'age' => 35,
@@ -3081,10 +3081,10 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        // Step 2: Bulk update all documents with age > 25 to have status 'active'
-        // This should match both existing_3 (age=23 doesn't match, age=24 doesn't match, but existing documents have age 21,22,23)
+        // Step 2: Bulk update all rows with age > 25 to have status 'active'
+        // This should match both existing_3 (age=23 doesn't match, age=24 doesn't match, but existing rows have age 21,22,23)
         // Wait, let me fix the ages - existing docs have ages 21, 22, 23, so only txn docs should match
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3109,8 +3109,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Verify that documents created in the transaction were updated by the bulk update
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/txn_doc_1", array_merge([
+        // Verify that rows created in the transaction were updated by the bulk update
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/txn_doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -3118,7 +3118,7 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('active', $response['body']['status'], 'Document created in transaction should be updated by bulk update query');
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/txn_doc_2", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/txn_doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -3126,24 +3126,24 @@ class TransactionsTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('active', $response['body']['status'], 'Document created in transaction should be updated by bulk update query');
 
-        // Verify existing documents were not affected
+        // Verify existing rows were not affected
         for ($i = 1; $i <= 3; $i++) {
-            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/existing_{$i}", array_merge([
+            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/existing_{$i}", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals('inactive', $response['body']['status'], "Existing document {$i} should remain inactive (age <= 25)");
+            $this->assertEquals('inactive', $response['body']['status'], "Existing row {$i} should remain inactive (age <= 25)");
         }
     }
 
     /**
-     * Test bulk update with queries that should match documents updated in the same transaction
+     * Test bulk update with queries that should match rows updated in the same transaction
      */
     public function testBulkUpdateMatchingUpdatedDocuments(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3155,12 +3155,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3170,10 +3170,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3183,7 +3183,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3193,7 +3193,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3205,14 +3205,14 @@ class TransactionsTest extends Scope
 
         sleep(3); // Wait for columns to be created
 
-        // Create existing documents
+        // Create existing rows
         for ($i = 1; $i <= 4; $i++) {
-            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'documentId' => 'doc_' . $i,
+                'rowId' => 'doc_' . $i,
                 'data' => [
                     'name' => 'Document ' . $i,
                     'category' => 'normal',
@@ -3230,8 +3230,8 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Step 1: Update some documents to have category 'special' in transaction
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_1", array_merge([
+        // Step 1: Update some rows to have category 'special' in transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3244,7 +3244,7 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_2", array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3257,9 +3257,9 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Step 2: Bulk update all documents with category 'special' to have priority 'high'
-        // This should match the documents we just updated in the transaction
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Step 2: Bulk update all rows with category 'special' to have priority 'high'
+        // This should match the rows we just updated in the transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3284,8 +3284,8 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Verify that the updated documents were matched by bulk update
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_1", array_merge([
+        // Verify that the updated rows were matched by bulk update
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -3294,7 +3294,7 @@ class TransactionsTest extends Scope
         $this->assertEquals('special', $response['body']['category']);
         $this->assertEquals('high', $response['body']['priority'], 'Document updated in transaction should be matched by bulk update query');
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_2", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -3303,8 +3303,8 @@ class TransactionsTest extends Scope
         $this->assertEquals('special', $response['body']['category']);
         $this->assertEquals('high', $response['body']['priority'], 'Document updated in transaction should be matched by bulk update query');
 
-        // Verify other documents were not affected
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_3", array_merge([
+        // Verify other rows were not affected
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_3", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -3315,11 +3315,11 @@ class TransactionsTest extends Scope
     }
 
     /**
-     * Test bulk delete with queries that should match documents created in the same transaction
+     * Test bulk delete with queries that should match rows created in the same transaction
      */
     public function testBulkDeleteMatchingCreatedDocuments(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3331,12 +3331,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3346,10 +3346,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3359,7 +3359,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3371,14 +3371,14 @@ class TransactionsTest extends Scope
 
         sleep(3); // Wait for columns to be created
 
-        // Create existing documents
+        // Create existing rows
         for ($i = 1; $i <= 3; $i++) {
-            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'documentId' => 'existing_' . $i,
+                'rowId' => 'existing_' . $i,
                 'data' => [
                     'name' => 'Existing ' . $i,
                     'type' => 'permanent'
@@ -3395,13 +3395,13 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Step 1: Create temporary documents in transaction
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Step 1: Create temporary rows in transaction
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'temp_1',
+            'rowId' => 'temp_1',
             'data' => [
                 'name' => 'Temporary 1',
                 'type' => 'temporary'
@@ -3411,12 +3411,12 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'temp_2',
+            'rowId' => 'temp_2',
             'data' => [
                 'name' => 'Temporary 2',
                 'type' => 'temporary'
@@ -3426,9 +3426,9 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        // Step 2: Bulk delete all documents with type 'temporary'
-        // This should delete the documents we just created in the transaction
-        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Step 2: Bulk delete all rows with type 'temporary'
+        // This should delete the rows we just created in the transaction
+        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3450,39 +3450,39 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Verify temporary documents were deleted (should not exist)
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/temp_1", array_merge([
+        // Verify temporary rows were deleted (should not exist)
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/temp_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(404, $response['headers']['status-code'], 'Temporary document created and deleted in transaction should not exist');
+        $this->assertEquals(404, $response['headers']['status-code'], 'Temporary row created and deleted in transaction should not exist');
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/temp_2", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/temp_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(404, $response['headers']['status-code'], 'Temporary document created and deleted in transaction should not exist');
+        $this->assertEquals(404, $response['headers']['status-code'], 'Temporary row created and deleted in transaction should not exist');
 
-        // Verify existing documents were not affected
+        // Verify existing rows were not affected
         for ($i = 1; $i <= 3; $i++) {
-            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/existing_{$i}", array_merge([
+            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/existing_{$i}", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals(200, $response['headers']['status-code'], "Permanent document {$i} should still exist");
+            $this->assertEquals(200, $response['headers']['status-code'], "Permanent row {$i} should still exist");
             $this->assertEquals('permanent', $response['body']['type']);
         }
     }
 
     /**
-     * Test bulk delete with queries that should match documents updated in the same transaction
+     * Test bulk delete with queries that should match rows updated in the same transaction
      */
     public function testBulkDeleteMatchingUpdatedDocuments(): void
     {
-        // Create database and collection
+        // Create database and table
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3494,12 +3494,12 @@ class TransactionsTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $collection = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCollection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3509,10 +3509,10 @@ class TransactionsTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Create columns
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3522,7 +3522,7 @@ class TransactionsTest extends Scope
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/columns/string", array_merge([
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3534,14 +3534,14 @@ class TransactionsTest extends Scope
 
         sleep(3); // Wait for columns to be created
 
-        // Create existing documents
+        // Create existing rows
         for ($i = 1; $i <= 5; $i++) {
-            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'documentId' => 'doc_' . $i,
+                'rowId' => 'doc_' . $i,
                 'data' => [
                     'name' => 'Document ' . $i,
                     'status' => 'active'
@@ -3558,8 +3558,8 @@ class TransactionsTest extends Scope
 
         $transactionId = $transaction['body']['$id'];
 
-        // Step 1: Mark some documents for deletion by updating their status
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_2", array_merge([
+        // Step 1: Mark some rows for deletion by updating their status
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3572,7 +3572,7 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_4", array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_4", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3585,9 +3585,9 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Step 2: Bulk delete all documents with status 'marked_for_deletion'
-        // This should delete the documents we just updated in the transaction
-        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Step 2: Bulk delete all rows with status 'marked_for_deletion'
+        // This should delete the rows we just updated in the transaction
+        $response = $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3609,24 +3609,24 @@ class TransactionsTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Verify marked documents were deleted
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_2", array_merge([
+        // Verify marked rows were deleted
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code'], 'Document marked for deletion should have been deleted');
 
-        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_4", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_4", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code'], 'Document marked for deletion should have been deleted');
 
-        // Verify other documents still exist
+        // Verify other rows still exist
         foreach ([1, 3, 5] as $i) {
-            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/doc_{$i}", array_merge([
+            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc_{$i}", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));

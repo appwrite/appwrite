@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -21,7 +21,7 @@ class Create extends Action
 {
     public static function getName(): string
     {
-        return 'createOperations';
+        return 'createDatabasesTransactionOperations';
     }
 
     protected function getResponseModel(): string
@@ -84,7 +84,9 @@ class Create extends Action
                 throw new Exception(Exception::DATABASE_NOT_FOUND);
             }
 
-            $collection = $collections[$operation['collectionId']] ??= $dbForProject->getDocument('database_' . $database->getSequence(), $operation['collectionId']);
+            $collection = $collections[$operation[$this->getGroupId()]] ??=
+                $dbForProject->getDocument('database_' . $database->getSequence(), $operation[$this->getGroupId()]);
+
             if ($collection->isEmpty()) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
@@ -94,7 +96,7 @@ class Create extends Action
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
-                'documentId' => $operation['documentId'] ?? null,
+                'documentId' => $operation[$this->getResourceId()] ?? null,
                 'action' => $operation['action'],
                 'data' => $operation['data'] ?? [],
             ]);

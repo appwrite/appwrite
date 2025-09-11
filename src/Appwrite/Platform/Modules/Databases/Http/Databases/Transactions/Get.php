@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -17,7 +16,7 @@ class Get extends Action
 {
     public static function getName(): string
     {
-        return 'getTransaction';
+        return 'getDatabasesTransaction';
     }
 
     protected function getResponseModel(): string

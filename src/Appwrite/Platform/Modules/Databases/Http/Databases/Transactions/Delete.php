@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -18,7 +17,7 @@ class Delete extends Action
 {
     public static function getName(): string
     {
-        return 'deleteTransaction';
+        return 'deleteDatabasesTransaction';
     }
 
     protected function getResponseModel(): string

@@ -54,8 +54,8 @@ class Update extends Action
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-documents.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -113,7 +113,7 @@ class Update extends Action
         );
 
         if ($hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk update is not supported for ' . $this->getSdkNamespace() . ' with relationship attributes');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk update is not supported for ' . $this->getSDKNamespace() . ' with relationship attributes');
         }
 
         $originalQueries = $queries;
@@ -174,7 +174,7 @@ class Update extends Action
 
             // Return successful response without actually updating documents
             $response->dynamic(new Document([
-                $this->getSdkGroup() => [],
+                $this->getSDKGroup() => [],
                 'total' => 0, // Can't predict how many would be updated
             ]), $this->getResponseModel());
             return;
@@ -214,7 +214,7 @@ class Update extends Action
 
         $response->dynamic(new Document([
             'total' => $modified,
-            $this->getSdkGroup() => $documents
+            $this->getSDKGroup() => $documents
         ]), $this->getResponseModel());
 
         $this->triggerBulk(

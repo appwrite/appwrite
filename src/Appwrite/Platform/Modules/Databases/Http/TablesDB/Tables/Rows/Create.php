@@ -50,8 +50,8 @@ class Create extends DocumentCreate
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     desc: 'Create row',
                     description: '/docs/references/tablesdb/create-row.md',
@@ -73,8 +73,8 @@ class Create extends DocumentCreate
                     ]
                 ),
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: $this->getBulkActionName(self::getName()),
                     desc: 'Create rows',
                     description: '/docs/references/tablesdb/create-rows.md',

@@ -78,6 +78,7 @@ use Utopia\Platform\Service;
  * - Documents
  * - Attributes
  * - Indexes
+ * - Transactions
  */
 class Legacy extends Base
 {

@@ -52,8 +52,8 @@ class Upsert extends Action
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/databases/upsert-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
@@ -103,7 +103,7 @@ class Upsert extends Action
         );
 
         if ($hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSdkNamespace() .  ' with relationship attributes');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSDKNamespace() .  ' with relationship attributes');
         }
 
         foreach ($documents as $key => $document) {
@@ -150,7 +150,7 @@ class Upsert extends Action
 
             // Return successful response without actually upserting documents
             $response->dynamic(new Document([
-                $this->getSdkGroup() => [],
+                $this->getSDKGroup() => [],
                 'total' => \count($documents),
             ]), $this->getResponseModel());
 
@@ -192,7 +192,7 @@ class Upsert extends Action
 
         $response->dynamic(new Document([
             'total' => $modified,
-            $this->getSdkGroup() => $upserted
+            $this->getSDKGroup() => $upserted
         ]), $this->getResponseModel());
 
         $this->triggerBulk(

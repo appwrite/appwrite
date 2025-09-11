@@ -46,8 +46,8 @@ class XList extends Action
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/list-documents.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -206,7 +206,7 @@ class XList extends Action
         $response->dynamic(new Document([
             'total' => $total,
             // rows or documents
-            $this->getSdkGroup() => $documents,
+            $this->getSDKGroup() => $documents,
         ]), $this->getResponseModel());
     }
 }

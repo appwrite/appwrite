@@ -58,8 +58,8 @@ class Upsert extends Action
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/databases/upsert-document.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],

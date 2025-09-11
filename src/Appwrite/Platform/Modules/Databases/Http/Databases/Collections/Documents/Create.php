@@ -63,8 +63,8 @@ class Create extends Action
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
@@ -90,8 +90,8 @@ class Create extends Action
                     ),
                 ),
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: $this->getBulkActionName(self::getName()),
                     desc: 'Create documents',
                     description: '/docs/references/databases/create-documents.md',
@@ -148,7 +148,7 @@ class Create extends Action
         }
         if (!empty($data) && !empty($documents)) {
             // Both single and bulk documents provided
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'You can only send one of the following parameters: data, ' . $this->getSdkGroup());
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'You can only send one of the following parameters: data, ' . $this->getSDKGroup());
         }
         if (!empty($data) && empty($documentId)) {
             // Single document provided without document ID
@@ -161,12 +161,12 @@ class Create extends Action
             $documentId = $this->isCollectionsAPI() ? 'documentId' : 'rowId';
             throw new Exception(
                 Exception::GENERAL_BAD_REQUEST,
-                "Param \"$documentId\" is not allowed when creating multiple " . $this->getSdkGroup() . ', set "$id" on each instead.'
+                "Param \"$documentId\" is not allowed when creating multiple " . $this->getSDKGroup() . ', set "$id" on each instead.'
             );
         }
         if (!empty($documents) && !empty($permissions)) {
             // Bulk documents provided with permissions
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple ' . $this->getSdkGroup() . ', set "$permissions" on each instead');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple ' . $this->getSDKGroup() . ', set "$permissions" on each instead');
         }
 
         $isBulk = true;
@@ -200,7 +200,7 @@ class Create extends Action
         );
 
         if ($isBulk && $hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSdkNamespace() .' with relationship ' . $this->getStructureContext());
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSDKNamespace() .' with relationship ' . $this->getStructureContext());
         }
 
         $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk) {
@@ -407,7 +407,7 @@ class Create extends Action
             // Return successful response without actually creating documents
             if ($isBulk) {
                 $response->dynamic(new Document([
-                    $this->getSdkGroup() => [],
+                    $this->getSDKGroup() => [],
                     'total' => \count($documents),
                 ]), $this->getBulkResponseModel());
             } else {
@@ -468,7 +468,7 @@ class Create extends Action
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($documents),
-                $this->getSdkGroup() => $documents
+                $this->getSDKGroup() => $documents
             ]), $this->getBulkResponseModel());
 
             $this->triggerBulk(

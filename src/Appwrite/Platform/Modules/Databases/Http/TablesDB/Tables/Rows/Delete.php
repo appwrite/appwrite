@@ -45,8 +45,8 @@ class Delete extends DocumentDelete
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/delete-row.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -67,6 +67,7 @@ class Delete extends DocumentDelete
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }

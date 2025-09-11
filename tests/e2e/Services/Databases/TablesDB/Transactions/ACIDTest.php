@@ -34,25 +34,25 @@ class ACIDTest extends Scope
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
-        // Create collection with unique constraint
-        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+        // Create table with unique constraint
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'AtomicityTest',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Add unique column
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -63,7 +63,7 @@ class ACIDTest extends Scope
         ]);
 
         // Add unique index
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/indexes', array_merge([
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -75,12 +75,12 @@ class ACIDTest extends Scope
 
         sleep(3);
 
-        // Create first document outside transaction
-        $doc1 = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create first row outside transaction
+        $doc1 = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'email' => 'existing@example.com'
             ]
@@ -108,27 +108,27 @@ class ACIDTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => [
                         'email' => 'newuser@example.com' // This should succeed
                     ]
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => [
                         'email' => 'existing@example.com' // This will fail - duplicate
                     ]
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => [
                         'email' => 'anotheruser@example.com' // This should not be created due to atomicity
                     ]
@@ -148,26 +148,26 @@ class ACIDTest extends Scope
         ]);
 
         if ($response['headers']['status-code'] === 200) {
-            // If transaction succeeded, all documents should be created
-            $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            // If transaction succeeded, all rows should be created
+            $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            // Should have 4 documents total (1 original + 3 from transaction)
+            // Should have 4 rows total (1 original + 3 from transaction)
             // But since we have a unique constraint violation, this might fail
-            $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
+            $this->assertGreaterThanOrEqual(1, $rows['body']['total']);
         } else {
             $this->assertEquals(409, $response['headers']['status-code']); // Conflict error
 
-            // Verify NO new documents were created (atomicity)
-            $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+            // Verify NO new rows were created (atomicity)
+            $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals(1, $documents['body']['total']); // Only the original document
-            $this->assertEquals('existing@example.com', $documents['body']['documents'][0]['email']);
+            $this->assertEquals(1, $rows['body']['total']); // Only the original row
+            $this->assertEquals('existing@example.com', $rows['body']['rows'][0]['email']);
         }
     }
 
@@ -189,25 +189,25 @@ class ACIDTest extends Scope
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
-        // Create collection with required fields and constraints
-        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+        // Create table with required fields and constraints
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'ConsistencyTest',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Add required string column
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -218,7 +218,7 @@ class ACIDTest extends Scope
         ]);
 
         // Add integer column with min/max constraints
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/integer', array_merge([
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -249,9 +249,9 @@ class ACIDTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => [
                         'required_field' => 'Valid User',
                         'age' => 25 // Valid age
@@ -259,9 +259,9 @@ class ACIDTest extends Scope
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => [
                         'required_field' => 'Too Young User',
                         'age' => 10 // Below minimum - will fail constraint
@@ -269,9 +269,9 @@ class ACIDTest extends Scope
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'rowId' => ID::unique(),
                     'data' => [
                         'required_field' => 'Another Valid User',
                         'age' => 30 // Valid but should not be created due to transaction failure
@@ -293,13 +293,13 @@ class ACIDTest extends Scope
 
         $this->assertContains($response['headers']['status-code'], [400, 500], 'Transaction commit should fail due to validation. Response: ' . json_encode($response['body']));
 
-        // Verify no documents were created
-        $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Verify no rows were created
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(0, $documents['body']['total']);
+        $this->assertEquals(0, $rows['body']['total']);
     }
 
     /**
@@ -320,15 +320,15 @@ class ACIDTest extends Scope
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
-        // Create collection
-        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+        // Create table
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'IsolationTest',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -336,10 +336,10 @@ class ACIDTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Add counter column
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/integer', array_merge([
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -352,12 +352,12 @@ class ACIDTest extends Scope
 
         sleep(2);
 
-        // Create initial document with counter
-        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // Create initial row with counter
+        $doc = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'shared_counter',
+            'rowId' => 'shared_counter',
             'data' => [
                 'counter' => 0
             ]
@@ -396,8 +396,8 @@ class ACIDTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'documentId' => 'shared_counter',
+                    'tableId' => $tableId,
+                    'rowId' => 'shared_counter',
                     'action' => 'increment',
                     'data' => [
                         'column' => 'counter',
@@ -416,8 +416,8 @@ class ACIDTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'documentId' => 'shared_counter',
+                    'tableId' => $tableId,
+                    'rowId' => 'shared_counter',
                     'action' => 'increment',
                     'data' => [
                         'column' => 'counter',
@@ -450,13 +450,13 @@ class ACIDTest extends Scope
         $this->assertEquals(200, $response2['headers']['status-code']);
 
         // Check final value - both increments should be applied
-        $document = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/shared_counter", array_merge([
+        $row = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/shared_counter", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         // Both increments should be applied: 0 + 10 + 5 = 15
-        $this->assertEquals(15, $document['body']['counter']);
+        $this->assertEquals(15, $row['body']['counter']);
     }
 
     /**
@@ -477,15 +477,15 @@ class ACIDTest extends Scope
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
-        // Create collection
-        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+        // Create table
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'DurabilityTest',
-            'documentSecurity' => false,
+            'rowSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -494,10 +494,10 @@ class ACIDTest extends Scope
             ],
         ]);
 
-        $collectionId = $collection['body']['$id'];
+        $tableId = $table['body']['$id'];
 
         // Add column
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -529,27 +529,27 @@ class ACIDTest extends Scope
             'operations' => [
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'durable_doc_1',
+                    'rowId' => 'durable_doc_1',
                     'data' => [
                         'data' => 'Important data 1'
                     ]
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'create',
-                    'documentId' => 'durable_doc_2',
+                    'rowId' => 'durable_doc_2',
                     'data' => [
                         'data' => 'Important data 2'
                     ]
                 ],
                 [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
+                    'tableId' => $tableId,
                     'action' => 'update',
-                    'documentId' => 'durable_doc_1',
+                    'rowId' => 'durable_doc_1',
                     'data' => [
                         'data' => 'Updated important data 1'
                     ]
@@ -569,33 +569,33 @@ class ACIDTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code'], 'Commit should succeed. Response: ' . json_encode($response['body']));
         $this->assertEquals('committed', $response['body']['status']);
 
-        // List all documents to see what was created
-        $allDocs = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // List all rows to see what was created
+        $allDocs = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertGreaterThan(0, $allDocs['body']['total'], 'Should have created documents. Found: ' . json_encode($allDocs['body']));
+        $this->assertGreaterThan(0, $allDocs['body']['total'], 'Should have created rows. Found: ' . json_encode($allDocs['body']));
 
-        // Verify documents exist and have correct data
-        $document1 = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/durable_doc_1", array_merge([
+        // Verify rows exist and have correct data
+        $row1 = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/durable_doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $document1['headers']['status-code']);
-        $this->assertEquals('Updated important data 1', $document1['body']['data']);
+        $this->assertEquals(200, $row1['headers']['status-code']);
+        $this->assertEquals('Updated important data 1', $row1['body']['data']);
 
-        $document2 = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/durable_doc_2", array_merge([
+        $row2 = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/durable_doc_2", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $document2['headers']['status-code']);
-        $this->assertEquals('Important data 2', $document2['body']['data']);
+        $this->assertEquals(200, $row2['headers']['status-code']);
+        $this->assertEquals('Important data 2', $row2['body']['data']);
 
         // Further update outside transaction to ensure persistence
-        $update = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/durable_doc_1", array_merge([
+        $update = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/durable_doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -607,19 +607,19 @@ class ACIDTest extends Scope
         $this->assertEquals(200, $update['headers']['status-code']);
 
         // Verify the update persisted
-        $document1 = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows/durable_doc_1", array_merge([
+        $row1 = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/durable_doc_1", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals('Modified outside transaction', $document1['body']['data']);
+        $this->assertEquals('Modified outside transaction', $row1['body']['data']);
 
-        // List all documents to verify total count
-        $documents = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$collectionId}/rows", array_merge([
+        // List all rows to verify total count
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(2, $documents['body']['total']);
+        $this->assertEquals(2, $rows['body']['total']);
     }
 }

@@ -43,8 +43,8 @@ class Upsert extends DocumentUpsert
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/tablesdb/upsert-row.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -69,6 +69,7 @@ class Upsert extends DocumentUpsert
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }

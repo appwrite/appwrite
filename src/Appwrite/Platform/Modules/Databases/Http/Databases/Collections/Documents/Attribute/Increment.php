@@ -54,8 +54,8 @@ class Increment extends Action
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/increment-document-attribute.md',
                 auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
@@ -166,9 +166,9 @@ class Increment extends Action
         } catch (NotFoundException) {
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
-            throw new Exception($this->getLimitException(), $this->getSdkNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
+            throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
         } catch (TypeException) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSdkNamespace() . ' "' . $attribute . '" is not a number');
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
