@@ -208,7 +208,7 @@ class Certificates extends Action
             $date = \date('H:i:s');
             $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
 
-            $certificate->setAttribute('logs', $currentLogs . $errorMessage . \mb_strcut($logs, 0, 1000000));// Limit to 1MB
+            $certificate->setAttribute('logs', $currentLogs . $errorMessage . \mb_strcut($logs, 0, 500000));// Limit to 500kb
 
             // Increase attempts count
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
