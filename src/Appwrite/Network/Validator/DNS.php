@@ -63,7 +63,15 @@ class DNS extends Validator
 
         $recordValuesVerbose = implode(', ', $this->recordValues);
 
-        return "Domain {$this->domain} has {$this->count} {$this->type} {$record} with wrong {$value}: {$recordValuesVerbose}";
+        $msg = "Domain {$this->domain} has {$this->count} {$this->type} {$record} with wrong {$value}: {$recordValuesVerbose}.";
+
+        if ($this->type === self::RECORD_CAA) {
+            $msg .= ' You can resolve this by adding our record too (recommended), or removing all other records.';
+        } elseif ($this->type === self::RECORD_A || $this->type === self::RECORD_AAAA || $this->type === self::RECORD_CNAME) {
+            $msg .= ' You can resolve this by changing the record to haveour value.';
+        }
+
+        return $msg;
     }
 
     /**
