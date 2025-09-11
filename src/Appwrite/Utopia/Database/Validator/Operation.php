@@ -64,6 +64,16 @@ class Operation extends Validator
         return $this->description;
     }
 
+    public function getCollectionIdName(): string
+    {
+        return $this->collectionIdName;
+    }
+
+    public function getDocumentIdName(): string
+    {
+        return $this->documentIdName;
+    }
+
     public function isArray(): bool
     {
         return true;

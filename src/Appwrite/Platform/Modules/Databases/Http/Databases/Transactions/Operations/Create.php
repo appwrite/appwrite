@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
 use Appwrite\SDK\AuthType;
@@ -13,6 +14,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -43,7 +45,7 @@ class Create extends Action
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/databases/create-operations.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
@@ -77,8 +79,19 @@ class Create extends Action
             );
         }
 
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
         $databases = $collections = $staged = [];
         foreach ($operations as $operation) {
+            if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
+                'bulkCreate',
+                'bulkUpdate',
+                'bulkDelete'
+            ])) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
             $database = $databases[$operation['databaseId']] ??= $dbForProject->getDocument('databases', $operation['databaseId']);
             if ($database->isEmpty()) {
                 throw new Exception(Exception::DATABASE_NOT_FOUND);
