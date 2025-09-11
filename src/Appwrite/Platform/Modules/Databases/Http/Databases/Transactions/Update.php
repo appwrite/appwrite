@@ -333,8 +333,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         if ($documentId && !isset($data['$id'])) {
             $data['$id'] = $documentId;
         }
@@ -358,8 +357,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -397,8 +395,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -428,8 +425,7 @@ class Update extends Action
         string $documentId,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -461,8 +457,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -499,8 +494,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -536,8 +530,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
             $dbForProject->createDocuments(
                 $collectionId,
@@ -561,8 +554,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->updateDocuments(
@@ -596,8 +588,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         // Run bulk upsert without timestamp wrapper, checking manually in callback
         $dbForProject->upsertDocuments(
             $collectionId,
@@ -633,8 +624,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void
-    {
+    ): void {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $dbForProject->deleteDocuments(
