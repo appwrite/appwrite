@@ -4806,6 +4806,424 @@
                 ]
             }
         },
+        "\/databases\/transactions": {
+            "get": {
+                "summary": "List transactions",
+                "operationId": "databasesListTransactions",
+                "tags": [
+                    "databases"
+                ],
+                "description": "List transactions across all databases.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transactionList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listTransactions",
+                    "group": "transactions",
+                    "weight": 376,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/list-transactions.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-transactions.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries).",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create transaction",
+                "operationId": "databasesCreateTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create a new transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createTransaction",
+                    "group": "transactions",
+                    "weight": 372,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ttl": {
+                                        "type": "integer",
+                                        "description": "Seconds before the transaction expires.",
+                                        "x-example": 60
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/transactions\/{transactionId}": {
+            "get": {
+                "summary": "Get transaction",
+                "operationId": "databasesGetTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Get a transaction by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getTransaction",
+                    "group": "transactions",
+                    "weight": 373,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/get-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update transaction",
+                "operationId": "databasesUpdateTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Update a transaction, to either commit or roll back its operations.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateTransaction",
+                    "group": "transactions",
+                    "weight": 374,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/update-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commit": {
+                                        "type": "boolean",
+                                        "description": "Commit transaction?",
+                                        "x-example": false
+                                    },
+                                    "rollback": {
+                                        "type": "boolean",
+                                        "description": "Rollback transaction?",
+                                        "x-example": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete transaction",
+                "operationId": "databasesDeleteTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Delete a transaction by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteTransaction",
+                    "group": "transactions",
+                    "weight": 375,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/delete-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/databases\/transactions\/{transactionId}\/operations": {
+            "post": {
+                "summary": "Add operations to transaction",
+                "operationId": "databasesCreateOperations",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create multiple operations in a single transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createOperations",
+                    "group": "transactions",
+                    "weight": 377,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-operations.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-operations.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "operations": {
+                                        "type": "array",
+                                        "description": "Array of staged operations.",
+                                        "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"collectionId\": \"<COLLECTION_ID>\",\n\t        \"documentId\": \"<DOCUMENT_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/documents": {
             "get": {
                 "summary": "List documents",
@@ -4893,6 +5311,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -4951,7 +5379,8 @@
                                 "collectionId",
                                 "documentId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -5037,6 +5466,11 @@
                                         "items": {
                                             "type": "object"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -5142,6 +5576,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -5200,7 +5644,8 @@
                                 "collectionId",
                                 "documentId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -5283,6 +5728,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 },
                                 "required": [
@@ -5396,6 +5846,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -5480,7 +5935,23 @@
                         },
                         "in": "path"
                     }
-                ]
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
@@ -5594,6 +6065,11 @@
                                         "type": "number",
                                         "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -5713,6 +6189,11 @@
                                         "type": "number",
                                         "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -5745,7 +6226,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 456,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -5820,7 +6301,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 454,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -5896,9 +6377,9 @@
                                         "x-enum-keys": []
                                     },
                                     "headers": {
-                                        "type": "string",
+                                        "type": "object",
                                         "description": "HTTP headers of execution. Defaults to empty.",
-                                        "x-example": null
+                                        "x-example": "{}"
                                     },
                                     "scheduledAt": {
                                         "type": "string",
@@ -5936,7 +6417,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 455,
+                    "weight": 467,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -7467,6 +7948,424 @@
                 ]
             }
         },
+        "\/tablesdb\/transactions": {
+            "get": {
+                "summary": "List transactions",
+                "operationId": "tablesDBListTransactions",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "List transactions across all databases.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transactionList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listTransactions",
+                    "group": "transactions",
+                    "weight": 441,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/list-transactions.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-transactions.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries).",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create transaction",
+                "operationId": "tablesDBCreateTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create a new transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createTransaction",
+                    "group": "transactions",
+                    "weight": 437,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ttl": {
+                                        "type": "integer",
+                                        "description": "Seconds before the transaction expires.",
+                                        "x-example": 60
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/tablesdb\/transactions\/{transactionId}": {
+            "get": {
+                "summary": "Get transaction",
+                "operationId": "tablesDBGetTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Get a transaction by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getTransaction",
+                    "group": "transactions",
+                    "weight": 438,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/get-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update transaction",
+                "operationId": "tablesDBUpdateTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Update a transaction, to either commit or roll back its operations.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateTransaction",
+                    "group": "transactions",
+                    "weight": 439,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/update-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commit": {
+                                        "type": "boolean",
+                                        "description": "Commit transaction?",
+                                        "x-example": false
+                                    },
+                                    "rollback": {
+                                        "type": "boolean",
+                                        "description": "Rollback transaction?",
+                                        "x-example": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete transaction",
+                "operationId": "tablesDBDeleteTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Delete a transaction by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteTransaction",
+                    "group": "transactions",
+                    "weight": 440,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/delete-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/transactions\/{transactionId}\/operations": {
+            "post": {
+                "summary": "Add operations to transaction",
+                "operationId": "tablesDBCreateOperations",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create multiple operations in a single transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createOperations",
+                    "group": "transactions",
+                    "weight": 442,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-operations.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-operations.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "transactions.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "operations": {
+                                        "type": "array",
+                                        "description": "Array of staged operations.",
+                                        "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"tableId\": \"<TABLE_ID>\",\n\t        \"rowId\": \"<ROW_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows": {
             "get": {
                 "summary": "List rows",
@@ -7491,7 +8390,7 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 427,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-rows.md",
@@ -7553,6 +8452,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -7579,7 +8488,7 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 419,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-row.md",
@@ -7610,7 +8519,8 @@
                                 "tableId",
                                 "rowId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -7692,6 +8602,11 @@
                                         "items": {
                                             "type": "object"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -7724,7 +8639,7 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 420,
+                    "weight": 426,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-row.md",
@@ -7796,6 +8711,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -7822,7 +8747,7 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 423,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-row.md",
@@ -7853,7 +8778,8 @@
                                 "tableId",
                                 "rowId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -7931,6 +8857,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -7961,7 +8892,7 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 421,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-row.md",
@@ -8040,6 +8971,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -8063,7 +8999,7 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 425,
+                    "weight": 431,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-row.md",
@@ -8123,7 +9059,23 @@
                         },
                         "in": "path"
                     }
-                ]
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/{column}\/decrement": {
@@ -8150,7 +9102,7 @@
                 "x-appwrite": {
                     "method": "decrementRowColumn",
                     "group": "rows",
-                    "weight": 430,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/decrement-row-column.md",
@@ -8236,6 +9188,11 @@
                                         "type": "number",
                                         "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -8268,7 +9225,7 @@
                 "x-appwrite": {
                     "method": "incrementRowColumn",
                     "group": "rows",
-                    "weight": 429,
+                    "weight": 435,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/increment-row-column.md",
@@ -8354,6 +9311,11 @@
                                         "type": "number",
                                         "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -9933,6 +10895,34 @@
                 "example": {
                     "total": 5,
                     "localeCodes": ""
+                }
+            },
+            "transactionList": {
+                "description": "Transaction List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of transactions that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "transactions": {
+                        "type": "array",
+                        "description": "List of transactions.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/transaction"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "transactions"
+                ],
+                "example": {
+                    "total": 5,
+                    "transactions": ""
                 }
             },
             "row": {
@@ -11837,6 +12827,59 @@
                     "phone": true,
                     "email": true,
                     "recoveryCode": true
+                }
+            },
+            "transaction": {
+                "description": "Transaction",
+                "type": "object",
+                "properties": {
+                    "$id": {
+                        "type": "string",
+                        "description": "Transaction ID.",
+                        "x-example": "259125845563242502"
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Transaction creation time in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Transaction update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Current status of the transaction. One of: pending, committing, committed, rolled_back, failed.",
+                        "x-example": "pending"
+                    },
+                    "operations": {
+                        "type": "integer",
+                        "description": "Number of operations in the transaction.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "description": "Expiration time in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    }
+                },
+                "required": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "status",
+                    "operations",
+                    "expiresAt"
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "status": "pending",
+                    "operations": 5,
+                    "expiresAt": "2020-10-15T06:38:00.000+00:00"
                 }
             },
             "subscriber": {

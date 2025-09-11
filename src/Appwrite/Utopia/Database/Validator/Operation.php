@@ -64,12 +64,12 @@ class Operation extends Validator
         return $this->description;
     }
 
-    public function getCollectionIdName(): string
+    public function getCollectionIdKey(): string
     {
         return $this->collectionIdName;
     }
 
-    public function getDocumentIdName(): string
+    public function getDocumentIdKey(): string
     {
         return $this->documentIdName;
     }
