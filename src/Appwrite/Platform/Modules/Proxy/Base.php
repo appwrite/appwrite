@@ -25,6 +25,27 @@ class Base extends Action
      */
     public static function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainApi = null, ?string $verificationDomainFunction = null): void
     {
+        $domain = new Domain($rule->getAttribute('domain', ''));
+
+        // Ensure CAA won't block certificate issuance
+        if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
+            $validationStart = \microtime(true);
+            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+            if (!$validator->isValid($domain->get())) {
+                if (!\is_null($log)) {
+                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
+                    $log->addTag('dnsDomain', $domain->get());
+                    $error = $validator->getDescription();
+                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+                }
+
+                $errorVerbose = 'Verification of DNS records failed.' . $validator->getDescription();
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $errorVerbose);
+            }
+        }
+
+        // Ensure at least one of CNAME/A/AAAA record points to our servers properly
+        // Ensures different target based on rule's type, as configured by env variables
         if (\is_null($verificationDomainApi)) {
             $verificationDomainApi = System::getEnv('_APP_DOMAIN_TARGET_CNAME', '');
         }
@@ -88,7 +109,6 @@ class Base extends Action
         }
 
         $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
-        $domain = new Domain($rule->getAttribute('domain', ''));
 
         $validationStart = \microtime(true);
         if (!$validator->isValid($domain->get())) {
@@ -109,23 +129,6 @@ class Base extends Action
 
             $errorVerbose = 'Verification of DNS records failed.' . $mainValidator->getDescription();
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $errorVerbose);
-        }
-
-        // Ensure CAA won't block certificate issuance
-        if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
-            $validationStart = \microtime(true);
-            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
-            if (!$validator->isValid($domain->get())) {
-                if (!\is_null($log)) {
-                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
-                    $log->addTag('dnsDomain', $domain->get());
-                    $error = $validator->getDescription();
-                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-                }
-
-                $errorVerbose = 'Verification of DNS records failed.' . $mainValidator->getDescription();
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $errorVerbose);
-            }
         }
     }
 }
