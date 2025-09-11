@@ -950,7 +950,7 @@ App::post('/v1/account/sessions/email')
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
