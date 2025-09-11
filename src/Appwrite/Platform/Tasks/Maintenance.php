@@ -38,6 +38,9 @@ class Maintenance extends Action
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
+        $intervalRuleVerification = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL_RULE_VERIFICATION', '120'); // 2 minutes
+        $intervalRuleGeneration = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL_RULE_GENERATION', '60'); // 1 minute
+
         $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
@@ -96,6 +99,15 @@ class Maintenance extends Action
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval, $delay);
+
+        Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
+            $this->checkRuleVerification($dbForPlatform, $queueForCertificates);
+        }, $intervalRuleVerification);
+
+
+        Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
+            $this->checkRuleGeneration($dbForPlatform, $queueForCertificates);
+        }, $intervalRuleGeneration);
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void
@@ -104,6 +116,78 @@ class Maintenance extends Action
             ->setType(DELETE_TYPE_REALTIME)
             ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -60))
             ->trigger();
+    }
+
+    private function checkRuleVerification(Database $dbForPlatform, Certificate $queueForCertificate): void
+    {
+        $time = DatabaseDateTime::now();
+
+        $oldestToCheck = new DateTime();
+        $oldestToCheck->sub(new DateInterval('PT72H')); // -3 days
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::createdAfter(DatabaseDateTime::format($oldestToCheck)), // max 3 days old
+            Query::equal('status', ['created']), // not verified yet
+            Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
+            Query::limit(30), // Reasonable pagination limit, processable within a minute
+        ]);
+
+        if (\count($rules) > 0) {
+            Console::info("[{$time}] Found " . \count($rules) . " rules for verification, scheduling jobs.");
+
+            foreach ($rules as $rule) {
+                if ($rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
+                    continue;
+                }
+
+                $queueForCertificate
+                    ->setDomain(new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]))
+                    ->setAction(Certificate::ACTION_VERIFICATION)
+                    ->trigger();
+            }
+        } else {
+            // Silenced because interval makes it too often
+            // Console::log("[{$time}] No rules for checking verification status.");
+        }
+    }
+
+    private function checkRuleGeneration(Database $dbForPlatform, Certificate $queueForCertificate): void
+    {
+        $time = DatabaseDateTime::now();
+
+        $oldestToCheck = new DateTime();
+        $oldestToCheck->sub(new DateInterval('PT72H')); // -3 days
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::createdAfter(DatabaseDateTime::format($oldestToCheck)), // max 3 days old
+            Query::equal('status', ['verifying']), // waiting for verification to finish
+            Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
+            Query::limit(10), // Reasonable pagination limit, processable within a minute
+        ]);
+
+        if (\count($rules) > 0) {
+            Console::info("[{$time}] Found " . \count($rules) . " rules under generation, scheduling jobs.");
+
+            foreach ($rules as $rule) {
+                if ($rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
+                    continue;
+                }
+
+                $queueForCertificate
+                    ->setDomain(new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]))
+                    ->setAction(Certificate::ACTION_GENERATION_SYNC)
+                    ->trigger();
+            }
+        } else {
+            // Silenced because interval makes it too often
+            // Console::log("[{$time}] No rules for checking generation progress.");
+        }
     }
 
     private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void
@@ -137,8 +221,10 @@ class Maintenance extends Action
 
                 $queueForCertificate
                     ->setDomain(new Document([
-                        'domain' => $certificate->getAttribute('domain')
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                     ]))
+                    ->setAction(Certificate::ACTION_GENERATION)
                     ->trigger();
             }
         } else {
