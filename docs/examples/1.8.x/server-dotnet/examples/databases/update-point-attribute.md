@@ -14,6 +14,6 @@ AttributePoint result = await databases.UpdatePointAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: "", // optional
+    default: [1, 2], // optional
     newKey: "" // optional
 );

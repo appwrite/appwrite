@@ -13,6 +13,6 @@ result = tables_db.update_point_column(
     table_id = '<TABLE_ID>',
     key = '',
     required = False,
-    default = '', # optional
+    default = [1, 2], # optional
     new_key = '' # optional
 )

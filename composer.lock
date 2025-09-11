@@ -3693,16 +3693,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "1.4.4",
+            "version": "1.4.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "16f96e5d9784dae87d4f6b864e87da8e3be15507"
+                "reference": "c7dcfd8a5671944d1a9a454cbf26b95a8bd47544"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/16f96e5d9784dae87d4f6b864e87da8e3be15507",
-                "reference": "16f96e5d9784dae87d4f6b864e87da8e3be15507",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/c7dcfd8a5671944d1a9a454cbf26b95a8bd47544",
+                "reference": "c7dcfd8a5671944d1a9a454cbf26b95a8bd47544",
                 "shasum": ""
             },
             "require": {
@@ -3743,9 +3743,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/1.4.4"
+                "source": "https://github.com/utopia-php/database/tree/1.4.6"
             },
-            "time": "2025-09-10T00:50:05+00:00"
+            "time": "2025-09-11T06:01:47+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -6291,16 +6291,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.25",
+            "version": "9.6.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "049c011e01be805202d8eebedef49f769a8ec7b7"
+                "reference": "a0139ea157533454f611038326f3020b3051f129"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/049c011e01be805202d8eebedef49f769a8ec7b7",
-                "reference": "049c011e01be805202d8eebedef49f769a8ec7b7",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/a0139ea157533454f611038326f3020b3051f129",
+                "reference": "a0139ea157533454f611038326f3020b3051f129",
                 "shasum": ""
             },
             "require": {
@@ -6374,7 +6374,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.25"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.26"
             },
             "funding": [
                 {
@@ -6398,7 +6398,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-08-20T14:38:31+00:00"
+            "time": "2025-09-11T06:17:45+00:00"
         },
         {
             "name": "psr/cache",
