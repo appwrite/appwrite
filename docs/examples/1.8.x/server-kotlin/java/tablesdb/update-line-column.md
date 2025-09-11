@@ -14,7 +14,7 @@ tablesDB.updateLineColumn(
     "<TABLE_ID>", // tableId
     "", // key
     false, // required
-    "", // default (optional)
+    listOf([1, 2], [3, 4], [5, 6]), // default (optional)
     "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
