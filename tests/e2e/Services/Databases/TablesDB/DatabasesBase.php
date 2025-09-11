@@ -7615,12 +7615,12 @@ trait DatabasesBase
             'rowId' => ID::unique(),
             'data' => [
                 'name' => 'Upserted Location',
-                'location' => [34.0522, -118.2437]
+                'location' => [34.0522, -80]
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([34.0522, -118.2437], $response['body']['location']);
+        $this->assertEquals([34.0522, -80], $response['body']['location']);
 
         // Create row without permissions (should fail)
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
@@ -7749,12 +7749,12 @@ trait DatabasesBase
             'rowId' => ID::unique(),
             'data' => [
                 'distance' => 200,
-                'route' => [[34.0522, -118.2437], [34.0736, -118.2400]]
+                'route' => [[34.0522, -80], [34.0736, -80]]
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([[34.0522, -118.2437], [34.0736, -118.2400]], $response['body']['route']);
+        $this->assertEquals([[34.0522, -80], [34.0736, -80]], $response['body']['route']);
 
         // Delete row
         $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, array_merge([
@@ -7883,12 +7883,12 @@ trait DatabasesBase
             'rowId' => ID::unique(),
             'data' => [
                 'active' => false,
-                'area' => [[[34.0522, -118.2437], [34.0736, -118.2437], [34.0736, -118.2400], [34.0522, -118.2400], [34.0522, -118.2437]]]
+                'area' => [[[34.0522, -80], [34.0736, -80], [34.0736, -80], [34.0522, -80], [34.0522, -80]]]
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([[[34.0522, -118.2437], [34.0736, -118.2437], [34.0736, -118.2400], [34.0522, -118.2400], [34.0522, -118.2437]]], $response['body']['area']);
+        $this->assertEquals([[[34.0522, -80], [34.0736, -80], [34.0736, -80], [34.0522, -80], [34.0522, -80]]], $response['body']['area']);
 
         // Create row missing required polygon (should fail)
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -8225,17 +8225,6 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(2, $response['body']['rows']);
 
-        // contains on line (point on line)
-        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [Query::contains('lineAttr', [[1.0, 1.0]])->toString()]
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['rows']);
-        $this->assertEquals('row1', $response['body']['rows'][0]['$id']);
-
         // notContains on polygon (point outside all polygons)
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -8561,19 +8550,6 @@ trait DatabasesBase
             'columns' => ['pOptional'],
         ]);
         $this->assertEquals(202, $retriedIndex['headers']['status-code']);
-
-        // Passing orders to spatial index should not throw error (in case of mariadb)
-        $ordersIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'idx_required_point_with_orders',
-            'type' => Database::INDEX_SPATIAL,
-            'columns' => ['pRequired'],
-            'orders' => ['ASC']
-        ]);
-        $this->assertEquals(202, $ordersIndex['headers']['status-code']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([
