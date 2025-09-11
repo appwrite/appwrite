@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\DNS;
+use Appwrite\Platform\Modules\Proxy\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -15,14 +15,13 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Domains\Domain;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\IP;
 
-class Create extends Action
+class Create extends Base
 {
     use HTTP;
 
@@ -66,11 +65,19 @@ class Create extends Action
             ->inject('queueForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('log')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
-    {
+    public function action(
+        string $domain,
+        Response $response,
+        Document $project,
+        Certificate $queueForCertificates,
+        Event $queueForEvents,
+        Database $dbForPlatform,
+        Log $log
+    ) {
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
@@ -131,28 +138,6 @@ class Create extends Action
         if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
             $status = 'verified';
         }
-        if ($status === 'created') {
-            $validators = [];
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
-            }
-            if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
-            }
-            if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
-            }
-
-            if (empty($validators)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
-            }
-
-            $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
-            if ($validator->isValid($domain->get())) {
-                $status = 'verifying';
-            }
-        }
 
         $owner = '';
         if (
@@ -175,6 +160,15 @@ class Create extends Action
             'owner' => $owner,
             'region' => $project->getAttribute('region')
         ]);
+
+        if ($status === 'created') {
+            try {
+                self::verifyRule($rule, $log);
+                $status = 'verifying';
+            } catch (Exception $err) {
+                $rule->setAttribute('verificationLogs', $err->getMessage());
+            }
+        }
 
         try {
             $rule = $dbForPlatform->createDocument('rules', $rule);

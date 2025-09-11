@@ -14,6 +14,10 @@ class DNS extends Validator
     public const RECORD_CNAME = 'CNAME';
     public const RECORD_CAA = 'CAA'; // You can provide domain only (as $target) for CAA validation
 
+    protected const FAILURE_REASON_QUERY = 'DNS query failed.';
+    protected const FAILURE_REASON_INTERNAL = 'Internal error occurred.';
+    protected const FAILURE_REASON_UNKNOWN = '';
+
     /**
      * @var mixed
      */
@@ -23,6 +27,11 @@ class DNS extends Validator
      * @var string
      */
     protected string $dnsServer;
+
+    protected string $domain = '';
+    protected array $recordValues = [];
+    protected int $count = 0;
+    protected string $reason = '';
 
     /**
      * @param string $target
@@ -41,7 +50,20 @@ class DNS extends Validator
      */
     public function getDescription(): string
     {
-        return 'Invalid DNS record';
+        if (!empty($this->reason)) {
+            return $this->reason;
+        }
+
+        if ($this->count === 0) {
+            return 'Domain ' . $this->domain . ' does not have ' . $this->type . ' record.';
+        }
+
+        $record = $this->count === 1 ? 'record' : 'records';
+        $value = $this->count === 1 ? 'value' : 'values';
+
+        $recordValuesVerbose = implode(', ', $this->recordValues);
+
+        return "Domain {$this->domain} has {$this->count} {$this->type} {$record} with wrong {$value}: {$recordValuesVerbose}";
     }
 
     /**
@@ -60,7 +82,13 @@ class DNS extends Validator
      */
     public function isValid($value): bool
     {
+        $this->count = 0;
+        $this->domain = $value;
+        $this->reason = self::FAILURE_REASON_UNKNOWN;
+        $this->recordValues = [];
+
         if (!is_string($value)) {
+            $this->reason = self::FAILURE_REASON_INTERNAL;
             return false;
         }
 
@@ -77,9 +105,12 @@ class DNS extends Validator
 
             $this->logs = $query;
         } catch (\Exception $e) {
+            $this->reason = self::FAILURE_REASON_QUERY;
             $this->logs = ['error' => $e->getMessage()];
             return false;
         }
+
+        $this->count = \count($query);
 
         if (empty($query)) {
             // CAA records inherit from parent (custom CAA behaviour)
@@ -109,9 +140,12 @@ class DNS extends Validator
                 $rdata = \trim($rdata, '"'); // certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600
                 $rdata = \explode(';', $rdata, 2)[0] ?? ''; // certainly.com
 
+                $this->recordValues[] = $rdata;
                 if ($rdata === $this->target) {
                     return true;
                 }
+            } else {
+                $this->recordValues[] = $record->getRdata();
             }
 
             if ($record->getRdata() === $this->target) {

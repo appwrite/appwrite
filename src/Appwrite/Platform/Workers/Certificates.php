@@ -3,12 +3,13 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
-use Appwrite\Network\Validator\DNS;
+use Appwrite\Platform\Modules\Proxy\Base;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
@@ -22,14 +23,13 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
-use Utopia\Validator\IP;
 
 class Certificates extends Action
 {
@@ -85,21 +85,44 @@ class Certificates extends Action
         array $plan
     ): void {
         $payload = $message->getPayload() ?? [];
-
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
         $document = new Document($payload['domain'] ?? []);
-        $domain   = new Domain($document->getAttribute('domain', ''));
+        $domain = new Domain($document->getAttribute('domain', ''));
+        $domainType = $document->getAttribute('domainType');
+
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
-        $validationDomain = $payload['validationDomain'] ?? null;
+        $action = $payload['action'] ?? [];
+        $verificationDomainFunction = $payload['verificationDomainFunction'] ?? null;
+        $verificationDomainApi = $payload['verificationDomainApi'] ?? null;
 
         $log->addTag('domain', $domain->get());
 
-        $domainType = $document->getAttribute('domainType');
+        switch ($action) {
+            case Certificate::ACTION_GENERATION:
+                $this->executeGeneration($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $verificationDomainFunction, $verificationDomainApi);
+                break;
+            case Certificate::ACTION_VERIFICATION:
+                $this->executeVerification();
+                break;
+            case Certificate::ACTION_GENERATION_SYNC:
+                $this->executeGenerationSync();
+                break;
+            default:
+                throw new Exception('Invalid action . ' . $action);
+        }
+    }
 
-        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $validationDomain);
+    private function executeGenerationSync(): void
+    {
+        throw new \Exception('To be implemented.');
+    }
+
+    private function executeVerification(): void
+    {
+        throw new \Exception('To be implemented.');
     }
 
     /**
@@ -113,12 +136,13 @@ class Certificates extends Action
      * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
      * @param array $plan
-     * @param string|null $validationDomain
+     * @param ?string $verificationDomainFunction
+     * @param ?string $verificationDomainApi
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(
+    private function executeGeneration(
         Domain $domain,
         ?string $domainType,
         Database $dbForPlatform,
@@ -131,7 +155,8 @@ class Certificates extends Action
         CertificatesAdapter $certificates,
         bool $skipRenewCheck = false,
         array $plan = [],
-        ?string $validationDomain = null
+        ?string $verificationDomainFunction = null,
+        ?string $verificationDomainApi = null
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -176,9 +201,37 @@ class Certificates extends Action
         try {
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $mainDomain = $validationDomain ?? $this->getMainDomain();
+                $mainDomain = $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-                $this->validateDomain($domain, $isMainDomain, $log);
+
+                if (empty($domain->get())) {
+                    throw new Exception('Missing certificate domain.');
+                }
+
+                if (!$domain->isKnown() || $domain->isTest()) {
+                    throw new Exception('Unknown public suffix for domain.');
+                }
+
+                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+                if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+                    $rule = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())));
+                } else {
+                    $rule = ValidatorAuthorization::skip(
+                        fn () => $dbForPlatform->find('rules', [
+                            Query::equal('domain', [$domain->get()]),
+                            Query::limit(1)
+                        ])
+                    )[0] ?? new Document();
+                }
+
+                if ($rule->isEmpty()) {
+                    $rule = new Document([
+                        'domain' => $domain->get(),
+                        'type' => 'api'
+                    ]);
+                }
+
+                $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainApi, $verificationDomainFunction);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
@@ -286,73 +339,18 @@ class Certificates extends Action
      * - Domain needs to be public and valid (prevents NFT domains that are not supported)
      * - Domain must have proper DNS record
      *
-     * @param Domain $domain Domain which we validate
+     * @param Document $rule Rule which we validate
      * @param bool $isMainDomain In case of master domain, we look for different DNS configurations
+     * @param string|null $verificationDomainApi Function to verify domain
+     * @param string|null $verificationDomainFunction Function to verify domain
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Domain $domain, bool $isMainDomain, Log $log): void
+    private function validateDomain(Document $rule, bool $isMainDomain, Log $log, ?string $verificationDomainApi = null, ?string $verificationDomainFunction = null): void
     {
-        if (empty($domain->get())) {
-            throw new Exception('Missing certificate domain.');
-        }
-
-        if (!$domain->isKnown() || $domain->isTest()) {
-            throw new Exception('Unknown public suffix for domain.');
-        }
-
         if (!$isMainDomain) {
-            $validationStart = \microtime(true);
-
-            $validators = [];
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
-            }
-            if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
-            }
-            if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
-            }
-
-            // Validate if domain target is properly configured
-            if (empty($validators)) {
-                throw new Exception('At least one of domain targets environment variable must be configured.');
-            }
-
-            // Verify domain with DNS records
-            $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
-            if (!$validator->isValid($domain->get())) {
-                $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
-                $log->addTag('dnsDomain', $domain->get());
-
-                $errors = [];
-                foreach ($validators as $validator) {
-                    if (!empty($validator->getLogs())) {
-                        $errors[] = $validator->getLogs();
-                    }
-                }
-
-                $error = \implode("\n", $errors);
-                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-
-                throw new Exception('Failed to verify domain DNS records.');
-            }
-
-            // Ensure CAA won't block certificate issuance
-            if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
-                $validationStart = \microtime(true);
-                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
-                if (!$validator->isValid($domain->get())) {
-                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
-                    $log->addTag('dnsDomain', $domain->get());
-                    $error = $validator->getDescription();
-                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-                    throw new Exception('Failed to verify domain DNS records. CAA records do not allow Appwrite\'s certificate issuer.');
-                }
-            }
+            Base::verifyRule($rule, $log, $verificationDomainApi, $verificationDomainFunction);
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?

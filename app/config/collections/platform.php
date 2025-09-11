@@ -1186,6 +1186,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('verificationLogs'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('redirectStatusCode'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
