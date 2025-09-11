@@ -424,6 +424,34 @@ class StatsUsage extends Action
             try {
                 $dbForProject = $getProjectDB($projectStats['project']);
                 Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
+
+                /**
+                 * Sort by unique index key reduce locks/deadlocks
+                 */
+                usort($projectStats['stats'], function ($a, $b) {
+                    // Metric DESC
+                    $cmp = strcmp($b['metric'], $a['metric']);
+                    if ($cmp !== 0) {
+                        return $cmp;
+                    }
+
+                    // Period ASC
+                    $cmp = strcmp($a['period'], $b['period']);
+                    if ($cmp !== 0) {
+                        return $cmp;
+                    }
+
+                    // Time ASC, NULLs first
+                    if ($a['time'] === null) {
+                        return ($b['time'] === null) ? 0 : -1;
+                    }
+                    if ($b['time'] === null) {
+                        return 1;
+                    }
+
+                    return strcmp($a['time'], $b['time']);
+                });
+
                 $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
                 Console::success('Batch successfully written to DB');
 
@@ -468,6 +496,42 @@ class StatsUsage extends Action
 
         try {
             Console::log('Processing batch with ' . count($this->statDocuments) . ' stats');
+
+            /**
+             * Sort by UNIQUE KEY "_key_metric_period_time" ("_tenant","metric" DESC,"period","time")
+             * Here we sort by _tenant as well because of setTenantPerDocument
+             */
+
+            usort($this->statDocuments, function ($a, $b) {
+                // Tenant ASC
+                $cmp = $a['_tenant'] <=> $b['_tenant'];
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Metric DESC
+                $cmp = strcmp($b['metric'], $a['metric']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Period ASC
+                $cmp = strcmp($a['period'], $b['period']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Time ASC, NULLs first
+                if ($a['time'] === null) {
+                    return ($b['time'] === null) ? 0 : -1;
+                }
+                if ($b['time'] === null) {
+                    return 1;
+                }
+
+                return strcmp($a['time'], $b['time']);
+            });
+
             $dbForLogs->createOrUpdateDocumentsWithIncrease(
                 'stats',
                 'value',
