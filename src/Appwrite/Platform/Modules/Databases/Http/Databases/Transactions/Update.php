@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Transaction as TransactionException;
@@ -215,6 +216,11 @@ class Update extends Action
                         'status' => 'failed',
                     ]));
                     throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+                } catch (LimitException $e) {
+                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                        'status' => 'failed',
+                    ]));
+                    throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, $e->getMessage());
                 } catch (TransactionException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',
