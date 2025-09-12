@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Swoole\Coroutine\WaitGroup;
 use Utopia\DNS\Client;
 use Utopia\Domains\Domain;
 use Utopia\System\System;
@@ -28,11 +29,11 @@ class DNS extends Validator
      */
     protected array $dnsServers = [];
 
-    protected string $domain = '';
-    protected string $resolver = '';
-    protected array $recordValues = [];
-    protected int $count = 0;
-    protected string $reason = '';
+    public string $domain = '';
+    public string $resolver = '';
+    public array $recordValues = [];
+    public int $count = 0;
+    public string $reason = '';
 
     /**
      * @param string $target
@@ -112,11 +113,40 @@ class DNS extends Validator
      */
     public function isValid(mixed $value): bool
     {
+        // If single server, query it
+        if (\count($this->dnsServers) === 1) {
+            return $this->isValidWithDNSServer($value, $this->dnsServers[0]);
+        }
+
+        // If multiple servers, concurrently query them
+        $wg = new WaitGroup();
+        $failedValidator = null;
         foreach ($this->dnsServers as $dnsServer) {
-            $isValid = $this->isValidWithDNSServer($value, $dnsServer);
-            if (!$isValid) {
-                return false;
-            }
+            $wg->add();
+
+            \go(function () use ($value, $dnsServer, $wg, &$failedValidator) {
+                try {
+                    $validator = new DNS($this->target, $this->type, $dnsServer);
+                    $isValid = $validator->isValid($value);
+                    if (!$isValid) {
+                        $failedValidator = $validator;
+                    }
+                } finally {
+                    $wg->done();
+                }
+            });
+        }
+
+        $wg->wait();
+
+        if (!\is_null($failedValidator)) {
+            $this->count = $failedValidator->count;
+            $this->domain = $failedValidator->domain;
+            $this->reason = $failedValidator->reason;
+            $this->recordValues = $failedValidator->recordValues;
+            $this->resolver = $failedValidator->resolver;
+
+            return false;
         }
 
         return true;
