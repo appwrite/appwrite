@@ -108,6 +108,9 @@ class XList extends Action
             $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
             $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+            if (new \DateTime($certificate->getUpdatedAt()) > new \DateTime($rule->getUpdatedAt())) {
+                $rule->setAttribute('$updatedAt', $certificate->getUpdatedAt());
+            }
         }
 
         $response->dynamic(new Document([

@@ -18,17 +18,20 @@ class DNS extends Validator
     protected const FAILURE_REASON_INTERNAL = 'Internal error occurred.';
     protected const FAILURE_REASON_UNKNOWN = '';
 
+    protected static string $regionVerbose = ''; // Useful when overriding in multi-region environments
+
     /**
      * @var mixed
      */
     protected mixed $logs;
 
     /**
-     * @var string
+     * @var array<string>
      */
-    protected string $dnsServer;
+    protected array $dnsServers;
 
     protected string $domain = '';
+    protected string $resolver = '';
     protected array $recordValues = [];
     protected int $count = 0;
     protected string $reason = '';
@@ -36,13 +39,15 @@ class DNS extends Validator
     /**
      * @param string $target
      */
-    public function __construct(protected string $target, protected string $type = self::RECORD_CNAME, string $dnsServer = '')
+    public function __construct(protected string $target, protected string $type = self::RECORD_CNAME, string $dnsServers = '')
     {
-        if (empty($dnsServer)) {
-            $dnsServer = System::getEnv('_APP_DNS', '8.8.8.8');
+        if (empty($dnsServers)) {
+            $dnsServers = System::getEnv('_APP_DNS', '8.8.8.8');
         }
 
-        $this->dnsServer = $dnsServer;
+        foreach (explode(',', $dnsServers) as $server) {
+            $this->dnsServers[] = trim($server);
+        }
     }
 
     /**
@@ -54,8 +59,19 @@ class DNS extends Validator
             return $this->reason;
         }
 
+        $messages = [];
+
+        $region = self::$regionVerbose;
+
+        if (!empty($region)) {
+            $messages[] = "Verification of DNS records failed with DNS resolver {$this->resolver} in {$region} region";
+        } else {
+            $messages[] = "Verification of DNS records failed with DNS resolver {$this->resolver}";
+        }
+
         if ($this->count === 0) {
-            return 'Domain ' . $this->domain . ' does not have ' . $this->type . ' record.';
+            $messages[] = 'Domain ' . $this->domain . ' does not have ' . $this->type . ' record';
+            return implode('. ', $messages) . '.';
         }
 
         $record = $this->count === 1 ? 'record' : 'records';
@@ -63,15 +79,15 @@ class DNS extends Validator
 
         $recordValuesVerbose = implode(', ', $this->recordValues);
 
-        $msg = "Domain {$this->domain} has {$this->count} {$this->type} {$record} with wrong {$value}: {$recordValuesVerbose}.";
+        $messages[] = "Domain {$this->domain} has {$this->count} {$this->type} {$record} with wrong {$value}: {$recordValuesVerbose}";
 
         if ($this->type === self::RECORD_CAA) {
-            $msg .= ' You can resolve this by adding our record (recommended), or removing all other records.';
+            $messages[] = 'You can resolve this by adding our record (recommended), or removing all other records';
         } elseif ($this->type === self::RECORD_A || $this->type === self::RECORD_AAAA || $this->type === self::RECORD_CNAME) {
-            $msg .= ' You can resolve this by changing the record to have our value.';
+            $messages[] = 'You can resolve this by changing the record to have our value';
         }
 
-        return $msg;
+        return implode('. ', $messages) . '.';
     }
 
     /**
@@ -90,6 +106,25 @@ class DNS extends Validator
      */
     public function isValid(mixed $value): bool
     {
+        foreach ($this->dnsServers as $dnsServer) {
+            $isValid = $this->isValidWithDNSServer($value, $dnsServer);
+            if (!$isValid) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if DNS record value matches specific value on a specific DNS server
+     *
+     * @param mixed $domain
+     * @param string $dnsServer
+     * @return bool
+     */
+    public function isValidWithDNSServer(mixed $value, string $dnsServer): bool
+    {
         if (!\is_string($value)) {
             $this->reason = self::FAILURE_REASON_INTERNAL;
             return false;
@@ -99,8 +134,9 @@ class DNS extends Validator
         $this->domain = \strval($value);
         $this->reason = self::FAILURE_REASON_UNKNOWN;
         $this->recordValues = [];
+        $this->resolver = $dnsServer;
 
-        $dns = new Client($this->dnsServer);
+        $dns = new Client($dnsServer);
 
         try {
             $rawQuery = $dns->query($value, $this->type);
@@ -132,8 +168,8 @@ class DNS extends Validator
                 $parts = \explode('.', $value);
                 \array_shift($parts);
                 $parentDomain = \implode('.', $parts);
-                $validator = new DNS($this->target, DNS::RECORD_CAA, $this->dnsServer);
-                return $validator->isValid($parentDomain);
+                $validator = new DNS($this->target, DNS::RECORD_CAA, $dnsServer);
+                return $validator->isValid($parentDomain, $dnsServer);
             }
 
             return false;

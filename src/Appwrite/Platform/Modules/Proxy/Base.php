@@ -40,8 +40,7 @@ class Base extends Action
                     $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
                 }
 
-                $errorVerbose = 'Verification of DNS records failed.' . $validator->getDescription();
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $errorVerbose);
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $validator->getDescription());
             }
         }
 
@@ -77,13 +76,11 @@ class Base extends Action
         $mainValidator = null; // Validator to use for error description
 
         if (!is_null($targetCNAME)) {
-            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validator = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
-                $validators[] = $validator;
+            $validator = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+            $validators[] = $validator;
 
-                if (\is_null($mainValidator)) {
-                    $mainValidator = $validator;
-                }
+            if (\is_null($mainValidator)) {
+                $mainValidator = $validator;
             }
         }
 
@@ -127,8 +124,7 @@ class Base extends Action
                 $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
             }
 
-            $errorVerbose = 'Verification of DNS records failed.' . $mainValidator->getDescription();
-            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $errorVerbose);
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
         }
     }
 }
