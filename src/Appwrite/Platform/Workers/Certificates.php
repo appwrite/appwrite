@@ -154,14 +154,6 @@ class Certificates extends Action
         $mainDomain = $this->getMainDomain();
         $isMainDomain = isset($mainDomain) && $domain->get() === $mainDomain;
 
-        if (empty($domain->get())) {
-            throw new Exception('Missing certificate domain.');
-        }
-
-        if (!$domain->isKnown() || $domain->isTest()) {
-            throw new Exception('Unknown public suffix for domain.');
-        }
-
         // Verify DNS records
         $updates = new Document();
         $success = false;
