@@ -538,7 +538,7 @@ App::get('/v1/health/queue/databases')
     ->inject('response')
     ->action(function (string $name, int|string $threshold, Database $queueForDatabase, Response $response) {
         $threshold = \intval($threshold);
-        $size = $queueForDatabase->getSize();
+        $size = $queueForDatabase->setQueue($name)->getSize();
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
