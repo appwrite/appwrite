@@ -17,7 +17,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
@@ -210,6 +210,11 @@ class Update extends Action
                         'status' => 'failed',
                     ]));
                     throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
+                } catch (StructureException $e) {
+                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                        'status' => 'failed',
+                    ]));
+                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
                 } catch (TransactionException $e) {
                     $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'failed',

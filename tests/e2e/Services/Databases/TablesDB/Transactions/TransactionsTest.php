@@ -96,7 +96,7 @@ class TransactionsTest extends Scope
     /**
      * Test adding operations to a transaction
      */
-    public function testAddOperations(): void
+    public function testCreateOperations(): void
     {
         // Create database first
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([

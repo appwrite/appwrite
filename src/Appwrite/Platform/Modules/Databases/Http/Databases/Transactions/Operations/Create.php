@@ -36,7 +36,7 @@ class Create extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/transactions/:transactionId/operations')
-            ->desc('Add operations to transaction')
+            ->desc('Create operations scoped to a transaction')
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'transactions.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
