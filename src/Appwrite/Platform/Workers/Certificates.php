@@ -9,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
+use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\Platform\Modules\Proxy\Base;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -52,6 +53,7 @@ class Certificates extends Action
             ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
+            ->inject('queueForCertificates')
             ->inject('log')
             ->inject('certificates')
             ->inject('plan')
@@ -66,6 +68,7 @@ class Certificates extends Action
      * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
+     * @param Certificate $queueForCertificates
      * @param Log $log
      * @param CertificatesAdapter $certificates
      * @return void
@@ -80,6 +83,7 @@ class Certificates extends Action
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
         Realtime $queueForRealtime,
+        Certificate $queueForCertificates,
         Log $log,
         CertificatesAdapter $certificates,
         array $plan
@@ -98,6 +102,8 @@ class Certificates extends Action
         $verificationDomainFunction = $payload['verificationDomainFunction'] ?? null;
         $verificationDomainApi = $payload['verificationDomainApi'] ?? null;
 
+        Console::log('Recieved ' . $action . ' action for ' . $domain->get() . ' domain');
+
         $log->addTag('domain', $domain->get());
 
         switch ($action) {
@@ -105,7 +111,7 @@ class Certificates extends Action
                 $this->executeGeneration($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $verificationDomainFunction, $verificationDomainApi);
                 break;
             case Certificate::ACTION_VERIFICATION:
-                $this->executeVerification();
+                $this->executeVerification($domain, $dbForPlatform, $log, $queueForCertificates, $verificationDomainFunction, $verificationDomainApi);
                 break;
             case Certificate::ACTION_GENERATION_SYNC:
                 $this->executeGenerationSync();
@@ -120,9 +126,74 @@ class Certificates extends Action
         throw new \Exception('To be implemented.');
     }
 
-    private function executeVerification(): void
-    {
-        throw new \Exception('To be implemented.');
+    private function executeVerification(
+        Domain $domain,
+        Database $dbForPlatform,
+        Log $log,
+        Certificate $queueForCertificates,
+        ?string $verificationDomainFunction = null,
+        ?string $verificationDomainApi = null,
+    ): void {
+        // Get rule
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())));
+        } else {
+            $rule = ValidatorAuthorization::skip(
+                fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', [$domain->get()]),
+                    Query::limit(1)
+                ])
+            )[0] ?? new Document();
+        }
+
+        // Skip if verification not needed
+        if ($rule->getAttribute('status', '') !== 'created') {
+            Console::warning('Verification for ' . $rule->getAttribute('domain', '') . ' is not needed.');
+            return;
+        }
+
+        Console::info('Verification for domain ' . $rule->getAttribute('domain', '') . ' started.');
+
+        // Prepare for verification
+        $mainDomain = $this->getMainDomain();
+        $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+
+        if (empty($domain->get())) {
+            throw new Exception('Missing certificate domain.');
+        }
+
+        if (!$domain->isKnown() || $domain->isTest()) {
+            throw new Exception('Unknown public suffix for domain.');
+        }
+
+        // Verify DNS records
+        $success = false;
+        try {
+            $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainApi, $verificationDomainFunction);
+            $rule = $rule
+                ->setAttribute('verificationLogs', '')
+                ->setAttribute('status', 'verifying');
+
+            Console::success('Verification succeeded.');
+            $success = true;
+        } catch (ExtendException $err) {
+            Console::warning('Verification failed: ' . $err->getMessage());
+            $rule = $rule->setAttribute('verificationLogs', $err->getMessage());
+        }
+
+        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+
+        // Issue a TLS certificate when domain is verified
+        if ($success) {
+            $queueForCertificates
+                ->setDomain(new Document([
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                ]))
+                ->trigger();
+
+            Console::success('Certificate generation triggered successfully.');
+        }
     }
 
     /**
@@ -199,6 +270,11 @@ class Certificates extends Action
         $success = false;
 
         try {
+            // Clean-up logs from previous attempt
+            if (!empty($certificate->getAttribute('logs', ''))) {
+                $certificate->setAttribute('logs', '');
+            }
+
             $date = \date('H:i:s');
             $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
 
