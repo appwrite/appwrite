@@ -1078,6 +1078,7 @@ services:
   coredns: # DNS server for testing purposes (Proxy APIs)
     image: coredns/coredns:1.12.4
     container_name: appwrite-coredns
+    restart: unless-stopped
     <<: *x-logging
     command: ["-conf", "/mnt/resources/Corefile"]
     ports:
