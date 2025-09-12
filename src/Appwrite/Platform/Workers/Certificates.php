@@ -178,7 +178,7 @@ class Certificates extends Action
             $updates->setAttribute('verificationLogs', $err->getMessage());
         }
 
-        $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
+        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
         // Issue a TLS certificate when domain is verified
         if ($success) {
@@ -415,7 +415,7 @@ class Certificates extends Action
     private function validateDomain(Document $rule, bool $isMainDomain, Log $log, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
         if (!$isMainDomain) {
-            Base::verifyRule($rule, $log, $verificationDomainAPI, $verificationDomainFunction);
+            self::verifyRule($rule, $log, $verificationDomainAPI, $verificationDomainFunction);
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
@@ -514,7 +514,7 @@ class Certificates extends Action
                 ->setAttribute('certificateId', $certificateId)
                 ->setAttribute('status', $success ? 'verified' : 'unverified');
 
-            $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
             $projectId = $rule->getAttribute('projectId');
 

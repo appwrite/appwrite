@@ -94,7 +94,7 @@ class Update extends Action
 
         $updates->setAttribute('status', 'verifying');
 
-        $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
+        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
         // Issue a TLS certificate when domain is verified
         $queueForCertificates
