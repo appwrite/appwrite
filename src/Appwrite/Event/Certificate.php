@@ -9,7 +9,6 @@ class Certificate extends Event
 {
     public const ACTION_VERIFICATION = 'verification';
     public const ACTION_GENERATION = 'generation';
-    public const ACTION_GENERATION_SYNC = 'generation_sync';
 
     protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;

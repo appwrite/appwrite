@@ -113,9 +113,6 @@ class Certificates extends Action
             case Certificate::ACTION_VERIFICATION:
                 $this->executeVerification($domain, $dbForPlatform, $log, $queueForCertificates, $verificationDomainFunction, $verificationDomainApi);
                 break;
-            case Certificate::ACTION_GENERATION_SYNC:
-                $this->executeGenerationSync();
-                break;
             default:
                 throw new Exception('Invalid action . ' . $action);
         }
