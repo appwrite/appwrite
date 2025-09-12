@@ -59,24 +59,38 @@ class DNS extends Validator
 
         $messages = [];
 
-        $messages[] = "Verification of DNS records failed with DNS resolver {$this->resolver}";
+        $messages[] = "DNS verification failed with resolver {$this->resolver}";
 
         if ($this->count === 0) {
-            $messages[] = 'Domain ' . $this->domain . ' does not have ' . $this->type . ' record';
+            $messages[] = 'Domain ' . $this->domain . ' is missing ' . $this->type . ' record';
             return implode('. ', $messages) . '.';
         }
 
-        $record = $this->count === 1 ? 'record' : 'records';
-        $value = $this->count === 1 ? 'value' : 'values';
+        $recordValuesVerbose = implode("', '", $this->recordValues);
 
-        $recordValuesVerbose = implode(', ', $this->recordValues);
+        $countVerbose = match($this->count) {
+            1 => 'one',
+            2 => 'two',
+            3 => 'three',
+            4 => 'four',
+            5 => 'five',
+            6 => 'six',
+            7 => 'seven',
+            8 => 'eight',
+            9 => 'nine',
+            10 => 'ten',
+            default => $this->count
+        };
 
-        $messages[] = "Domain {$this->domain} has {$this->count} {$this->type} {$record} with wrong {$value}: {$recordValuesVerbose}";
+        if ($this->count === 1) {
+            $messages[] = "Domain {$this->domain} has incorrect {$this->type} value '{$recordValuesVerbose}'";
+        } else {
+            // Two or more
+            $messages[] = "Domain {$this->domain} has {$countVerbose} incompatible {$this->type} records: '{$recordValuesVerbose}'";
+        }
 
         if ($this->type === self::RECORD_CAA) {
-            $messages[] = 'You can resolve this by adding our record (recommended), or removing all other records';
-        } elseif ($this->type === self::RECORD_A || $this->type === self::RECORD_AAAA || $this->type === self::RECORD_CNAME) {
-            $messages[] = 'You can resolve this by changing the record to have our value';
+            $messages[] = 'Add new CAA record, or removing all other CAA records';
         }
 
         return implode('. ', $messages) . '.';
