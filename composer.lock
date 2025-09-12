@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5c861fd3b9ba28caced612134ab9e51c",
+    "content-hash": "7553e976312b0423cc31544abb91caec",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3638,16 +3638,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-spatial-filter",
+            "version": "1.4.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "753800f9eb16bfd62b9647a0c54f39675dde728b"
+                "reference": "dbecdf89fde33a5f81ec19f4f97fe0c3715dc83a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/753800f9eb16bfd62b9647a0c54f39675dde728b",
-                "reference": "753800f9eb16bfd62b9647a0c54f39675dde728b",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/dbecdf89fde33a5f81ec19f4f97fe0c3715dc83a",
+                "reference": "dbecdf89fde33a5f81ec19f4f97fe0c3715dc83a",
                 "shasum": ""
             },
             "require": {
@@ -3688,9 +3688,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/spatial-filter"
+                "source": "https://github.com/utopia-php/database/tree/1.4.8"
             },
-            "time": "2025-09-11T15:21:57+00:00"
+            "time": "2025-09-12T03:35:59+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8510,18 +8510,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-spatial-filter",
-            "alias": "1.4.9",
-            "alias_normalized": "1.4.9.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

@@ -6693,7 +6693,7 @@ trait DatabasesBase
                 '$id' => 'doc1',
                 'name' => 'Test Document 1',
                 'pointAttr' => [6.0, 6.0],
-                'lineAttr' => [[1.0, 1.0], [2.0, 2.0]],
+                'lineAttr' => [[1.0, 1.0], [1.1,1.1] , [2.0, 2.0]],
                 'polyAttr' => [[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]]
             ],
             [
@@ -6763,6 +6763,17 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(2, $response['body']['documents']);
+
+        // Test 4.1: contains on line (point on line)
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::contains('lineAttr', [[1.1, 1.1]])->toString()]
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['documents']);
+        $this->assertEquals('doc1', $response['body']['documents'][0]['$id']);
 
 
         // Test 4.2: notContains on polygon (point outside all polygons)
