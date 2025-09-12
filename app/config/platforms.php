@@ -11,7 +11,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '20.0.0',
+                'version' => '20.1.0-rc.1',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -24,7 +24,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev',
+                'gitBranch' => 'feat-txn',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/web/CHANGELOG.md'),
                 'demos' => [
                     [
@@ -262,7 +262,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '19.0.0',
+                'version' => '19.1.0-rc.1',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
@@ -275,7 +275,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev',
+                'gitBranch' => 'feat-txn',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/nodejs/CHANGELOG.md'),
             ],
             [

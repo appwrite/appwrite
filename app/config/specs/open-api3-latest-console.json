@@ -5542,7 +5542,7 @@
         },
         "\/databases\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Add operations to transaction",
+                "summary": "Create operations scoped to a transaction",
                 "operationId": "databasesCreateOperations",
                 "tags": [
                     "databases"
@@ -5611,7 +5611,7 @@
                                     "operations": {
                                         "type": "array",
                                         "description": "Array of staged operations.",
-                                        "x-example": "[\n    {\n        \"action\": \"create\",\n        \"databaseId\": \"<DATABASE_ID>\",\n        \"collectionId\": \"<COLLECTION_ID>\",\n        \"documentId\": \"<DOCUMENT_ID>\",\n        \"data\": {\n            \"name\": \"Walter O'Brien\"\n        }\n    }\n]",
+                                        "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"collectionId\": \"<COLLECTION_ID>\",\n\t        \"documentId\": \"<DOCUMENT_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
                                         "items": {
                                             "type": "object"
                                         }
@@ -33677,7 +33677,7 @@
         },
         "\/tablesdb\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Add operations to transaction",
+                "summary": "Create operations scoped to a transaction",
                 "operationId": "tablesDBCreateOperations",
                 "tags": [
                     "tablesDB"
@@ -33746,7 +33746,7 @@
                                     "operations": {
                                         "type": "array",
                                         "description": "Array of staged operations.",
-                                        "x-example": "[\n    {\n        \"action\": \"create\",\n        \"databaseId\": \"<DATABASE_ID>\",\n        \"tableId\": \"<TABLE_ID>\",\n        \"rowId\": \"<ROW_ID>\",\n        \"data\": {\n            \"name\": \"Walter O'Brien\"\n        }\n    }\n]",
+                                        "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"tableId\": \"<TABLE_ID>\",\n\t        \"rowId\": \"<ROW_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
                                         "items": {
                                             "type": "object"
                                         }

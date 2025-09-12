@@ -5090,7 +5090,7 @@
         },
         "\/databases\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Add operations to transaction",
+                "summary": "Create operations scoped to a transaction",
                 "operationId": "databasesCreateOperations",
                 "tags": [
                     "databases"
@@ -24203,7 +24203,7 @@
         },
         "\/tablesdb\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Add operations to transaction",
+                "summary": "Create operations scoped to a transaction",
                 "operationId": "tablesDBCreateOperations",
                 "tags": [
                     "tablesDB"
