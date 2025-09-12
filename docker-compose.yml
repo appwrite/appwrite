@@ -89,9 +89,12 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+    dns:
+      - 172.16.238.100
     depends_on:
       - mariadb
       - redis
+      - coredns
       # - clamav
     entrypoint:
       - php
@@ -524,9 +527,12 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
+    dns:
+      - 172.16.238.100
     depends_on:
       - redis
       - mariadb
+      - coredns
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -1068,6 +1074,19 @@ services:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
+      
+  coredns: # DNS server for testing purposes (Proxy APIs)
+    image: coredns/coredns:1.12.4
+    container_name: appwrite-coredns
+    <<: *x-logging
+    command: ["-conf", "/mnt/resources/Corefile"]
+    ports:
+      - "1053:1053"
+    networks:
+      appwrite:
+        ipv4_address: 172.16.238.100
+    volumes:
+      - ./tests/resources/coredns:/mnt/resources:ro
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
@@ -1146,6 +1165,9 @@ networks:
     name: gateway
   appwrite:
     name: appwrite
+    ipam:
+      config:
+        - subnet: 172.16.238.0/24
   runtimes:
     name: runtimes
 
