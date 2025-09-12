@@ -4227,7 +4227,7 @@ class TransactionsTest extends Scope
         // Remaining should be docs 6-8
         $this->assertEquals(3, $docs['body']['total']);
 
-        $remainingIds = array_map(fn($doc) => $doc['$id'], $docs['body']['documents']);
+        $remainingIds = array_map(fn ($doc) => $doc['$id'], $docs['body']['documents']);
         sort($remainingIds);
         $this->assertEquals(['doc_6', 'doc_7', 'doc_8'], $remainingIds);
     }
