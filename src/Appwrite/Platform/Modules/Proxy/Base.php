@@ -117,11 +117,11 @@ class Base extends Action
                 $errors = [];
                 foreach ($validators as $validator) {
                     if (!empty($validator->getLogs())) {
-                        $errors[] = $validator->getLogs();
+                        $errors[] = \is_array($validator->getLogs()) ? \json_encode($validator->getLogs()) : \strval($validator->getLogs());
                     }
                 }
                 $error = \implode("\n", $errors);
-                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+                $log->addExtra('dnsResponse', $error);
             }
 
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());

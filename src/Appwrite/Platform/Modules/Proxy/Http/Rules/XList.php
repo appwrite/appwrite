@@ -104,6 +104,8 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $rules = $dbForPlatform->find('rules', $queries);
+
+        // Fill response model
         foreach ($rules as $rule) {
             $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
             $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));

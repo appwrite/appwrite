@@ -64,6 +64,7 @@ class Get extends Action
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
+        // Fill response model
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));

@@ -62,52 +62,57 @@ class Maintenance extends Action
 
         Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
 
-        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
-            $time = DatabaseDateTime::now();
+        \go(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates, $delay) {
+            Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
+                $time = DatabaseDateTime::now();
 
-            Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
+                Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            // Iterate through project only if it was accessed in last 30 days
-            $dateInterval  = DateInterval::createFromDateString('30 days');
-            $before30days = (new DateTime())->sub($dateInterval);
+                // Iterate through project only if it was accessed in last 30 days
+                $dateInterval  = DateInterval::createFromDateString('30 days');
+                $before30days = (new DateTime())->sub($dateInterval);
 
-            $dbForPlatform->foreach(
-                'projects',
-                function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_MAINTENANCE)
-                        ->setProject($project)
-                        ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                        ->trigger();
-                },
-                [
-                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                    Query::limit(100),
-                    Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                    Query::orderAsc('teamInternalId'),
-                ]
-            );
+                $dbForPlatform->foreach(
+                    'projects',
+                    function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
+                        $queueForDeletes
+                            ->setType(DELETE_TYPE_MAINTENANCE)
+                            ->setProject($project)
+                            ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                            ->trigger();
+                    },
+                    [
+                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                        Query::limit(100),
+                        Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
+                        Query::orderAsc('teamInternalId'),
+                    ]
+                );
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_MAINTENANCE)
-                ->setProject($console)
-                ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                ->trigger();
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_MAINTENANCE)
+                    ->setProject($console)
+                    ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                    ->trigger();
 
-            $this->notifyDeleteConnections($queueForDeletes);
-            $this->renewCertificates($dbForPlatform, $queueForCertificates);
-            $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
-            $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-        }, $interval, $delay);
+                $this->notifyDeleteConnections($queueForDeletes);
+                $this->renewCertificates($dbForPlatform, $queueForCertificates);
+                $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
+                $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
+            }, $interval, $delay);
+        });
 
-        Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
-            $this->checkRuleVerification($dbForPlatform, $queueForCertificates);
-        }, $intervalRuleVerification);
+        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalRuleVerification) {
+            Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
+                $this->checkRuleVerification($dbForPlatform, $queueForCertificates);
+            }, $intervalRuleVerification);
+        });
 
-
-        Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
-            $this->checkRuleGeneration($dbForPlatform, $queueForCertificates);
-        }, $intervalRuleGeneration);
+        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalRuleGeneration) {
+            Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
+                $this->checkRuleGeneration($dbForPlatform, $queueForCertificates);
+            }, $intervalRuleGeneration);
+        });
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void
