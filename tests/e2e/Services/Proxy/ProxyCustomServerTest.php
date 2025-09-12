@@ -540,7 +540,7 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(0, $rules['body']['total']);
         $this->assertCount(0, $rules['body']['rules']);
     }
-    
+
     public function testRuleVerification(): void
     {
         // TODO: Implement
