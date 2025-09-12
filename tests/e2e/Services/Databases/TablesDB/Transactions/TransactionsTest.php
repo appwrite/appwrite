@@ -3635,4 +3635,600 @@ class TransactionsTest extends Scope
             $this->assertEquals('active', $response['body']['status']);
         }
     }
+
+    /**
+     * Test increment and decrement operations in transaction
+     */
+    public function testIncrementDecrementOperations(): void
+    {
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'IncrementDecrementTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'CounterTable',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        // Add integer columns
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'counter',
+            'required' => false,
+            'default' => 0,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'score',
+            'required' => false,
+            'default' => 100,
+        ]);
+
+        sleep(2);
+
+        // Create initial row
+        $row = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'counter_row',
+            'data' => [
+                'counter' => 10,
+                'score' => 50
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Add increment and decrement operations
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'increment',
+                    'rowId' => 'counter_row',
+                    'data' => [
+                        'column' => 'counter',
+                        'value' => 5,
+                    ]
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'decrement',
+                    'rowId' => 'counter_row',
+                    'data' => [
+                        'column' => 'score',
+                        'value' => 20,
+                    ]
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'increment',
+                    'rowId' => 'counter_row',
+                    'data' => [
+                        'column' => 'counter',
+                        'value' => 3,
+                        'max' => 20
+                    ]
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'decrement',
+                    'rowId' => 'counter_row',
+                    'data' => [
+                        'column' => 'score',
+                        'value' => 30,
+                        'min' => 0
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify final values
+        $row = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/counter_row", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        // counter: 10 + 5 + 3 = 18 (capped at 20 max)
+        $this->assertEquals(18, $row['body']['counter']);
+        // score: 50 - 20 - 100 = -70, but min is 0
+        $this->assertEquals(0, $row['body']['score']);
+    }
+
+    /**
+     * Test bulk update operations in transaction
+     */
+    public function testBulkUpdateOperations(): void
+    {
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkUpdateTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'BulkUpdateTable',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        // Add columns
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 50,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'category',
+            'size' => 50,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        // Create initial rows
+        for ($i = 1; $i <= 5; $i++) {
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'rowId' => "row_{$i}",
+                'data' => [
+                    'status' => 'pending',
+                    'category' => $i % 2 === 0 ? 'even' : 'odd'
+                ]
+            ]);
+        }
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Add bulk update operations
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'bulkUpdate',
+                    'data' => [
+                        'queries' => [
+                            Query::equal('category', ['even'])->toString()
+                        ],
+                        'data' => [
+                            'status' => 'approved'
+                        ]
+                    ]
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'bulkUpdate',
+                    'data' => [
+                        'queries' => [
+                            Query::equal('category', ['odd'])->toString()
+                        ],
+                        'data' => [
+                            'status' => 'rejected'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify updates
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        foreach ($rows['body']['rows'] as $row) {
+            if ($row['category'] === 'even') {
+                $this->assertEquals('approved', $row['status']);
+            } else {
+                $this->assertEquals('rejected', $row['status']);
+            }
+        }
+    }
+
+    /**
+     * Test bulk upsert operations in transaction
+     */
+    public function testBulkUpsertOperations(): void
+    {
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkUpsertTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'BulkUpsertTable',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        // Add columns
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 100,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'value',
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        // Create some initial rows
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'existing_1',
+            'data' => [
+                'name' => 'Existing Row 1',
+                'value' => 10
+            ]
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'existing_2',
+            'data' => [
+                'name' => 'Existing Row 2',
+                'value' => 20
+            ]
+        ]);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Add bulk upsert operations
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'bulkUpsert',
+                    'data' => [
+                        [
+                            '$id' => 'existing_1',
+                            'name' => 'Updated Row 1',
+                            'value' => 100
+                        ],
+                        [
+                            '$id' => 'new_1',
+                            'name' => 'New Row 1',
+                            'value' => 30
+                        ],
+                        [
+                            '$id' => 'new_2',
+                            'name' => 'New Row 2',
+                            'value' => 40
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify results
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(4, $rows['body']['total']);
+
+        $rowMap = [];
+        foreach ($rows['body']['rows'] as $row) {
+            $rowMap[$row['$id']] = $row;
+        }
+
+        // Verify updated row
+        $this->assertEquals('Updated Row 1', $rowMap['existing_1']['name']);
+        $this->assertEquals(100, $rowMap['existing_1']['value']);
+
+        // Verify unchanged row
+        $this->assertEquals('Existing Row 2', $rowMap['existing_2']['name']);
+        $this->assertEquals(20, $rowMap['existing_2']['value']);
+
+        // Verify new rows
+        $this->assertEquals('New Row 1', $rowMap['new_1']['name']);
+        $this->assertEquals(30, $rowMap['new_1']['value']);
+        $this->assertEquals('New Row 2', $rowMap['new_2']['name']);
+        $this->assertEquals(40, $rowMap['new_2']['value']);
+    }
+
+    /**
+     * Test bulk delete operations in transaction
+     */
+    public function testBulkDeleteOperations(): void
+    {
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkDeleteTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'BulkDeleteTable',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        // Add columns
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'type',
+            'size' => 50,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'priority',
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        // Create initial rows
+        for ($i = 1; $i <= 10; $i++) {
+            $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'rowId' => "row_{$i}",
+                'data' => [
+                    'type' => $i <= 5 ? 'temp' : 'permanent',
+                    'priority' => $i
+                ]
+            ]);
+        }
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Add bulk delete operations
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'bulkDelete',
+                    'data' => [
+                        'queries' => [
+                            Query::equal('type', ['temp'])->toString()
+                        ]
+                    ]
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'action' => 'bulkDelete',
+                    'data' => [
+                        'queries' => [
+                            Query::greaterThan('priority', 8)->toString()
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify deletions
+        $rows = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        // Should have deleted rows 1-5 (temp) and rows 9-10 (priority > 8)
+        // Remaining should be rows 6-8
+        $this->assertEquals(3, $rows['body']['total']);
+
+        $remainingIds = array_map(fn($row) => $row['$id'], $rows['body']['rows']);
+        sort($remainingIds);
+        $this->assertEquals(['row_6', 'row_7', 'row_8'], $remainingIds);
+    }
 }
