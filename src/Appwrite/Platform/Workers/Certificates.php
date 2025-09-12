@@ -153,7 +153,7 @@ class Certificates extends Action
 
         // Prepare for verification
         $mainDomain = $this->getMainDomain();
-        $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+        $isMainDomain = isset($mainDomain) && $domain->get() === $mainDomain;
 
         if (empty($domain->get())) {
             throw new Exception('Missing certificate domain.');
@@ -280,7 +280,7 @@ class Certificates extends Action
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
                 $mainDomain = $this->getMainDomain();
-                $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+                $isMainDomain = isset($mainDomain) && $domain->get() === $mainDomain;
 
                 if (empty($domain->get())) {
                     throw new Exception('Missing certificate domain.');
