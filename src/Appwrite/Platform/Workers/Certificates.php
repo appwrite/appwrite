@@ -282,14 +282,6 @@ class Certificates extends Action
                 $mainDomain = $this->getMainDomain();
                 $isMainDomain = isset($mainDomain) && $domain->get() === $mainDomain;
 
-                if (empty($domain->get())) {
-                    throw new Exception('Missing certificate domain.');
-                }
-
-                if (!$domain->isKnown() || $domain->isTest()) {
-                    throw new Exception('Unknown public suffix for domain.');
-                }
-
                 // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                 if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
                     $rule = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())));

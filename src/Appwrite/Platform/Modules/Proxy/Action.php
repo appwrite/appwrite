@@ -27,6 +27,14 @@ class Action extends PlatformAction
     {
         $domain = new Domain($rule->getAttribute('domain', ''));
 
+        if (empty($domain->get())) {
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed because domain is not valid.');
+        }
+
+        if (!$domain->isKnown() || $domain->isTest()) {
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed because domain ' . $domain->get() . ' is not known public suffix.');
+        }
+
         // Ensure CAA won't block certificate issuance
         if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
             $validationStart = \microtime(true);
