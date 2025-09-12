@@ -18,17 +18,15 @@ class DNS extends Validator
     protected const FAILURE_REASON_INTERNAL = 'Internal error occurred.';
     protected const FAILURE_REASON_UNKNOWN = '';
 
-    protected static string $regionVerbose = ''; // Useful when overriding in multi-region environments
-
     /**
      * @var mixed
      */
-    protected mixed $logs;
+    protected mixed $logs = [];
 
     /**
      * @var array<string>
      */
-    protected array $dnsServers;
+    protected array $dnsServers = [];
 
     protected string $domain = '';
     protected string $resolver = '';
@@ -61,13 +59,7 @@ class DNS extends Validator
 
         $messages = [];
 
-        $region = self::$regionVerbose;
-
-        if (!empty($region)) {
-            $messages[] = "Verification of DNS records failed with DNS resolver {$this->resolver} in {$region} region";
-        } else {
-            $messages[] = "Verification of DNS records failed with DNS resolver {$this->resolver}";
-        }
+        $messages[] = "Verification of DNS records failed with DNS resolver {$this->resolver}";
 
         if ($this->count === 0) {
             $messages[] = 'Domain ' . $this->domain . ' does not have ' . $this->type . ' record';
@@ -169,7 +161,7 @@ class DNS extends Validator
                 \array_shift($parts);
                 $parentDomain = \implode('.', $parts);
                 $validator = new DNS($this->target, DNS::RECORD_CAA, $dnsServer);
-                return $validator->isValid($parentDomain, $dnsServer);
+                return $validator->isValidWithDNSServer($parentDomain, $dnsServer);
             }
 
             return false;
