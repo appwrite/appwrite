@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Base;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -17,13 +17,12 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\Text;
 
-class Create extends Base
+class Create extends Action
 {
     use HTTP;
 

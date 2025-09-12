@@ -120,8 +120,7 @@ class Maintenance extends Action
     {
         $time = DatabaseDateTime::now();
 
-        $oldestToCheck = new DateTime();
-        $oldestToCheck->sub(new DateInterval('PT72H')); // -3 days
+        $oldestToCheck = new DateTime('-3 days');
 
         $rules = $dbForPlatform->find('rules', [
             Query::createdAfter(DatabaseDateTime::format($oldestToCheck)), // max 3 days old

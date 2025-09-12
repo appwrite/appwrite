@@ -10,7 +10,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as ExtendException;
-use Appwrite\Platform\Modules\Proxy\Base;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
@@ -28,7 +28,6 @@ use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
-use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
 
@@ -100,7 +99,7 @@ class Certificates extends Action
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
         $action = $payload['action'] ?? Certificate::ACTION_GENERATION;
         $verificationDomainFunction = $payload['verificationDomainFunction'] ?? null;
-        $verificationDomainApi = $payload['verificationDomainApi'] ?? null;
+        $verificationDomainAPI = $payload['verificationDomainAPI'] ?? null;
 
         Console::log('Recieved ' . $action . ' action for ' . $domain->get() . ' domain');
 
@@ -108,10 +107,10 @@ class Certificates extends Action
 
         switch ($action) {
             case Certificate::ACTION_GENERATION:
-                $this->executeGeneration($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $verificationDomainFunction, $verificationDomainApi);
+                $this->executeGeneration($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $verificationDomainFunction, $verificationDomainAPI);
                 break;
             case Certificate::ACTION_VERIFICATION:
-                $this->executeVerification($domain, $dbForPlatform, $log, $queueForCertificates, $verificationDomainFunction, $verificationDomainApi);
+                $this->executeVerification($domain, $dbForPlatform, $log, $queueForCertificates, $verificationDomainFunction, $verificationDomainAPI);
                 break;
             default:
                 throw new Exception('Invalid action . ' . $action);
@@ -129,7 +128,7 @@ class Certificates extends Action
         Log $log,
         Certificate $queueForCertificates,
         ?string $verificationDomainFunction = null,
-        ?string $verificationDomainApi = null,
+        ?string $verificationDomainAPI = null,
     ): void {
         // Get rule
         if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
@@ -164,10 +163,11 @@ class Certificates extends Action
         }
 
         // Verify DNS records
+        $updates = new Document();
         $success = false;
         try {
-            $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainApi, $verificationDomainFunction);
-            $rule = $rule
+            $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainAPI, $verificationDomainFunction);
+            $updates
                 ->setAttribute('verificationLogs', '')
                 ->setAttribute('status', 'verifying');
 
@@ -175,10 +175,10 @@ class Certificates extends Action
             $success = true;
         } catch (ExtendException $err) {
             Console::warning('Verification failed: ' . $err->getMessage());
-            $rule = $rule->setAttribute('verificationLogs', $err->getMessage());
+            $updates->setAttribute('verificationLogs', $err->getMessage());
         }
 
-        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+        $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
         // Issue a TLS certificate when domain is verified
         if ($success) {
@@ -205,7 +205,7 @@ class Certificates extends Action
      * @param bool $skipRenewCheck
      * @param array $plan
      * @param ?string $verificationDomainFunction
-     * @param ?string $verificationDomainApi
+     * @param ?string $verificationDomainAPI
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -224,7 +224,7 @@ class Certificates extends Action
         bool $skipRenewCheck = false,
         array $plan = [],
         ?string $verificationDomainFunction = null,
-        ?string $verificationDomainApi = null
+        ?string $verificationDomainAPI = null
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -309,7 +309,7 @@ class Certificates extends Action
                     ]);
                 }
 
-                $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainApi, $verificationDomainFunction);
+                $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainAPI, $verificationDomainFunction);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
@@ -414,16 +414,16 @@ class Certificates extends Action
      *
      * @param Document $rule Rule which we validate
      * @param bool $isMainDomain In case of master domain, we look for different DNS configurations
-     * @param string|null $verificationDomainApi Function to verify domain
+     * @param string|null $verificationDomainAPI Function to verify domain
      * @param string|null $verificationDomainFunction Function to verify domain
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, bool $isMainDomain, Log $log, ?string $verificationDomainApi = null, ?string $verificationDomainFunction = null): void
+    private function validateDomain(Document $rule, bool $isMainDomain, Log $log, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
         if (!$isMainDomain) {
-            Base::verifyRule($rule, $log, $verificationDomainApi, $verificationDomainFunction);
+            Base::verifyRule($rule, $log, $verificationDomainAPI, $verificationDomainFunction);
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
@@ -516,9 +516,13 @@ class Certificates extends Action
         }
 
         if (!$rule->isEmpty()) {
-            $rule->setAttribute('certificateId', $certificateId);
-            $rule->setAttribute('status', $success ? 'verified' : 'unverified');
-            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+            $updates = new Document();
+
+            $updates
+                ->setAttribute('certificateId', $certificateId)
+                ->setAttribute('status', $success ? 'verified' : 'unverified');
+
+            $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
             $projectId = $rule->getAttribute('projectId');
 

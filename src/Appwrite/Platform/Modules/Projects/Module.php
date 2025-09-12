@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Projects;
 
 use Appwrite\Platform\Modules\Projects\Services\Http;
-use Utopia\Platform\Module as Base;
+use Utopia\Platform\Module as PlatformModule;
 
-class Module extends Base
+class Module extends PlatformModule
 {
     public function __construct()
     {

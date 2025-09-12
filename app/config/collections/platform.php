@@ -1189,7 +1189,7 @@ return [
                 '$id' => ID::custom('verificationLogs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 65535,
                 'signed' => true,
                 'required' => false,
                 'default' => '',

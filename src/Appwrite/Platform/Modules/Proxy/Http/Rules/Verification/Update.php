@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Verification;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Base;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,12 +13,10 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 
@@ -82,18 +80,21 @@ class Update extends Base
             return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         }
 
+        $updates = new Document();
+
         try {
             self::verifyRule($rule, $log);
-            $rule = $rule->setAttribute('verificationLogs', '');
+            $updates->setAttribute('verificationLogs', '');
         } catch (Exception $err) {
-            $rule = $rule->setAttribute('verificationLogs', $err->getMessage());
-            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+            $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'verificationLogs' => $err->getMessage(),
+            ]));
             throw $err;
         }
 
-        $rule = $rule->setAttribute('status', 'verifying');
+        $updates->setAttribute('status', 'verifying');
 
-        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+        $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
         // Issue a TLS certificate when domain is verified
         $queueForCertificates

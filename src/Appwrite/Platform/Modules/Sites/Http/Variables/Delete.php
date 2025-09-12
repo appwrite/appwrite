@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -11,10 +11,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Delete extends Base
+class Delete extends Action
 {
     use HTTP;
 

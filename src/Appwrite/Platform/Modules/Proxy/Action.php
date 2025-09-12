@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Proxy;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Action as PlatformAction;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
@@ -12,18 +12,18 @@ use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\IP;
 
-class Base extends Action
+class Action extends PlatformAction
 {
     /**
      * Verify or re-verify a rule
      *
      * @param Document $rule Rule to verify
      * @param Log|null $log Log instance to add timings to
-     * @param string|null $verificationDomainApi Override for expected API rule value during verification
+     * @param string|null $verificationDomainAPI Override for expected API rule value during verification
      * @param string|null $verificationDomainFunction Override for expected Function rule value during verification
      * @return void
      */
-    public static function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainApi = null, ?string $verificationDomainFunction = null): void
+    public static function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
         $domain = new Domain($rule->getAttribute('domain', ''));
 
@@ -46,8 +46,8 @@ class Base extends Action
 
         // Ensure at least one of CNAME/A/AAAA record points to our servers properly
         // Ensures different target based on rule's type, as configured by env variables
-        if (\is_null($verificationDomainApi)) {
-            $verificationDomainApi = System::getEnv('_APP_DOMAIN_TARGET_CNAME', '');
+        if (\is_null($verificationDomainAPI)) {
+            $verificationDomainAPI = System::getEnv('_APP_DOMAIN_TARGET_CNAME', '');
         }
         if (\is_null($verificationDomainFunction)) {
             $verificationDomainFunction = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -65,7 +65,7 @@ class Base extends Action
             $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
         } elseif ($ruleType === 'api') {
             // For example: fra.cloud.appwrite.io
-            $targetCNAME = new Domain($verificationDomainApi);
+            $targetCNAME = new Domain($verificationDomainAPI);
         } elseif ($ruleType === 'redirect') {
             // Shouldn't be needed, because redirect should always have resourceTyp too, but just in case we defailt to sites
             // For example: appwrite.network

@@ -13,7 +13,7 @@ class Certificate extends Event
     protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;
     protected ?string $verificationDomainFunction = null; // For example: fra.cloud.appwrite.io
-    protected ?string $verificationDomainApi = null; // For example: fra.appwrite.run
+    protected ?string $verificationDomainAPI = null; // For example: fra.appwrite.run
     protected string $action = self::ACTION_GENERATION;
 
     public function __construct(protected Publisher $publisher)
@@ -88,12 +88,12 @@ class Certificate extends Event
     /**
      * Set verification domain api.
      *
-     * @param ?string $verificationDomainApi
+     * @param ?string $verificationDomainAPI
      * @return self
      */
-    public function setVerificationDomainApi(?string $verificationDomainApi): self
+    public function setVerificationDomainAPI(?string $verificationDomainAPI): self
     {
-        $this->verificationDomainApi = $verificationDomainApi;
+        $this->verificationDomainAPI = $verificationDomainAPI;
 
         return $this;
     }
@@ -103,9 +103,9 @@ class Certificate extends Event
      *
      * @return ?string
      */
-    public function getVerificationDomainApi(): ?string
+    public function getVerificationDomainAPI(): ?string
     {
-        return $this->verificationDomainApi;
+        return $this->verificationDomainAPI;
     }
 
     /**
@@ -153,7 +153,7 @@ class Certificate extends Event
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck,
             'verificationDomainFunction' => $this->verificationDomainFunction,
-            'verificationDomainApi' => $this->verificationDomainApi,
+            'verificationDomainAPI' => $this->verificationDomainAPI,
             'action' => $this->action
         ];
     }
