@@ -7,5 +7,5 @@ X-Appwrite-Key: <YOUR_API_KEY>
 
 {
   "onDelete": "cascade",
-  "newKey": 
+  "newKey": ""
 }

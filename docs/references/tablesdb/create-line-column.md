@@ -1,1 +1,1 @@
-Create a geometric line attribute.
+Create a geometric line column.

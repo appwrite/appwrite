@@ -57,7 +57,8 @@ class Mapper
             'datetime' => Type::string(),
             'json' => Types::json(),
             'none' => Types::json(),
-            'any' => Types::json()
+            'any' => Types::json(),
+            'array' => Types::json()
         ];
 
         foreach ($defaults as $type => $default) {

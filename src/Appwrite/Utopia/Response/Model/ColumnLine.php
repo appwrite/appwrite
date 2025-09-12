@@ -12,14 +12,18 @@ class ColumnLine extends Column
 
         $this
             ->addRule('default', [
-                'type' => self::TYPE_JSON,
+                'type' => self::TYPE_ARRAY,
                 'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,
-                'example' => '[[0, 0], [1, 1]]'
+                'example' => [[0, 0], [1, 1]]
             ])
         ;
     }
+
+    public array $conditions = [
+        'type' => 'linestring',
+    ];
 
     /**
      * Get Name

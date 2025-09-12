@@ -17,5 +17,5 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "attachments": [],
   "draft": false,
   "html": false,
-  "scheduledAt": 
+  "scheduledAt": ""
 }
