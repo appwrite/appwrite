@@ -106,7 +106,7 @@ class Create extends Base
             'rootDirectory' => $rootDirectory,
             'branch' => $branch
         ]);
-        
+
 
         if (!empty($site->getAttribute('providerRepositoryId'))) {
             $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
@@ -137,11 +137,11 @@ class Create extends Base
 
         $branchUrl = "https://github.com/$owner/$repository/tree/$branch";
         $repositoryUrl = "https://github.com/$owner/$repository";
-        
+
         try {
-          $commitDetails = $github->getLatestCommit($owner, $repository, $branch);
+            $commitDetails = $github->getLatestCommit($owner, $repository, $branch);
         } catch (\Throwable $error) {
-          // Ignore; deployment can continue
+            // Ignore; deployment can continue
         }
 
         $commands = [];

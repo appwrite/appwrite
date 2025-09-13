@@ -324,8 +324,8 @@ class Builds extends Action
 
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '-template';
-                    
-                    if(empty($templateVersion)) {
+
+                    if (empty($templateVersion)) {
                         $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, GitHub::CLONE_TYPE_BRANCH, $tmpTemplateDirectory, $templateRootDirectory);
                     } else {
                         // True template

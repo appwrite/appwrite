@@ -4,9 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Services;
 
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Delete as DeleteDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Direct\Create as CreateDirectDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Download\Get as DownloadDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate\Create as CreateDuplicateDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\Direct\Create as CreateDirectDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Get as GetDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Status\Update as UpdateDeploymentStatus;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Template\Create as CreateTemplateDeployment;
