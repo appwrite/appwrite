@@ -119,7 +119,7 @@ class Key
             $project->getId(),
             $type,
             Auth::USER_ROLE_GUESTS,
-            $roles[Auth::USER_ROLE_GUESTS]['scopes'] ?? [],
+            [],
             'UNKNOWN'
         );
 
