@@ -65,7 +65,9 @@ class Create extends Base
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.')
-            ->param('version', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.')
+            ->param('version', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
+            ->param('type', '', new Text(128, 0), 'Type for the reference provided. Can be commit, branch, or version', true)
+            ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag', true)
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
@@ -84,6 +86,8 @@ class Create extends Base
         string $owner,
         string $rootDirectory,
         string $version,
+        string $type,
+        string $reference,
         bool $activate,
         Request $request,
         Response $response,
@@ -100,11 +104,22 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
+        if (empty($version) && empty($type) && empty($reference)) {
+            throw new Exception("Either version or type & reference must be provided");
+        }
+
+        $referenceType = !empty($version) ? GitHub::CLONE_TYPE_TAG : $type;
+        $referenceValue = !empty($version) ? $version : $reference;
+
+        $branchUrl = $type == GitHub::CLONE_TYPE_BRANCH ? "https://github.com/$owner/$repository/tree/$referenceValue" : "";
+        $repositoryUrl = "https://github.com/$owner/$repository";
+
         $template = new Document([
             'repositoryName' => $repository,
             'ownerName' => $owner,
             'rootDirectory' => $rootDirectory,
-            'version' => $version
+            'referenceType' => $referenceType,
+            'referenceValue' => $referenceValue,
         ]);
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
@@ -146,7 +161,12 @@ class Create extends Base
             'resourceType' => 'functions',
             'entrypoint' => $function->getAttribute('entrypoint', ''),
             'buildCommands' => $function->getAttribute('commands', ''),
-            'type' => 'manual',
+            'providerRepositoryName' => $repository,
+            'providerRepositoryOwner' => $owner,
+            'providerRepositoryUrl' => $repositoryUrl,
+            'providerBranchUrl' => $branchUrl,
+            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $referenceValue : '',
+            'type' => 'vcs',
             'activate' => $activate,
         ]));
 

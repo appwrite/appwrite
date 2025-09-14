@@ -310,27 +310,22 @@ class Builds extends Action
                 // Non-VCS + Template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
-                $templateVersion = $template->getAttribute('version', '');
-                $templateBranch = $template->getAttribute('branch', '');
+                $templateReferenceType = $template->getAttribute('referenceType', '');
+                $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && (!empty($templateVersion) || !empty($templateBranch))) {
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateReferenceType) && !empty($templateReferenceValue)) {
                     $stdout = '';
                     $stderr = '';
 
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '-template';
 
-                    if (empty($templateVersion)) {
-                        $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, GitHub::CLONE_TYPE_BRANCH, $tmpTemplateDirectory, $templateRootDirectory);
-                    } else {
-                        // True template
-                        $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
-                    }
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
 
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
