@@ -21,6 +21,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
@@ -66,7 +67,7 @@ class Create extends Base
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.')
             ->param('version', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
-            ->param('type', '', new Text(128, 0), 'Type for the reference provided. Can be commit, branch, or version', true)
+            ->param('type', '', new WhiteList(['commit', 'branch', 'tag']), 'Type for the reference provided. Can be commit, branch, or version', true)
             ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag', true)
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
