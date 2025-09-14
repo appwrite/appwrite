@@ -6682,7 +6682,7 @@ class DatabasesCustomServerTest extends Scope
                 'path' => [
                     [0, 0],
                     [50, 50],
-                    [100, 100]
+                    [80, 80]
                 ] // New LINE STRING
             ],
         ]);
@@ -6696,7 +6696,7 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals([
                 [0, 0],
                 [50, 50],
-                [100, 100]
+                [80, 80]
             ], $document['path']);
         }
 

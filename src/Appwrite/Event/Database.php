@@ -161,17 +161,20 @@ class Database extends Event
         return $this->document;
     }
 
-    public function getQueue(): string
+    public function setProject(Document $project): self
     {
-        try {
-            $dsn = new DSN($this->getProject()->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $this->getProject()->getAttribute('database'));
+        $database = $project->getAttribute('database');
+        if (!empty($database)) {
+            try {
+                $dsn = new DSN($database);
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN("mysql://$database");
+            }
+            $this->queue = $dsn->getHost();
         }
 
-        $this->queue = $dsn->getHost();
-        return $this->queue;
+        return parent::setProject($project);
     }
 
     /**
