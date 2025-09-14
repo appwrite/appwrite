@@ -2698,7 +2698,7 @@ class AccountCustomClientTest extends Scope
         $this->assertStringContainsStringIgnoringCase('Sign in to '. $this->getProject()['name'] . ' with your secure link. Expires in 1 hour.', $lastEmail['text']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
-        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
 
         $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
 
