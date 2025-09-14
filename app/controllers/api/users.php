@@ -1402,12 +1402,8 @@ App::patch('/v1/users/:userId/password')
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
             ->setAttribute('passwordUpdate', DateTime::now())
-            ->setAttribute('hash', 'argon2')
-            ->setAttribute('hashOptions', [
-                'memoryCost' => 65536,
-                'timeCost' => 4,
-                'threads' => 3
-            ]);
+            ->setAttribute('hash', $hasher->getName())
+            ->setAttribute('hashOptions', $hasher->getOptions());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
