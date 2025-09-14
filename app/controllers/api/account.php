@@ -2034,8 +2034,9 @@ App::post('/v1/account/tokens/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $proofsForTokenMagicUrl = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
-        $tokenSecret = $proofsForTokenMagicUrl->generate();
+        $proofForToken->setLength(TOKEN_LENGTH_MAGIC_URL);
+
+        $tokenSecret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
@@ -2043,7 +2044,7 @@ App::post('/v1/account/tokens/magic-url')
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_MAGIC_URL,
-            'secret' => $proofsForTokenMagicUrl->hash($tokenSecret), // One way hash encryption to protect DB leak
+            'secret' => $proofForToken->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
