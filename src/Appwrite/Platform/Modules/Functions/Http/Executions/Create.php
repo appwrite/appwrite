@@ -205,7 +205,7 @@ class Create extends Base
 
             foreach ($sessions as $session) {
                 /** @var Utopia\Database\Document $session */
-                if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
+                if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // Find most recent active session for user ID and JWT headers
                     $current = $session;
                 }
             }
