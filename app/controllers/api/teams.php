@@ -1272,12 +1272,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
             Authorization::setRole(Role::user($userId)->toString());
 
-            if (!Config::getParam('domainVerification')) {
-                $encoded = $store
-                    ->setProperty('id', $user->getId())
-                    ->setProperty('secret', $secret)
-                    ->encode();
+            $encoded = $store
+                ->setProperty('id', $user->getId())
+                ->setProperty('secret', $secret)
+                ->encode();
 
+            if (!Config::getParam('domainVerification')) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
             }
 
