@@ -11735,8 +11735,20 @@
                                 "version": {
                                     "type": "string",
                                     "description": "Version (tag) for the repo linked to the function template.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<VERSION>"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "description": "Type for the reference provided. Can be commit, branch, or version",
+                                    "default": "",
+                                    "x-example": "<TYPE>"
+                                },
+                                "reference": {
+                                    "type": "string",
+                                    "description": "Reference value, can be a commit hash, branch name, or release tag",
+                                    "default": "",
+                                    "x-example": "<REFERENCE>"
                                 },
                                 "activate": {
                                     "type": "boolean",
@@ -11748,8 +11760,7 @@
                             "required": [
                                 "repository",
                                 "owner",
-                                "rootDirectory",
-                                "version"
+                                "rootDirectory"
                             ]
                         }
                     }
@@ -20226,112 +20237,6 @@
                 ]
             }
         },
-        "\/sites\/direct": {
-            "post": {
-                "summary": "Create direct deployment",
-                "operationId": "sitesCreateDirectDeployment",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "sites"
-                ],
-                "description": "Create a deployment directly from a repository branch.",
-                "responses": {
-                    "202": {
-                        "description": "Deployment",
-                        "schema": {
-                            "$ref": "#\/definitions\/deployment"
-                        }
-                    }
-                },
-                "deprecated": false,
-                "x-appwrite": {
-                    "method": "createDirectDeployment",
-                    "group": "deployments",
-                    "weight": 483,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "sites\/create-direct-deployment.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment directly from a repository branch.",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "sites.write",
-                    "platforms": [
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": [],
-                        "Key": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Key": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "siteId": {
-                                    "type": "string",
-                                    "description": "Site ID.",
-                                    "default": null,
-                                    "x-example": "<SITE_ID>"
-                                },
-                                "repository": {
-                                    "type": "string",
-                                    "description": "Repository name of the template.",
-                                    "default": null,
-                                    "x-example": "<REPOSITORY>"
-                                },
-                                "owner": {
-                                    "type": "string",
-                                    "description": "The name of the owner of the template.",
-                                    "default": null,
-                                    "x-example": "<OWNER>"
-                                },
-                                "rootDirectory": {
-                                    "type": "string",
-                                    "description": "Path to site code in the template repo.",
-                                    "default": null,
-                                    "x-example": "<ROOT_DIRECTORY>"
-                                },
-                                "branch": {
-                                    "type": "string",
-                                    "description": "Branch to create deployment from.",
-                                    "default": null,
-                                    "x-example": "<BRANCH>"
-                                },
-                                "activate": {
-                                    "type": "boolean",
-                                    "description": "Automatically activate the deployment when it is finished building.",
-                                    "default": true,
-                                    "x-example": false
-                                }
-                            },
-                            "required": [
-                                "siteId",
-                                "repository",
-                                "owner",
-                                "rootDirectory",
-                                "branch"
-                            ]
-                        }
-                    }
-                ]
-            }
-        },
         "\/sites\/frameworks": {
             "get": {
                 "summary": "List frameworks",
@@ -20406,7 +20311,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 496,
+                    "weight": 495,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -21241,9 +21146,21 @@
                                 },
                                 "version": {
                                     "type": "string",
-                                    "description": "Version (tag) for the repo linked to the site template.",
-                                    "default": null,
+                                    "description": "Version (tag) for the repo linked to the function template.",
+                                    "default": "",
                                     "x-example": "<VERSION>"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "description": "Type for the reference provided. Can be commit, branch, or version",
+                                    "default": "",
+                                    "x-example": "<TYPE>"
+                                },
+                                "reference": {
+                                    "type": "string",
+                                    "description": "Reference value, can be a commit hash, branch name, or release tag",
+                                    "default": "",
+                                    "x-example": "<REFERENCE>"
                                 },
                                 "activate": {
                                     "type": "boolean",
@@ -21255,8 +21172,7 @@
                             "required": [
                                 "repository",
                                 "owner",
-                                "rootDirectory",
-                                "version"
+                                "rootDirectory"
                             ]
                         }
                     }
@@ -21672,7 +21588,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 485,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -21744,7 +21660,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 484,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -21809,7 +21725,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 486,
+                    "weight": 485,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -21877,7 +21793,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 489,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -21937,7 +21853,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 487,
+                    "weight": 486,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -22028,7 +21944,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 488,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -22096,7 +22012,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 490,
+                    "weight": 489,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -22189,7 +22105,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 491,
+                    "weight": 490,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -30142,7 +30058,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 508,
+                    "weight": 507,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -30223,7 +30139,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 506,
+                    "weight": 505,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -30308,7 +30224,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 507,
+                    "weight": 506,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -30369,7 +30285,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 509,
+                    "weight": 508,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -30441,7 +30357,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 510,
+                    "weight": 509,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",

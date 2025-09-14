@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Sites\Services;
 
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Delete as DeleteDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\Direct\Create as CreateDirectDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Download\Get as DownloadDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate\Create as CreateDuplicateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Get as GetDeployment;
@@ -61,7 +60,6 @@ class Http extends Service
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
         $this->addAction(CreateDuplicateDeployment::getName(), new CreateDuplicateDeployment());
         $this->addAction(UpdateDeploymentStatus::getName(), new UpdateDeploymentStatus());
-        $this->addAction(CreateDirectDeployment::getName(), new CreateDirectDeployment());
 
         // Logs
         $this->addAction(GetLog::getName(), new GetLog());
