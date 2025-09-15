@@ -86,7 +86,7 @@ class Rule extends Model
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
-                'default' => false,
+                'default' => 'created',
                 'example' => 'verified',
                 'enum' => ['created', 'verifying', 'verified', 'unverified'],
             ])
