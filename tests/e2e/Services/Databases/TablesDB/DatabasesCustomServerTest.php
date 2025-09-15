@@ -6379,7 +6379,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         // Coordinates are not validated strictly; creation should succeed
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test 4b: Invalid polygon (insufficient points - should fail)
         $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
@@ -6650,7 +6650,7 @@ class DatabasesCustomServerTest extends Scope
                 'path' => [
                     [0, 0],
                     [50, 50],
-                    [100, 100]
+                    [80, 80]
                 ] // New LINE STRING
             ],
         ]);
@@ -6664,7 +6664,7 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals([
                 [0, 0],
                 [50, 50],
-                [100, 100]
+                [80, 80]
             ], $row['path']);
         }
 
