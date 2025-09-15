@@ -1501,7 +1501,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
-        $userParam = \json_decode($request->getParam('user', '{}'), true); // only valid for Apple OAuth2 which returns a user param in the request
+        $userParam = $request->getParam('user');
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
         } elseif ($userParam !== null) {
