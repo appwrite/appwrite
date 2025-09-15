@@ -1,0 +1,15 @@
+# Re-use public resolver to answer unknown queries
+. {
+    forward . 1.1.1.1
+}
+
+# Zones configuration
+webapp.com {
+    file /mnt/resources/webapp.com.zone
+}
+
+# Zones configuration
+wrong-a-webapp.com {
+    file /mnt/resources/wrong-a-webapp.com.zone
+}
+

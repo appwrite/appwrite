@@ -1,0 +1,23 @@
+; Nessessary setup
+$ORIGIN webapp.com.
+@ IN SOA ns1.webapp.com. hostmaster.webapp.com. (2025091201 7200 3600 1209600 3600)
+@ IN NS ns1.webapp.com.
+ns1 IN A 127.0.0.1
+
+; Custom DNS records
+@ IN A 203.0.0.1
+
+stage-site IN CNAME sites.localhost.
+
+stage-function IN CNAME functions.localhost.
+
+stage IN CNAME cname.localhost.
+; No CAA record intentionally
+
+stage-wrong-cname IN CNAME cname-wrong.tests.appwrite.io.
+
+stage-wrong-caa IN A 203.0.0.1
+stage-wrong-caa IN CAA 0 issue "unknown-issuer.org"
+
+stage-correct-caa IN CNAME cname.localhost.
+stage-correct-caa IN CAA 0 issue "digicert.com"
