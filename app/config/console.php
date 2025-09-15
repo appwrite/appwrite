@@ -9,6 +9,8 @@ use Appwrite\Network\Platform;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
+$localeCodes = include __DIR__ . '/locale/codes.php';
+
 $console = [
     '$id' => ID::custom('console'),
     '$sequence' => ID::custom('console'),
@@ -49,6 +51,44 @@ $console = [
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
     ],
+    'templates' => [
+        'email.verification-en' => [
+            'subject' => 'Account Verification',
+            'preview' => 'Verify your email to activate your {{project}} account.',
+            'heading' => 'Verify your email to start using Appwrite Cloud',
+            'hello' => 'Hello {{user}},',
+            'body' => 'Thanks for signing up for Appwrite Cloud. Before you can get started, please verify your email address.',
+            'footer' => 'If you didn’t create an account, you can ignore this email.',
+            'buttonText' => 'Verify email',
+            'thanks' => 'Thanks,',
+            "signature" => "{{project}} team",
+        ],
+        'email.mfaChallenge-en' => [
+            'subject' => 'Verification Code for {{project}}',
+            'preview' => 'Use code {{otp}} for two-step verification in {{project}}. Expires in 15 minutes.',
+            'heading' => 'Complete two-step verification to use Appwrite Cloud',
+            'hello' => 'Hello {{user}},',
+            'body' => 'Enter the following code to confirm your two-step verification in {{b}}{{project}}{{/b}}. This code will expire in 15 minutes.',
+            'thanks' => 'Thanks,',
+            "signature" => "{{project}} team",
+        ],
+        'email.otpSession-en' => [
+            'subject' => 'OTP for {{project}} account login',
+            'preview' => 'Use OTP {{otp}} to sign in to {{project}}. Expires in 15 minutes.',
+            'heading' => 'Login with OTP to use Appwrite Cloud',
+            'hello' => 'Hello {{user}},',
+            'body' => 'Enter the following verification code when prompted to securely sign in to your {{b}}{{project}}{{/b}} account. This code will expire in 15 minutes.',
+            'thanks' => 'Thanks,',
+            "signature" => "{{project}} team",
+        ],
+    ],
+    'customEmails' => true,
 ];
+
+foreach ($localeCodes as $localeCode) {
+    $console['templates']['email.verification-'.$localeCode['code']] = $console['templates']['email.verification-en'];
+    $console['templates']['email.mfaChallenge-'.$localeCode['code']] = $console['templates']['email.mfaChallenge-en'];
+    $console['templates']['email.otpSession-'.$localeCode['code']] = $console['templates']['email.otpSession-en'];
+}
 
 return $console;

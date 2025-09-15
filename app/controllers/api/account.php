@@ -2295,6 +2295,10 @@ App::post('/v1/account/tokens/email')
         $preview = $locale->getText("emails.otpSession.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
 
+        $customEmails = $project->getAttribute('customEmails', false);
+        $bodyTemplate = '';
+        $heading = '';
+
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
         $agentClient = $detector->getClient();
@@ -2360,6 +2364,21 @@ App::post('/v1/account/tokens/email')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
+        } else if ($customEmails) {
+            $subject = $customTemplate['subject'];
+            $preview = $customTemplate['preview'];
+            $heading = $customTemplate['heading'];
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
+            $message
+                ->setParam('{{hello}}', $customTemplate['hello'])
+                ->setParam('{{description}}', $customTemplate['body'], escapeHtml: false)
+                ->setParam('{{thanks}}', $customTemplate['thanks'])
+                ->setParam('{{signature}}', $customTemplate['signature'])
+                ->setParam('{{clientInfo}}', '');
+
+            $body = $message->render();
+            $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
         }
 
         $emailVariables = [
@@ -2374,12 +2393,21 @@ App::post('/v1/account/tokens/email')
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
+            'heading' => $heading,
+            'accentColor' => APP_EMAIL_ACCENT_COLOR,
+            'logoUrl' => APP_EMAIL_LOGO_URL,
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body)
+            ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
             ->setRecipient($email)
             ->trigger();
@@ -3602,6 +3630,10 @@ App::post('/v1/account/verification')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
+        $customEmails = $project->getAttribute('customEmails', false);
+        $bodyTemplate = '';
+        $heading = '';
+
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
@@ -3639,6 +3671,22 @@ App::post('/v1/account/verification')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
+        } else if ($customEmails) {
+            $subject = $customTemplate['subject'];
+            $preview = $customTemplate['preview'];
+            $heading = $customTemplate['heading'];
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-verification.tpl');
+            $message
+                ->setParam('{{hello}}', $customTemplate['hello'])
+                ->setParam('{{body}}', $customTemplate['body'], escapeHtml: false)
+                ->setParam('{{buttonText}}', $customTemplate['buttonText'])
+                ->setParam('{{footer}}', $customTemplate['footer'])
+                ->setParam('{{thanks}}', $customTemplate['thanks'])
+                ->setParam('{{signature}}', $customTemplate['signature']);
+
+            $body = $message->render();
+            $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
         }
 
         $emailVariables = [
@@ -3649,12 +3697,21 @@ App::post('/v1/account/verification')
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
             'team' => '',
+            'heading' => $heading,
+            'accentColor' => APP_EMAIL_ACCENT_COLOR,
+            'logoUrl' => APP_EMAIL_LOGO_URL,
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body)
+            ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name') ?? '')
@@ -4684,6 +4741,10 @@ App::post('/v1/account/mfa/challenge')
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
 
+                $customEmails = $project->getAttribute('customEmails', false);
+                $bodyTemplate = '';
+                $heading = '';
+
                 if ($smtpEnabled) {
                     if (!empty($smtp['senderEmail'])) {
                         $senderEmail = $smtp['senderEmail'];
@@ -4721,6 +4782,21 @@ App::post('/v1/account/mfa/challenge')
                         ->setSmtpReplyTo($replyTo)
                         ->setSmtpSenderEmail($senderEmail)
                         ->setSmtpSenderName($senderName);
+                } else if ($customEmails) {
+                    $subject = $customTemplate['subject'];
+                    $preview = $customTemplate['preview'];
+                    $heading = $customTemplate['heading'];
+
+                    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-challenge.tpl');
+                    $message
+                        ->setParam('{{hello}}', $customTemplate['hello'])
+                        ->setParam('{{description}}', $customTemplate['body'], escapeHtml: false)
+                        ->setParam('{{thanks}}', $customTemplate['thanks'])
+                        ->setParam('{{signature}}', $customTemplate['signature'])
+                        ->setParam('{{clientInfo}}', '');
+
+                    $body = $message->render();
+                    $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
                 }
 
                 $emailVariables = [
@@ -4731,13 +4807,22 @@ App::post('/v1/account/mfa/challenge')
                     'otp' => $code,
                     'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+                    'heading' => $heading,
+                    'accentColor' => APP_EMAIL_ACCENT_COLOR,
+                    'logoUrl' => APP_EMAIL_LOGO_URL,
+                    'twitterUrl' => APP_SOCIAL_TWITTER,
+                    'discordUrl' => APP_SOCIAL_DISCORD,
+                    'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+                    'termsUrl' => APP_EMAIL_TERMS_URL,
+                    'privacyUrl' => APP_EMAIL_PRIVACY_URL,
                 ];
 
                 $queueForMails
                     ->setSubject($subject)
                     ->setPreview($preview)
                     ->setBody($body)
+                    ->setBodyTemplate($bodyTemplate)
                     ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))
                     ->trigger();
