@@ -241,10 +241,11 @@ App::init()
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-            // Disable authorization checks for API keys
-            Authorization::setDefaultStatus(false);
 
             if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
+                // Disable authorization checks for API keys
+                Authorization::setDefaultStatus(false);
+
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
