@@ -265,7 +265,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
-        $store->decode(((isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
+        $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
 
     if (APP_MODE_ADMIN !== $mode) {
