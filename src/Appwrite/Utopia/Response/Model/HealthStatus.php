@@ -24,7 +24,7 @@ class HealthStatus extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Service status. Possible values can are: `pass`, `fail`',
+                'description' => 'Service status. Possible values are: `pass`, `fail`',
                 'default' => '',
                 'example' => 'pass',
                 'enum' => ['pass', 'fail'],

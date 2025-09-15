@@ -53738,7 +53738,7 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "Antivirus status. Possible values can are: `disabled`, `offline`, `online`",
+                        "description": "Antivirus status. Possible values are: `disabled`, `offline`, `online`",
                         "x-example": "online",
                         "enum": [
                             "disabled",
@@ -53791,7 +53791,7 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "Service status. Possible values can are: `pass`, `fail`",
+                        "description": "Service status. Possible values are: `pass`, `fail`",
                         "x-example": "pass",
                         "enum": [
                             "pass",
