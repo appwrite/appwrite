@@ -19,5 +19,5 @@ stage-wrong-cname IN CNAME cname-wrong.tests.appwrite.io.
 stage-wrong-caa IN A 203.0.0.1
 stage-wrong-caa IN CAA 0 issue "unknown-issuer.org"
 
-stage-correct-caa IN CNAME cname.localhost.
+stage-correct-caa IN A 203.0.0.1
 stage-correct-caa IN CAA 0 issue "digicert.com"

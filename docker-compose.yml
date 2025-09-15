@@ -1081,8 +1081,9 @@ services:
     restart: unless-stopped
     <<: *x-logging
     command: ["-conf", "/mnt/resources/Corefile"]
-    ports:
-      - "1053:1053"
+    # If you need to debug CoreDNS, do it from "appwrite container", or port forward:
+    # ports:
+    #  - "53:53"
     networks:
       appwrite:
         ipv4_address: 172.16.238.100
