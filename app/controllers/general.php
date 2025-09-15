@@ -1188,26 +1188,26 @@ App::error()
             $logLevel = $code >= 500 || $code == 0 ? 'error' : 'warning';
             $logPrefix = $code >= 500 || $code == 0 ? '[Error]' : '[Warning]';
 
-            Console::$logLevel($logPrefix . ' Timestamp: ' . date('c', time()));
+            Console::{$logLevel}($logPrefix . ' Timestamp: ' . date('c', time()));
 
             if ($route) {
-                Console::$logLevel($logPrefix . ' Status Code: ' . $code);
-                Console::$logLevel($logPrefix . ' URL: ' . $route->getMethod() . ' ' . $route->getPath());
+                Console::{$logLevel}($logPrefix . ' Status Code: ' . $code);
+                Console::{$logLevel}($logPrefix . ' URL: ' . $route->getMethod() . ' ' . $route->getPath());
             }
-            Console::$logLevel($logPrefix . ' Type: ' . get_class($error));
-            Console::$logLevel($logPrefix . ' Message: ' . $message);
-            Console::$logLevel($logPrefix . ' File: ' . $file);
-            Console::$logLevel($logPrefix . ' Line: ' . $line);
-            Console::$logLevel($logPrefix . ' Trace:');
+            Console::{$logLevel}($logPrefix . ' Type: ' . get_class($error));
+            Console::{$logLevel}($logPrefix . ' Message: ' . $message);
+            Console::{$logLevel}($logPrefix . ' File: ' . $file);
+            Console::{$logLevel}($logPrefix . ' Line: ' . $line);
+            Console::{$logLevel}($logPrefix . ' Trace:');
             foreach ($trace as $index => $entry) {
                 $traceFile = $entry['file'] ?? 'unknown';
                 $traceLine = $entry['line'] ?? 0;
                 $traceFunction = $entry['function'] ?? 'unknown';
                 $traceClass = $entry['class'] ?? '';
                 $traceType = $entry['type'] ?? '';
-                Console::$logLevel("  #{$index} {$traceFile}({$traceLine}): {$traceClass}{$traceType}{$traceFunction}()");
+                Console::{$logLevel}("  #{$index} {$traceFile}({$traceLine}): {$traceClass}{$traceType}{$traceFunction}()");
             }
-            Console::$logLevel('');
+            Console::{$logLevel}('');
         }
 
         switch ($class) {
