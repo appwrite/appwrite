@@ -95,10 +95,11 @@ class Deployment extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'The deployment status. Possible values are "waiting", "processing", "building", "ready", and "failed".',
                 'default' => '',
                 'example' => 'ready',
+                'enum' => ['waiting', 'processing', 'building', 'ready', 'failed'],
             ])
             ->addRule('buildLogs', [
                 'type' => self::TYPE_STRING,

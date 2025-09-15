@@ -65,10 +65,11 @@ class Rule extends Model
                 'example' => 'n3u9feiwmf',
             ])
             ->addRule('deploymentResourceType', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
                 'default' => '',
                 'example' => 'function',
+                'enum' => ['function', 'site'],
             ])
             ->addRule('deploymentResourceId', [
                 'type' => self::TYPE_STRING,
@@ -83,10 +84,11 @@ class Rule extends Model
                 'example' => 'function',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
                 'default' => false,
                 'example' => 'verified',
+                'enum' => ['created', 'verifying', 'verified', 'unverified'],
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,

@@ -690,6 +690,10 @@ class Swagger2 extends Format
                         $type = 'string';
                         break;
 
+                    case 'enum':
+                        $type = 'string';
+                        break;
+
                     case 'json':
                         $type = 'object';
                         break;
@@ -791,6 +795,13 @@ class Swagger2 extends Format
                 }
                 if ($items) {
                     $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                }
+                if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
+                    if ($rule['array']) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = $rule['enum'];
+                    } else {
+                        $output['definitions'][$model->getType()]['properties'][$name]['enum'] = $rule['enum'];
+                    }
                 }
                 if (!in_array($name, $required)) {
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;

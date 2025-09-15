@@ -35331,7 +35331,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -35419,7 +35426,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -35509,7 +35523,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -35599,7 +35620,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -35672,7 +35700,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -35752,7 +35787,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -35842,7 +35884,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -35922,7 +35971,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -36002,7 +36058,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -36082,7 +36145,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -36190,7 +36260,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -36269,7 +36346,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -36360,7 +36444,14 @@
                     "status": {
                         "type": "string",
                         "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -37835,7 +37926,14 @@
                     "status": {
                         "type": "string",
                         "description": "Index status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ]
                     },
                     "error": {
                         "type": "string",
@@ -40272,7 +40370,14 @@
                     "status": {
                         "type": "string",
                         "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"ready\", and \"failed\".",
-                        "x-example": "ready"
+                        "x-example": "ready",
+                        "enum": [
+                            "waiting",
+                            "processing",
+                            "building",
+                            "ready",
+                            "failed"
+                        ]
                     },
                     "buildLogs": {
                         "type": "string",
@@ -40437,12 +40542,23 @@
                     "trigger": {
                         "type": "string",
                         "description": "The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.",
-                        "x-example": "http"
+                        "x-example": "http",
+                        "enum": [
+                            "http",
+                            "schedule",
+                            "event"
+                        ]
                     },
                     "status": {
                         "type": "string",
                         "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.",
-                        "x-example": "processing"
+                        "x-example": "processing",
+                        "enum": [
+                            "waiting",
+                            "processing",
+                            "completed",
+                            "failed"
+                        ]
                     },
                     "requestMethod": {
                         "type": "string",
@@ -40811,7 +40927,12 @@
                     "status": {
                         "type": "string",
                         "description": "Antivirus status. Possible values can are: `disabled`, `offline`, `online`",
-                        "x-example": "online"
+                        "x-example": "online",
+                        "enum": [
+                            "disabled",
+                            "offline",
+                            "online"
+                        ]
                     }
                 },
                 "required": [
@@ -40859,7 +40980,11 @@
                     "status": {
                         "type": "string",
                         "description": "Service status. Possible values can are: `pass`, `fail`",
-                        "x-example": "pass"
+                        "x-example": "pass",
+                        "enum": [
+                            "pass",
+                            "fail"
+                        ]
                     }
                 },
                 "required": [

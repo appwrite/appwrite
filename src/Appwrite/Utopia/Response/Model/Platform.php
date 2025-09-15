@@ -40,10 +40,11 @@ class Platform extends Model
                 'example' => 'My Web App',
             ])
             ->addRule('type', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, and unity.',
                 'default' => '',
                 'example' => 'web',
+                'enum' => ['web', 'flutter-web', 'flutter-ios', 'flutter-android', 'ios', 'android', 'unity'],
             ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,

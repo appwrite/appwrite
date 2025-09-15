@@ -17,10 +17,11 @@ class HealthAntivirus extends Model
                 'example' => '1.0.0',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Antivirus status. Possible values can are: `disabled`, `offline`, `online`',
                 'default' => '',
                 'example' => 'online',
+                'enum' => ['disabled', 'offline', 'online'],
             ])
         ;
     }
