@@ -216,7 +216,7 @@ class Mapper
             if (\is_array($rule['type'])) {
                 $type = self::getUnionType($escapedKey, $rule);
             } elseif ($rule['type'] === 'enum' && !empty($rule['enum'])) {
-                $type = self::createEnumType($rule, $escapedKey);
+                $type = self::getEnumType($escapedKey, $rule);
             } else {
                 $type = self::getObjectType($rule);
             }
@@ -391,9 +391,9 @@ class Mapper
         return $type;
     }
 
-    private static function createEnumType(array $rule, string $fieldName): Type
+    private static function getEnumType(string $name, array $rule): Type
     {
-        $enumTypeName = \ucfirst($fieldName) . 'Enum';
+        $enumTypeName = \ucfirst($name) . 'Enum';
 
         if (Registry::has($enumTypeName)) {
             return Registry::get($enumTypeName);
