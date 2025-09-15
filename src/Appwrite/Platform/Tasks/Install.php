@@ -158,12 +158,14 @@ class Install extends Action
                 }
 
                 if ($var['filter'] === 'token') {
-                    $input[$var['name']] = (new Token())->generate();
+                    $token = new Token();
+                    $input[$var['name']] = $token->generate();
                     continue;
                 }
 
                 if ($var['filter'] === 'password') {
-                    $input[$var['name']] = (new Password())->generate();
+                    $password = new Password();
+                    $input[$var['name']] = $password->generate();
                     continue;
                 }
             }
