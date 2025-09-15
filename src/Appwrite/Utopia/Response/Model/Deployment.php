@@ -131,12 +131,6 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'https://github.com/vermakhushboo/g4-node-function',
             ])
-            ->addRule('providerBranch', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The branch name of the vcs provider repository',
-                'default' => '',
-                'example' => 'main',
-            ])
             ->addRule('providerCommitHash', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The commit hash of the vcs commit',

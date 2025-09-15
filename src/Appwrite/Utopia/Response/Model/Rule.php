@@ -55,7 +55,7 @@ class Rule extends Model
             ->addRule('redirectStatusCode', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Status code to apply during redirect. Used if type is "redirect"',
-                'default' => '',
+                'default' => 301,
                 'example' => 301,
             ])
             ->addRule('deploymentId', [
@@ -81,7 +81,7 @@ class Rule extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Name of Git branch that updates rule. Used if type is "deployment"',
                 'default' => '',
-                'example' => 'function',
+                'example' => 'main',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,

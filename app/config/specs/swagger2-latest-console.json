@@ -52272,11 +52272,6 @@
                     "description": "The url of the vcs provider repository",
                     "x-example": "https:\/\/github.com\/vermakhushboo\/g4-node-function"
                 },
-                "providerBranch": {
-                    "type": "string",
-                    "description": "The branch of the vcs repository",
-                    "x-example": "0.7.x"
-                },
                 "providerCommitHash": {
                     "type": "string",
                     "description": "The commit hash of the vcs commit",
@@ -52301,6 +52296,11 @@
                     "type": "string",
                     "description": "The url of the vcs commit",
                     "x-example": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb"
+                },
+                "providerBranch": {
+                    "type": "string",
+                    "description": "The branch of the vcs repository",
+                    "x-example": "0.7.x"
                 },
                 "providerBranchUrl": {
                     "type": "string",
@@ -52329,12 +52329,12 @@
                 "providerRepositoryName",
                 "providerRepositoryOwner",
                 "providerRepositoryUrl",
-                "providerBranch",
                 "providerCommitHash",
                 "providerCommitAuthorUrl",
                 "providerCommitAuthor",
                 "providerCommitMessage",
                 "providerCommitUrl",
+                "providerBranch",
                 "providerBranchUrl"
             ],
             "example": {
@@ -52358,12 +52358,12 @@
                 "providerRepositoryName": "database",
                 "providerRepositoryOwner": "utopia",
                 "providerRepositoryUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function",
-                "providerBranch": "0.7.x",
                 "providerCommitHash": "7c3f25d",
                 "providerCommitAuthorUrl": "https:\/\/github.com\/vermakhushboo",
                 "providerCommitAuthor": "Khushboo Verma",
                 "providerCommitMessage": "Update index.js",
                 "providerCommitUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb",
+                "providerBranch": "0.7.x",
                 "providerBranchUrl": "https:\/\/github.com\/vermakhushboo\/appwrite\/tree\/0.7.x"
             }
         },
@@ -52439,7 +52439,7 @@
                 },
                 "requestHeaders": {
                     "type": "array",
-                    "description": "HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
+                    "description": "HTTP request headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/headers"
@@ -53408,7 +53408,7 @@
                 "hostname": {
                     "type": "string",
                     "description": "Web app hostname. Empty string for other platforms.",
-                    "x-example": true
+                    "x-example": "app.example.com"
                 },
                 "httpUser": {
                     "type": "string",
@@ -53441,7 +53441,7 @@
                 "type": "web",
                 "key": "com.company.appname",
                 "store": "",
-                "hostname": true,
+                "hostname": "app.example.com",
                 "httpUser": "username",
                 "httpPass": "password"
             }
@@ -56022,7 +56022,7 @@
                 "deploymentVcsProviderBranch": {
                     "type": "string",
                     "description": "Name of Git branch that updates rule. Used if type is \"deployment\"",
-                    "x-example": "function"
+                    "x-example": "main"
                 },
                 "status": {
                     "type": "string",
@@ -56075,7 +56075,7 @@
                 "deploymentId": "n3u9feiwmf",
                 "deploymentResourceType": "function",
                 "deploymentResourceId": "n3u9feiwmf",
-                "deploymentVcsProviderBranch": "function",
+                "deploymentVcsProviderBranch": "main",
                 "status": "verified",
                 "logs": "HTTP challegne failed.",
                 "renewAt": "datetime"

@@ -11422,7 +11422,7 @@
                 },
                 "requestHeaders": {
                     "type": "array",
-                    "description": "HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
+                    "description": "HTTP request headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/headers"
