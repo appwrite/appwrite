@@ -91,7 +91,7 @@ class DNS extends Validator
         }
 
         if ($this->type === self::RECORD_CAA) {
-            $messages[] = 'Add new CAA record, or removing all other CAA records';
+            $messages[] = 'Add new CAA record, or remove all other CAA records';
         }
 
         return implode('. ', $messages) . '.';

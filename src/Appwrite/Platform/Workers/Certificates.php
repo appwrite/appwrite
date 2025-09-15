@@ -101,7 +101,7 @@ class Certificates extends Action
         $verificationDomainFunction = $payload['verificationDomainFunction'] ?? null;
         $verificationDomainAPI = $payload['verificationDomainAPI'] ?? null;
 
-        Console::log('Recieved ' . $action . ' action for ' . $domain->get() . ' domain');
+        Console::log('Received ' . $action . ' action for ' . $domain->get() . ' domain');
 
         $log->addTag('domain', $domain->get());
 
@@ -113,7 +113,7 @@ class Certificates extends Action
                 $this->executeVerification($domain, $dbForPlatform, $log, $queueForCertificates, $verificationDomainFunction, $verificationDomainAPI);
                 break;
             default:
-                throw new Exception('Invalid action . ' . $action);
+                throw new Exception('Invalid action: ' . $action);
         }
     }
 
