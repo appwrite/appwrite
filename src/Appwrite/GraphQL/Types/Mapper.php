@@ -6,6 +6,7 @@ use Appwrite\GraphQL\Resolvers;
 use Appwrite\GraphQL\Types;
 use Appwrite\SDK\Method;
 use Exception;
+use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
@@ -58,7 +59,8 @@ class Mapper
             'json' => Types::json(),
             'none' => Types::json(),
             'any' => Types::json(),
-            'array' => Types::json()
+            'array' => Types::json(),
+            'enum' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {
@@ -213,6 +215,8 @@ class Mapper
 
             if (\is_array($rule['type'])) {
                 $type = self::getUnionType($escapedKey, $rule);
+            } elseif ($rule['type'] === 'enum' && !empty($rule['enum'])) {
+                $type = self::createEnumType($rule, $escapedKey);
             } else {
                 $type = self::getObjectType($rule);
             }
@@ -387,6 +391,30 @@ class Mapper
         return $type;
     }
 
+    private static function createEnumType(array $rule, string $fieldName): Type
+    {
+        $enumTypeName = \ucfirst($fieldName) . 'Enum';
+
+        if (Registry::has($enumTypeName)) {
+            return Registry::get($enumTypeName);
+        }
+
+        $values = [];
+        foreach ($rule['enum'] as $enumValue) {
+            $values[\strtoupper(\str_replace(['-', ' ', '.'], '_', $enumValue))] = [
+                'value' => $enumValue
+            ];
+        }
+
+        $enumType = new EnumType([
+            'name' => $enumTypeName,
+            'values' => $values
+        ]);
+
+        Registry::set($enumTypeName, $enumType);
+        return $enumType;
+    }
+
     private static function getObjectType(array $rule): Type
     {
         $type = $rule['type'];
@@ -460,6 +488,7 @@ class Mapper
             'point' => static::model("{$prefix}Point"),
             'linestring' => static::model("{$prefix}Line"),
             'polygon' => static::model("{$prefix}Polygon"),
+            'enum' => static::model("{$prefix}Enum"),
             default => throw new Exception('Unknown ' . strtolower($prefix) . ' implementation'),
         };
     }
