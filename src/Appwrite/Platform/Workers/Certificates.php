@@ -314,7 +314,6 @@ class Certificates extends Action
             $certificate->setAttribute('renewDate', $renewDate);
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', DateTime::now());
-            $status = 'verified';
         } catch (Throwable $e) {
             $status = 'unverified';
 
