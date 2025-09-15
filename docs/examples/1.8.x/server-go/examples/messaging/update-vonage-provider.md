@@ -6,26 +6,19 @@ import (
     "github.com/appwrite/sdk-for-go/messaging"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithKey("<YOUR_API_KEY>") // Your secret API key
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithKey("<YOUR_API_KEY>")
+)
 
-    service := messaging.New(client)
-    response, error := service.UpdateVonageProvider(
-        "<PROVIDER_ID>",
-        messaging.WithUpdateVonageProviderName("<NAME>"),
-        messaging.WithUpdateVonageProviderEnabled(false),
-        messaging.WithUpdateVonageProviderApiKey("<API_KEY>"),
-        messaging.WithUpdateVonageProviderApiSecret("<API_SECRET>"),
-        messaging.WithUpdateVonageProviderFrom("<FROM>"),
-    )
+service := messaging.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.UpdateVonageProvider(
+    "<PROVIDER_ID>",
+    messaging.WithUpdateVonageProviderName("<NAME>"),
+    messaging.WithUpdateVonageProviderEnabled(false),
+    messaging.WithUpdateVonageProviderApiKey("<API_KEY>"),
+    messaging.WithUpdateVonageProviderApiSecret("<API_SECRET>"),
+    messaging.WithUpdateVonageProviderFrom("<FROM>"),
+)

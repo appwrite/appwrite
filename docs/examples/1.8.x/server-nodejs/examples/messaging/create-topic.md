@@ -10,5 +10,5 @@ const messaging = new sdk.Messaging(client);
 const result = await messaging.createTopic({
     topicId: '<TOPIC_ID>',
     name: '<NAME>',
-    subscribe: ["any"]
+    subscribe: ["any"] // optional
 });

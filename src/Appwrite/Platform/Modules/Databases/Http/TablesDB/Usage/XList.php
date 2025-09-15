@@ -25,7 +25,7 @@ class XList extends DatabaseUsageXList
             ->setHttpPath('/v1/tablesdb/usage')
             ->desc('Get TablesDB usage stats')
             ->groups(['api', 'database', 'usage'])
-            ->label('scope', 'tables.read')
+            ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(

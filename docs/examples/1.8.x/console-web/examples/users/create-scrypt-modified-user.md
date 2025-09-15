@@ -13,7 +13,7 @@ const result = await users.createScryptModifiedUser({
     passwordSalt: '<PASSWORD_SALT>',
     passwordSaltSeparator: '<PASSWORD_SALT_SEPARATOR>',
     passwordSignerKey: '<PASSWORD_SIGNER_KEY>',
-    name: '<NAME>'
+    name: '<NAME>' // optional
 });
 
 console.log(result);

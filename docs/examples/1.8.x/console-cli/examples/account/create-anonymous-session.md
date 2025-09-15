@@ -1,1 +1,1 @@
-appwrite account createAnonymousSession
+appwrite account create-anonymous-session

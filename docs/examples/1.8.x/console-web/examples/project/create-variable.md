@@ -9,7 +9,7 @@ const project = new Project(client);
 const result = await project.createVariable({
     key: '<KEY>',
     value: '<VALUE>',
-    secret: false
+    secret: false // optional
 });
 
 console.log(result);

@@ -9,5 +9,5 @@ const tokens = new sdk.Tokens(client);
 
 const result = await tokens.update({
     tokenId: '<TOKEN_ID>',
-    expire: ''
+    expire: '' // optional
 });

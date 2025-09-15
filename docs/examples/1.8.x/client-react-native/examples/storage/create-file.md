@@ -9,8 +9,8 @@ const storage = new Storage(client);
 const result = await storage.createFile({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    file: await pickSingle(),
-    permissions: ["read("any")"]
+    file: InputFile.fromPath('/path/to/file', 'filename'),
+    permissions: ["read("any")"] // optional
 });
 
 console.log(result);

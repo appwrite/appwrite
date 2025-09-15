@@ -1,6 +1,6 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.TablesDb;
+import io.appwrite.services.TablesDB;
 import io.appwrite.enums.IndexType;
 
 Client client = new Client()
@@ -8,7 +8,7 @@ Client client = new Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>"); // Your secret API key
 
-TablesDb tablesDB = new TablesDb(client);
+TablesDB tablesDB = new TablesDB(client);
 
 tablesDB.createIndex(
     "<DATABASE_ID>", // databaseId

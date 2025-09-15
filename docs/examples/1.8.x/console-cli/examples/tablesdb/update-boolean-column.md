@@ -1,7 +1,6 @@
-appwrite tablesDB updateBooleanColumn \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key '' \
-        --required false \
-        --default false \
-
+appwrite tables-db update-boolean-column \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key '' \
+    --required false \
+    --default false

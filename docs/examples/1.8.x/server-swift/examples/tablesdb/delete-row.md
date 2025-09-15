@@ -5,7 +5,7 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setSession("") // The user session to authenticate with
 
-let tablesDB = TablesDb(client)
+let tablesDB = TablesDB(client)
 
 let result = try await tablesDB.deleteRow(
     databaseId: "<DATABASE_ID>",

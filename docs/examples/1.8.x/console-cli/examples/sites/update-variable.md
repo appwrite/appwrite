@@ -1,6 +1,4 @@
-appwrite sites updateVariable \
-        --siteId <SITE_ID> \
-        --variableId <VARIABLE_ID> \
-        --key <KEY> \
-
-
+appwrite sites update-variable \
+    --site-id <SITE_ID> \
+    --variable-id <VARIABLE_ID> \
+    --key <KEY>

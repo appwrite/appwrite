@@ -7,7 +7,7 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetSession(""); // The user session to authenticate with
 
-TablesDb tablesDB = new TablesDb(client);
+TablesDB tablesDB = new TablesDB(client);
 
 Row result = await tablesDB.UpsertRow(
     databaseId: "<DATABASE_ID>",

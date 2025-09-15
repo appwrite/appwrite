@@ -90,7 +90,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($this->publisher);
+                    $queueForFunctions = new Func($this->publisherFunctions);
 
                     $queueForFunctions
                         ->setType('schedule')

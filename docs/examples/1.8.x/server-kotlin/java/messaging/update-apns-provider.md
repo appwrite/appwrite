@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.updateApnsProvider(
+messaging.updateAPNSProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name (optional)
     false, // enabled (optional)

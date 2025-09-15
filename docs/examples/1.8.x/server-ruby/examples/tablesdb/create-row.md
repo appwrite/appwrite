@@ -7,12 +7,18 @@ client = Client.new
     .set_project('<YOUR_PROJECT_ID>') # Your project ID
     .set_session('') # The user session to authenticate with
 
-tables_db = TablesDb.new(client)
+tables_db = TablesDB.new(client)
 
 result = tables_db.create_row(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
     row_id: '<ROW_ID>',
-    data: {},
+    data: {
+        "username" => "walter.obrien",
+        "email" => "walter.obrien@example.com",
+        "fullName" => "Walter O'Brien",
+        "age" => 30,
+        "isAdmin" => false
+    },
     permissions: ["read("any")"] # optional
 )

@@ -5,12 +5,18 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setSession(''); // The user session to authenticate with
 
-const tablesDB = new sdk.TablesDb(client);
+const tablesDB = new sdk.TablesDB(client);
 
 const result = await tablesDB.createRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
-    data: {},
-    permissions: ["read("any")"]
+    data: {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 30,
+        "isAdmin": false
+    },
+    permissions: ["read("any")"] // optional
 });

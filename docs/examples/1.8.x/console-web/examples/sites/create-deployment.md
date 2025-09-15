@@ -10,9 +10,9 @@ const result = await sites.createDeployment({
     siteId: '<SITE_ID>',
     code: document.getElementById('uploader').files[0],
     activate: false,
-    installCommand: '<INSTALL_COMMAND>',
-    buildCommand: '<BUILD_COMMAND>',
-    outputDirectory: '<OUTPUT_DIRECTORY>'
+    installCommand: '<INSTALL_COMMAND>', // optional
+    buildCommand: '<BUILD_COMMAND>', // optional
+    outputDirectory: '<OUTPUT_DIRECTORY>' // optional
 });
 
 console.log(result);

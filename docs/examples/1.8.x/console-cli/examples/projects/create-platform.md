@@ -1,7 +1,4 @@
-appwrite projects createPlatform \
-        --projectId <PROJECT_ID> \
-        --type web \
-        --name <NAME> \
-
-
-
+appwrite projects create-platform \
+    --project-id <PROJECT_ID> \
+    --type web \
+    --name <NAME>

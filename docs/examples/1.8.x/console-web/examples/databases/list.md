@@ -7,8 +7,8 @@ const client = new Client()
 const databases = new Databases(client);
 
 const result = await databases.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

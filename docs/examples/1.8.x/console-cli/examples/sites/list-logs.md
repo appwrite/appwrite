@@ -1,3 +1,2 @@
-appwrite sites listLogs \
-        --siteId <SITE_ID> \
-
+appwrite sites list-logs \
+    --site-id <SITE_ID>

@@ -1,4 +1,3 @@
-appwrite tablesDB listTableLogs \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-
+appwrite tables-db list-table-logs \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID>

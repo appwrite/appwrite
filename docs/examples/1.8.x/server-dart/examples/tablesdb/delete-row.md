@@ -5,7 +5,7 @@ Client client = Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setSession(''); // The user session to authenticate with
 
-TablesDb tablesDB = TablesDb(client);
+TablesDB tablesDB = TablesDB(client);
 
 await tablesDB.deleteRow(
     databaseId: '<DATABASE_ID>',

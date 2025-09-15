@@ -5,10 +5,10 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setSession(''); // The user session to authenticate with
 
-const tablesDB = new sdk.TablesDb(client);
+const tablesDB = new sdk.TablesDB(client);
 
 const result = await tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    queries: []
+    queries: [] // optional
 });

@@ -16,5 +16,5 @@ const response = await users.createScryptUser({
     passwordMemory: null,
     passwordParallel: null,
     passwordLength: null,
-    name: '<NAME>'
+    name: '<NAME>' // optional
 });

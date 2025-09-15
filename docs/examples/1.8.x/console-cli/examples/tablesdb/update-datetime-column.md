@@ -1,7 +1,6 @@
-appwrite tablesDB updateDatetimeColumn \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key '' \
-        --required false \
-        --default '' \
-
+appwrite tables-db update-datetime-column \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key '' \
+    --required false \
+    --default ''

@@ -9,7 +9,7 @@ const proxy = new Proxy(client);
 const result = await proxy.createFunctionRule({
     domain: '',
     functionId: '<FUNCTION_ID>',
-    branch: '<BRANCH>'
+    branch: '<BRANCH>' // optional
 });
 
 console.log(result);

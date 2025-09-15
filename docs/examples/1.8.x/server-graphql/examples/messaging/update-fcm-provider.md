@@ -1,5 +1,5 @@
 mutation {
-    messagingUpdateFcmProvider(
+    messagingUpdateFCMProvider(
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
         enabled: false,

@@ -11,7 +11,7 @@ $client = (new Client())
 
 $account = new Account($client);
 
-$result = $account->updateMfaAuthenticator(
+$result = $account->updateMFAAuthenticator(
     type: AuthenticatorType::TOTP(),
     otp: '<OTP>'
 );

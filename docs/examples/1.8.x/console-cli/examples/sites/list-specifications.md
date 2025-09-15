@@ -1,1 +1,1 @@
-appwrite sites listSpecifications
+appwrite sites list-specifications

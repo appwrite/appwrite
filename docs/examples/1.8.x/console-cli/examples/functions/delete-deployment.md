@@ -1,3 +1,3 @@
-appwrite functions deleteDeployment \
-        --functionId <FUNCTION_ID> \
-        --deploymentId <DEPLOYMENT_ID>
+appwrite functions delete-deployment \
+    --function-id <FUNCTION_ID> \
+    --deployment-id <DEPLOYMENT_ID>

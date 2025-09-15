@@ -8,7 +8,7 @@ let client = Client()
 
 let messaging = Messaging(client)
 
-let provider = try await messaging.updateSmtpProvider(
+let provider = try await messaging.updateSMTPProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>", // optional
     host: "<HOST>", // optional

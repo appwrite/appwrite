@@ -1,4 +1,4 @@
-appwrite databases getIndex \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --key ''
+appwrite databases get-index \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --key ''

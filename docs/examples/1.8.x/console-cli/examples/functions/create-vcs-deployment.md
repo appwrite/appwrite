@@ -1,5 +1,4 @@
-appwrite functions createVcsDeployment \
-        --functionId <FUNCTION_ID> \
-        --type branch \
-        --reference <REFERENCE> \
-
+appwrite functions create-vcs-deployment \
+    --function-id <FUNCTION_ID> \
+    --type branch \
+    --reference <REFERENCE>

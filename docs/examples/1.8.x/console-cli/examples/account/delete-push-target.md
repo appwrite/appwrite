@@ -1,2 +1,2 @@
-appwrite account deletePushTarget \
-        --targetId <TARGET_ID>
+appwrite account delete-push-target \
+    --target-id <TARGET_ID>

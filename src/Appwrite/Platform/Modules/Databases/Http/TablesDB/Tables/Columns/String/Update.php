@@ -36,7 +36,7 @@ class Update extends StringUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/string/:key')
             ->desc('Update string column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'tables.write')
+            ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')

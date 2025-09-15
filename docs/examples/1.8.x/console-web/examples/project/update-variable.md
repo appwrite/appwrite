@@ -9,8 +9,8 @@ const project = new Project(client);
 const result = await project.updateVariable({
     variableId: '<VARIABLE_ID>',
     key: '<KEY>',
-    value: '<VALUE>',
-    secret: false
+    value: '<VALUE>', // optional
+    secret: false // optional
 });
 
 console.log(result);

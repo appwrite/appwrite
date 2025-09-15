@@ -10,8 +10,8 @@ const result = await databases.updateDocument({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
-    data: {},
-    permissions: ["read("any")"]
+    data: {}, // optional
+    permissions: ["read("any")"] // optional
 });
 
 console.log(result);

@@ -13,5 +13,5 @@ const response = await functions.createTemplateDeployment({
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
     version: '<VERSION>',
-    activate: false
+    activate: false // optional
 });

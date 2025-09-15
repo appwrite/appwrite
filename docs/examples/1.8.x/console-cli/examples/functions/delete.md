@@ -1,2 +1,2 @@
 appwrite functions delete \
-        --functionId <FUNCTION_ID>
+    --function-id <FUNCTION_ID>

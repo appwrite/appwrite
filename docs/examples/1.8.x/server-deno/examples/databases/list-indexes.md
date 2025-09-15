@@ -10,5 +10,5 @@ const databases = new Databases(client);
 const response = await databases.listIndexes({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    queries: []
+    queries: [] // optional
 });

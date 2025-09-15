@@ -1,2 +1,2 @@
-appwrite proxy getRule \
-        --ruleId <RULE_ID>
+appwrite proxy get-rule \
+    --rule-id <RULE_ID>

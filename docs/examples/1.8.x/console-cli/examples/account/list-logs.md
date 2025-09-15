@@ -1,2 +1,1 @@
-appwrite account listLogs \
-
+appwrite account list-logs

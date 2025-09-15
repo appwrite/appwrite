@@ -8,7 +8,7 @@ let client = Client()
 
 let messaging = Messaging(client)
 
-let provider = try await messaging.createSmtpProvider(
+let provider = try await messaging.createSMTPProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>",
     host: "<HOST>",

@@ -10,7 +10,7 @@ const result = await projects.createKey({
     projectId: '<PROJECT_ID>',
     name: '<NAME>',
     scopes: [],
-    expire: ''
+    expire: '' // optional
 });
 
 console.log(result);

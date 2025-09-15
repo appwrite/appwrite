@@ -9,5 +9,5 @@ const messaging = new sdk.Messaging(client);
 
 const result = await messaging.listTargets({
     messageId: '<MESSAGE_ID>',
-    queries: []
+    queries: [] // optional
 });

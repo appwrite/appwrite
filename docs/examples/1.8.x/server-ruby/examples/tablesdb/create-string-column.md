@@ -7,7 +7,7 @@ client = Client.new
     .set_project('<YOUR_PROJECT_ID>') # Your project ID
     .set_key('<YOUR_API_KEY>') # Your secret API key
 
-tables_db = TablesDb.new(client)
+tables_db = TablesDB.new(client)
 
 result = tables_db.create_string_column(
     database_id: '<DATABASE_ID>',

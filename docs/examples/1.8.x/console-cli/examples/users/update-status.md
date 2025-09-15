@@ -1,3 +1,3 @@
-appwrite users updateStatus \
-        --userId <USER_ID> \
-        --status false
+appwrite users update-status \
+    --user-id <USER_ID> \
+    --status false

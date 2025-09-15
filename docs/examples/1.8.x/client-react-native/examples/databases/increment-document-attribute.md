@@ -11,8 +11,8 @@ const result = await databases.incrementDocumentAttribute({
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
     attribute: '',
-    value: null,
-    max: null
+    value: 0, // optional
+    max: 0 // optional
 });
 
 console.log(result);

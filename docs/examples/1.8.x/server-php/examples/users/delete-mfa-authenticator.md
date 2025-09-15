@@ -11,7 +11,7 @@ $client = (new Client())
 
 $users = new Users($client);
 
-$result = $users->deleteMfaAuthenticator(
+$result = $users->deleteMFAAuthenticator(
     userId: '<USER_ID>',
     type: AuthenticatorType::TOTP()
 );

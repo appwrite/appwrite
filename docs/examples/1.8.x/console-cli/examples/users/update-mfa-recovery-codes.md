@@ -1,2 +1,2 @@
-appwrite users updateMfaRecoveryCodes \
-        --userId <USER_ID>
+appwrite users update-mfa-recovery-codes \
+    --user-id <USER_ID>

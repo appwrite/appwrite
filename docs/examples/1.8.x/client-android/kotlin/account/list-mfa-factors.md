@@ -8,4 +8,4 @@ val client = Client(context)
 
 val account = Account(client)
 
-val result = account.listMfaFactors()
+val result = account.listMFAFactors()

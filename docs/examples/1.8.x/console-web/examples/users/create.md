@@ -8,10 +8,10 @@ const users = new Users(client);
 
 const result = await users.create({
     userId: '<USER_ID>',
-    email: 'email@example.com',
-    phone: '+12065550100',
-    password: '',
-    name: '<NAME>'
+    email: 'email@example.com', // optional
+    phone: '+12065550100', // optional
+    password: '', // optional
+    name: '<NAME>' // optional
 });
 
 console.log(result);

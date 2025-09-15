@@ -30,7 +30,7 @@ class XList extends AttributesXList
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns')
             ->desc('List columns')
             ->groups(['api', 'database'])
-            ->label('scope', 'tables.read')
+            ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
@@ -47,7 +47,7 @@ class XList extends AttributesXList
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID.')
-            ->param('queries', [], new Columns(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Columns::ALLOWED_COLUMNS), true)
+            ->param('queries', [], new Columns(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following columns: ' . implode(', ', Columns::ALLOWED_COLUMNS), true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

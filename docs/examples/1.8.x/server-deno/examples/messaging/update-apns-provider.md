@@ -7,13 +7,13 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.updateApnsProvider({
+const response = await messaging.updateAPNSProvider({
     providerId: '<PROVIDER_ID>',
-    name: '<NAME>',
-    enabled: false,
-    authKey: '<AUTH_KEY>',
-    authKeyId: '<AUTH_KEY_ID>',
-    teamId: '<TEAM_ID>',
-    bundleId: '<BUNDLE_ID>',
-    sandbox: false
+    name: '<NAME>', // optional
+    enabled: false, // optional
+    authKey: '<AUTH_KEY>', // optional
+    authKeyId: '<AUTH_KEY_ID>', // optional
+    teamId: '<TEAM_ID>', // optional
+    bundleId: '<BUNDLE_ID>', // optional
+    sandbox: false // optional
 });

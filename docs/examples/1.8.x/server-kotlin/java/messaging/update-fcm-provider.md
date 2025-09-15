@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.updateFcmProvider(
+messaging.updateFCMProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name (optional)
     false, // enabled (optional)

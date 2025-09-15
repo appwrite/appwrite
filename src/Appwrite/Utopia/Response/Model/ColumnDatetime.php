@@ -32,7 +32,7 @@ class ColumnDatetime extends Column
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Default value for attribute when not provided. Only null is optional',
+                'description' => 'Default value for column when not provided. Only null is optional',
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
                 'array' => false,

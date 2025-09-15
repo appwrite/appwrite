@@ -179,7 +179,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:6.2.0
+    image: <?php echo $organization; ?>/console:7.0.2
     restart: unless-stopped
     networks:
       - appwrite

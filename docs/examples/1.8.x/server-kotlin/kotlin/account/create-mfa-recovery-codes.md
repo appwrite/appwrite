@@ -9,4 +9,4 @@ val client = Client()
 
 val account = Account(client)
 
-val response = account.createMfaRecoveryCodes()
+val response = account.createMFARecoveryCodes()

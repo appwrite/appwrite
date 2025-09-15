@@ -1,3 +1,3 @@
-appwrite messaging getSubscriber \
-        --topicId <TOPIC_ID> \
-        --subscriberId <SUBSCRIBER_ID>
+appwrite messaging get-subscriber \
+    --topic-id <TOPIC_ID> \
+    --subscriber-id <SUBSCRIBER_ID>

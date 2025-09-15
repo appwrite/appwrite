@@ -12,9 +12,9 @@ const result = await projects.updateEmailTemplate({
     locale: EmailTemplateLocale.Af,
     subject: '<SUBJECT>',
     message: '<MESSAGE>',
-    senderName: '<SENDER_NAME>',
-    senderEmail: 'email@example.com',
-    replyTo: 'email@example.com'
+    senderName: '<SENDER_NAME>', // optional
+    senderEmail: 'email@example.com', // optional
+    replyTo: 'email@example.com' // optional
 });
 
 console.log(result);

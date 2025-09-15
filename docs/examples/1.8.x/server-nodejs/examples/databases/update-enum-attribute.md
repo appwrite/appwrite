@@ -14,5 +14,5 @@ const result = await databases.updateEnumAttribute({
     elements: [],
     required: false,
     default: '<DEFAULT>',
-    newKey: ''
+    newKey: '' // optional
 });

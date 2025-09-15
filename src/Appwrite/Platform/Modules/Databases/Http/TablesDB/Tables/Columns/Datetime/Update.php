@@ -35,7 +35,7 @@ class Update extends DatetimeUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/datetime/:key')
             ->desc('Update dateTime column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'tables.write')
+            ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')

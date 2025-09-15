@@ -9,7 +9,7 @@ const tokens = new Tokens(client);
 const result = await tokens.createFileToken({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    expire: ''
+    expire: '' // optional
 });
 
 console.log(result);

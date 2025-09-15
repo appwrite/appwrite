@@ -1,3 +1,3 @@
-appwrite projects deletePlatform \
-        --projectId <PROJECT_ID> \
-        --platformId <PLATFORM_ID>
+appwrite projects delete-platform \
+    --project-id <PROJECT_ID> \
+    --platform-id <PLATFORM_ID>

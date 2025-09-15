@@ -8,5 +8,5 @@ const client = new sdk.Client()
 const health = new sdk.Health(client);
 
 const result = await health.getQueueLogs({
-    threshold: null
+    threshold: null // optional
 });

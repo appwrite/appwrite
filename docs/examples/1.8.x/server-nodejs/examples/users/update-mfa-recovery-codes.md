@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updateMfaRecoveryCodes({
+const result = await users.updateMFARecoveryCodes({
     userId: '<USER_ID>'
 });

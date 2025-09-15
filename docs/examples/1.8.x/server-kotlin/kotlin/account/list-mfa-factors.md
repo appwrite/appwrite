@@ -9,4 +9,4 @@ val client = Client()
 
 val account = Account(client)
 
-val response = account.listMfaFactors()
+val response = account.listMFAFactors()

@@ -1,5 +1,4 @@
-appwrite databases getDocument \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --documentId <DOCUMENT_ID> \
-
+appwrite databases get-document \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --document-id <DOCUMENT_ID>

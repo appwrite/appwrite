@@ -9,6 +9,6 @@ val client = Client()
 
 val users = Users(client)
 
-val response = users.createMfaRecoveryCodes(
+val response = users.createMFARecoveryCodes(
     userId = "<USER_ID>"
 )

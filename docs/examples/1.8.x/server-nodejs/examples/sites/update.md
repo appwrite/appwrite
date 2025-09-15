@@ -11,19 +11,19 @@ const result = await sites.update({
     siteId: '<SITE_ID>',
     name: '<NAME>',
     framework: sdk..Analog,
-    enabled: false,
-    logging: false,
-    timeout: 1,
-    installCommand: '<INSTALL_COMMAND>',
-    buildCommand: '<BUILD_COMMAND>',
-    outputDirectory: '<OUTPUT_DIRECTORY>',
-    buildRuntime: sdk..Node145,
-    adapter: sdk..Static,
-    fallbackFile: '<FALLBACK_FILE>',
-    installationId: '<INSTALLATION_ID>',
-    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>',
-    providerBranch: '<PROVIDER_BRANCH>',
-    providerSilentMode: false,
-    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>',
-    specification: ''
+    enabled: false, // optional
+    logging: false, // optional
+    timeout: 1, // optional
+    installCommand: '<INSTALL_COMMAND>', // optional
+    buildCommand: '<BUILD_COMMAND>', // optional
+    outputDirectory: '<OUTPUT_DIRECTORY>', // optional
+    buildRuntime: sdk..Node145, // optional
+    adapter: sdk..Static, // optional
+    fallbackFile: '<FALLBACK_FILE>', // optional
+    installationId: '<INSTALLATION_ID>', // optional
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
+    providerBranch: '<PROVIDER_BRANCH>', // optional
+    providerSilentMode: false, // optional
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
+    specification: '' // optional
 });

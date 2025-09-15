@@ -1,9 +1,2 @@
-appwrite messaging updateApnsProvider \
-        --providerId <PROVIDER_ID> \
-
-
-
-
-
-
-
+appwrite messaging update-apns-provider \
+    --provider-id <PROVIDER_ID>

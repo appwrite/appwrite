@@ -1,3 +1,3 @@
-appwrite users updatePhoneVerification \
-        --userId <USER_ID> \
-        --phoneVerification false
+appwrite users update-phone-verification \
+    --user-id <USER_ID> \
+    --phone-verification false

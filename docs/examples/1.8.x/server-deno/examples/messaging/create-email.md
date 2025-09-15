@@ -11,13 +11,13 @@ const response = await messaging.createEmail({
     messageId: '<MESSAGE_ID>',
     subject: '<SUBJECT>',
     content: '<CONTENT>',
-    topics: [],
-    users: [],
-    targets: [],
-    cc: [],
-    bcc: [],
-    attachments: [],
-    draft: false,
-    html: false,
-    scheduledAt: ''
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    cc: [], // optional
+    bcc: [], // optional
+    attachments: [], // optional
+    draft: false, // optional
+    html: false, // optional
+    scheduledAt: '' // optional
 });

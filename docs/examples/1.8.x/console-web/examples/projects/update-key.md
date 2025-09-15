@@ -11,7 +11,7 @@ const result = await projects.updateKey({
     keyId: '<KEY_ID>',
     name: '<NAME>',
     scopes: [],
-    expire: ''
+    expire: '' // optional
 });
 
 console.log(result);

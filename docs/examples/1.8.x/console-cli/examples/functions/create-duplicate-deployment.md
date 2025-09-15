@@ -1,4 +1,3 @@
-appwrite functions createDuplicateDeployment \
-        --functionId <FUNCTION_ID> \
-        --deploymentId <DEPLOYMENT_ID> \
-
+appwrite functions create-duplicate-deployment \
+    --function-id <FUNCTION_ID> \
+    --deployment-id <DEPLOYMENT_ID>

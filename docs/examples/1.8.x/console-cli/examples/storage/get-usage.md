@@ -1,2 +1,1 @@
-appwrite storage getUsage \
-
+appwrite storage get-usage

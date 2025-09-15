@@ -12,9 +12,9 @@ const result = await projects.createWebhook({
     events: [],
     url: '',
     security: false,
-    enabled: false,
-    httpUser: '<HTTP_USER>',
-    httpPass: '<HTTP_PASS>'
+    enabled: false, // optional
+    httpUser: '<HTTP_USER>', // optional
+    httpPass: '<HTTP_PASS>' // optional
 });
 
 console.log(result);

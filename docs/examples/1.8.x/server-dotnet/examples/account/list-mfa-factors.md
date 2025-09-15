@@ -9,4 +9,4 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-MfaFactors result = await account.ListMfaFactors();
+MfaFactors result = await account.ListMFAFactors();

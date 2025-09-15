@@ -1,1 +1,1 @@
-appwrite project listVariables
+appwrite project list-variables

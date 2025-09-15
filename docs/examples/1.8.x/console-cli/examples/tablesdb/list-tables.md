@@ -1,4 +1,2 @@
-appwrite tablesDB listTables \
-        --databaseId <DATABASE_ID> \
-
-
+appwrite tables-db list-tables \
+    --database-id <DATABASE_ID>

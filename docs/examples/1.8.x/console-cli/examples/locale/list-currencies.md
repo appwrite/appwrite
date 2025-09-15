@@ -1,1 +1,1 @@
-appwrite locale listCurrencies
+appwrite locale list-currencies

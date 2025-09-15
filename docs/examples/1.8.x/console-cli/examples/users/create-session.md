@@ -1,2 +1,2 @@
-appwrite users createSession \
-        --userId <USER_ID>
+appwrite users create-session \
+    --user-id <USER_ID>

@@ -1,2 +1,2 @@
 appwrite messaging delete \
-        --messageId <MESSAGE_ID>
+    --message-id <MESSAGE_ID>

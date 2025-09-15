@@ -6,26 +6,19 @@ import (
     "github.com/appwrite/sdk-for-go/databases"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithSession("") // The user session to authenticate with
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithSession("")
+)
 
-    service := databases.New(client)
-    response, error := service.IncrementDocumentAttribute(
-        "<DATABASE_ID>",
-        "<COLLECTION_ID>",
-        "<DOCUMENT_ID>",
-        "",
-        databases.WithIncrementDocumentAttributeValue(0),
-        databases.WithIncrementDocumentAttributeMax(0),
-    )
+service := databases.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.IncrementDocumentAttribute(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    "",
+    databases.WithIncrementDocumentAttributeValue(0),
+    databases.WithIncrementDocumentAttributeMax(0),
+)

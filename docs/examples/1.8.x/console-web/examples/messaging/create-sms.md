@@ -6,14 +6,14 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.createSms({
+const result = await messaging.createSMS({
     messageId: '<MESSAGE_ID>',
     content: '<CONTENT>',
-    topics: [],
-    users: [],
-    targets: [],
-    draft: false,
-    scheduledAt: ''
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    draft: false, // optional
+    scheduledAt: '' // optional
 });
 
 console.log(result);

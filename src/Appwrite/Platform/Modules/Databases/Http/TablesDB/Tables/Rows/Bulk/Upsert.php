@@ -30,9 +30,9 @@ class Upsert extends DocumentsUpsert
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/rows')
-            ->desc('Create or update rows')
+            ->desc('Upsert rows')
             ->groups(['api', 'database'])
-            ->label('scope', 'rows.write')
+            ->label('scope', ['rows.write', 'documents.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'row.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
@@ -61,6 +61,10 @@ class Upsert extends DocumentsUpsert
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->inject('plan')
             ->callback($this->action(...));
     }

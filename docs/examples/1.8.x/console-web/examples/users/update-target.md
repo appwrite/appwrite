@@ -9,9 +9,9 @@ const users = new Users(client);
 const result = await users.updateTarget({
     userId: '<USER_ID>',
     targetId: '<TARGET_ID>',
-    identifier: '<IDENTIFIER>',
-    providerId: '<PROVIDER_ID>',
-    name: '<NAME>'
+    identifier: '<IDENTIFIER>', // optional
+    providerId: '<PROVIDER_ID>', // optional
+    name: '<NAME>' // optional
 });
 
 console.log(result);

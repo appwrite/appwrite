@@ -9,7 +9,7 @@ val client = Client()
 
 val messaging = Messaging(client)
 
-val response = messaging.createApnsProvider(
+val response = messaging.createAPNSProvider(
     providerId = "<PROVIDER_ID>",
     name = "<NAME>",
     authKey = "<AUTH_KEY>", // optional

@@ -8,8 +8,8 @@ const storage = new Storage(client);
 
 const result = await storage.listFiles({
     bucketId: '<BUCKET_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

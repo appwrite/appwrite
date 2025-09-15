@@ -9,7 +9,7 @@ const vcs = new Vcs(client);
 const result = await vcs.listRepositories({
     installationId: '<INSTALLATION_ID>',
     type: VCSDetectionType.Runtime,
-    search: '<SEARCH>'
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

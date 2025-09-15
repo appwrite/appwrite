@@ -1,5 +1,5 @@
 mutation {
-    usersCreateMfaRecoveryCodes(
+    usersCreateMFARecoveryCodes(
         userId: "<USER_ID>"
     ) {
         recoveryCodes

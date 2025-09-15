@@ -1,2 +1,2 @@
 appwrite teams delete \
-        --teamId <TEAM_ID>
+    --team-id <TEAM_ID>

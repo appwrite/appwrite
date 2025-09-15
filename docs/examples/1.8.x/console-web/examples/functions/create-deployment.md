@@ -10,8 +10,8 @@ const result = await functions.createDeployment({
     functionId: '<FUNCTION_ID>',
     code: document.getElementById('uploader').files[0],
     activate: false,
-    entrypoint: '<ENTRYPOINT>',
-    commands: '<COMMANDS>'
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>' // optional
 });
 
 console.log(result);

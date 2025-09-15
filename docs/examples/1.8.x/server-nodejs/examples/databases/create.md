@@ -10,5 +10,5 @@ const databases = new sdk.Databases(client);
 const result = await databases.create({
     databaseId: '<DATABASE_ID>',
     name: '<NAME>',
-    enabled: false
+    enabled: false // optional
 });

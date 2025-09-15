@@ -7,8 +7,8 @@ const client = new Client()
 const functions = new Functions(client);
 
 const result = await functions.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

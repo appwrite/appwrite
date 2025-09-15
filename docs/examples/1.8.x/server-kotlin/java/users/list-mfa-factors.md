@@ -9,7 +9,7 @@ Client client = new Client()
 
 Users users = new Users(client);
 
-users.listMfaFactors(
+users.listMFAFactors(
     "<USER_ID>", // userId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

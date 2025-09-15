@@ -1,3 +1,2 @@
-appwrite tablesDB getUsage \
-        --databaseId <DATABASE_ID> \
-
+appwrite tables-db get-usage \
+    --database-id <DATABASE_ID>

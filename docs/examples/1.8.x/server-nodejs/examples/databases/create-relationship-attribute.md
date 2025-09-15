@@ -12,8 +12,8 @@ const result = await databases.createRelationshipAttribute({
     collectionId: '<COLLECTION_ID>',
     relatedCollectionId: '<RELATED_COLLECTION_ID>',
     type: sdk.RelationshipType.OneToOne,
-    twoWay: false,
-    key: '',
-    twoWayKey: '',
-    onDelete: sdk.RelationMutate.Cascade
+    twoWay: false, // optional
+    key: '', // optional
+    twoWayKey: '', // optional
+    onDelete: sdk.RelationMutate.Cascade // optional
 });

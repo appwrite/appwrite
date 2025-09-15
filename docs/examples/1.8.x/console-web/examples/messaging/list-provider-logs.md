@@ -8,7 +8,7 @@ const messaging = new Messaging(client);
 
 const result = await messaging.listProviderLogs({
     providerId: '<PROVIDER_ID>',
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

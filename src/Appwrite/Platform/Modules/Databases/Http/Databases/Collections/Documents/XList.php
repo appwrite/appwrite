@@ -176,7 +176,7 @@ class XList extends Action
                 }
 
                 // Check which removable attributes are explicitly requested
-                foreach ($this->removableAttributes as $attribute) {
+                foreach ($this->removableAttributes['*'] as $attribute) {
                     if (\in_array($attribute, $values, true)) {
                         $requestedAttributes[$attribute] = true;
                     }
@@ -186,7 +186,7 @@ class XList extends Action
             if (!$hasWildcard) {
                 foreach ($documents as $document) {
                     // Remove attributes that are not explicitly requested
-                    foreach ($this->removableAttributes as $attribute) {
+                    foreach ($this->removableAttributes['*'] as $attribute) {
                         if (!isset($requestedAttributes[$attribute])) {
                             $document->removeAttribute($attribute);
                         }

@@ -10,5 +10,5 @@ const tokens = new sdk.Tokens(client);
 const result = await tokens.list({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    queries: []
+    queries: [] // optional
 });

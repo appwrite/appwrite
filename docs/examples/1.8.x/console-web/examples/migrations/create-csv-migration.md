@@ -10,7 +10,7 @@ const result = await migrations.createCsvMigration({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     resourceId: '[ID1:ID2]',
-    internalFile: false
+    internalFile: false // optional
 });
 
 console.log(result);

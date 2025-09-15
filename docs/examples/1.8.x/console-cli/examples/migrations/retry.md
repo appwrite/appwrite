@@ -1,2 +1,2 @@
 appwrite migrations retry \
-        --migrationId <MIGRATION_ID>
+    --migration-id <MIGRATION_ID>

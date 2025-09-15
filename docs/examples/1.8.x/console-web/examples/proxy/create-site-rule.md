@@ -9,7 +9,7 @@ const proxy = new Proxy(client);
 const result = await proxy.createSiteRule({
     domain: '',
     siteId: '<SITE_ID>',
-    branch: '<BRANCH>'
+    branch: '<BRANCH>' // optional
 });
 
 console.log(result);

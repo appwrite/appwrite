@@ -11,7 +11,7 @@ const response = await sites.createDeployment({
     siteId: '<SITE_ID>',
     code: InputFile.fromPath('/path/to/file.png', 'file.png'),
     activate: false,
-    installCommand: '<INSTALL_COMMAND>',
-    buildCommand: '<BUILD_COMMAND>',
-    outputDirectory: '<OUTPUT_DIRECTORY>'
+    installCommand: '<INSTALL_COMMAND>', // optional
+    buildCommand: '<BUILD_COMMAND>', // optional
+    outputDirectory: '<OUTPUT_DIRECTORY>' // optional
 });

@@ -1,5 +1,5 @@
-appwrite projects updateSmsTemplate \
-        --projectId <PROJECT_ID> \
-        --type verification \
-        --locale af \
-        --message <MESSAGE>
+appwrite projects update-sms-template \
+    --project-id <PROJECT_ID> \
+    --type verification \
+    --locale af \
+    --message <MESSAGE>

@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-Provider result = await messaging.UpdateApnsProvider(
+Provider result = await messaging.UpdateAPNSProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>", // optional
     enabled: false, // optional

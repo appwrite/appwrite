@@ -10,5 +10,5 @@ const storage = new Storage(client);
 const result = storage.getFileDownload({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    token: '<TOKEN>'
+    token: '<TOKEN>' // optional
 });

@@ -9,11 +9,11 @@ const messaging = new Messaging(client);
 
 const response = await messaging.updateSendgridProvider({
     providerId: '<PROVIDER_ID>',
-    name: '<NAME>',
-    enabled: false,
-    apiKey: '<API_KEY>',
-    fromName: '<FROM_NAME>',
-    fromEmail: 'email@example.com',
-    replyToName: '<REPLY_TO_NAME>',
-    replyToEmail: '<REPLY_TO_EMAIL>'
+    name: '<NAME>', // optional
+    enabled: false, // optional
+    apiKey: '<API_KEY>', // optional
+    fromName: '<FROM_NAME>', // optional
+    fromEmail: 'email@example.com', // optional
+    replyToName: '<REPLY_TO_NAME>', // optional
+    replyToEmail: '<REPLY_TO_EMAIL>' // optional
 });

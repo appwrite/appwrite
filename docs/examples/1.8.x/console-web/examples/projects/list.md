@@ -7,8 +7,8 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

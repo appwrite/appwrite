@@ -7,7 +7,7 @@ let client = Client()
 
 let messaging = Messaging(client)
 
-let message = try await messaging.updateSms(
+let message = try await messaging.updateSMS(
     messageId: "<MESSAGE_ID>",
     topics: [], // optional
     users: [], // optional

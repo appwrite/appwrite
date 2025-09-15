@@ -10,9 +10,9 @@ const result = await projects.updatePlatform({
     projectId: '<PROJECT_ID>',
     platformId: '<PLATFORM_ID>',
     name: '<NAME>',
-    key: '<KEY>',
-    store: '<STORE>',
-    hostname: ''
+    key: '<KEY>', // optional
+    store: '<STORE>', // optional
+    hostname: '' // optional
 });
 
 console.log(result);

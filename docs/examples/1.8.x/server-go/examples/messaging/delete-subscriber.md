@@ -6,22 +6,15 @@ import (
     "github.com/appwrite/sdk-for-go/messaging"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithJWT("<YOUR_JWT>") // Your secret JSON Web Token
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithJWT("<YOUR_JWT>")
+)
 
-    service := messaging.New(client)
-    response, error := service.DeleteSubscriber(
-        "<TOPIC_ID>",
-        "<SUBSCRIBER_ID>",
-    )
+service := messaging.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.DeleteSubscriber(
+    "<TOPIC_ID>",
+    "<SUBSCRIBER_ID>",
+)

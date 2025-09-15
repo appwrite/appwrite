@@ -8,6 +8,6 @@ const client = new Client()
 const health = new Health(client);
 
 const response = await health.getQueueDatabases({
-    name: '<NAME>',
-    threshold: null
+    name: '<NAME>', // optional
+    threshold: null // optional
 });

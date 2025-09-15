@@ -7,4 +7,4 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.createMfaRecoveryCodes();
+const response = await account.createMFARecoveryCodes();

@@ -8,7 +8,7 @@ let client = Client()
 
 let users = Users(client)
 
-let result = try await users.deleteMfaAuthenticator(
+let result = try await users.deleteMFAAuthenticator(
     userId: "<USER_ID>",
     type: .totp
 )

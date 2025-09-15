@@ -9,6 +9,6 @@ const users = new Users(client);
 
 const response = await users.createToken({
     userId: '<USER_ID>',
-    length: 4,
-    expire: 60
+    length: 4, // optional
+    expire: 60 // optional
 });

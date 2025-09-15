@@ -1,3 +1,3 @@
-appwrite projects getPlatform \
-        --projectId <PROJECT_ID> \
-        --platformId <PLATFORM_ID>
+appwrite projects get-platform \
+    --project-id <PROJECT_ID> \
+    --platform-id <PLATFORM_ID>

@@ -9,7 +9,7 @@ Client client = new Client()
 
 Users users = new Users(client);
 
-users.createMfaRecoveryCodes(
+users.createMFARecoveryCodes(
     "<USER_ID>", // userId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

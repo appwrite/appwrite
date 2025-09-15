@@ -9,7 +9,7 @@ val client = Client()
 
 val messaging = Messaging(client)
 
-val response = messaging.updateSms(
+val response = messaging.updateSMS(
     messageId = "<MESSAGE_ID>",
     topics = listOf(), // optional
     users = listOf(), // optional

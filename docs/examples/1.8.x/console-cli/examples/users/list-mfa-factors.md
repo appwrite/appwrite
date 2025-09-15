@@ -1,2 +1,2 @@
-appwrite users listMfaFactors \
-        --userId <USER_ID>
+appwrite users list-mfa-factors \
+    --user-id <USER_ID>

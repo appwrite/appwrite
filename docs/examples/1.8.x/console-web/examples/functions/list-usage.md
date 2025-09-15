@@ -7,7 +7,7 @@ const client = new Client()
 const functions = new Functions(client);
 
 const result = await functions.listUsage({
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

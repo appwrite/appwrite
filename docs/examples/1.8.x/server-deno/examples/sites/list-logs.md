@@ -9,5 +9,5 @@ const sites = new Sites(client);
 
 const response = await sites.listLogs({
     siteId: '<SITE_ID>',
-    queries: []
+    queries: [] // optional
 });

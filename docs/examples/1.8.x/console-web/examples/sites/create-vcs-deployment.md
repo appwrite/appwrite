@@ -10,7 +10,7 @@ const result = await sites.createVcsDeployment({
     siteId: '<SITE_ID>',
     type: VCSDeploymentType.Branch,
     reference: '<REFERENCE>',
-    activate: false
+    activate: false // optional
 });
 
 console.log(result);

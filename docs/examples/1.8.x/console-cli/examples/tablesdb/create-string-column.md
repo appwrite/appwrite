@@ -1,9 +1,6 @@
-appwrite tablesDB createStringColumn \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key '' \
-        --size 1 \
-        --required false \
-
-
-
+appwrite tables-db create-string-column \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key '' \
+    --size 1 \
+    --required false

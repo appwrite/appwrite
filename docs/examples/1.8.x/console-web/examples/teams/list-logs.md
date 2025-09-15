@@ -8,7 +8,7 @@ const teams = new Teams(client);
 
 const result = await teams.listLogs({
     teamId: '<TEAM_ID>',
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

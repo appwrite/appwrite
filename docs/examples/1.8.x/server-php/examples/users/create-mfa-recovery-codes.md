@@ -10,6 +10,6 @@ $client = (new Client())
 
 $users = new Users($client);
 
-$result = $users->createMfaRecoveryCodes(
+$result = $users->createMFARecoveryCodes(
     userId: '<USER_ID>'
 );

@@ -10,5 +10,5 @@ const functions = new Functions(client);
 const result = functions.getDeploymentDownload({
     functionId: '<FUNCTION_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
-    type: DeploymentDownloadType.Source
+    type: DeploymentDownloadType.Source // optional
 });

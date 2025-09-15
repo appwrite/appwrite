@@ -9,7 +9,7 @@ const databases = new Databases(client);
 const result = await databases.create({
     databaseId: '<DATABASE_ID>',
     name: '<NAME>',
-    enabled: false
+    enabled: false // optional
 });
 
 console.log(result);

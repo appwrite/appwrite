@@ -45,7 +45,7 @@ class Upsert extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-            ->desc('Create or update a document')
+            ->desc('Upsert a document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
             ->label('scope', 'documents.write')
@@ -97,6 +97,10 @@ class Upsert extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
+        if (\array_is_list($data) && \count($data) > 1) { // Allow 1 associated array
+            throw new Exception($this->getMissingPayloadException());
+        }
+
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -117,7 +121,8 @@ class Upsert extends Action
         ];
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
-        // if no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
+
+        // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
             $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
             if ($oldDocument->isEmpty()) {
@@ -153,24 +158,14 @@ class Upsert extends Action
                 }
             }
         }
-        // Allowing to add createdAt and updatedAt timestamps if server side(api key)
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            if (isset($data['$createdAt'])) {
-                throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-            }
-
-            if (isset($data['$updatedAt'])) {
-                throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-            }
-        }
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
+        $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $newDocument = new Document($data);
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
-
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations) {
             $operations++;
 
             $relationships = \array_filter(
@@ -209,11 +204,13 @@ class Upsert extends Action
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
+                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
+
                         $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
-                        $this->removeReadonlyAttributes($relation);
+
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
@@ -265,7 +262,13 @@ class Upsert extends Action
         }
 
         $collectionsCache = [];
+
+        if (empty($upserted[0])) {
+            $upserted[0] = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+        }
+
         $document = $upserted[0];
+
         $this->processDocument(
             database: $database,
             collection: $collection,

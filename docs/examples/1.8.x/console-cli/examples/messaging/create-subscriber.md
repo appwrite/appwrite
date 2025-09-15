@@ -1,4 +1,4 @@
-appwrite messaging createSubscriber \
-        --topicId <TOPIC_ID> \
-        --subscriberId <SUBSCRIBER_ID> \
-        --targetId <TARGET_ID>
+appwrite messaging create-subscriber \
+    --topic-id <TOPIC_ID> \
+    --subscriber-id <SUBSCRIBER_ID> \
+    --target-id <TARGET_ID>

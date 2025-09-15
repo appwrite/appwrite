@@ -1,3 +1,3 @@
-appwrite sites deleteDeployment \
-        --siteId <SITE_ID> \
-        --deploymentId <DEPLOYMENT_ID>
+appwrite sites delete-deployment \
+    --site-id <SITE_ID> \
+    --deployment-id <DEPLOYMENT_ID>

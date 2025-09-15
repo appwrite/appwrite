@@ -10,7 +10,7 @@ const result = await functions.createVariable({
     functionId: '<FUNCTION_ID>',
     key: '<KEY>',
     value: '<VALUE>',
-    secret: false
+    secret: false // optional
 });
 
 console.log(result);

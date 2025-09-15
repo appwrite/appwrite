@@ -1,15 +1,2 @@
-appwrite messaging updateSmtpProvider \
-        --providerId <PROVIDER_ID> \
-
-
-
-
-
-
-
-
-
-
-
-
-
+appwrite messaging update-smtp-provider \
+    --provider-id <PROVIDER_ID>

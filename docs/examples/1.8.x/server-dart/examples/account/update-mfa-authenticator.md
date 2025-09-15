@@ -7,7 +7,7 @@ Client client = Client()
 
 Account account = Account(client);
 
-User result = await account.updateMfaAuthenticator(
+User result = await account.updateMFAAuthenticator(
     type: AuthenticatorType.totp,
     otp: '<OTP>',
 );

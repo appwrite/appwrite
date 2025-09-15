@@ -1,2 +1,2 @@
-appwrite storage getBucket \
-        --bucketId <BUCKET_ID>
+appwrite storage get-bucket \
+    --bucket-id <BUCKET_ID>

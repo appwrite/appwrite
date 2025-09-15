@@ -9,7 +9,7 @@ const teams = new Teams(client);
 const result = await teams.create({
     teamId: '<TEAM_ID>',
     name: '<NAME>',
-    roles: []
+    roles: [] // optional
 });
 
 console.log(result);

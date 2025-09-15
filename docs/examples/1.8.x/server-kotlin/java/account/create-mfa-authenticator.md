@@ -10,7 +10,7 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-account.createMfaAuthenticator(
+account.createMFAAuthenticator(
     AuthenticatorType.TOTP, // type
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

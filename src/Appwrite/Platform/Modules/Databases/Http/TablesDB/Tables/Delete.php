@@ -30,14 +30,14 @@ class Delete extends CollectionDelete
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId')
             ->desc('Delete table')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'tables.write')
+            ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].delete')
             ->label('audits.event', 'table.delete')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
-                group: null,
+                group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/delete-table.md',
                 auth: [AuthType::KEY],

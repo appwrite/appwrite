@@ -13,5 +13,5 @@ const response = await databases.updateIpAttribute({
     key: '',
     required: false,
     default: '',
-    newKey: ''
+    newKey: '' // optional
 });

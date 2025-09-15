@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const users = new sdk.Users(client);
 
 const result = await users.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

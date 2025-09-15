@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const health = new sdk.Health(client);
 
 const result = await health.getQueueDatabases({
-    name: '<NAME>',
-    threshold: null
+    name: '<NAME>', // optional
+    threshold: null // optional
 });

@@ -1,4 +1,4 @@
-appwrite tablesDB deleteColumn \
-        --databaseId <DATABASE_ID> \
-        --tableId <TABLE_ID> \
-        --key ''
+appwrite tables-db delete-column \
+    --database-id <DATABASE_ID> \
+    --table-id <TABLE_ID> \
+    --key ''

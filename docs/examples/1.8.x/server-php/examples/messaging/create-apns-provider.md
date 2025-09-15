@@ -10,7 +10,7 @@ $client = (new Client())
 
 $messaging = new Messaging($client);
 
-$result = $messaging->createApnsProvider(
+$result = $messaging->createAPNSProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>',
     authKey: '<AUTH_KEY>', // optional

@@ -8,5 +8,5 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.listIdentities({
-    queries: []
+    queries: [] // optional
 });

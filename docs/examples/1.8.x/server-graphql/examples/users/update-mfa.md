@@ -1,5 +1,5 @@
 mutation {
-    usersUpdateMfa(
+    usersUpdateMFA(
         userId: "<USER_ID>",
         mfa: false
     ) {

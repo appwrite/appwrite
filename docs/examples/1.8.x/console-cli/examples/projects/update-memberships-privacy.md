@@ -1,5 +1,5 @@
-appwrite projects updateMembershipsPrivacy \
-        --projectId <PROJECT_ID> \
-        --userName false \
-        --userEmail false \
-        --mfa false
+appwrite projects update-memberships-privacy \
+    --project-id <PROJECT_ID> \
+    --user-name false \
+    --user-email false \
+    --mfa false

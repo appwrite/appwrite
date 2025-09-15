@@ -9,5 +9,5 @@ const account = new sdk.Account(client);
 
 const result = await account.updatePassword({
     password: '',
-    oldPassword: 'password'
+    oldPassword: 'password' // optional
 });

@@ -8,8 +8,8 @@ const sites = new Sites(client);
 
 const result = await sites.listDeployments({
     siteId: '<SITE_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

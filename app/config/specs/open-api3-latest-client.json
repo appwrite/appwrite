@@ -383,7 +383,7 @@
                     "weight": 30,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-j-w-t.md",
+                    "demo": "account\/create-jwt.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "rate-limit": 100,
                     "rate-time": 3600,
@@ -498,7 +498,7 @@
                     "weight": 45,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-m-f-a.md",
+                    "demo": "account\/update-mfa.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -581,7 +581,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAAuthenticator"
+                        "replaceWith": "account.createMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -607,7 +607,7 @@
                             "demo": "account\/create-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAAuthenticator"
+                                "replaceWith": "account.createMFAAuthenticator"
                             }
                         },
                         {
@@ -630,7 +630,7 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-m-f-a-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -701,7 +701,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAAuthenticator"
+                        "replaceWith": "account.updateMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -729,7 +729,7 @@
                             "demo": "account\/update-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAAuthenticator"
+                                "replaceWith": "account.updateMFAAuthenticator"
                             }
                         },
                         {
@@ -754,7 +754,7 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-m-f-a-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -837,7 +837,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "deleteMFAAuthenticator"
+                        "replaceWith": "account.deleteMFAAuthenticator"
                     },
                     "methods": [
                         {
@@ -862,7 +862,7 @@
                             "demo": "account\/delete-mfa-authenticator.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "deleteMFAAuthenticator"
+                                "replaceWith": "account.deleteMFAAuthenticator"
                             }
                         },
                         {
@@ -884,7 +884,7 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-m-f-a-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md"
                         }
                     ],
                     "auth": {
@@ -957,7 +957,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFAChallenge"
+                        "replaceWith": "account.createMFAChallenge"
                     },
                     "methods": [
                         {
@@ -983,7 +983,7 @@
                             "demo": "account\/create-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFAChallenge"
+                                "replaceWith": "account.createMFAChallenge"
                             }
                         },
                         {
@@ -1006,7 +1006,7 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1085,7 +1085,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFAChallenge"
+                        "replaceWith": "account.updateMFAChallenge"
                     },
                     "methods": [
                         {
@@ -1113,7 +1113,7 @@
                             "demo": "account\/update-mfa-challenge.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFAChallenge"
+                                "replaceWith": "account.updateMFAChallenge"
                             }
                         },
                         {
@@ -1138,7 +1138,7 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-m-f-a-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md"
                         }
                     ],
                     "auth": {
@@ -1219,7 +1219,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "listMFAFactors"
+                        "replaceWith": "account.listMFAFactors"
                     },
                     "methods": [
                         {
@@ -1241,7 +1241,7 @@
                             "demo": "account\/list-mfa-factors.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "listMFAFactors"
+                                "replaceWith": "account.listMFAFactors"
                             }
                         },
                         {
@@ -1260,7 +1260,7 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-m-f-a-factors.md"
+                            "demo": "account\/list-mfa-factors.md"
                         }
                     ],
                     "auth": {
@@ -1316,7 +1316,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "getMFARecoveryCodes"
+                        "replaceWith": "account.getMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1338,7 +1338,7 @@
                             "demo": "account\/get-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "getMFARecoveryCodes"
+                                "replaceWith": "account.getMFARecoveryCodes"
                             }
                         },
                         {
@@ -1357,7 +1357,7 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-m-f-a-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1411,7 +1411,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "createMFARecoveryCodes"
+                        "replaceWith": "account.createMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1433,7 +1433,7 @@
                             "demo": "account\/create-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "createMFARecoveryCodes"
+                                "replaceWith": "account.createMFARecoveryCodes"
                             }
                         },
                         {
@@ -1452,7 +1452,7 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-m-f-a-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1506,7 +1506,7 @@
                     "packaging": false,
                     "deprecated": {
                         "since": "1.8.0",
-                        "replaceWith": "updateMFARecoveryCodes"
+                        "replaceWith": "account.updateMFARecoveryCodes"
                     },
                     "methods": [
                         {
@@ -1528,7 +1528,7 @@
                             "demo": "account\/update-mfa-recovery-codes.md",
                             "deprecated": {
                                 "since": "1.8.0",
-                                "replaceWith": "updateMFARecoveryCodes"
+                                "replaceWith": "account.updateMFARecoveryCodes"
                             }
                         },
                         {
@@ -1547,7 +1547,7 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-m-f-a-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md"
                         }
                     ],
                     "auth": {
@@ -1891,7 +1891,7 @@
                                     "prefs": {
                                         "type": "object",
                                         "description": "Prefs key-value JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"language\":\"en\",\"timezone\":\"UTC\",\"darkTheme\":true}"
                                     }
                                 },
                                 "required": [
@@ -2305,7 +2305,7 @@
                     "weight": 27,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-magic-u-r-l-session.md",
+                    "demo": "account\/update-magic-url-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -2316,6 +2316,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.6.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -2372,7 +2376,7 @@
                     "weight": 20,
                     "cookies": false,
                     "type": "webAuth",
-                    "demo": "account\/create-o-auth2session.md",
+                    "demo": "account\/create-o-auth-2-session.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
@@ -2525,6 +2529,10 @@
                         "client"
                     ],
                     "packaging": false,
+                    "deprecated": {
+                        "since": "1.6.0",
+                        "replaceWith": "account.createSession"
+                    },
                     "auth": {
                         "Project": []
                     }
@@ -3082,7 +3090,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the email address has never been used, a **new account is created** using the provided `userId`. Otherwise, if the email address is already attached to an account, the **user ID is ignored**. Then, the user will receive an email with the one-time password. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3133,7 +3141,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "email": {
@@ -3184,7 +3192,7 @@
                     "weight": 25,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-magic-u-r-l-token.md",
+                    "demo": "account\/create-magic-url-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "rate-limit": 60,
                     "rate-time": 3600,
@@ -3215,7 +3223,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "email": {
@@ -3264,7 +3272,7 @@
                     "weight": 24,
                     "cookies": false,
                     "type": "webAuth",
-                    "demo": "account\/create-o-auth2token.md",
+                    "demo": "account\/create-o-auth-2-token.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
@@ -3437,7 +3445,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "phone": {
@@ -3900,7 +3908,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, unionpay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3918,7 +3926,7 @@
                                 "mastercard",
                                 "naranja",
                                 "targeta-shopping",
-                                "union-china-pay",
+                                "unionpay",
                                 "visa",
                                 "mir",
                                 "maestro",
@@ -3938,7 +3946,7 @@
                                 "Mastercard",
                                 "Naranja",
                                 "Tarjeta Shopping",
-                                "Union China Pay",
+                                "Union Pay",
                                 "Visa",
                                 "MIR",
                                 "Maestro",
@@ -4726,7 +4734,7 @@
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
-                    "demo": "avatars\/get-q-r.md",
+                    "demo": "avatars\/get-qr.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -4822,7 +4830,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 340,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-documents.md",
@@ -4911,7 +4919,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 332,
+                    "weight": 327,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-document.md",
@@ -5012,7 +5020,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -5061,7 +5069,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 333,
+                    "weight": 328,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-document.md",
@@ -5138,7 +5146,7 @@
                 ]
             },
             "put": {
-                "summary": "Create or update a document",
+                "summary": "Upsert a document",
                 "operationId": "databasesUpsertDocument",
                 "tags": [
                     "databases"
@@ -5160,7 +5168,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 336,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-document.md",
@@ -5308,7 +5316,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 334,
+                    "weight": 329,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-document.md",
@@ -5411,7 +5419,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 338,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-document.md",
@@ -5499,7 +5507,7 @@
                 "x-appwrite": {
                     "method": "decrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 343,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/decrement-document-attribute.md",
@@ -5618,7 +5626,7 @@
                 "x-appwrite": {
                     "method": "incrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 342,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/increment-document-attribute.md",
@@ -5737,7 +5745,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 448,
+                    "weight": 456,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -5812,7 +5820,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 446,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -5873,7 +5881,7 @@
                                     },
                                     "method": {
                                         "type": "string",
-                                        "description": "HTTP method of execution. Default value is GET.",
+                                        "description": "HTTP method of execution. Default value is POST.",
                                         "x-example": "GET",
                                         "enum": [
                                             "GET",
@@ -5881,7 +5889,8 @@
                                             "PUT",
                                             "PATCH",
                                             "DELETE",
-                                            "OPTIONS"
+                                            "OPTIONS",
+                                            "HEAD"
                                         ],
                                         "x-enum-name": "ExecutionMethod",
                                         "x-enum-keys": []
@@ -5927,7 +5936,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 447,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -6001,7 +6010,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 255,
+                    "weight": 250,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -6053,7 +6062,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 254,
+                    "weight": 249,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -6316,7 +6325,7 @@
                     "weight": 73,
                     "cookies": false,
                     "type": "",
-                    "demo": "locale\/list-countries-e-u.md",
+                    "demo": "locale\/list-countries-eu.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -6521,7 +6530,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 301,
+                    "weight": 296,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -6604,7 +6613,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 305,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -6679,7 +6688,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 161,
+                    "weight": 160,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -6765,7 +6774,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 160,
+                    "weight": 159,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -6863,7 +6872,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 162,
+                    "weight": 161,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -6935,7 +6944,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 167,
+                    "weight": 166,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -7024,7 +7033,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 168,
+                    "weight": 167,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -7091,7 +7100,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 164,
+                    "weight": 163,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -7169,7 +7178,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 163,
+                    "weight": 162,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -7397,7 +7406,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 165,
+                    "weight": 164,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -7482,15 +7491,18 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 420,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/list-rows.md",
+                    "demo": "tablesdb\/list-rows.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7567,15 +7579,18 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 412,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/create-row.md",
+                    "demo": "tablesdb\/create-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7610,7 +7625,7 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/create-row.md"
+                            "demo": "tablesdb\/create-row.md"
                         }
                     ],
                     "auth": {
@@ -7660,7 +7675,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -7672,7 +7687,7 @@
                                     },
                                     "rows": {
                                         "type": "array",
-                                        "description": "Array of documents data as JSON objects.",
+                                        "description": "Array of rows data as JSON objects.",
                                         "x-example": null,
                                         "items": {
                                             "type": "object"
@@ -7709,15 +7724,18 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 413,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/get-row.md",
+                    "demo": "tablesdb\/get-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "rows.read",
+                        "documents.read"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7782,7 +7800,7 @@
                 ]
             },
             "put": {
-                "summary": "Create or update a row",
+                "summary": "Upsert a row",
                 "operationId": "tablesDBUpsertRow",
                 "tags": [
                     "tablesDB"
@@ -7804,15 +7822,18 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 416,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/upsert-row.md",
+                    "demo": "tablesdb\/upsert-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -7846,7 +7867,7 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
-                            "demo": "tables-d-b\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md"
                         }
                     ],
                     "auth": {
@@ -7940,15 +7961,18 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 414,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/update-row.md",
+                    "demo": "tablesdb\/update-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8039,15 +8063,18 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 418,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/delete-row.md",
+                    "demo": "tablesdb\/delete-row.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8123,15 +8150,18 @@
                 "x-appwrite": {
                     "method": "decrementRowColumn",
                     "group": "rows",
-                    "weight": 423,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/decrement-row-column.md",
+                    "demo": "tablesdb\/decrement-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8238,15 +8268,18 @@
                 "x-appwrite": {
                     "method": "incrementRowColumn",
                     "group": "rows",
-                    "weight": 422,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
-                    "demo": "tables-d-b\/increment-row-column.md",
+                    "demo": "tablesdb\/increment-row-column.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "rows.write",
+                        "documents.write"
+                    ],
                     "platforms": [
                         "client",
                         "server",
@@ -8353,7 +8386,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 172,
+                    "weight": 171,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list.md",
@@ -8429,7 +8462,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 171,
+                    "weight": 170,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create.md",
@@ -8514,7 +8547,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 173,
+                    "weight": 172,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get.md",
@@ -8576,7 +8609,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 175,
+                    "weight": 174,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-name.md",
@@ -8650,7 +8683,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 177,
+                    "weight": 176,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete.md",
@@ -8714,7 +8747,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 179,
+                    "weight": 178,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list-memberships.md",
@@ -8800,7 +8833,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 178,
+                    "weight": 177,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create-membership.md",
@@ -8911,7 +8944,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 180,
+                    "weight": 179,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-membership.md",
@@ -8983,7 +9016,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 181,
+                    "weight": 180,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership.md",
@@ -9070,7 +9103,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 183,
+                    "weight": 182,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete-membership.md",
@@ -9144,7 +9177,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 182,
+                    "weight": 181,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership-status.md",
@@ -9242,7 +9275,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 174,
+                    "weight": 173,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-prefs.md",
@@ -9303,7 +9336,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 176,
+                    "weight": 175,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-prefs.md",
@@ -9915,17 +9948,20 @@
                         "type": "integer",
                         "description": "Row automatically incrementing ID.",
                         "x-example": 1,
-                        "format": "int32"
+                        "format": "int32",
+                        "readOnly": true
                     },
                     "$tableId": {
                         "type": "string",
                         "description": "Table ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readOnly": true
                     },
                     "$databaseId": {
                         "type": "string",
                         "description": "Database ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readOnly": true
                     },
                     "$createdAt": {
                         "type": "string",
@@ -11331,7 +11367,7 @@
                     },
                     "$updatedAt": {
                         "type": "string",
-                        "description": "Execution upate date in ISO 8601 format.",
+                        "description": "Execution update date in ISO 8601 format.",
                         "x-example": "2020-10-15T06:38:00.000+00:00"
                     },
                     "$permissions": {
@@ -11348,6 +11384,11 @@
                         "type": "string",
                         "description": "Function ID.",
                         "x-example": "5e5ea6g16897e"
+                    },
+                    "deploymentId": {
+                        "type": "string",
+                        "description": "Function's deployment ID used to create the execution.",
+                        "x-example": "5e5ea5c16897e"
                     },
                     "trigger": {
                         "type": "string",
@@ -11433,6 +11474,7 @@
                     "$updatedAt",
                     "$permissions",
                     "functionId",
+                    "deploymentId",
                     "trigger",
                     "status",
                     "requestMethod",
@@ -11453,6 +11495,7 @@
                         "any"
                     ],
                     "functionId": "5e5ea6g16897e",
+                    "deploymentId": "5e5ea5c16897e",
                     "trigger": "http",
                     "status": "processing",
                     "requestMethod": "GET",

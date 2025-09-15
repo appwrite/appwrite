@@ -12,7 +12,7 @@ const result = await databases.updateDatetimeAttribute({
     key: '',
     required: false,
     default: '',
-    newKey: ''
+    newKey: '' // optional
 });
 
 console.log(result);

@@ -1,4 +1,3 @@
 appwrite databases create \
-        --databaseId <DATABASE_ID> \
-        --name <NAME> \
-
+    --database-id <DATABASE_ID> \
+    --name <NAME>

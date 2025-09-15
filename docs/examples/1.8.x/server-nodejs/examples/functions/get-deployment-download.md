@@ -10,5 +10,5 @@ const functions = new sdk.Functions(client);
 const result = await functions.getDeploymentDownload({
     functionId: '<FUNCTION_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
-    type: sdk.DeploymentDownloadType.Source
+    type: sdk.DeploymentDownloadType.Source // optional
 });

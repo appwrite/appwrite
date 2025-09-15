@@ -1,3 +1,3 @@
-appwrite teams deleteMembership \
-        --teamId <TEAM_ID> \
-        --membershipId <MEMBERSHIP_ID>
+appwrite teams delete-membership \
+    --team-id <TEAM_ID> \
+    --membership-id <MEMBERSHIP_ID>

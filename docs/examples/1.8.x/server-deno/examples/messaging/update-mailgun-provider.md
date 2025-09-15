@@ -9,13 +9,13 @@ const messaging = new Messaging(client);
 
 const response = await messaging.updateMailgunProvider({
     providerId: '<PROVIDER_ID>',
-    name: '<NAME>',
-    apiKey: '<API_KEY>',
-    domain: '<DOMAIN>',
-    isEuRegion: false,
-    enabled: false,
-    fromName: '<FROM_NAME>',
-    fromEmail: 'email@example.com',
-    replyToName: '<REPLY_TO_NAME>',
-    replyToEmail: '<REPLY_TO_EMAIL>'
+    name: '<NAME>', // optional
+    apiKey: '<API_KEY>', // optional
+    domain: '<DOMAIN>', // optional
+    isEuRegion: false, // optional
+    enabled: false, // optional
+    fromName: '<FROM_NAME>', // optional
+    fromEmail: 'email@example.com', // optional
+    replyToName: '<REPLY_TO_NAME>', // optional
+    replyToEmail: '<REPLY_TO_EMAIL>' // optional
 });

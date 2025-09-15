@@ -1,1 +1,1 @@
-appwrite account listSessions
+appwrite account list-sessions

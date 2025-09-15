@@ -9,9 +9,9 @@ const messaging = new Messaging(client);
 
 const response = await messaging.updateTextmagicProvider({
     providerId: '<PROVIDER_ID>',
-    name: '<NAME>',
-    enabled: false,
-    username: '<USERNAME>',
-    apiKey: '<API_KEY>',
-    from: '<FROM>'
+    name: '<NAME>', // optional
+    enabled: false, // optional
+    username: '<USERNAME>', // optional
+    apiKey: '<API_KEY>', // optional
+    from: '<FROM>' // optional
 });

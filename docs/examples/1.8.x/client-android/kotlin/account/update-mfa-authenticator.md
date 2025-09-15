@@ -9,7 +9,7 @@ val client = Client(context)
 
 val account = Account(client)
 
-val result = account.updateMfaAuthenticator(
+val result = account.updateMFAAuthenticator(
     type = AuthenticatorType.TOTP,
     otp = "<OTP>", 
 )

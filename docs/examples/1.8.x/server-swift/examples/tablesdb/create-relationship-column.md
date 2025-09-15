@@ -6,7 +6,7 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
-let tablesDB = TablesDb(client)
+let tablesDB = TablesDB(client)
 
 let columnRelationship = try await tablesDB.createRelationshipColumn(
     databaseId: "<DATABASE_ID>",

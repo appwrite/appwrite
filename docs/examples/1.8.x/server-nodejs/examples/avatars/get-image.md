@@ -9,6 +9,6 @@ const avatars = new sdk.Avatars(client);
 
 const result = await avatars.getImage({
     url: 'https://example.com',
-    width: 0,
-    height: 0
+    width: 0, // optional
+    height: 0 // optional
 });

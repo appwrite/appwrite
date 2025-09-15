@@ -1,4 +1,3 @@
-appwrite vcs listRepositories \
-        --installationId <INSTALLATION_ID> \
-        --type runtime \
-
+appwrite vcs list-repositories \
+    --installation-id <INSTALLATION_ID> \
+    --type runtime

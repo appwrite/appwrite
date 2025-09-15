@@ -1,19 +1,5 @@
 appwrite sites create \
-        --siteId <SITE_ID> \
-        --name <NAME> \
-        --framework analog \
-        --buildRuntime node-14.5 \
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    --site-id <SITE_ID> \
+    --name <NAME> \
+    --framework analog \
+    --build-runtime node-14.5

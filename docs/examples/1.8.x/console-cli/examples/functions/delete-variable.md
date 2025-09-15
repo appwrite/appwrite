@@ -1,3 +1,3 @@
-appwrite functions deleteVariable \
-        --functionId <FUNCTION_ID> \
-        --variableId <VARIABLE_ID>
+appwrite functions delete-variable \
+    --function-id <FUNCTION_ID> \
+    --variable-id <VARIABLE_ID>

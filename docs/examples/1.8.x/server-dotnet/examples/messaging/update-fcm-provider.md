@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-Provider result = await messaging.UpdateFcmProvider(
+Provider result = await messaging.UpdateFCMProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>", // optional
     enabled: false, // optional

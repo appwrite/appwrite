@@ -1,3 +1,2 @@
-appwrite sites getUsage \
-        --siteId <SITE_ID> \
-
+appwrite sites get-usage \
+    --site-id <SITE_ID>

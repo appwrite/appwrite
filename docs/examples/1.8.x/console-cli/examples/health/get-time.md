@@ -1,1 +1,1 @@
-appwrite health getTime
+appwrite health get-time

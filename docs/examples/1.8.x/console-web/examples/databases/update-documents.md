@@ -9,8 +9,8 @@ const databases = new Databases(client);
 const result = await databases.updateDocuments({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    data: {},
-    queries: []
+    data: {}, // optional
+    queries: [] // optional
 });
 
 console.log(result);

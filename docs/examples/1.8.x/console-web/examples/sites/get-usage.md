@@ -8,7 +8,7 @@ const sites = new Sites(client);
 
 const result = await sites.getUsage({
     siteId: '<SITE_ID>',
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);

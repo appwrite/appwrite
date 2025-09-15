@@ -7,7 +7,7 @@ Client client = Client()
 
 Messaging messaging = Messaging(client);
 
-Message result = await messaging.createSms(
+Message result = await messaging.createSMS(
     messageId: '<MESSAGE_ID>',
     content: '<CONTENT>',
     topics: [], // (optional)

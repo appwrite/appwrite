@@ -1,2 +1,1 @@
-appwrite databases listUsage \
-
+appwrite databases list-usage

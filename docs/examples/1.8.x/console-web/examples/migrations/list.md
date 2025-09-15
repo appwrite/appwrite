@@ -7,8 +7,8 @@ const client = new Client()
 const migrations = new Migrations(client);
 
 const result = await migrations.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

@@ -4,7 +4,7 @@ Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>'); // Your project ID
 
-TablesDb tablesDB = TablesDb(client);
+TablesDB tablesDB = TablesDB(client);
 
 await tablesDB.deleteRow(
     databaseId: '<DATABASE_ID>',

@@ -254,7 +254,7 @@ App::post('/v1/messaging/providers/smtp')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createSMTPProvider',
+                replaceWith: 'messaging.createSMTPProvider',
             ),
         ),
         new Method(
@@ -787,7 +787,7 @@ App::post('/v1/messaging/providers/fcm')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createFCMProvider',
+                replaceWith: 'messaging.createFCMProvider',
             ),
         ),
         new Method(
@@ -876,7 +876,7 @@ App::post('/v1/messaging/providers/apns')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createAPNSProvider',
+                replaceWith: 'messaging.createAPNSProvider',
             ),
         ),
         new Method(
@@ -1395,7 +1395,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateSMTPProvider',
+                replaceWith: 'messaging.updateSMTPProvider',
             ),
         ),
         new Method(
@@ -1986,7 +1986,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateFCMProvider',
+                replaceWith: 'messaging.updateFCMProvider',
             ),
         ),
         new Method(
@@ -2081,7 +2081,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateAPNSProvider',
+                replaceWith: 'messaging.updateAPNSProvider',
             ),
         ),
         new Method(
@@ -3011,7 +3011,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3154,7 +3154,7 @@ App::post('/v1/messaging/messages/sms')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'createSMS',
+                replaceWith: 'messaging.createSMS',
             ),
         ),
         new Method(
@@ -3184,7 +3184,7 @@ App::post('/v1/messaging/messages/sms')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, ?array $topics, ?array $users, ?array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3319,7 +3319,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -4000,7 +4000,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
-                replaceWith: 'updateSMS',
+                replaceWith: 'messaging.updateSMS',
             ),
         ),
         new Method(

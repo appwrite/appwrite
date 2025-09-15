@@ -1,1 +1,1 @@
-appwrite locale listLanguages
+appwrite locale list-languages

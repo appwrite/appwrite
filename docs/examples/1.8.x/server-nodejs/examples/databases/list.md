@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const result = await databases.list({
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

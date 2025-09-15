@@ -8,8 +8,8 @@ const databases = new Databases(client);
 
 const result = await databases.listCollections({
     databaseId: '<DATABASE_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });
 
 console.log(result);

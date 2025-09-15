@@ -1,7 +1,4 @@
-appwrite databases createCollection \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --name <NAME> \
-
-
-
+appwrite databases create-collection \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --name <NAME>

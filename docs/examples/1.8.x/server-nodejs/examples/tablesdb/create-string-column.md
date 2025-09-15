@@ -5,7 +5,7 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const tablesDB = new sdk.TablesDb(client);
+const tablesDB = new sdk.TablesDB(client);
 
 const result = await tablesDB.createStringColumn({
     databaseId: '<DATABASE_ID>',
@@ -13,7 +13,7 @@ const result = await tablesDB.createStringColumn({
     key: '',
     size: 1,
     required: false,
-    default: '<DEFAULT>',
-    array: false,
-    encrypt: false
+    default: '<DEFAULT>', // optional
+    array: false, // optional
+    encrypt: false // optional
 });

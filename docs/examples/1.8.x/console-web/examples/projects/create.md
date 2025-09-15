@@ -10,16 +10,16 @@ const result = await projects.create({
     projectId: '',
     name: '<NAME>',
     teamId: '<TEAM_ID>',
-    region: .Default,
-    description: '<DESCRIPTION>',
-    logo: '<LOGO>',
-    url: 'https://example.com',
-    legalName: '<LEGAL_NAME>',
-    legalCountry: '<LEGAL_COUNTRY>',
-    legalState: '<LEGAL_STATE>',
-    legalCity: '<LEGAL_CITY>',
-    legalAddress: '<LEGAL_ADDRESS>',
-    legalTaxId: '<LEGAL_TAX_ID>'
+    region: .Default, // optional
+    description: '<DESCRIPTION>', // optional
+    logo: '<LOGO>', // optional
+    url: 'https://example.com', // optional
+    legalName: '<LEGAL_NAME>', // optional
+    legalCountry: '<LEGAL_COUNTRY>', // optional
+    legalState: '<LEGAL_STATE>', // optional
+    legalCity: '<LEGAL_CITY>', // optional
+    legalAddress: '<LEGAL_ADDRESS>', // optional
+    legalTaxId: '<LEGAL_TAX_ID>' // optional
 });
 
 console.log(result);

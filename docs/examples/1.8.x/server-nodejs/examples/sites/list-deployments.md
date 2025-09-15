@@ -9,6 +9,6 @@ const sites = new sdk.Sites(client);
 
 const result = await sites.listDeployments({
     siteId: '<SITE_ID>',
-    queries: [],
-    search: '<SEARCH>'
+    queries: [], // optional
+    search: '<SEARCH>' // optional
 });

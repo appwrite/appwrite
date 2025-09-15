@@ -1,3 +1,1 @@
-appwrite vcs listInstallations \
-
-
+appwrite vcs list-installations

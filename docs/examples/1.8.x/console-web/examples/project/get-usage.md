@@ -9,7 +9,7 @@ const project = new Project(client);
 const result = await project.getUsage({
     startDate: '',
     endDate: '',
-    period: ProjectUsageRange.OneHour
+    period: ProjectUsageRange.OneHour // optional
 });
 
 console.log(result);

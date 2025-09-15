@@ -10,7 +10,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-Provider result = await messaging.UpdateSmtpProvider(
+Provider result = await messaging.UpdateSMTPProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>", // optional
     host: "<HOST>", // optional

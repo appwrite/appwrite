@@ -8,7 +8,7 @@ const health = new Health(client);
 
 const result = await health.getFailedJobs({
     name: .V1Database,
-    threshold: null
+    threshold: null // optional
 });
 
 console.log(result);

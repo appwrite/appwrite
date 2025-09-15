@@ -7,7 +7,7 @@ client = Client.new
     .set_project('<YOUR_PROJECT_ID>') # Your project ID
     .set_session('') # The user session to authenticate with
 
-tables_db = TablesDb.new(client)
+tables_db = TablesDB.new(client)
 
 result = tables_db.delete_row(
     database_id: '<DATABASE_ID>',

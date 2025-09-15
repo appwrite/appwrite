@@ -7,7 +7,7 @@ let client = Client()
 
 let users = Users(client)
 
-let user = try await users.updateMfa(
+let user = try await users.updateMFA(
     userId: "<USER_ID>",
     mfa: false
 )

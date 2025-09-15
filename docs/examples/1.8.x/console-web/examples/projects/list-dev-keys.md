@@ -8,7 +8,7 @@ const projects = new Projects(client);
 
 const result = await projects.listDevKeys({
     projectId: '<PROJECT_ID>',
-    queries: []
+    queries: [] // optional
 });
 
 console.log(result);

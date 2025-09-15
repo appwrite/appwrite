@@ -1,7 +1,2 @@
-appwrite messaging updateTextmagicProvider \
-        --providerId <PROVIDER_ID> \
-
-
-
-
-
+appwrite messaging update-textmagic-provider \
+    --provider-id <PROVIDER_ID>

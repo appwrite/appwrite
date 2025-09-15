@@ -1,7 +1,3 @@
-appwrite messaging createTwilioProvider \
-        --providerId <PROVIDER_ID> \
-        --name <NAME> \
-
-
-
-
+appwrite messaging create-twilio-provider \
+    --provider-id <PROVIDER_ID> \
+    --name <NAME>

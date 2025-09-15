@@ -1,3 +1,1 @@
-appwrite migrations list \
-
-
+appwrite migrations list

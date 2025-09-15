@@ -6,28 +6,21 @@ import (
     "github.com/appwrite/sdk-for-go/messaging"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithKey("<YOUR_API_KEY>") // Your secret API key
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithKey("<YOUR_API_KEY>")
+)
 
-    service := messaging.New(client)
-    response, error := service.CreateApnsProvider(
-        "<PROVIDER_ID>",
-        "<NAME>",
-        messaging.WithCreateApnsProviderAuthKey("<AUTH_KEY>"),
-        messaging.WithCreateApnsProviderAuthKeyId("<AUTH_KEY_ID>"),
-        messaging.WithCreateApnsProviderTeamId("<TEAM_ID>"),
-        messaging.WithCreateApnsProviderBundleId("<BUNDLE_ID>"),
-        messaging.WithCreateApnsProviderSandbox(false),
-        messaging.WithCreateApnsProviderEnabled(false),
-    )
+service := messaging.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.CreateAPNSProvider(
+    "<PROVIDER_ID>",
+    "<NAME>",
+    messaging.WithCreateAPNSProviderAuthKey("<AUTH_KEY>"),
+    messaging.WithCreateAPNSProviderAuthKeyId("<AUTH_KEY_ID>"),
+    messaging.WithCreateAPNSProviderTeamId("<TEAM_ID>"),
+    messaging.WithCreateAPNSProviderBundleId("<BUNDLE_ID>"),
+    messaging.WithCreateAPNSProviderSandbox(false),
+    messaging.WithCreateAPNSProviderEnabled(false),
+)

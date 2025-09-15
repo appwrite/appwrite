@@ -7,7 +7,7 @@ const client = new Client()
 const storage = new Storage(client);
 
 const result = await storage.getUsage({
-    range: UsageRange.TwentyFourHours
+    range: UsageRange.TwentyFourHours // optional
 });
 
 console.log(result);
