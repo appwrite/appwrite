@@ -6,6 +6,8 @@ use Utopia\Logger\Log;
 
 interface Adapter
 {
+    public function isIssueInstant(string $domain, ?string $domainType): bool;
+
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string;
 
     public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool;

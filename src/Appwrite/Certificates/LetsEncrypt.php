@@ -17,6 +17,10 @@ class LetsEncrypt implements Adapter
         $this->email = $email;
     }
 
+    public function isIssueInstant(string $domain, ?string $domainType): bool
+    {
+        return true;
+    }
 
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
     {

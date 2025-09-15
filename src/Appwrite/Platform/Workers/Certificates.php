@@ -117,11 +117,6 @@ class Certificates extends Action
         }
     }
 
-    private function executeGenerationSync(): void
-    {
-        throw new \Exception('To be implemented.');
-    }
-
     private function executeVerification(
         Domain $domain,
         Database $dbForPlatform,
@@ -256,7 +251,7 @@ class Certificates extends Action
             $certificate->setAttribute('domain', $domain->get());
         }
 
-        $success = false;
+        $status = $certificate->getAttribute('status', 'verifying');
 
         try {
             // Clean-up logs from previous attempt
@@ -306,6 +301,12 @@ class Certificates extends Action
             $certName = ID::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
+            // This is useful when cert provider does extra work in background
+            // For example, verification, or example certificate distribution to all edges
+            if ($certificates->isIssueInstant($domain->get(), $domainType)) {
+                $status = 'verified';
+            }
+
             // Command succeeded, store all data into document
             $certificate->setAttribute('logs', 'Certificate successfully generated.');
 
@@ -313,8 +314,10 @@ class Certificates extends Action
             $certificate->setAttribute('renewDate', $renewDate);
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', DateTime::now());
-            $success = true;
+            $status = 'verified';
         } catch (Throwable $e) {
+            $status = 'unverified';
+
             $logs = $e->getMessage();
             $currentLogs = $certificate->getAttribute('logs', '');
             $date = \date('H:i:s');
@@ -341,7 +344,7 @@ class Certificates extends Action
             $certificate = $this->upsertCertificate($domain->get(), $certificate, $dbForPlatform);
 
             // Synchronize new status to all rules
-            $this->updateDomainDocuments($certificate->getId(), $domain->get(), $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
+            $this->updateDomainDocuments($certificate->getId(), $domain->get(), $status, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
     }
 
@@ -476,14 +479,14 @@ class Certificates extends Action
      *
      * @param string $certificateId ID of a new or updated certificate document
      * @param string $domain Domain that is affected by new certificate
-     * @param bool $success Was certificate generation successful?
+     * @param string $status Status of the certificate generation, can be 'verifying', 'verified' 'unverified'
      *
      * @return void
      */
     private function updateDomainDocuments(
         string $certificateId,
         string $domain,
-        bool $success,
+        string $status,
         Database $dbForPlatform,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
@@ -504,7 +507,7 @@ class Certificates extends Action
 
             $updates
                 ->setAttribute('certificateId', $certificateId)
-                ->setAttribute('status', $success ? 'verified' : 'unverified');
+                ->setAttribute('status', $status);
 
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
