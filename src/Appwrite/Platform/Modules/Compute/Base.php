@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Compute;
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -29,40 +30,28 @@ class Base extends Action
     protected function getDefaultSpecification(array $plan): string
     {
         $specifications = Config::getParam('specifications', []);
-        
+
         if (empty($specifications)) {
             return APP_COMPUTE_SPECIFICATION_DEFAULT;
         }
 
-        // If there's a plan with runtime specifications, use the highest one from the plan
-        if (!empty($plan) && array_key_exists('runtimeSpecifications', $plan) && !empty($plan['runtimeSpecifications'])) {
-            $planSpecifications = $plan['runtimeSpecifications'];
-            // Find the highest specification in the plan
-            foreach (array_reverse(array_keys($specifications)) as $specKey) {
-                if (in_array($specKey, $planSpecifications)) {
-                    return $specKey;
-                }
-            }
+        $specificationValidator = new SpecificationValidator(
+            $plan,
+            $specifications,
+            System::getEnv('_APP_COMPUTE_CPUS', 0),
+            System::getEnv('_APP_COMPUTE_MEMORY', 0)
+        );
+        $allowedSpecifications = $specificationValidator->getAllowedSpecifications();
+
+        // If there is no plan use the highest specification
+        if (empty($plan)) {
+            return end($allowedSpecifications) ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
         }
 
-        // If no plan or plan-based specification, use the highest available specification
-        $maxCpus = (float) System::getEnv('_APP_COMPUTE_CPUS', 0);
-        $maxMemory = (int) System::getEnv('_APP_COMPUTE_MEMORY', 0);
-
-        $highestSpec = APP_COMPUTE_SPECIFICATION_DEFAULT;
-        foreach (array_reverse(array_keys($specifications)) as $specKey) {
-            $spec = $specifications[$specKey];
-            $withinCpuLimit = empty($maxCpus) || $spec['cpus'] <= $maxCpus;
-            $withinMemoryLimit = empty($maxMemory) || $spec['memory'] <= $maxMemory;
-            
-            if ($withinCpuLimit && $withinMemoryLimit) {
-                $highestSpec = $specKey;
-                break;
-            }
-        }
-
-        return $highestSpec;
+        // Otherwise, use the lowest specification available in the plan
+        return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
     }
+
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
