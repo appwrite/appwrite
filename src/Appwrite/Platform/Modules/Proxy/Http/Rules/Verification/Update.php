@@ -76,7 +76,7 @@ class Update extends Action
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        if ($rule->getAttribute('verification') === true) {
+        if ($rule->getAttribute('status', '') !== RULE_STATUS_VERIFICATION_FAILED) {
             return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         }
 
