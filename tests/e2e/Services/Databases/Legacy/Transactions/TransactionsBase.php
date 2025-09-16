@@ -3,19 +3,13 @@
 namespace Tests\E2E\Services\Databases\Legacy\Transactions;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\ProjectCustom;
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-class TransactionsTest extends Scope
+trait TransactionsBase
 {
-    use ProjectCustom;
-    use SideClient;
-
     /**
      * Test creating a transaction
      */
