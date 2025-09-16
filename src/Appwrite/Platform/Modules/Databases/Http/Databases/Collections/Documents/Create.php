@@ -362,19 +362,19 @@ class Create extends Action
         }, $documents);
 
         try {
-        $created = [];
-        $dbForProject->withPreserveDates(
-            function () use (&$created, $dbForProject, $database, $collection, $documents) {
-                $dbForProject->createDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    $documents,
-                    onNext: function ($doc) use (&$created) {
-                        $created[] = $doc;
-                    }
-                );
-            }
-        );
-        
+            $created = [];
+            $dbForProject->withPreserveDates(
+                function () use (&$created, $dbForProject, $database, $collection, $documents) {
+                    $dbForProject->createDocuments(
+                        'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                        $documents,
+                        onNext: function ($doc) use (&$created) {
+                            $created[] = $doc;
+                        }
+                    );
+                }
+            );
+
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (NotFoundException) {

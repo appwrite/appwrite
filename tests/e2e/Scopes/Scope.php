@@ -16,7 +16,7 @@ abstract class Scope extends TestCase
 
     public const REQUEST_TYPE_WEBHOOK = 'webhook';
     public const REQUEST_TYPE_SMS = 'sms';
-    
+
     // Database adapter constants
     public const DB_ADAPTER_MONGODB = 'mongodb';
     public const DB_ADAPTER_ENV_KEY = '_APP_DB_ADAPTER';
