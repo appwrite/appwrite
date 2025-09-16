@@ -5909,6 +5909,11 @@ trait DatabasesBase
 
     public function testSpatialPointAttributes(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6047,6 +6052,11 @@ trait DatabasesBase
 
     public function testSpatialLineAttributes(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6184,6 +6194,11 @@ trait DatabasesBase
 
     public function testSpatialPolygonAttributes(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6319,6 +6334,11 @@ trait DatabasesBase
 
     public function testSpatialAttributesMixedCollection(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6473,6 +6493,11 @@ trait DatabasesBase
 
     public function testUpdateSpatialAttributes(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6632,6 +6657,11 @@ trait DatabasesBase
 
     public function testSpatialQuery(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7042,6 +7072,10 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToOne(): void
     {
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7180,6 +7214,10 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToMany(): void
     {
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7314,6 +7352,11 @@ trait DatabasesBase
 
     public function testSpatialRelationshipManyToOne(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7439,6 +7482,10 @@ trait DatabasesBase
 
     public function testSpatialRelationshipManyToMany(): void
     {
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7564,6 +7611,11 @@ trait DatabasesBase
 
     public function testSpatialIndex(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7674,6 +7726,11 @@ trait DatabasesBase
 
     public function testSpatialDistanceInMeter(): void
     {
+
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

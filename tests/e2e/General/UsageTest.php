@@ -3,7 +3,6 @@
 namespace Tests\E2E\General;
 
 use Appwrite\Platform\Modules\Compute\Specification;
-use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
 use Tests\E2E\Client;
@@ -714,7 +713,7 @@ class UsageTest extends Scope
 
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/tablesdb/' . $databaseId . '/tables',
+                '/databases/' . $databaseId . '/tables',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id']
@@ -743,7 +742,7 @@ class UsageTest extends Scope
             if ($i < (self::CREATE / 2)) {
                 $response = $this->client->call(
                     Client::METHOD_DELETE,
-                    '/tablesdb/' . $databaseId . '/tables/' . $tableId,
+                    '/databases/' . $databaseId . '/tables/' . $tableId,
                     array_merge([
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders()),
@@ -758,7 +757,7 @@ class UsageTest extends Scope
 
         $response = $this->client->call(
             Client::METHOD_POST,
-            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns' . '/string',
+            '/databases/' . $databaseId . '/tables/' . $tableId . '/columns' . '/string',
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
@@ -781,7 +780,7 @@ class UsageTest extends Scope
 
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows',
+                '/databases/' . $databaseId . '/tables/' . $tableId . '/rows',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id']
@@ -803,7 +802,7 @@ class UsageTest extends Scope
             if ($i < (self::CREATE / 2)) {
                 $response = $this->client->call(
                     Client::METHOD_DELETE,
-                    '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId,
+                    '/databases/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId,
                     array_merge([
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders()),
@@ -899,7 +898,7 @@ class UsageTest extends Scope
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/usage?range=30d',
+            '/databases/' . $databaseId . '/tables/' . $tableId . '/usage?range=30d',
             $this->getConsoleHeaders()
         );
 
@@ -1291,7 +1290,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'domain' => 'test-' . ID::unique() . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
                 'functionId' => $functionId,
             ],
         );

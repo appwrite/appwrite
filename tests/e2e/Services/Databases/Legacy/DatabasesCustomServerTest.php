@@ -6203,6 +6203,10 @@ class DatabasesCustomServerTest extends Scope
 
     public function testSpatialBulkOperations(): void
     {
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -6604,6 +6608,10 @@ class DatabasesCustomServerTest extends Scope
 
     public function testSpatialBulkOperationsWithLineStrings(): void
     {
+        if($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',

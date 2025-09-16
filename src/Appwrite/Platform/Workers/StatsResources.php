@@ -435,7 +435,7 @@ class StatsResources extends Action
         $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
 
         try {
-            $dbForLogs->createOrUpdateDocuments(
+            $dbForLogs->upsertDocuments(
                 'stats',
                 $this->documents
             );
