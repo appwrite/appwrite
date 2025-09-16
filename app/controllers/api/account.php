@@ -961,10 +961,11 @@ App::post('/v1/account/sessions/email')
 
         // Re-hash if not using recommended algo
         if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
+            $proofForPasswordUpdated = new ProofsPassword();
             $user
-                ->setAttribute('password', (new ProofsPassword())->hash($password))
-                ->setAttribute('hash', $proofForPassword->getHash()->getName())
-                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
+                ->setAttribute('password', $proofForPasswordUpdated->hash($password))
+                ->setAttribute('hash', $proofForPasswordUpdated->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPasswordUpdated->getHash()->getOptions());
             $dbForProject->updateDocument('users', $user->getId(), $user);
         }
 
