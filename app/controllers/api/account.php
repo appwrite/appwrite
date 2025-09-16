@@ -1739,8 +1739,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $session->setAttribute('expire', $expire);
 
-            // Always set fallback cookies for OAuth2 sessions to ensure compatibility with React Router v7
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            if (!Config::getParam('domainVerification')) {
+                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            }
 
             $queueForEvents
                 ->setParam('userId', $user->getId())
@@ -1756,17 +1757,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $query['secret'] = Auth::encodeSession($user->getId(), $secret);
             }
 
-            // Determine appropriate SameSite setting for OAuth2 redirects
-            $sameSite = Config::getParam('cookieSamesite');
-            
-            // For OAuth2 redirects, use 'Lax' instead of 'None' to ensure compatibility with modern browsers and SPA routing
-            if ($sameSite === 'None') {
-                $sameSite = 'Lax';
+            // For OAuth2 redirects, use SameSite=Lax instead of SameSite=None to improve compatibility
+            // with modern browsers and SPA frameworks like React Router v7
+            // Ref: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+            // Ref: https://web.dev/articles/samesite-cookies-explained
+            $oauthSameSite = Config::getParam('cookieSamesite');
+            if ($oauthSameSite === Response::COOKIE_SAMESITE_NONE) {
+                $oauthSameSite = Response::COOKIE_SAMESITE_LAX;
             }
 
             $response
                 ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, $sameSite);
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, $oauthSameSite);
         }
 
         if (isset($sessionUpgrade) && $sessionUpgrade) {
