@@ -6,7 +6,6 @@ use Appwrite\GraphQL\Resolvers;
 use Appwrite\GraphQL\Types;
 use Appwrite\SDK\Method;
 use Exception;
-use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
@@ -215,8 +214,6 @@ class Mapper
 
             if (\is_array($rule['type'])) {
                 $type = self::getUnionType($escapedKey, $rule);
-            } elseif ($rule['type'] === 'enum' && !empty($rule['enum'])) {
-                $type = self::getEnumType($escapedKey, $rule);
             } else {
                 $type = self::getObjectType($rule);
             }
@@ -391,30 +388,6 @@ class Mapper
         return $type;
     }
 
-    private static function getEnumType(string $name, array $rule): Type
-    {
-        $enumTypeName = \ucfirst($name) . 'Enum';
-
-        if (Registry::has($enumTypeName)) {
-            return Registry::get($enumTypeName);
-        }
-
-        $values = [];
-        foreach ($rule['enum'] as $enumValue) {
-            $values[\strtoupper(\str_replace(['-', ' ', '.'], '_', $enumValue))] = [
-                'value' => $enumValue
-            ];
-        }
-
-        $enumType = new EnumType([
-            'name' => $enumTypeName,
-            'values' => $values
-        ]);
-
-        Registry::set($enumTypeName, $enumType);
-        return $enumType;
-    }
-
     private static function getObjectType(array $rule): Type
     {
         $type = $rule['type'];
@@ -480,6 +453,7 @@ class Mapper
                 'ip' => static::model("{$prefix}Ip"),
                 default => static::model("{$prefix}String"),
             },
+            'enum' => static::model("{$prefix}String"), // TODO: Add enum type (breaking change if added)
             'integer' => static::model("{$prefix}Integer"),
             'double' => static::model("{$prefix}Float"),
             'boolean' => static::model("{$prefix}Boolean"),
@@ -488,7 +462,6 @@ class Mapper
             'point' => static::model("{$prefix}Point"),
             'linestring' => static::model("{$prefix}Line"),
             'polygon' => static::model("{$prefix}Polygon"),
-            'enum' => static::model("{$prefix}Enum"),
             default => throw new Exception('Unknown ' . strtolower($prefix) . ' implementation'),
         };
     }
