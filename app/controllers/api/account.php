@@ -2364,7 +2364,7 @@ App::post('/v1/account/tokens/email')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
-        } else if ($customEmails) {
+        } elseif ($customEmails && !empty($customTemplate)) {
             $subject = $customTemplate['subject'];
             $preview = $customTemplate['preview'];
             $heading = $customTemplate['heading'];
@@ -3671,7 +3671,7 @@ App::post('/v1/account/verification')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
-        } else if ($customEmails) {
+        } elseif ($customEmails && !empty($customTemplate)) {
             $subject = $customTemplate['subject'];
             $preview = $customTemplate['preview'];
             $heading = $customTemplate['heading'];
@@ -4782,7 +4782,7 @@ App::post('/v1/account/mfa/challenge')
                         ->setSmtpReplyTo($replyTo)
                         ->setSmtpSenderEmail($senderEmail)
                         ->setSmtpSenderName($senderName);
-                } else if ($customEmails) {
+                } elseif ($customEmails && !empty($customTemplate)) {
                     $subject = $customTemplate['subject'];
                     $preview = $customTemplate['preview'];
                     $heading = $customTemplate['heading'];
