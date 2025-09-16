@@ -126,6 +126,7 @@ class Maintenance extends Action
             Query::createdAfter(DatabaseDateTime::format($oldestToCheck)), // max 3 days old
             Query::equal('status', [RULE_STATUS_VERIFICATION_FAILED]), // not verified yet
             Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
             Query::limit(30), // Reasonable pagination limit, processable within a minute
         ]);
 
@@ -133,10 +134,6 @@ class Maintenance extends Action
             Console::info("[{$time}] Found " . \count($rules) . " rules for verification, scheduling jobs.");
 
             foreach ($rules as $rule) {
-                if ($rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
-                    continue;
-                }
-
                 $queueForCertificate
                     ->setDomain(new Document([
                         'domain' => $rule->getAttribute('domain'),
