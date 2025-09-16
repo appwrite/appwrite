@@ -305,10 +305,10 @@ class Certificates extends Action
             // For example, verification, or example certificate distribution to all edges
             if ($certificates->isIssueInstant($domain->get(), $domainType)) {
                 $status = RULE_STATUS_SUCCESSFUL;
-            }
 
-            // Command succeeded, store all data into document
-            $certificate->setAttribute('logs', 'Certificate successfully generated.');
+                // Command succeeded, store all data into document
+                $certificate->setAttribute('logs', 'Certificate successfully generated.');
+            }
 
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $renewDate);
