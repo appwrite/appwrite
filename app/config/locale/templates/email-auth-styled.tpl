@@ -38,7 +38,7 @@
                 background-color: #ffffff;
                 margin: 0;
                 padding: 0;
-            } 1Code has comments. Press enter to view.
+            }
             a {
                 color: currentColor;
                 word-break: break-all;
