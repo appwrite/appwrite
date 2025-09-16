@@ -6010,12 +6010,12 @@ trait DatabasesBase
             'documentId' => ID::unique(),
             'data' => [
                 'name' => 'Upserted Location',
-                'location' => [34.0522, -118.2437] // Los Angeles coordinates
+                'location' => [34.0522, -80] // Los Angeles coordinates
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([34.0522, -118.2437], $response['body']['location']);
+        $this->assertEquals([34.0522, -80], $response['body']['location']);
 
         // Test 5: Create document without permissions (should fail)
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
@@ -6145,12 +6145,12 @@ trait DatabasesBase
             'documentId' => ID::unique(),
             'data' => [
                 'distance' => 200,
-                'route' => [[34.0522, -118.2437], [34.0736, -118.2400]] // LA route
+                'route' => [[34.0522, -80], [34.0736, -90]] // LA route
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([[34.0522, -118.2437], [34.0736, -118.2400]], $response['body']['route']);
+        $this->assertEquals([[34.0522, -80], [34.0736, -90]], $response['body']['route']);
 
         // Test 5: Delete document
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, array_merge([
@@ -6282,12 +6282,12 @@ trait DatabasesBase
             'documentId' => ID::unique(),
             'data' => [
                 'active' => false,
-                'area' => [[[34.0522, -118.2437], [34.0736, -118.2437], [34.0736, -118.2400], [34.0522, -118.2400], [34.0522, -118.2437]]] // LA area
+                'area' => [[[34.0522, -80], [34.0736, -80], [34.0736, -90], [34.0522, -90], [34.0522, -80]]] // LA area
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([[[34.0522, -118.2437], [34.0736, -118.2437], [34.0736, -118.2400], [34.0522, -118.2400], [34.0522, -118.2437]]], $response['body']['area']);
+        $this->assertEquals([[[34.0522, -80], [34.0736, -80], [34.0736, -90], [34.0522, -90], [34.0522, -80]]], $response['body']['area']);
 
         // Test 5: Create document without required polygon attribute (should fail)
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -6722,7 +6722,7 @@ trait DatabasesBase
                 '$id' => 'doc1',
                 'name' => 'Test Document 1',
                 'pointAttr' => [6.0, 6.0],
-                'lineAttr' => [[1.0, 1.0], [2.0, 2.0]],
+                'lineAttr' => [[1.0, 1.0], [1.1,1.1] , [2.0, 2.0]],
                 'polyAttr' => [[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]]
             ],
             [
@@ -6803,6 +6803,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['documents']);
         $this->assertEquals('doc1', $response['body']['documents'][0]['$id']);
+
 
         // Test 4.2: notContains on polygon (point outside all polygons)
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([

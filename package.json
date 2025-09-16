@@ -4,5 +4,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appwrite/appwrite.git"
-  }
+  },
+  "files": [
+    "docs/examples",
+    "app/config/specs"
+  ]
 }

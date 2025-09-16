@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce433cef8711249299b58cc36419d912",
+    "content-hash": "7553e976312b0423cc31544abb91caec",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -961,83 +961,6 @@
                 "wiki": "https://dev.matomo.org/"
             },
             "time": "2025-08-20T17:20:16+00:00"
-        },
-        {
-            "name": "mongodb/mongodb",
-            "version": "2.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/mongodb/mongo-php-library.git",
-                "reference": "3bbe7ba9578724c7e1f47fcd17c881c0995baaad"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/3bbe7ba9578724c7e1f47fcd17c881c0995baaad",
-                "reference": "3bbe7ba9578724c7e1f47fcd17c881c0995baaad",
-                "shasum": ""
-            },
-            "require": {
-                "composer-runtime-api": "^2.0",
-                "ext-mongodb": "^2.1",
-                "php": "^8.1",
-                "psr/log": "^1.1.4|^2|^3",
-                "symfony/polyfill-php85": "^1.32"
-            },
-            "replace": {
-                "mongodb/builder": "*"
-            },
-            "require-dev": {
-                "doctrine/coding-standard": "^12.0",
-                "phpunit/phpunit": "^10.5.35",
-                "rector/rector": "^1.2",
-                "squizlabs/php_codesniffer": "^3.7",
-                "vimeo/psalm": "6.5.*"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "src/functions.php"
-                ],
-                "psr-4": {
-                    "MongoDB\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Andreas Braun",
-                    "email": "andreas.braun@mongodb.com"
-                },
-                {
-                    "name": "Jeremy Mikola",
-                    "email": "jmikola@gmail.com"
-                },
-                {
-                    "name": "Jérôme Tamarelle",
-                    "email": "jerome.tamarelle@mongodb.com"
-                }
-            ],
-            "description": "MongoDB driver library",
-            "homepage": "https://jira.mongodb.org/browse/PHPLIB",
-            "keywords": [
-                "database",
-                "driver",
-                "mongodb",
-                "persistence"
-            ],
-            "support": {
-                "issues": "https://github.com/mongodb/mongo-php-library/issues",
-                "source": "https://github.com/mongodb/mongo-php-library/tree/2.1.0"
-            },
-            "time": "2025-05-23T10:48:05+00:00"
         },
         {
             "name": "mustangostang/spyc",
@@ -3098,86 +3021,6 @@
             "time": "2025-07-08T02:45:35+00:00"
         },
         {
-            "name": "symfony/polyfill-php85",
-            "version": "v1.33.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-php85.git",
-                "reference": "d4e5fcd4ab3d998ab16c0db48e6cbb9a01993f91"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/d4e5fcd4ab3d998ab16c0db48e6cbb9a01993f91",
-                "reference": "d4e5fcd4ab3d998ab16c0db48e6cbb9a01993f91",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.2"
-            },
-            "type": "library",
-            "extra": {
-                "thanks": {
-                    "url": "https://github.com/symfony/polyfill",
-                    "name": "symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ],
-                "psr-4": {
-                    "Symfony\\Polyfill\\Php85\\": ""
-                },
-                "classmap": [
-                    "Resources/stubs"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nicolas Grekas",
-                    "email": "p@tchwork.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill backporting some PHP 8.5+ features to lower PHP versions",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "polyfill",
-                "portable",
-                "shim"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.33.0"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/nicolas-grekas",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2025-06-23T16:12:55+00:00"
-        },
-        {
             "name": "symfony/service-contracts",
             "version": "v3.6.0",
             "source": {
@@ -3795,16 +3638,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-mongo-tmp-pulls",
+            "version": "1.4.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c967e720efb4b5ad6f14b8313c85faac3d7bdb16"
+                "reference": "dbecdf89fde33a5f81ec19f4f97fe0c3715dc83a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c967e720efb4b5ad6f14b8313c85faac3d7bdb16",
-                "reference": "c967e720efb4b5ad6f14b8313c85faac3d7bdb16",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/dbecdf89fde33a5f81ec19f4f97fe0c3715dc83a",
+                "reference": "dbecdf89fde33a5f81ec19f4f97fe0c3715dc83a",
                 "shasum": ""
             },
             "require": {
@@ -3813,7 +3656,6 @@
                 "php": ">=8.1",
                 "utopia-php/cache": "0.13.*",
                 "utopia-php/framework": "0.33.*",
-                "utopia-php/mongo": "dev-feat-create-UUID as 0.5.3",
                 "utopia-php/pools": "0.8.*"
             },
             "require-dev": {
@@ -3846,9 +3688,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-mongo-tmp-pulls"
+                "source": "https://github.com/utopia-php/database/tree/1.4.8"
             },
-            "time": "2025-09-11T09:50:34+00:00"
+            "time": "2025-09-12T03:35:59+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4403,67 +4245,6 @@
             "time": "2025-09-10T06:17:20+00:00"
         },
         {
-            "name": "utopia-php/mongo",
-            "version": "dev-feat-create-UUID",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "682c2e0b8474acfca1953eaca321f6f9bb0245f0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/682c2e0b8474acfca1953eaca321f6f9bb0245f0",
-                "reference": "682c2e0b8474acfca1953eaca321f6f9bb0245f0",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mongodb": "2.1.1",
-                "mongodb/mongodb": "2.1.0",
-                "php": ">=8.0",
-                "ramsey/uuid": "^4.9.0"
-            },
-            "require-dev": {
-                "fakerphp/faker": "^1.14",
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "2.1.*",
-                "phpunit/phpunit": "^9.4",
-                "swoole/ide-helper": "4.8.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Mongo\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Wess",
-                    "email": "wess@appwrite.io"
-                }
-            ],
-            "description": "A simple library to manage Mongo database",
-            "keywords": [
-                "database",
-                "mongo",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/feat-create-UUID"
-            },
-            "time": "2025-09-11T10:51:49+00:00"
-        },
-        {
             "name": "utopia-php/orchestration",
             "version": "0.9.1",
             "source": {
@@ -4670,16 +4451,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.11.0",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5"
+                "reference": "498bbbef418b1db71b51e1bb62f5d1d752ddd8d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5",
-                "reference": "06b5ced0eaed2ecc6aab6d8e1b4d96bff37a1ce5",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/498bbbef418b1db71b51e1bb62f5d1d752ddd8d6",
+                "reference": "498bbbef418b1db71b51e1bb62f5d1d752ddd8d6",
                 "shasum": ""
             },
             "require": {
@@ -4730,9 +4511,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.11.0"
+                "source": "https://github.com/utopia-php/queue/tree/0.11.1"
             },
-            "time": "2025-05-30T09:52:38+00:00"
+            "time": "2025-05-30T11:50:34+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -8729,19 +8510,10 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-mongo-tmp-pulls",
-            "alias": "1.4.6",
-            "alias_normalized": "1.4.6.0"
-        }
-    ],
-    "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
-    "prefer-stable": true,
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.3.0",
@@ -8764,5 +8536,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }

@@ -414,7 +414,6 @@ trait DatabasesBase
                 Query::cursorAfter(new Document(['$id' => 'title']))->toString()
             ],
         ]);
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, \count($response['body']['columns']));
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns', array_merge([
