@@ -2,6 +2,7 @@
 
 namespace Appwrite\Certificates;
 
+use Appwrite\Certificates\Exceptions\IssueStatus as IssueStatusException;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -24,7 +25,7 @@ class LetsEncrypt implements Adapter
 
     public function getIssueStatus(string $domain, ?string $domainType): ?string
     {
-        throw new \Exception('Issue status synchronization is not supported in this adapter.');
+        throw new IssueStatusException('Issue status synchronization is not supported in this adapter.');
     }
 
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
