@@ -1540,15 +1540,6 @@ return [
             ],
         ],
         'indexes' => [
-            // Mongodb do not allow two fulltext indexes on the same field in a single collection
-            // https://www.mongodb.com/docs/manual/core/indexes/index-types/index-text/text-index-restrictions/
-            // [
-            //     '$id' => ID::custom('_fulltext_name'),
-            //     'type' => Database::INDEX_FULLTEXT,
-            //     'attributes' => ['name'],
-            //     'lengths' => [],
-            //     'orders' => [],
-            // ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
@@ -1563,14 +1554,13 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-            // Mongodb do not allow two indexes on the same field in a single collection
-            // [
-            //     '$id' => ID::custom('_key_name'),
-            //     'type' => Database::INDEX_KEY,
-            //     'attributes' => ['name'],
-            //     'lengths' => [],
-            //     'orders' => [Database::ORDER_ASC],
-            // ],
+            [
+                '$id' => ID::custom('_key_name'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['name'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
             [
                 '$id' => ID::custom('_key_fileSecurity'),
                 'type' => Database::INDEX_KEY,
@@ -1779,15 +1769,6 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-            // Mongodb do not allow two fulltext indexes on the same field in a single collection
-            // https://www.mongodb.com/docs/manual/core/indexes/index-types/index-text/text-index-restrictions/
-            // [
-            //     '$id' => ID::custom('_key_name'),
-            //     'type' => Database::INDEX_FULLTEXT,
-            //     'attributes' => ['name'],
-            //     'lengths' => [],
-            //     'orders' => [Database::ORDER_ASC],
-            // ],
             [
                 '$id' => ID::custom('_key_type'),
                 'type' => Database::INDEX_KEY,
@@ -2055,16 +2036,8 @@ return [
                 'filters' => ['topicSearch'],
             ],
         ],
-        // Mongodb do not allow two fulltext indexes on the same field in a single collection
-        // https://www.mongodb.com/docs/manual/core/indexes/index-types/index-text/text-index-restrictions/
+
         'indexes' => [
-            // [
-            //     '$id' => ID::custom('_key_name'),
-            //     'type' => Database::INDEX_FULLTEXT,
-            //     'attributes' => ['name'],
-            //     'lengths' => [],
-            //     'orders' => [],
-            // ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
