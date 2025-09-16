@@ -4,10 +4,13 @@ import { Client, Account, Models } from 'appwrite'
 
 // Configure Appwrite client
 const client = new Client()
-  .setEndpoint('https://cloud.appwrite.io/v1')
-  .setProject('68124150003c6b34fd4f') // Your project ID from .env file
+  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT )
+  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID )
 
 const account = new Account(client)
+
+// Get the OAuth callback URL from environment
+const OAUTH_CALLBACK_URL = import.meta.env.VITE_APPWRITE_OAUTH2_CALLBACK_URL
 
 // Login component
 function Login() {
@@ -20,14 +23,26 @@ function Login() {
       setLoading(true)
       setError(null)
       
-      // Set success and failure URLs
+      console.log('Using OAuth callback URL:', OAUTH_CALLBACK_URL)
+      
+      // Use the callback URL from environment (.env file)
       const successUrl = `${window.location.origin}/auth/success`
       const failureUrl = `${window.location.origin}/auth/failure`
       
-      // Initiate OAuth2 session with Google
-      account.createOAuth2Session('google', successUrl, failureUrl)
+      console.log('Success URL:', successUrl)
+      console.log('Failure URL:', failureUrl)
+      console.log('Expected Google redirect should go to:', OAUTH_CALLBACK_URL)
+      
+     
+      
+      // Add a small delay to help with debugging
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // The OAUTH_CALLBACK_URL will be used automatically by Appwrite for the OAuth flow
+      // We just need to specify where to redirect after the OAuth callback is processed
+      ;(account as any).createOAuth2Session('google', successUrl, failureUrl)
     } catch (error) {
-      console.error('OAuth2 login error:', error)
+      console.error('OAuth2 session creation error:', error)
       setError('Failed to initiate Google login')
       setLoading(false)
     }
@@ -61,15 +76,104 @@ function Login() {
       </button>
       
       <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-        <p><strong>Testing Instructions:</strong></p>
-        <ol style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
-          <li>Click "Login with Google"</li>
-          <li>Complete OAuth2 authentication</li>
-          <li>You should be redirected back to this app</li>
-          <li>Check if account.get() works without 401 error</li>
-          <li>If successful, you'll see user data on the dashboard</li>
-        </ol>
+      
+        
+       
+       
       </div>
+    </div>
+  )
+}
+
+// OAuth callback handler
+function OAuthCallback() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleOAuthCallback = async (userId: string, secret: string) => {
+    try {
+      console.log('Creating session with OAuth2 token...')
+      
+      // Create a session using the OAuth2 token
+      await account.createSession(userId, secret)
+      
+      // Test the fix - this should work without 401 errors with your PR
+      const user = await account.get()
+      console.log('✅ OAuth2 Token flow successful:', user)
+      
+      // Redirect to dashboard
+      navigate('/dashboard')
+    } catch (error: any) {
+      console.error('❌ OAuth2 Token flow failed:', error)
+      setError(`Authentication failed: ${error.message}`)
+      setTimeout(() => navigate('/'), 3000)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const userId = searchParams.get('userId')
+    const secret = searchParams.get('secret')
+
+    if (userId && secret) {
+      console.log('OAuth2 callback received - userId:', userId, 'secret length:', secret.length)
+      handleOAuthCallback(userId, secret)
+    } else {
+      console.error('Missing OAuth2 parameters')
+      setError('Invalid OAuth2 callback parameters')
+      setLoading(false)
+      setTimeout(() => navigate('/?error=oauth_failed'), 3000)
+    }
+  }, [searchParams, navigate])
+
+  if (loading) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>Processing OAuth2 Token...</h2>
+        <div style={{
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #3498db',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          animation: 'spin 2s linear infinite',
+          margin: '20px auto'
+        }}></div>
+        <p>Creating session from OAuth2 token...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2 style={{ color: 'red' }}>OAuth2 Token Flow Failed</h2>
+        <p>{error}</p>
+        <p>Redirecting to login page...</p>
+      </div>
+    )
+  }
+
+  return null
+}
+
+// OAuth failure handler
+function OAuthFailure() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  
+  useEffect(() => {
+    setTimeout(() => navigate('/'), 3000)
+  }, [navigate])
+
+  return (
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <h2 style={{ color: 'red' }}>OAuth2 Authentication Failed</h2>
+      <p>Error: {searchParams.get('error') || 'Unknown error occurred'}</p>
+      <p>Redirecting to login page in 3 seconds...</p>
     </div>
   )
 }
@@ -231,13 +335,6 @@ function Dashboard() {
         <p><strong>Created:</strong> {new Date(user.$createdAt).toLocaleString()}</p>
       </div>
       
-      <div style={{ margin: '20px 0' }}>
-        <h3>✅ Test Results</h3>
-        <p style={{ color: 'green' }}>
-          <strong>SUCCESS:</strong> OAuth2 authentication with React Router v7 is working!
-        </p>
-        <p>The account.get() call succeeded without 401 errors after OAuth2 redirect.</p>
-      </div>
       
       <button 
         onClick={handleLogout}
@@ -263,6 +360,8 @@ function App() {
     <div>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
+        <Route path="/oauth/failure" element={<OAuthFailure />} />
         <Route path="/auth/success" element={<AuthSuccess />} />
         <Route path="/auth/failure" element={<AuthFailure />} />
         <Route path="/dashboard" element={<Dashboard />} />
