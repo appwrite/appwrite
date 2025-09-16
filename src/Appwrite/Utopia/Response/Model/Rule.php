@@ -84,9 +84,9 @@ class Rule extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
+                'description' => 'Domain verification status. Possible values are "' . RULE_STATUS_VERIFICATION_FAILED . '", "' . RULE_STATUS_GENERATING_CERTIFICATE . '", "' . RULE_STATUS_SUCCESSFUL . '" and "' . RULE_STATUS_GENERATION_FAILED . '"',
                 'default' => false,
-                'example' => 'verified',
+                'example' => RULE_STATUS_SUCCESSFUL,
             ])
             ->addRule('verificationLogs', [
                 'type' => self::TYPE_STRING,

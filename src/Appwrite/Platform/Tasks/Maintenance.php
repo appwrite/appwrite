@@ -124,7 +124,7 @@ class Maintenance extends Action
 
         $rules = $dbForPlatform->find('rules', [
             Query::createdAfter(DatabaseDateTime::format($oldestToCheck)), // max 3 days old
-            Query::equal('status', ['created']), // not verified yet
+            Query::equal('status', [RULE_STATUS_VERIFICATION_FAILED]), // not verified yet
             Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
             Query::limit(30), // Reasonable pagination limit, processable within a minute
         ]);

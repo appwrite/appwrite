@@ -188,7 +188,7 @@ class Create extends Action
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
                 'deploymentResourceInternalId' => $site->getSequence(),
-                'status' => 'verified',
+                'status' => RULE_STATUS_SUCCESSFUL,
                 'certificateId' => '',
                 'owner' => 'Appwrite',
                 'region' => $project->getAttribute('region')

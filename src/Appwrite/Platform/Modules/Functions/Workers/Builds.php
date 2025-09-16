@@ -1216,7 +1216,7 @@ class Builds extends Action
                             'deploymentResourceId' => $deployment->getId(),
                             'deploymentResourceInternalId' => $deployment->getSequence(),
                             'deploymentVcsProviderBranch' => $branchName,
-                            'status' => 'verified',
+                            'status' => RULE_STATUS_SUCCESSFUL,
                             'certificateId' => '',
                             'search' => implode(' ', [$ruleId, $domain]),
                             'owner' => 'Appwrite',

@@ -365,7 +365,7 @@ class Create extends Action
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getSequence(),
                         'domain' => $domain,
-                        'status' => 'verified',
+                        'status' => RULE_STATUS_SUCCESSFUL,
                         'type' => 'deployment',
                         'trigger' => 'manual',
                         'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),

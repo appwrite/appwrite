@@ -92,7 +92,7 @@ class Update extends Action
             throw $err;
         }
 
-        $updates->setAttribute('status', 'verifying');
+        $updates->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
 
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 

@@ -148,9 +148,9 @@ class Create extends Action
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
 
-        $status = 'created';
+        $status = RULE_STATUS_VERIFICATION_FAILED;
         if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
-            $status = 'verified';
+            $status = RULE_STATUS_SUCCESSFUL;
         }
 
         $owner = '';
@@ -181,10 +181,10 @@ class Create extends Action
             'region' => $project->getAttribute('region')
         ]);
 
-        if ($rule->getAttribute('status', '') === 'created') {
+        if ($rule->getAttribute('status', '') === RULE_STATUS_VERIFICATION_FAILED) {
             try {
                 self::verifyRule($rule, $log);
-                $rule->setAttribute('status', 'verifying');
+                $rule->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
             } catch (Exception $err) {
                 $rule->setAttribute('verificationLogs', $err->getMessage());
             }
@@ -196,7 +196,7 @@ class Create extends Action
             throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
 
-        if ($rule->getAttribute('status', '') === 'verifying') {
+        if ($rule->getAttribute('status', '') === RULE_STATUS_GENERATING_CERTIFICATE) {
             $queueForCertificates
                 ->setDomain(new Document([
                     'domain' => $rule->getAttribute('domain'),

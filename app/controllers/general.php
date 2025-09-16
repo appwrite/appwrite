@@ -969,7 +969,7 @@ App::init()
                             '$id' => $ruleId,
                             'domain' => $domain->get(),
                             'type' => 'api',
-                            'status' => 'verifying',
+                            'status' => RULE_STATUS_GENERATING_CERTIFICATE,
                             'projectId' => $console->getId(),
                             'projectInternalId' => $console->getSequence(),
                             'search' => implode(' ', [$ruleId, $domain->get()]),

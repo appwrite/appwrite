@@ -138,7 +138,7 @@ class Certificates extends Action
         }
 
         // Skip if verification not needed
-        if ($rule->getAttribute('status', '') !== 'created') {
+        if ($rule->getAttribute('status', '') !== RULE_STATUS_VERIFICATION_FAILED) {
             Console::warning('Verification for ' . $rule->getAttribute('domain', '') . ' is not needed.');
             return;
         }
@@ -156,7 +156,7 @@ class Certificates extends Action
             $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainAPI, $verificationDomainFunction);
             $updates
                 ->setAttribute('verificationLogs', '')
-                ->setAttribute('status', 'verifying');
+                ->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
 
             Console::success('Verification succeeded.');
             $success = true;
@@ -251,7 +251,7 @@ class Certificates extends Action
             $certificate->setAttribute('domain', $domain->get());
         }
 
-        $status = $certificate->getAttribute('status', 'verifying');
+        $status = $certificate->getAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
 
         try {
             // Clean-up logs from previous attempt
@@ -304,7 +304,7 @@ class Certificates extends Action
             // This is useful when cert provider does extra work in background
             // For example, verification, or example certificate distribution to all edges
             if ($certificates->isIssueInstant($domain->get(), $domainType)) {
-                $status = 'verified';
+                $status = RULE_STATUS_SUCCESSFUL;
             }
 
             // Command succeeded, store all data into document
@@ -315,7 +315,7 @@ class Certificates extends Action
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', DateTime::now());
         } catch (Throwable $e) {
-            $status = 'unverified';
+            $status = RULE_STATUS_GENERATION_FAILED;
 
             $logs = $e->getMessage();
             $currentLogs = $certificate->getAttribute('logs', '');
