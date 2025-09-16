@@ -151,7 +151,7 @@ App::setResource('queueForMigrations', function (Publisher $publisher) {
 App::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
-App::setResource('platforms', function (Request $request, Document $console, Document $project) {
+App::setResource('platforms', function (Request $request, Document $console, Document $project, Database $dbForPlatform) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
@@ -190,11 +190,52 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
         ], Document::SET_TYPE_APPEND);
     }
 
+    $origin = \parse_url($request->getOrigin(), PHP_URL_HOST);
+
+    if (empty($origin)) {
+        $origin = \parse_url($request->getReferer(), PHP_URL_HOST);
+    }
+
+    // Safe if rule with same project ID exists
+    if (!empty($origin)) {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
+        } else {
+            $rule = Authorization::skip(
+                fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', [$origin]),
+                    Query::limit(1)
+                ])
+            )[0] ?? new Document();
+        }
+
+        var_dump($rule);
+
+        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
+            echo "inside project internal id\n";
+
+            $project->setAttribute('platforms', [
+                '$collection' => ID::custom('platforms'),
+                'type' => Platform::TYPE_WEB,
+                'name' => $origin,
+                'hostname' => $origin,
+            ], Document::SET_TYPE_APPEND);
+        }
+    }
+
+    // Unsafe; Localhost is always safe for ease of local development
+    $project->setAttribute('platforms', [
+        '$collection' => ID::custom('platforms'),
+        'type' => Platform::TYPE_WEB,
+        'name' => "localhost",
+        'hostname' => "localhost",
+    ], Document::SET_TYPE_APPEND);
+
     return [
         ...$console->getAttribute('platforms', []),
         ...$project->getAttribute('platforms', []),
     ];
-}, ['request', 'console', 'project']);
+}, ['request', 'console', 'project', 'dbForPlatform']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
@@ -1003,24 +1044,6 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $originValidator = new Origin($platforms);
     if ($originValidator->isValid($request->getOrigin($httpReferrer))) {
         return $referrer;
-    }
-
-    // Safe if rule with same project ID exists
-    if (!empty($origin)) {
-        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
-        } else {
-            $rule = Authorization::skip(
-                fn () => $dbForPlatform->find('rules', [
-                    Query::equal('domain', [$origin]),
-                    Query::limit(1)
-                ])
-            )[0] ?? new Document();
-        }
-
-        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
-            return $referrer;
-        }
     }
 
     // Unsafe; Localhost is always safe for ease of local development
