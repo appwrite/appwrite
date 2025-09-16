@@ -13,4 +13,6 @@ interface Adapter
     public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool;
 
     public function deleteCertificate(string $domain): void;
+
+    public function getIssueStatus(string $domain, ?string $domainType): ?string;
 }

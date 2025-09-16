@@ -22,6 +22,11 @@ class LetsEncrypt implements Adapter
         return true;
     }
 
+    public function getIssueStatus(string $domain, ?string $domainType): ?string
+    {
+        throw new \Exception('Issue status synchronization is not supported in this adapter.');
+    }
+
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
     {
         $stdout = '';
