@@ -31,7 +31,6 @@ class TransactionState
         // Fetch operations ordered by sequence to replay in exact order
         $operations = $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
-            Query::orderAsc('$createdAt'), // Ensure operations are processed in order
         ]);
 
         $state = [];
