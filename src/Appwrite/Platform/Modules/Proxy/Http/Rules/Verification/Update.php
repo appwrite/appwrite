@@ -78,6 +78,8 @@ class Update extends Action
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
+        $queueForEvents->setParam('ruleId', $rule->getId());
+
         if ($rule->getAttribute('status', '') !== RULE_STATUS_VERIFICATION_FAILED) {
             return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         }
@@ -105,8 +107,6 @@ class Update extends Action
                 'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]))
             ->trigger();
-
-        $queueForEvents->setParam('ruleId', $rule->getId());
 
         // Fill response model
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
