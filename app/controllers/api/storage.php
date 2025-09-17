@@ -225,6 +225,8 @@ App::get('/v1/storage/buckets')
             $total = $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
         $response->dynamic(new Document([
             'buckets' => $buckets,
@@ -853,6 +855,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         $response->dynamic(new Document([

@@ -2,8 +2,10 @@
 
 namespace Appwrite\Utopia\Request\Filters;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -54,8 +56,8 @@ class V20 extends Filter
 
         try {
             $parsed = Query::parseQueries($content['queries']);
-        } catch (QueryException) {
-            return $content;
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         $selections = Query::groupByType($parsed)['selections'] ?? [];
@@ -136,17 +138,28 @@ class V20 extends Filter
             return [];
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
-            return [];
+        try {
+            $database = Authorization::skip(fn () => $dbForProject->getDocument(
+                'databases',
+                $databaseId
+            ));
+            if ($database->isEmpty()) {
+                return [];
+            }
+        } catch (NotFound) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument(
-            'database_' . $database->getSequence(),
-            $collectionId
-        ));
-        if ($collection->isEmpty()) {
-            return [];
+        try {
+            $collection = Authorization::skip(fn () => $dbForProject->getDocument(
+                'database_' . $database->getSequence(),
+                $collectionId
+            ));
+            if ($collection->isEmpty()) {
+                return [];
+            }
+        } catch (NotFound) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         $attributes = $collection->getAttribute('attributes', []);
