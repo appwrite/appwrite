@@ -9056,7 +9056,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(202, $poly['headers']['status-code']);
-        
+
         // Wait for columns to be available
         sleep(2);
 
@@ -9076,7 +9076,7 @@ trait DatabasesBase
             ]
         ]);
         $this->assertEquals(201, $newRow['headers']['status-code']);
-        
+
         $newRowId = $newRow['body']['$id'];
 
         // Fetch the row to verify default values are applied
@@ -9084,9 +9084,9 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertEquals(200, $fetchedRow['headers']['status-code']);
-        
+
         // Verify default values are applied
         $this->assertEquals([0.0, 0.0], $fetchedRow['body']['loc']);
         $this->assertEquals([[0.0, 0.0], [1.0, 1.0]], $fetchedRow['body']['route']);
