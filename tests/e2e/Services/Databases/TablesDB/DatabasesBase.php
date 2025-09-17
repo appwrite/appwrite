@@ -9056,6 +9056,41 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(202, $poly['headers']['status-code']);
+        
+        // Wait for columns to be available
+        sleep(2);
+
+        // Create a new row without spatial data to test default values
+        $newRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'description' => 'test default values'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $newRow['headers']['status-code']);
+        
+        $newRowId = $newRow['body']['$id'];
+
+        // Fetch the row to verify default values are applied
+        $fetchedRow = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $newRowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        
+        $this->assertEquals(200, $fetchedRow['headers']['status-code']);
+        
+        // Verify default values are applied
+        $this->assertEquals([0.0, 0.0], $fetchedRow['body']['loc']);
+        $this->assertEquals([[0.0, 0.0], [1.0, 1.0]], $fetchedRow['body']['route']);
+        $this->assertEquals([[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]], $fetchedRow['body']['area']);
     }
 
 }
