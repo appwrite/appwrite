@@ -31,8 +31,10 @@ class Create extends Action
         return 'createSiteRule';
     }
 
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/proxy/rules/site')
@@ -183,7 +185,7 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_VERIFICATION_FAILED) {
             try {
-                self::verifyRule($rule, $log);
+                $this->verifyRule($rule, $log);
                 $rule->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
             } catch (Exception $err) {
                 $rule->setAttribute('verificationLogs', $err->getMessage());

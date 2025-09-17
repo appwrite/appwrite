@@ -25,8 +25,10 @@ class Update extends Action
         return 'updateRuleVerification';
     }
 
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/proxy/rules/:ruleId/verification')
@@ -83,7 +85,7 @@ class Update extends Action
         $updates = new Document();
 
         try {
-            self::verifyRule($rule, $log);
+            $this->verifyRule($rule, $log);
             $updates->setAttribute('verificationLogs', '');
         } catch (Exception $err) {
             $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([

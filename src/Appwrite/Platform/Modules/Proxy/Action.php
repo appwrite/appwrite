@@ -14,9 +14,8 @@ use Utopia\Validator\IP;
 
 class Action extends PlatformAction
 {
-    protected function getDNSValidator(): string
+    public function __construct(protected string $dnsValidatorClass = DNS::class)
     {
-        return DNS::class;
     }
 
     /**
@@ -28,9 +27,9 @@ class Action extends PlatformAction
      * @param string|null $verificationDomainFunction Override for expected Function rule value during verification
      * @return void
      */
-    public static function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
+    public function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
-        $dnsValidatorClass = self::getDNSValidator();
+        $dnsValidatorClass = $this->dnsValidatorClass;
 
         $domain = new Domain($rule->getAttribute('domain', ''));
 

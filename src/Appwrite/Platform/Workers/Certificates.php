@@ -41,8 +41,10 @@ class Certificates extends Action
     /**
      * @throws Exception
      */
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->desc('Certificates worker')
             ->inject('message')
@@ -409,7 +411,7 @@ class Certificates extends Action
     private function validateDomain(Document $rule, bool $isMainDomain, Log $log, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
         if (!$isMainDomain) {
-            self::verifyRule($rule, $log, $verificationDomainAPI, $verificationDomainFunction);
+            $this->verifyRule($rule, $log, $verificationDomainAPI, $verificationDomainFunction);
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
