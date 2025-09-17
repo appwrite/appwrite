@@ -504,7 +504,7 @@ class StatsUsage extends Action
 
             usort($this->statDocuments, function ($a, $b) {
                 // Tenant ASC
-                $cmp = $a['_tenant'] <=> $b['_tenant'];
+                $cmp = $a['$tenant'] <=> $b['$tenant'];
                 if ($cmp !== 0) {
                     return $cmp;
                 }
