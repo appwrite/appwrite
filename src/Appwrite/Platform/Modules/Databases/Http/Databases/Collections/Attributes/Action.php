@@ -366,13 +366,20 @@ abstract class Action extends UtopiaAction
                 'filters' => $filters,
                 'options' => $options,
             ]);
-
+            if (!$dbForProject->getAdapter()->getSupportForSpatialIndexNull() && in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) && $attribute->getAttribute('required')) {
+                $existingDataPresent = $dbForProject->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
+                if (count($existingDataPresent)) {
+                    throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
+                }
+            }
             $dbForProject->checkAttribute($collection, $attribute);
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException());
+        } catch (StructureException $e) {
+            throw new Exception($this->getInvalidStructureException(), $e->getMessage());
         } catch (Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
             $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
