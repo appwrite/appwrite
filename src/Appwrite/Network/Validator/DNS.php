@@ -126,7 +126,7 @@ class DNS extends Validator
 
             \go(function () use ($value, $dnsServer, $wg, &$failedValidator) {
                 try {
-                    $validator = new DNS($this->target, $this->type, $dnsServer);
+                    $validator = new self($this->target, $this->type, $dnsServer);
                     $isValid = $validator->isValid($value);
                     if (!$isValid) {
                         $failedValidator = $validator;
@@ -204,7 +204,7 @@ class DNS extends Validator
                 $parts = \explode('.', $value);
                 \array_shift($parts);
                 $parentDomain = \implode('.', $parts);
-                $validator = new DNS($this->target, DNS::RECORD_CAA, $dnsServer);
+                $validator = new self($this->target, DNS::RECORD_CAA, $dnsServer);
                 return $validator->isValidWithDNSServer($parentDomain, $dnsServer);
             }
 
