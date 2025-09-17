@@ -85,10 +85,13 @@ App::post('/v1/storage/buckets')
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD], true), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ',  [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('cacheControl', '', new Text(1024), 'Default Cache-Control header for files in this bucket. Example: public, max-age=604800, immutable', true)
+    ->param('etagMode', 'hash', new WhiteList(['static', 'hash', 'date'], true), 'Default ETag mode for files in this bucket. One of static, hash, date.', true)
+    ->param('etagStatic', '', new Text(1024), 'Default static ETag value if etagMode is static.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, string $cacheControl, string $etagMode, string $etagStatic, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -141,6 +144,9 @@ App::post('/v1/storage/buckets')
                 'compression' => $compression,
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
+                'cacheControl' => $cacheControl,
+                'etagMode' => $etagMode,
+                'etagStatic' => $etagStatic,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
@@ -295,10 +301,13 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD], true), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('cacheControl', '', new Text(1024), 'Default Cache-Control header for files in this bucket. Example: public, max-age=604800, immutable', true)
+    ->param('etagMode', 'hash', new WhiteList(['static', 'hash', 'date'], true), 'Default ETag mode for files in this bucket. One of static, hash, date.', true)
+    ->param('etagStatic', '', new Text(1024), 'Default static ETag value if etagMode is static.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, string $cacheControl, string $etagMode, string $etagStatic, Response $response, Database $dbForProject, Event $queueForEvents) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -312,6 +321,9 @@ App::put('/v1/storage/buckets/:bucketId')
         $encryption ??= $bucket->getAttribute('encryption', true);
         $antivirus ??= $bucket->getAttribute('antivirus', true);
         $compression ??= $bucket->getAttribute('compression', Compression::NONE);
+        $cacheControl = $cacheControl === '' ? $bucket->getAttribute('cacheControl', '') : $cacheControl;
+        $etagMode = $etagMode === '' ? $bucket->getAttribute('etagMode', 'hash') : $etagMode;
+        $etagStatic = $etagStatic === '' ? $bucket->getAttribute('etagStatic', '') : $etagStatic;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
@@ -325,7 +337,10 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setAttribute('enabled', $enabled)
             ->setAttribute('encryption', $encryption)
             ->setAttribute('compression', $compression)
-            ->setAttribute('antivirus', $antivirus));
+            ->setAttribute('antivirus', $antivirus)
+            ->setAttribute('cacheControl', $cacheControl)
+            ->setAttribute('etagMode', $etagMode)
+            ->setAttribute('etagStatic', $etagStatic));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 
@@ -416,6 +431,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->param('cacheControl', '', new Text(1024), 'Cache-Control header override for this file. Example: public, max-age=86400', true)
+    ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'ETag mode for this file. One of static, hash, date.', true)
+    ->param('etagStatic', '', new Text(1024), 'Static ETag value when etagMode is static.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -424,7 +442,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, string $cacheControl, string $etagMode, string $etagStatic, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -670,6 +688,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'openSSLIV' => $openSSLIV,
                     'search' => implode(' ', [$fileId, $fileName]),
                     'metadata' => $metadata,
+                    'cacheControl' => empty($cacheControl) ? null : $cacheControl,
+                    'etagMode' => empty($etagMode) ? null : $etagMode,
+                    'etagStatic' => empty($etagStatic) ? null : $etagStatic,
                 ]);
 
                 $file = $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
@@ -686,6 +707,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     ->setAttribute('openSSLIV', $openSSLIV)
                     ->setAttribute('metadata', $metadata)
                     ->setAttribute('chunksUploaded', $chunksUploaded);
+                if (!empty($cacheControl)) {
+                    $file = $file->setAttribute('cacheControl', $cacheControl);
+                }
+                if (!empty($etagMode)) {
+                    $file = $file->setAttribute('etagMode', $etagMode);
+                }
+                if (!empty($etagStatic)) {
+                    $file = $file->setAttribute('etagStatic', $etagStatic);
+                }
 
                 /**
                  * Validate create permission and skip authorization in updateDocument
@@ -718,6 +748,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'chunksUploaded' => $chunksUploaded,
                     'search' => implode(' ', [$fileId, $fileName]),
                     'metadata' => $metadata,
+                    'cacheControl' => empty($cacheControl) ? null : $cacheControl,
+                    'etagMode' => empty($etagMode) ? null : $etagMode,
+                    'etagStatic' => empty($etagStatic) ? null : $etagStatic,
                 ]);
 
                 try {
@@ -729,6 +762,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 $file = $file
                     ->setAttribute('chunksUploaded', $chunksUploaded)
                     ->setAttribute('metadata', $metadata);
+                if (!empty($cacheControl)) {
+                    $file = $file->setAttribute('cacheControl', $cacheControl);
+                }
+                if (!empty($etagMode)) {
+                    $file = $file->setAttribute('etagMode', $etagMode);
+                }
+                if (!empty($etagStatic)) {
+                    $file = $file->setAttribute('etagStatic', $etagStatic);
+                }
 
                 /**
                  * Validate create permission and skip authorization in updateDocument
@@ -952,8 +994,20 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->param('cacheControl', '', new Text(1024), 'Override Cache-Control header for this response.', true)
+    ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'Override ETag mode for this response.', true)
+    ->param('etagStatic', '', new Text(1024), 'Override static ETag value when etagMode is static.', true)
     // NOTE: this is only for the sdk generator and is not used in the action below and is utilised in `resources.php` for `resourceToken`.
     ->param('token', '', new Text(512), 'File token for accessing this file.', true)
+    ->param('cacheControl', '', new Text(1024), 'Override Cache-Control header for this response.', true)
+    ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'Override ETag mode for this response.', true)
+    ->param('etagStatic', '', new Text(1024), 'Override static ETag value when etagMode is static.', true)
+    ->param('cacheControl', '', new Text(1024), 'Override Cache-Control header for this response.', true)
+    ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'Override ETag mode for this response.', true)
+    ->param('etagStatic', '', new Text(1024), 'Override static ETag value when etagMode is static.', true)
+    ->param('cacheControl', '', new Text(1024), 'Override Cache-Control header for this response.', true)
+    ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'Override ETag mode for this response.', true)
+    ->param('etagStatic', '', new Text(1024), 'Override static ETag value when etagMode is static.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -961,7 +1015,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
     ->inject('project')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, ?string $token, Request $request, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal, Document $project) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, string $cacheControl, string $etagMode, string $etagStatic, ?string $token, Request $request, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal, Document $project) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -1119,8 +1173,35 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             }
         }
 
+        $resolvedCacheControl = $cacheControl !== '' ? $cacheControl : ($file->getAttribute('cacheControl') ?: $bucket->getAttribute('cacheControl') ?: 'private, max-age=2592000');
+        $resolvedEtagMode = $etagMode !== '' ? $etagMode : ($file->getAttribute('etagMode') ?: $bucket->getAttribute('etagMode') ?: 'hash');
+        $resolvedEtagStatic = $etagStatic !== '' ? $etagStatic : ($file->getAttribute('etagStatic') ?: $bucket->getAttribute('etagStatic') ?: '');
+
+        $etag = '';
+        switch ($resolvedEtagMode) {
+            case 'static':
+                $etag = $resolvedEtagStatic;
+                break;
+            case 'date':
+                $etag = DateTime::now();
+                break;
+            case 'hash':
+            default:
+                $etag = $file->getAttribute('signature') ?: ($file->getAttribute('openSSLTag') ?: '');
+                break;
+        }
+
+        $clientETag = $request->getHeader('if-none-match');
+        if (!empty($etag)) {
+            $response->addHeader('ETag', $etag);
+            if ($clientETag === $etag) {
+                $response->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)->send('');
+                return;
+            }
+        }
+
         $response
-            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->addHeader('Cache-Control', $resolvedCacheControl) // 30 days default
             ->setContentType($contentType)
             ->file($data);
 
@@ -1158,7 +1239,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('mode')
     ->inject('resourceToken')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, ?string $token, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
+    ->action(function (string $bucketId, string $fileId, ?string $token, string $cacheControl, string $etagMode, string $etagStatic, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
         /* @type Document $bucket */
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1221,9 +1302,36 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
+        $resolvedCacheControl = $cacheControl !== '' ? $cacheControl : ($file->getAttribute('cacheControl') ?: $bucket->getAttribute('cacheControl') ?: 'private, max-age=3888000');
+        $resolvedEtagMode = $etagMode !== '' ? $etagMode : ($file->getAttribute('etagMode') ?: $bucket->getAttribute('etagMode') ?: 'hash');
+        $resolvedEtagStatic = $etagStatic !== '' ? $etagStatic : ($file->getAttribute('etagStatic') ?: $bucket->getAttribute('etagStatic') ?: '');
+
+        $etag = '';
+        switch ($resolvedEtagMode) {
+            case 'static':
+                $etag = $resolvedEtagStatic;
+                break;
+            case 'date':
+                $etag = DateTime::now();
+                break;
+            case 'hash':
+            default:
+                $etag = $file->getAttribute('signature') ?: ($file->getAttribute('openSSLTag') ?: '');
+                break;
+        }
+
+        $clientETag = $request->getHeader('if-none-match');
+        if (!empty($etag)) {
+            $response->addHeader('ETag', $etag);
+            if ($clientETag === $etag) {
+                $response->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)->send('');
+                return;
+            }
+        }
+
         $response
             ->setContentType($file->getAttribute('mimeType'))
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('Cache-Control', $resolvedCacheControl) // default 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
         ;
@@ -1319,7 +1427,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('mode')
     ->inject('resourceToken')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, ?string $token, Response $response, Request $request, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
+    ->action(function (string $bucketId, string $fileId, ?string $token, string $cacheControl, string $etagMode, string $etagStatic, Response $response, Request $request, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
         /* @type Document $bucket */
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1390,12 +1498,39 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
+        $resolvedCacheControl = $file->getAttribute('cacheControl') ?: $bucket->getAttribute('cacheControl') ?: 'private, max-age=3888000';
+        $resolvedEtagMode = $file->getAttribute('etagMode') ?: $bucket->getAttribute('etagMode') ?: 'hash';
+        $resolvedEtagStatic = $file->getAttribute('etagStatic') ?: $bucket->getAttribute('etagStatic') ?: '';
+
+        $etag = '';
+        switch ($resolvedEtagMode) {
+            case 'static':
+                $etag = $resolvedEtagStatic;
+                break;
+            case 'date':
+                $etag = DateTime::now();
+                break;
+            case 'hash':
+            default:
+                $etag = $file->getAttribute('signature') ?: ($file->getAttribute('openSSLTag') ?: '');
+                break;
+        }
+
+        $clientETag = $request->getHeader('if-none-match');
+        if (!empty($etag)) {
+            $response->addHeader('ETag', $etag);
+            if ($clientETag === $etag) {
+                $response->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)->send('');
+                return;
+            }
+        }
+
         $response
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', 'script-src none;')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('Cache-Control', $resolvedCacheControl) // default 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
 
@@ -1543,12 +1678,39 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
+        $resolvedCacheControl = $cacheControl !== '' ? $cacheControl : ($file->getAttribute('cacheControl') ?: $bucket->getAttribute('cacheControl') ?: 'private, max-age=3888000');
+        $resolvedEtagMode = $etagMode !== '' ? $etagMode : ($file->getAttribute('etagMode') ?: $bucket->getAttribute('etagMode') ?: 'hash');
+        $resolvedEtagStatic = $etagStatic !== '' ? $etagStatic : ($file->getAttribute('etagStatic') ?: $bucket->getAttribute('etagStatic') ?: '');
+
+        $etag = '';
+        switch ($resolvedEtagMode) {
+            case 'static':
+                $etag = $resolvedEtagStatic;
+                break;
+            case 'date':
+                $etag = DateTime::now();
+                break;
+            case 'hash':
+            default:
+                $etag = $file->getAttribute('signature') ?: ($file->getAttribute('openSSLTag') ?: '');
+                break;
+        }
+
+        $clientETag = $request->getHeader('if-none-match');
+        if (!empty($etag)) {
+            $response->addHeader('ETag', $etag);
+            if ($clientETag === $etag) {
+                $response->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)->send('');
+                return;
+            }
+        }
+
         $response
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', 'script-src none;')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('Cache-Control', $resolvedCacheControl) // default 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage());
 
         $source = '';
@@ -1641,12 +1803,15 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('name', null, new Text(255), 'Name of the file', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->param('cacheControl', '', new Text(1024), 'Cache-Control header override for this file. Example: public, max-age=86400', true)
+    ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'ETag mode for this file. One of static, hash, date.', true)
+    ->param('etagStatic', '', new Text(1024), 'Static ETag value when etagMode is static.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, string $cacheControl, string $etagMode, string $etagStatic, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1707,6 +1872,16 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         if (!is_null($name)) {
             $file->setAttribute('name', $name);
+        }
+
+        if ($cacheControl !== '') {
+            $file->setAttribute('cacheControl', $cacheControl);
+        }
+        if ($etagMode !== '') {
+            $file->setAttribute('etagMode', $etagMode);
+        }
+        if ($etagStatic !== '') {
+            $file->setAttribute('etagStatic', $etagStatic);
         }
 
         try {

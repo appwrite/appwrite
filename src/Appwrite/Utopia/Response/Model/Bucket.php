@@ -86,6 +86,24 @@ class Bucket extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('cacheControl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default Cache-Control header applied to files in this bucket.',
+                'default' => '',
+                'example' => 'public, max-age=604800, immutable',
+            ])
+            ->addRule('etagMode', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default ETag mode for files in this bucket. One of static, hash, date.',
+                'default' => 'hash',
+                'example' => 'hash',
+            ])
+            ->addRule('etagStatic', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default static ETag value when etagMode is static.',
+                'default' => '',
+                'example' => 'W/"my-global-etag"',
+            ])
         ;
     }
 

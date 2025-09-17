@@ -77,6 +77,24 @@ class File extends Model
                 'default' => 0,
                 'example' => 17890,
             ])
+            ->addRule('cacheControl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Cache-Control header for this file.',
+                'default' => '',
+                'example' => 'public, max-age=86400',
+            ])
+            ->addRule('etagMode', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ETag mode for this file. One of static, hash, date.',
+                'default' => 'hash',
+                'example' => 'hash',
+            ])
+            ->addRule('etagStatic', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Static ETag value when etagMode is static.',
+                'default' => '',
+                'example' => '"abc123"',
+            ])
         ;
     }
 
