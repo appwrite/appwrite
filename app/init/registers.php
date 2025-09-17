@@ -7,7 +7,6 @@ use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
-use Swoole\Database\PDOProxy;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
@@ -216,15 +215,34 @@ $register->set('pools', function () {
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                            \PDO::ATTR_TIMEOUT => 3, // Seconds
-                            \PDO::ATTR_PERSISTENT => false,
-                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                            \PDO::ATTR_EMULATE_PREPARES => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES => true
-                        ]);
-                    });
+                    $lastException = null;
+                    $maxAttempts = 3;
+                    for ($attempts = 1; $attempts <= $maxAttempts; $attempts++) {
+                        try {
+                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
+                                \PDO::ATTR_TIMEOUT => 3, // Seconds
+                                \PDO::ATTR_PERSISTENT => false,
+                                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                                \PDO::ATTR_EMULATE_PREPARES => true,
+                                \PDO::ATTR_STRINGIFY_FETCHES => true,
+                                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                            ]);
+                        } catch (\Throwable $e) {
+                            Console::warning("[Database] PDO connection attempt {$attempts} failed: " . $e->getMessage());
+                            Console::warning("[Database] {$e->getTraceAsString()}");
+
+                            $lastException = $e;
+
+                            if ($attempts === $maxAttempts) {
+                                throw $e;
+                            }
+
+                            // Wait extra 100ms per attempt
+                            \usleep(100_000 * $attempts);
+                        }
+                    }
+
+                    throw $lastException;
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
