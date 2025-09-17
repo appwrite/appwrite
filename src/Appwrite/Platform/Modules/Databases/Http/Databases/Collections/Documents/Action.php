@@ -37,6 +37,8 @@ abstract class Action extends AppwriteAction
             'privileged' => [
                 '$createdAt',
                 '$updatedAt',
+                '$createdBy',
+                '$updatedBy'
             ],
         ];
 

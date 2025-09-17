@@ -4354,6 +4354,189 @@ trait DatabasesBase
         return $data;
     }
 
+    public function testCreatedByUpdatedBy(): void
+    {
+        // Setup: Create database for createdBy/updatedBy tests
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Setup: Create collection for createdBy/updatedBy tests
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'CreatedBy UpdatedBy Collection',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Setup: Add attributes
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'releaseYear',
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'count',
+            'required' => false,
+        ]);
+
+        // Wait for attributes to be created
+        sleep(2);
+
+        $headers = $this->getSide() === 'client' ? array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()): ['x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']];
+
+        // Test 1: Create document - verify $createdBy and $updatedBy behavior
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'CreatedBy UpdatedBy Test',
+                'releaseYear' => 2024
+            ]
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals('CreatedBy UpdatedBy Test', $document['body']['title']);
+
+        $documentId = $document['body']['$id'];
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $document['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $document['body']['$updatedBy']);
+
+        \sleep(1);
+
+        // Test 2: Update document - verify $updatedBy behavior
+        $updatedDocument = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, $headers, [
+            'data' => [
+                'title' => 'Updated CreatedBy UpdatedBy Test',
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedDocument['headers']['status-code']);
+        $this->assertEquals('Updated CreatedBy UpdatedBy Test', $updatedDocument['body']['title']);
+
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $updatedDocument['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $updatedDocument['body']['$updatedBy']);
+
+        // Test 4: Upsert operation
+        $upsertDocument = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, $headers, [
+            'data' => [
+                'title' => 'Upserted Document',
+                'releaseYear' => 2025
+            ]
+        ]);
+
+        $this->assertEquals(200, $upsertDocument['headers']['status-code']);
+        $this->assertEquals('Upserted Document', $upsertDocument['body']['title']);
+
+        // Client side: $createdBy should remain original user, $updatedBy should be current user
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $upsertDocument['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $upsertDocument['body']['$updatedBy']);
+
+        // Test 5: Create new document with upsert
+        $newUpsertId = ID::unique();
+        $newUpsertDocument = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $newUpsertId, $headers, [
+            'data' => [
+                'title' => 'New Upserted Document',
+                'releaseYear' => 2026
+            ]
+        ]);
+
+        $this->assertEquals(200, $newUpsertDocument['headers']['status-code']);
+        $this->assertEquals('New Upserted Document', $newUpsertDocument['body']['title']);
+
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $newUpsertDocument['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $newUpsertDocument['body']['$updatedBy']);
+
+        // Test 6: Increment/Decrement operations
+        $countDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Count Test Document',
+                'count' => 10
+            ]
+        ]);
+
+        $this->assertEquals(201, $countDocument['headers']['status-code']);
+        $countDocumentId = $countDocument['body']['$id'];
+        
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $countDocument['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $countDocument['body']['$updatedBy']);
+
+        // Test increment operation
+        $incrementResponse = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $countDocumentId . '/count/increment', $headers, [
+            'value' => 5
+        ]);
+
+        $this->assertEquals(200, $incrementResponse['headers']['status-code']);
+        $this->assertEquals(15, $incrementResponse['body']['count']);
+
+        // Client side: $createdBy should remain unchanged, $updatedBy should be current user
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $incrementResponse['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $incrementResponse['body']['$updatedBy']);
+
+        // Test decrement operation
+        $decrementResponse = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $countDocumentId . '/count/decrement', $headers, [
+            'value' => 3
+        ]);
+
+        $this->assertEquals(200, $decrementResponse['headers']['status-code']);
+        $this->assertEquals(12, $decrementResponse['body']['count']);
+
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $decrementResponse['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $decrementResponse['body']['$updatedBy']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $headers);
+    }
+
     public function testUpdatePermissionsWithEmptyPayload(): array
     {
         // Create Database

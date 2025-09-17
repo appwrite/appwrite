@@ -23,6 +23,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Numeric;
+use Utopia\Database\Document;
 
 class Increment extends Action
 {
@@ -77,12 +78,13 @@ class Increment extends Action
             ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -112,6 +114,12 @@ class Increment extends Action
             throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSdkNamespace() . ' "' . $attribute . '" is not a number');
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+        }
+
+        // Set $updatedBy field to current user ID if available
+        $userId = $user->getId();
+        if (!empty($userId)) {
+            $document->setAttribute('$updatedBy', $userId);
         }
 
         $relationships = \array_map(

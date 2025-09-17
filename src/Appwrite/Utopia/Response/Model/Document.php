@@ -69,6 +69,18 @@ class Document extends Any
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('$createdBy', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID of the user who created the document.',
+                'default' => null,
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$updatedBy', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID of the user who updated the document.',
+                'default' => null,
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Document permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',

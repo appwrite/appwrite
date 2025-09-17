@@ -6729,4 +6729,246 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
+
+    public function testCreatedByUpdatedByModify(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'CreatedBy UpdatedBy Test DB'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create collection
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'CreatedBy UpdatedBy Collection',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Add attributes
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'count',
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        // Test 1: Create document with manual $createdBy and $updatedBy
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Server Side Test',
+                'count' => 10,
+                '$createdBy' => 'user-123',
+                '$updatedBy' => 'user-456'
+            ]
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals('user-123', $document['body']['$createdBy']);
+        $this->assertEquals('user-456', $document['body']['$updatedBy']);
+        $documentId = $document['body']['$id'];
+
+        // Test 2: Update document with different $updatedBy
+        $updatedDocument = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'data' => [
+                'title' => 'Updated Server Side Test',
+                '$updatedBy' => 'user-789'
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedDocument['headers']['status-code']);
+        $this->assertEquals('user-123', $updatedDocument['body']['$createdBy']); // Should remain unchanged
+        $this->assertEquals('user-789', $updatedDocument['body']['$updatedBy']); // Should be updated
+
+        // Test 3: Bulk create with mixed $createdBy and $updatedBy values
+        // bulk1: both createdBy and updatedBy set
+        // bulk2: only createdBy set, updatedBy should be null
+        // bulk3: neither set, both should be null
+        $bulkDocuments = [
+            [
+                '$id' => 'bulk1',
+                'title' => 'Bulk Document 1',
+                'count' => 1,
+                '$createdBy' => 'bulk-user-1',
+                '$updatedBy' => 'bulk-user-1'
+            ],
+            [
+                '$id' => 'bulk2',
+                'title' => 'Bulk Document 2',
+                'count' => 2,
+                '$createdBy' => 'bulk-user-2'
+            ],
+            [
+                '$id' => 'bulk3',
+                'title' => 'Bulk Document 3',
+                'count' => 3
+            ]
+        ];
+
+        $bulkCreateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documents' => $bulkDocuments
+        ]);
+
+        $this->assertEquals(201, $bulkCreateResponse['headers']['status-code']);
+        $this->assertCount(3, $bulkCreateResponse['body']['documents']);
+
+        // Verify bulk create results
+        $this->assertEquals('bulk-user-1', $bulkCreateResponse['body']['documents'][0]['$createdBy']);
+        $this->assertEquals('bulk-user-1', $bulkCreateResponse['body']['documents'][0]['$updatedBy']);
+        $this->assertEquals('bulk-user-2', $bulkCreateResponse['body']['documents'][1]['$createdBy']);
+
+        // Test 4: Bulk update with $updatedBy
+        $bulkUpdateResponse = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'data' => [
+                'title' => 'Bulk Updated',
+                '$updatedBy' => 'bulk-updater'
+            ],
+            'queries' => [Query::startsWith('$id', 'bulk')->toString()]
+        ]);
+
+        $this->assertEquals(200, $bulkUpdateResponse['headers']['status-code']);
+        $this->assertCount(3, $bulkUpdateResponse['body']['documents']);
+
+        // Verify bulk update results - $createdBy should remain unchanged, $updatedBy should be updated
+        foreach ($bulkUpdateResponse['body']['documents'] as $doc) {
+            $this->assertEquals('bulk-updater', $doc['$updatedBy']);
+            $this->assertEquals('Bulk Updated', $doc['title']);
+            
+            // $createdBy should remain as originally set
+            if ($doc['$id'] === 'bulk1') {
+                $this->assertEquals('bulk-user-1', $doc['$createdBy']);
+            } elseif ($doc['$id'] === 'bulk2') {
+                $this->assertEquals('bulk-user-2', $doc['$createdBy']);
+            }
+        }
+
+        // Test 5: Bulk upsert with $createdBy and $updatedBy
+        // bulk1: existing document - createdBy should be ignored, updatedBy should be updated
+        // new-upsert: new document - both should be set as specified
+        $upsertDocuments = [
+            [
+                '$id' => 'bulk1', // Existing document
+                'title' => 'Upserted Document 1',
+                'count' => 100,
+                '$createdBy' => 'should-not-change',
+                '$updatedBy' => 'upsert-updater-1'
+            ],
+            [
+                '$id' => 'new-upsert',
+                'title' => 'New Upserted Document',
+                'count' => 200,
+                '$createdBy' => 'new-creator',
+                '$updatedBy' => 'new-updater'
+            ]
+        ];
+
+        $bulkUpsertResponse = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documents' => $upsertDocuments
+        ]);
+
+        $this->assertEquals(200, $bulkUpsertResponse['headers']['status-code']);
+        $this->assertCount(2, $bulkUpsertResponse['body']['documents']);
+
+        // Verify upsert results
+        foreach ($bulkUpsertResponse['body']['documents'] as $doc) {
+            if ($doc['$id'] === 'bulk1') {
+                $this->assertEquals('should-not-change', $doc['$createdBy']);
+                $this->assertEquals('upsert-updater-1', $doc['$updatedBy']);
+            } elseif ($doc['$id'] === 'new-upsert') {
+                $this->assertEquals('new-creator', $doc['$createdBy']);
+                $this->assertEquals('new-updater', $doc['$updatedBy']);
+            }
+        }
+
+        // Test 6: Increment operation
+        // making requests via root
+        $incrementResponse = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/increment', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 5
+        ]);
+
+        $this->assertEquals(200, $incrementResponse['headers']['status-code']);
+        $this->assertEquals(15, $incrementResponse['body']['count']);
+        $this->assertEquals('user-123', $incrementResponse['body']['$createdBy']);
+        $this->assertEquals($this->getRoot()['$id'], $incrementResponse['body']['$updatedBy']);
+
+        // Test 7: Decrement operation
+        $decrementResponse = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/count/decrement', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 3
+        ]);
+
+        $this->assertEquals(200, $decrementResponse['headers']['status-code']);
+        $this->assertEquals(12, $decrementResponse['body']['count']);
+        $this->assertEquals('user-123', $decrementResponse['body']['$createdBy']);
+        $this->assertEquals($this->getRoot()['$id'], $decrementResponse['body']['$updatedBy']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+    }
 }

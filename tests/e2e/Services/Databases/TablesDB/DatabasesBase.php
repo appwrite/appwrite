@@ -8828,4 +8828,186 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}", $headers);
     }
 
+    public function testCreatedByUpdatedBy(): void
+    {
+        // Setup: Create database for createdBy/updatedBy tests
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Setup: Create table for createdBy/updatedBy tests
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'tableId' => ID::unique(),
+            'name' => 'CreatedBy UpdatedBy Table',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Setup: Add columns
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'releaseYear',
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'count',
+            'required' => false,
+        ]);
+
+        // Wait for columns to be created
+        sleep(2);
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        // Test 1: Create row - verify $createdBy and $updatedBy behavior
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $headers, [
+            'rowId' => ID::unique(),
+            'data' => [
+                'title' => 'CreatedBy UpdatedBy Test',
+                'releaseYear' => 2024
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $this->assertEquals('CreatedBy UpdatedBy Test', $row['body']['title']);
+
+        $rowId = $row['body']['$id'];
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $row['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $row['body']['$updatedBy']);
+
+        \sleep(1);
+
+        // Test 2: Update row - verify $updatedBy behavior
+        $updatedRow = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $headers, [
+            'data' => [
+                'title' => 'Updated CreatedBy UpdatedBy Test',
+            ]
+        ]);
+
+        $this->assertEquals(200, $updatedRow['headers']['status-code']);
+        $this->assertEquals('Updated CreatedBy UpdatedBy Test', $updatedRow['body']['title']);
+
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $updatedRow['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $updatedRow['body']['$updatedBy']);
+
+        // Test 4: Upsert operation
+        $upsertRow = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $headers, [
+            'data' => [
+                'title' => 'Upserted Row',
+                'releaseYear' => 2025
+            ]
+        ]);
+
+        $this->assertEquals(200, $upsertRow['headers']['status-code']);
+        $this->assertEquals('Upserted Row', $upsertRow['body']['title']);
+
+        // Client side: $createdBy should remain original user, $updatedBy should be current user
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $upsertRow['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $upsertRow['body']['$updatedBy']);
+
+        // Test 5: Create new row with upsert
+        $newUpsertId = ID::unique();
+        $newUpsertRow = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $newUpsertId, $headers, [
+            'data' => [
+                'title' => 'New Upserted Row',
+                'releaseYear' => 2026
+            ]
+        ]);
+
+        $this->assertEquals(200, $newUpsertRow['headers']['status-code']);
+        $this->assertEquals('New Upserted Row', $newUpsertRow['body']['title']);
+
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $newUpsertRow['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $newUpsertRow['body']['$updatedBy']);
+
+        // Test 6: Increment/Decrement operations
+        $countRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $headers, [
+            'rowId' => ID::unique(),
+            'data' => [
+                'title' => 'Count Test Row',
+                'count' => 10
+            ]
+        ]);
+
+        $this->assertEquals(201, $countRow['headers']['status-code']);
+        $countRowId = $countRow['body']['$id'];
+        
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $countRow['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $countRow['body']['$updatedBy']);
+
+        // Test increment operation
+        $incrementResponse = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $countRowId . '/count/increment', $headers, [
+            'value' => 5
+        ]);
+
+        $this->assertEquals(200, $incrementResponse['headers']['status-code']);
+        $this->assertEquals(15, $incrementResponse['body']['count']);
+
+        // Client side: $createdBy should remain unchanged, $updatedBy should be current user
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $incrementResponse['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $incrementResponse['body']['$updatedBy']);
+
+        // Test decrement operation
+        $decrementResponse = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $countRowId . '/count/decrement', $headers, [
+            'value' => 3
+        ]);
+
+        $this->assertEquals(200, $decrementResponse['headers']['status-code']);
+        $this->assertEquals(12, $decrementResponse['body']['count']);
+
+        $user = $this->getSide() === 'client' ?$this->getUser() : $this->getRoot();
+        $this->assertEquals($user['$id'], $decrementResponse['body']['$createdBy']);
+        $this->assertEquals($user['$id'], $decrementResponse['body']['$updatedBy']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, $headers);
+    }
+
 }

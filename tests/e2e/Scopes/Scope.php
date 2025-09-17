@@ -7,6 +7,8 @@ use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 abstract class Scope extends TestCase
@@ -40,6 +42,10 @@ abstract class Scope extends TestCase
     protected function tearDown(): void
     {
         $this->client = null;
+        
+        // Clean up Authorization context to prevent state contamination between tests
+        Authorization::cleanRoles();
+        Authorization::setRole(Role::any()->toString());
     }
 
     protected function getLastEmail(int $limit = 1): array
