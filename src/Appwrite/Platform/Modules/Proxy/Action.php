@@ -30,7 +30,7 @@ class Action extends PlatformAction
      */
     public static function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
-        $dnsValidatorClass = $this->getDNSValidator();
+        $dnsValidatorClass = self::getDNSValidator();
 
         $domain = new Domain($rule->getAttribute('domain', ''));
 
