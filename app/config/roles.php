@@ -16,6 +16,8 @@ $member = [
     'documents.write',
     'rows.read',
     'rows.write',
+    'transactions.read',
+    'transactions.write',
     'files.read',
     'files.write',
     'projects.read',
@@ -28,7 +30,7 @@ $member = [
     'subscribers.write',
     'subscribers.read',
     'assistant.read',
-    'rules.read'
+    'rules.read',
 ];
 
 $admins = [
@@ -41,6 +43,8 @@ $admins = [
     'documents.write',
     'rows.read',
     'rows.write',
+    'transactions.read',
+    'transactions.write',
     'files.read',
     'files.write',
     'buckets.read',

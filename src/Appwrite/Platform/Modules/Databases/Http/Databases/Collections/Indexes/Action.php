@@ -52,7 +52,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the SDK group name for the current action.
      */
-    final protected function getSdkGroup(): string
+    final protected function getSDKGroup(): string
     {
         return 'indexes';
     }
@@ -60,7 +60,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the SDK namespace for the current action.
      */
-    final protected function getSdkNamespace(): string
+    final protected function getSDKNamespace(): string
     {
         return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }

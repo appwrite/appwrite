@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Legacy;
+namespace Tests\E2E\Services\Databases\TablesDB\Permissions;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -16,7 +16,7 @@ class DatabasesPermissionsTeamTest extends Scope
     use SideClient;
     use DatabasesPermissionsScope;
 
-    public array $collections = [];
+    public array $tables = [];
     public string $databaseId = 'testpermissiondb';
 
     public function createTeams(): array
@@ -36,17 +36,17 @@ class DatabasesPermissionsTeamTest extends Scope
         ];
     }
 
-    public function createCollections($teams)
+    public function createTables($teams)
     {
-        $db = $this->client->call(Client::METHOD_POST, '/databases', $this->getServerHeader(), [
+        $db = $this->client->call(Client::METHOD_POST, '/tablesdb', $this->getServerHeader(), [
             'databaseId' => $this->databaseId,
             'name' => 'Test Database',
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
 
-        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::custom('collection1'),
-            'name' => 'Collection 1',
+        $table1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->databaseId . '/tables', $this->getServerHeader(), [
+            'tableId' => ID::custom('table1'),
+            'name' => 'Table 1',
             'permissions' => [
                 Permission::read(Role::team($teams['team1']['$id'])),
                 Permission::create(Role::team($teams['team1']['$id'], 'admin')),
@@ -55,17 +55,17 @@ class DatabasesPermissionsTeamTest extends Scope
             ],
         ]);
 
-        $this->collections['collection1'] = $collection1['body']['$id'];
+        $this->tables['table1'] = $table1['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->databaseId . '/tables/' . $this->tables['table1'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::custom('collection2'),
-            'name' => 'Collection 2',
+        $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->databaseId . '/tables', $this->getServerHeader(), [
+            'tableId' => ID::custom('table2'),
+            'name' => 'Table 2',
             'permissions' => [
                 Permission::read(Role::team($teams['team2']['$id'])),
                 Permission::create(Role::team($teams['team2']['$id'], 'owner')),
@@ -74,9 +74,9 @@ class DatabasesPermissionsTeamTest extends Scope
             ]
         ]);
 
-        $this->collections['collection2'] = $collection2['body']['$id'];
+        $this->tables['table2'] = $table2['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->databaseId . '/tables/' . $this->tables['table2'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -84,38 +84,38 @@ class DatabasesPermissionsTeamTest extends Scope
 
         sleep(2);
 
-        return $this->collections;
+        return $this->tables;
     }
 
     /*
-     * $success = can $user read from $collection
-     * [$user, $collection, $success]
+     * $success = can $user read from $table
+     * [$user, $table, $success]
      */
-    public function readDocumentsProvider(): array
+    public function readRowsProvider(): array
     {
         return [
-            ['user1', 'collection1', true],
-            ['user2', 'collection1', false],
-            ['user3', 'collection1', true],
-            ['user1', 'collection2', false],
-            ['user2', 'collection2', true],
-            ['user3', 'collection2', true],
+            ['user1', 'table1', true],
+            ['user2', 'table1', false],
+            ['user3', 'table1', true],
+            ['user1', 'table2', false],
+            ['user2', 'table2', true],
+            ['user3', 'table2', true],
         ];
     }
 
     /*
-     * $success = can $user write to $collection
-     * [$user, $collection, $success]
+     * $success = can $user write to $table
+     * [$user, $table, $success]
      */
-    public function writeDocumentsProvider(): array
+    public function writeRowsProvider(): array
     {
         return [
-            ['user1', 'collection1', true],
-            ['user2', 'collection1', false],
-            ['user3', 'collection1', false],
-            ['user1', 'collection2', false],
-            ['user2', 'collection2', true],
-            ['user3', 'collection2', false],
+            ['user1', 'table1', true],
+            ['user2', 'table1', false],
+            ['user3', 'table1', false],
+            ['user1', 'table2', false],
+            ['user2', 'table2', true],
+            ['user3', 'table2', false],
         ];
     }
 
@@ -138,18 +138,18 @@ class DatabasesPermissionsTeamTest extends Scope
         $this->addToTeam('user3', 'team1');
         $this->addToTeam('user3', 'team2');
 
-        $this->createCollections($this->teams);
+        $this->createTables($this->teams);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->databaseId . '/tables/' . $this->tables['table1'] . '/rows', $this->getServerHeader(), [
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->databaseId . '/tables/' . $this->tables['table2'] . '/rows', $this->getServerHeader(), [
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
             ],
@@ -162,11 +162,11 @@ class DatabasesPermissionsTeamTest extends Scope
     /**
      * Data provider params are passed before test dependencies
      * @depends testSetupDatabase
-     * @dataProvider readDocumentsProvider
+     * @dataProvider readRowsProvider
      */
-    public function testReadDocuments($user, $collection, $success, $users)
+    public function testReadRows($user, $table, $success, $users)
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $this->databaseId . '/collections/' . $collection  . '/documents', [
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $this->databaseId . '/tables/' . $table  . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -174,35 +174,35 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
 
         if ($success) {
-            $this->assertCount(1, $documents['body']['documents']);
+            $this->assertCount(1, $rows['body']['rows']);
         } else {
-            $this->assertEquals(401, $documents['headers']['status-code']);
+            $this->assertEquals(401, $rows['headers']['status-code']);
         }
     }
 
     /**
      * @depends testSetupDatabase
-     * @dataProvider writeDocumentsProvider
+     * @dataProvider writeRowsProvider
      */
-    public function testWriteDocuments($user, $collection, $success, $users)
+    public function testWriteRows($user, $table, $success, $users)
     {
-        $documents = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $collection  . '/documents', [
+        $rows = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->databaseId . '/tables/' . $table  . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users[$user]['session'],
         ], [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
             ],
         ]);
 
         if ($success) {
-            $this->assertEquals(201, $documents['headers']['status-code']);
+            $this->assertEquals(201, $rows['headers']['status-code']);
         } else {
             // 401 if user is a part of team, 404 otherwise
-            $this->assertContains($documents['headers']['status-code'], [401, 404]);
+            $this->assertContains($rows['headers']['status-code'], [401, 404]);
         }
     }
 }

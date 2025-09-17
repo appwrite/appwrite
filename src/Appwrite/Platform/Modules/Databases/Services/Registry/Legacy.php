@@ -54,6 +54,20 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Logs\XList as
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Update as UpdateCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Usage\Get as GetCollectionUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\XList as ListCollections;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Create as CreateDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Create as CreateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete as DeleteTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Get as GetTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations\Create as CreateOperations;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Update as UpdateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\XList as ListTransactions;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\Get as GetDatabaseUsage;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\XList as ListDatabaseUsage;
+use Appwrite\Platform\Modules\Databases\Http\Databases\XList as ListDatabases;
 use Utopia\Platform\Service;
 
 /**
@@ -64,15 +78,30 @@ use Utopia\Platform\Service;
  * - Documents
  * - Attributes
  * - Indexes
+ * - Transactions
  */
-class Collections extends Base
+class Legacy extends Base
 {
     protected function register(Service $service): void
     {
+        $this->registerDatabaseActions($service);
         $this->registerCollectionActions($service);
         $this->registerDocumentActions($service);
         $this->registerAttributeActions($service);
         $this->registerIndexActions($service);
+        $this->registerTransactionActions($service);
+    }
+
+    public function registerDatabaseActions(Service $service): void
+    {
+        $service->addAction(CreateDatabase::getName(), new CreateDatabase());
+        $service->addAction(GetDatabase::getName(), new GetDatabase());
+        $service->addAction(UpdateDatabase::getName(), new UpdateDatabase());
+        $service->addAction(DeleteDatabase::getName(), new DeleteDatabase());
+        $service->addAction(ListDatabases::getName(), new ListDatabases());
+        $service->addAction(ListDatabaseLogs::getName(), new ListDatabaseLogs());
+        $service->addAction(GetDatabaseUsage::getName(), new GetDatabaseUsage());
+        $service->addAction(ListDatabaseUsage::getName(), new ListDatabaseUsage());
     }
 
     private function registerCollectionActions(Service $service): void
@@ -169,5 +198,15 @@ class Collections extends Base
         $service->addAction(GetIndex::getName(), new GetIndex());
         $service->addAction(DeleteIndex::getName(), new DeleteIndex());
         $service->addAction(ListIndexes::getName(), new ListIndexes());
+    }
+
+    private function registerTransactionActions(Service $service): void
+    {
+        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
+        $service->addAction(GetTransaction::getName(), new GetTransaction());
+        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
+        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
+        $service->addAction(ListTransactions::getName(), new ListTransactions());
+        $service->addAction(CreateOperations::getName(), new CreateOperations());
     }
 }

@@ -37,7 +37,7 @@ class Get extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: $this->getSdkGroup(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/get-collection.md',
                 auth: [AuthType::KEY],

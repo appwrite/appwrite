@@ -52,7 +52,7 @@ class Create extends Action
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: $this->getSdkGroup(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-collection.md',
                 auth: [AuthType::KEY],

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Legacy;
+namespace Tests\E2E\Services\Databases\TablesDB\Permissions;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -16,7 +16,7 @@ class DatabasesPermissionsMemberTest extends Scope
     use SideClient;
     use DatabasesPermissionsScope;
 
-    public array $collections = [];
+    public array $tables = [];
 
     public function createUsers(): array
     {
@@ -107,7 +107,7 @@ class DatabasesPermissionsMemberTest extends Scope
     /**
      * Setup database
      *
-     * Data providers lose object state so explicitly pass [$users, $collections] to each iteration
+     * Data providers lose object state so explicitly pass [$users, $tables] to each iteration
      *
      * @return array
      * @throws \Exception
@@ -124,8 +124,8 @@ class DatabasesPermissionsMemberTest extends Scope
 
         $databaseId = $db['body']['$id'];
 
-        $public = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+        $public = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $this->getServerHeader(), [
+            'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -133,20 +133,20 @@ class DatabasesPermissionsMemberTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $public['headers']['status-code']);
-        $this->collections = ['public' => $public['body']['$id']];
+        $this->tables = ['public' => $public['body']['$id']];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['public'] . '/attributes/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $this->tables['public'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        $private = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+        $private = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $this->getServerHeader(), [
+            'tableId' => ID::unique(),
             'name' => 'Private Movies',
             'permissions' => [
                 Permission::read(Role::users()),
@@ -154,28 +154,28 @@ class DatabasesPermissionsMemberTest extends Scope
                 Permission::update(Role::users()),
                 Permission::delete(Role::users()),
             ],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
-        $this->collections['private'] = $private['body']['$id'];
+        $this->tables['private'] = $private['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $this->tables['private'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        $doconly = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
-            'name' => 'Document Only Movies',
+        $doconly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $this->getServerHeader(), [
+            'tableId' => ID::unique(),
+            'name' => 'Row Only Movies',
             'permissions' => [],
-            'documentSecurity' => true,
+            'rowSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
-        $this->collections['doconly'] = $doconly['body']['$id'];
+        $this->tables['doconly'] = $doconly['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['doconly'] . '/attributes/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $this->tables['doconly'] . '/columns/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -186,7 +186,7 @@ class DatabasesPermissionsMemberTest extends Scope
 
         return [
             'users' => $this->users,
-            'collections' => $this->collections,
+            'tables' => $this->tables,
             'databaseId' => $databaseId
         ];
     }
@@ -196,14 +196,14 @@ class DatabasesPermissionsMemberTest extends Scope
      * @dataProvider permissionsProvider
      * @depends      testSetupDatabase
      */
-    public function testReadDocuments($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
+    public function testReadRows($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
     {
         $users = $data['users'];
-        $collections = $data['collections'];
+        $tables = $data['tables'];
         $databaseId = $data['databaseId'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['public'] . '/rows', $this->getServerHeader(), [
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -211,8 +211,8 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['private'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['private'] . '/rows', $this->getServerHeader(), [
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -220,8 +220,8 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['doconly'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['doconly'] . '/rows', $this->getServerHeader(), [
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -230,42 +230,42 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
-         * Check "any" permission collection
+         * Check "any" permission table
          */
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', [
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['public'] . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
         ]);
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals($anyCount, $documents['body']['total']);
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertEquals($anyCount, $rows['body']['total']);
 
         /**
-         * Check "users" permission collection
+         * Check "users" permission table
          */
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['private'] . '/documents', [
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['private'] . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
         ]);
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals($usersCount, $documents['body']['total']);
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertEquals($usersCount, $rows['body']['total']);
 
         /**
-         * Check "user:user1" document only permission collection
+         * Check "user:user1" row only permission table
          */
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['doconly'] . '/documents', [
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['doconly'] . '/rows', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
         ]);
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals($docOnlyCount, $documents['body']['total']);
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertEquals($docOnlyCount, $rows['body']['total']);
     }
 }

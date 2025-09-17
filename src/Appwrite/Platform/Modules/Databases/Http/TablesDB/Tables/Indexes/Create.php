@@ -42,8 +42,8 @@ class Create extends IndexCreate
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: 'createIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/tablesdb/create-index.md',
                 auth: [AuthType::KEY],

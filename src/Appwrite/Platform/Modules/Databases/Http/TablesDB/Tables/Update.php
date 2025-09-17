@@ -39,7 +39,7 @@ class Update extends CollectionUpdate
             ->label('audits.event', 'table.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: $this->getSDKNamespace(),
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/update-table.md',

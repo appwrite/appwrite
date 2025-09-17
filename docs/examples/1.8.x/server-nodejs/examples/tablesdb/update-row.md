@@ -12,5 +12,6 @@ const result = await tablesDB.updateRow({
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
     data: {}, // optional
-    permissions: ["read("any")"] // optional
+    permissions: ["read("any")"], // optional
+    transactionId: '<TRANSACTION_ID>' // optional
 });

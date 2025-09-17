@@ -44,7 +44,7 @@ class XList extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: $this->getSdkGroup(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/list-collections.md',
                 auth: [AuthType::KEY],
@@ -121,7 +121,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'total' => $total,
-            $this->getSdkGroup() => $collections,
+            $this->getSDKGroup() => $collections,
         ]), $this->getResponseModel());
     }
 }
