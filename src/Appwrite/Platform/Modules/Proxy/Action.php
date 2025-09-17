@@ -14,6 +14,11 @@ use Utopia\Validator\IP;
 
 class Action extends PlatformAction
 {
+    protected function getDNSValidator(): string
+    {
+        return DNS::class;
+    }
+
     /**
      * Verify or re-verify a rule
      *
@@ -25,6 +30,8 @@ class Action extends PlatformAction
      */
     public static function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
+        $dnsValidatorClass = $this->getDNSValidator();
+
         $domain = new Domain($rule->getAttribute('domain', ''));
 
         if (empty($domain->get())) {
@@ -38,7 +45,7 @@ class Action extends PlatformAction
         // Ensure CAA won't block certificate issuance
         if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
             $validationStart = \microtime(true);
-            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
             if (!$validator->isValid($domain->get())) {
                 if (!\is_null($log)) {
                     $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
@@ -84,7 +91,7 @@ class Action extends PlatformAction
         $mainValidator = null; // Validator to use for error description
 
         if (!is_null($targetCNAME)) {
-            $validator = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+            $validator = new $dnsValidatorClass($targetCNAME->get(), DNS::RECORD_CNAME);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
@@ -93,7 +100,7 @@ class Action extends PlatformAction
         }
 
         if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
+            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
@@ -102,7 +109,7 @@ class Action extends PlatformAction
         }
 
         if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
+            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
