@@ -71,14 +71,24 @@ $console = [
             'body' => 'Enter the following code to confirm your two-step verification in {{b}}{{project}}{{/b}}. This code will expire in 15 minutes.',
             'thanks' => 'Thanks,',
             "signature" => "{{project}} team",
-        ]
+        ],
+        'email.otpSession-en' => [
+            'subject' => 'OTP for {{project}} account login',
+            'preview' => 'Use OTP {{otp}} to sign in to {{project}}. Expires in 15 minutes.',
+            'heading' => 'Login with OTP to use Appwrite Cloud',
+            'hello' => 'Hello {{user}},',
+            'body' => 'Enter the following verification code when prompted to securely sign in to your {{b}}{{project}}{{/b}} account. This code will expire in 15 minutes.',
+            'thanks' => 'Thanks,',
+            "signature" => "{{project}} team",
+        ],
     ],
     'customEmails' => true,
 ];
 
 foreach ($localeCodes as $localeCode) {
-    $console['templates']['email.verification-'.$localeCode['code']] = $console['templates']['email.verification-en'];
-    $console['templates']['email.mfaChallenge-'.$localeCode['code']] = $console['templates']['email.mfaChallenge-en'];
+    $console['templates']['email.verification-' . $localeCode['code']] = $console['templates']['email.verification-en'];
+    $console['templates']['email.mfaChallenge-' . $localeCode['code']] = $console['templates']['email.mfaChallenge-en'];
+    $console['templates']['email.otpSession-' . $localeCode['code']] = $console['templates']['email.otpSession-en'];
 }
 
 return $console;
