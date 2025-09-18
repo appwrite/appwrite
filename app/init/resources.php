@@ -209,8 +209,6 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
             )[0] ?? new Document();
         }
 
-        var_dump($rule);
-
         if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
             $project->setAttribute('platforms', [
                 '$collection' => ID::custom('platforms'),
