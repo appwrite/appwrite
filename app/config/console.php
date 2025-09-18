@@ -73,7 +73,7 @@ $console = [
             "signature" => "{{project}} team",
         ],
         'email.otpSession-en' => [
-            'subject' => 'OTP for {{project}} account login',
+            'subject' => 'OTP for {{project}} Login',
             'preview' => 'Use OTP {{otp}} to sign in to {{project}}. Expires in 15 minutes.',
             'heading' => 'Login with OTP to use Appwrite Cloud',
             'hello' => 'Hello {{user}},',
