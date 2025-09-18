@@ -256,7 +256,7 @@ Database::addFilter(
                 Query::equal('resourceInternalId', [$document->getSequence()]),
                 Query::equal('resourceType', $resourceType),
                 Query::orderAsc('resourceType'),
-                Query::orderAsc('$sequence'),
+                Query::orderAsc(),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
