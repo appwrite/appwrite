@@ -23,6 +23,7 @@ use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
 use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
+use Appwrite\Utopia\Request\Filters\V21 as RequestV21;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -905,6 +906,9 @@ App::init()
             if (version_compare($requestFormat, '1.8.0', '<')) {
                 $dbForProject = $getProjectDB($project);
                 $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
+            }
+            if (version_compare($requestFormat, '1.8.1', '<')) {
+                $request->addFilter(new RequestV21());
             }
         }
 

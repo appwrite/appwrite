@@ -68,9 +68,8 @@ class Create extends Base
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
-            ->param('version', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
-            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type for the reference provided. Can be commit, branch, or version', true)
-            ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag', true)
+            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type for the reference provided. Can be commit, branch, or tag')
+            ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
@@ -88,7 +87,6 @@ class Create extends Base
         string $repository,
         string $owner,
         string $rootDirectory,
-        string $version,
         string $type,
         string $reference,
         bool $activate,
@@ -107,22 +105,15 @@ class Create extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
-        if (empty($version) && empty($type) && empty($reference)) {
-            throw new Exception("Either version or type & reference must be provided");
-        }
-
-        $referenceType = !empty($version) ? GitHub::CLONE_TYPE_TAG : $type;
-        $referenceValue = !empty($version) ? $version : $reference;
-
-        $branchUrl = $type == GitHub::CLONE_TYPE_BRANCH ? "https://github.com/$owner/$repository/tree/$referenceValue" : "";
+        $branchUrl = $type == GitHub::CLONE_TYPE_BRANCH ? "https://github.com/$owner/$repository/tree/$reference" : "";
         $repositoryUrl = "https://github.com/$owner/$repository";
 
         $template = new Document([
             'repositoryName' => $repository,
             'ownerName' => $owner,
             'rootDirectory' => $rootDirectory,
-            'referenceType' => $referenceType,
-            'referenceValue' => $referenceValue
+            'referenceType' => $type,
+            'referenceValue' => $reference
         ]);
 
         if (!empty($site->getAttribute('providerRepositoryId'))) {
@@ -177,7 +168,7 @@ class Create extends Base
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,
             'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $referenceValue : '',
+            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
