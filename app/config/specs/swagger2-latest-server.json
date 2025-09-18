@@ -11732,22 +11732,23 @@
                                     "default": null,
                                     "x-example": "<ROOT_DIRECTORY>"
                                 },
-                                "version": {
-                                    "type": "string",
-                                    "description": "Version (tag) for the repo linked to the function template.",
-                                    "default": "",
-                                    "x-example": "<VERSION>"
-                                },
                                 "type": {
                                     "type": "string",
-                                    "description": "Type for the reference provided. Can be commit, branch, or version",
-                                    "default": "",
-                                    "x-example": "<TYPE>"
+                                    "description": "Type for the reference provided. Can be commit, branch, or tag",
+                                    "default": null,
+                                    "x-example": "commit",
+                                    "enum": [
+                                        "commit",
+                                        "branch",
+                                        "tag"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
                                 },
                                 "reference": {
                                     "type": "string",
                                     "description": "Reference value, can be a commit hash, branch name, or release tag",
-                                    "default": "",
+                                    "default": null,
                                     "x-example": "<REFERENCE>"
                                 },
                                 "activate": {
@@ -11760,7 +11761,9 @@
                             "required": [
                                 "repository",
                                 "owner",
-                                "rootDirectory"
+                                "rootDirectory",
+                                "type",
+                                "reference"
                             ]
                         }
                     }
@@ -21144,22 +21147,23 @@
                                     "default": null,
                                     "x-example": "<ROOT_DIRECTORY>"
                                 },
-                                "version": {
-                                    "type": "string",
-                                    "description": "Version (tag) for the repo linked to the function template.",
-                                    "default": "",
-                                    "x-example": "<VERSION>"
-                                },
                                 "type": {
                                     "type": "string",
-                                    "description": "Type for the reference provided. Can be commit, branch, or version",
-                                    "default": "",
-                                    "x-example": "<TYPE>"
+                                    "description": "Type for the reference provided. Can be commit, branch, or tag",
+                                    "default": null,
+                                    "x-example": "branch",
+                                    "enum": [
+                                        "branch",
+                                        "commit",
+                                        "tag"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
                                 },
                                 "reference": {
                                     "type": "string",
                                     "description": "Reference value, can be a commit hash, branch name, or release tag",
-                                    "default": "",
+                                    "default": null,
                                     "x-example": "<REFERENCE>"
                                 },
                                 "activate": {
@@ -21172,7 +21176,9 @@
                             "required": [
                                 "repository",
                                 "owner",
-                                "rootDirectory"
+                                "rootDirectory",
+                                "type",
+                                "reference"
                             ]
                         }
                     }

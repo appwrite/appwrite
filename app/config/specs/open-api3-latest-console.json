@@ -12927,15 +12927,17 @@
                                         "description": "Path to function code in the template repo.",
                                         "x-example": "<ROOT_DIRECTORY>"
                                     },
-                                    "version": {
-                                        "type": "string",
-                                        "description": "Version (tag) for the repo linked to the function template.",
-                                        "x-example": "<VERSION>"
-                                    },
                                     "type": {
                                         "type": "string",
-                                        "description": "Type for the reference provided. Can be commit, branch, or version",
-                                        "x-example": "<TYPE>"
+                                        "description": "Type for the reference provided. Can be commit, branch, or tag",
+                                        "x-example": "commit",
+                                        "enum": [
+                                            "commit",
+                                            "branch",
+                                            "tag"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     },
                                     "reference": {
                                         "type": "string",
@@ -12951,7 +12953,9 @@
                                 "required": [
                                     "repository",
                                     "owner",
-                                    "rootDirectory"
+                                    "rootDirectory",
+                                    "type",
+                                    "reference"
                                 ]
                             }
                         }
@@ -30214,15 +30218,17 @@
                                         "description": "Path to site code in the template repo.",
                                         "x-example": "<ROOT_DIRECTORY>"
                                     },
-                                    "version": {
-                                        "type": "string",
-                                        "description": "Version (tag) for the repo linked to the function template.",
-                                        "x-example": "<VERSION>"
-                                    },
                                     "type": {
                                         "type": "string",
-                                        "description": "Type for the reference provided. Can be commit, branch, or version",
-                                        "x-example": "<TYPE>"
+                                        "description": "Type for the reference provided. Can be commit, branch, or tag",
+                                        "x-example": "branch",
+                                        "enum": [
+                                            "branch",
+                                            "commit",
+                                            "tag"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     },
                                     "reference": {
                                         "type": "string",
@@ -30238,7 +30244,9 @@
                                 "required": [
                                     "repository",
                                     "owner",
-                                    "rootDirectory"
+                                    "rootDirectory",
+                                    "type",
+                                    "reference"
                                 ]
                             }
                         }
