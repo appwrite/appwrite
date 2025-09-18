@@ -255,6 +255,8 @@ Database::addFilter(
             ->find('variables', [
                 Query::equal('resourceInternalId', [$document->getSequence()]),
                 Query::equal('resourceType', $resourceType),
+                Query::orderAsc('resourceType'),
+                Query::orderAsc('$sequence'),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
