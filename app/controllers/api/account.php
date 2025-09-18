@@ -40,6 +40,7 @@ use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
+use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
@@ -2042,6 +2043,7 @@ App::post('/v1/account/tokens/magic-url')
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
+        $proofForToken->setHash(new Sha());
 
         $tokenSecret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
