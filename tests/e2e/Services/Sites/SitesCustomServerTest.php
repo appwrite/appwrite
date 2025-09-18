@@ -1563,7 +1563,154 @@ class SitesCustomServerTest extends Scope
             'repository' => $template['providerRepositoryId'],
             'owner' => $template['providerOwner'],
             'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
-            'version' => $template['providerVersion'],
+            'type' => 'tag',
+            'reference' => $template['providerVersion'],
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals(0, $deployment['body']['totalSize']);
+
+        $this->assertEventually(function () use ($siteId) {
+            $site = $this->getSite($siteId);
+            $this->assertNotEmpty($site['body']['deploymentId']);
+        }, 50000, 500);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/about');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("About Me", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateSiteFromTemplateBranch()
+    {
+        $template = $this->getTemplate('playground-for-astro');
+        $this->assertEquals(200, $template['headers']['status-code']);
+
+        $template = $template['body'];
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro Blog - Branch Test',
+            'framework' => $template['frameworks'][0]['key'],
+            'adapter' => $template['frameworks'][0]['adapter'],
+            'buildRuntime' => $template['frameworks'][0]['buildRuntime'],
+            'outputDirectory' => $template['frameworks'][0]['outputDirectory'],
+            'buildCommand' => $template['frameworks'][0]['buildCommand'],
+            'installCommand' => $template['frameworks'][0]['installCommand'],
+            'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        // Deploy using branch
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals(0, $deployment['body']['totalSize']);
+
+        $this->assertEventually(function () use ($siteId) {
+            $site = $this->getSite($siteId);
+            $this->assertNotEmpty($site['body']['deploymentId']);
+        }, 50000, 500);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/about');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("About Me", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateSiteFromTemplateCommit()
+    {
+        $template = $this->getTemplate('playground-for-astro');
+        $this->assertEquals(200, $template['headers']['status-code']);
+
+        // Ensure we have the latest commit
+        $this->assertArrayHasKey('latestCommit', $template['body']);
+        $latestCommit = $template['body']['latestCommit'];
+
+        $template = $template['body'];
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro Blog - Commit Test',
+            'framework' => $template['frameworks'][0]['key'],
+            'adapter' => $template['frameworks'][0]['adapter'],
+            'buildRuntime' => $template['frameworks'][0]['buildRuntime'],
+            'outputDirectory' => $template['frameworks'][0]['outputDirectory'],
+            'buildCommand' => $template['frameworks'][0]['buildCommand'],
+            'installCommand' => $template['frameworks'][0]['installCommand'],
+            'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        // Deploy using commit
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'type' => 'commit',
+            'reference' => $latestCommit,
             'activate' => true
         ]);
 
