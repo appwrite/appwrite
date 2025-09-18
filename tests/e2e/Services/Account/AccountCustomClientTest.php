@@ -277,6 +277,7 @@ class AccountCustomClientTest extends Scope
     {
         sleep(5);
         $session = $data['session'] ?? '';
+
         /**
          * Test for SUCCESS
          */
@@ -618,11 +619,12 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
-            'email' =>  $data['email'],
-            'password' =>  $data['password'],
-            'name' =>  $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'name' => $data['name'],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -779,7 +781,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode((new \DateTime($response['body']['expire']))->format('Y-m-d\TH:i:s.v')), 0);
         $this->assertNotFalse($expireTime);
 
         $secretTest = strpos($lastEmail['text'], 'secret=' . $response['body']['secret'], 0);
@@ -1082,7 +1084,7 @@ class AccountCustomClientTest extends Scope
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode((new \DateTime($response['body']['expire']))->format('Y-m-d\TH:i:s.v')), 0);
 
         $this->assertNotFalse($expireTime);
 
@@ -1188,6 +1190,127 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
+    }
+
+    /**
+     * @depends testCreateAccountSession
+     */
+    public function testSessionAlert($data): void
+    {
+        $email = uniqid() . 'session-alert@appwrite.io';
+        $password = 'password123';
+        $name = 'Session Alert Tester';
+
+        // Enable session alerts
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/session-alerts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'alerts' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Create a new account
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Create first session for the new account
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Create second session for the new account
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+
+        // Check the alert email
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertStringContainsString('Security alert: new session', $lastEmail['subject']);
+        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
+        $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
+        $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+
+        // Verify no alert sent in OTP login
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => 'otpuser2@appwrite.io'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['$createdAt']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['phrase']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals('otpuser2@appwrite.io', $lastEmail['to'][0]['address']);
+        $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
+
+        // FInd 6 concurrent digits in email text - OTP
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $code = ($matches[0] ?? [])[0] ?? '';
+
+        $this->assertNotEmpty($code);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'secret' => $code
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['userId']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $this->assertEmpty($response['body']['secret']);
+
+        $lastEmailId = $lastEmail['id'];
+        $lastEmail = $this->getLastEmail();
+        $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
 
     /**
@@ -2187,6 +2310,60 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['expire']);
         $this->assertEmpty($response['body']['secret']);
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CH', $response['body']['clientCode']);
+        $this->assertEquals('Chrome', $response['body']['clientName']);
+
+        // Forwarded User Agent with API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-forwarded-user-agent' => 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CM', actual: $response['body']['clientCode']);
+        $this->assertEquals('Chrome Mobile', $response['body']['clientName']);
+
+        // Forwarded User Agent without API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-user-agent' => 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CH', $response['body']['clientCode']);
+        $this->assertEquals('Chrome', $response['body']['clientName']);
 
         /**
          * Test for FAILURE
@@ -2243,6 +2420,33 @@ class AccountCustomClientTest extends Scope
 
         $message = $smsRequest['data']['message'];
         $token = substr($message, 0, 6);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // disable phone sessions
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'status' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['authPhone']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals("Phone authentication is disabled for this project", $response['body']['message']);
 
         return \array_merge($data, [
             'token' => \substr($smsRequest['data']['message'], 0, 6)
@@ -2574,5 +2778,46 @@ class AccountCustomClientTest extends Scope
         $data['password'] = 'new-password';
 
         return $data;
+    }
+
+    public function testCreatePushTarget(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('test-identifier', $response['body']['identifier']);
+    }
+
+    public function testUpdatePushTarget(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-2',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('test-identifier-2', $response['body']['identifier']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/targets/'. $response['body']['$id'] .'/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => 'test-identifier-updated',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
+        $this->assertEquals(false, $response['body']['expired']);
     }
 }

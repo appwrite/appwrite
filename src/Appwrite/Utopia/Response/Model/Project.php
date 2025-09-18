@@ -138,6 +138,37 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('authMockNumbers', [
+                'type' => Response::MODEL_MOCK_NUMBER,
+                'description' => 'An array of mock numbers and their corresponding verification codes (OTPs).',
+                'default' => [],
+                'array' => true,
+                'example' => [new \stdClass()],
+            ])
+            ->addRule('authSessionAlerts', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to send session alert emails to users.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authMembershipsUserName', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user names in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authMembershipsUserEmail', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user emails in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authMembershipsMfa', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user MFA status in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('oAuthProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
@@ -162,6 +193,13 @@ class Project extends Model
             ->addRule('keys', [
                 'type' => Response::MODEL_KEY,
                 'description' => 'List of API Keys.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
+            ->addRule('devKeys', [
+                'type' => Response::MODEL_DEV_KEY,
+                'description' => 'List of dev keys.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
@@ -220,6 +258,18 @@ class Project extends Model
                 'description' => 'SMTP server secure protocol',
                 'default' => '',
                 'example' => 'tls',
+            ])
+            ->addRule('pingCount', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of times the ping was received for this project.',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule('pingedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last ping datetime in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
 
@@ -280,9 +330,9 @@ class Project extends Model
     }
 
     /**
-     * Get Collection
+     * Filter document structure
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {
@@ -321,6 +371,11 @@ class Project extends Model
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
+        $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
+        $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
+        $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? true);
+        $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

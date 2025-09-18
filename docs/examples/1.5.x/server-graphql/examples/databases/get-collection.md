@@ -19,6 +19,8 @@ query {
             error
             attributes
             orders
+            _createdAt
+            _updatedAt
         }
     }
 }

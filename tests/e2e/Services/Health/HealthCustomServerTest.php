@@ -67,24 +67,6 @@ class HealthCustomServerTest extends Scope
         return [];
     }
 
-    public function testQueueSuccess(): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
-        $this->assertIsInt($response['body']['statuses'][0]['ping']);
-        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
-
-        return [];
-    }
-
     public function testPubSubSuccess(): array
     {
         /**
@@ -455,7 +437,7 @@ class HealthCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('/CN=www.google.com', $response['body']['name']);
         $this->assertEquals('www.google.com', $response['body']['subjectSN']);
-        $this->assertStringContainsString('Google Trust Services', $response['body']['issuerOrganisation']);
+        $this->assertContains($response['body']['issuerOrganisation'], ['Let\'s Encrypt', 'Google Trust Services']);
         $this->assertIsInt($response['body']['validFrom']);
         $this->assertIsInt($response['body']['validTo']);
 
@@ -467,7 +449,7 @@ class HealthCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('/CN=appwrite.io', $response['body']['name']);
         $this->assertEquals('appwrite.io', $response['body']['subjectSN']);
-        $this->assertEquals("Let's Encrypt", $response['body']['issuerOrganisation']);
+        $this->assertContains($response['body']['issuerOrganisation'], ['Let\'s Encrypt', 'Google Trust Services']);
         $this->assertIsInt($response['body']['validFrom']);
         $this->assertIsInt($response['body']['validTo']);
 
@@ -512,12 +494,12 @@ class HealthCustomServerTest extends Scope
         return [];
     }
 
-    public function testUsageSuccess()
+    public function testStatsResources()
     {
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-resources', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -529,19 +511,19 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage?threshold=0', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-resources?threshold=0', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
         $this->assertEquals(503, $response['headers']['status-code']);
     }
 
-    public function testUsageDumpSuccess()
+    public function testUsageSuccess()
     {
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage-dump', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -553,7 +535,7 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage-dump?threshold=0', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-usage?threshold=0', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);

@@ -17,7 +17,6 @@ $member = [
     'files.read',
     'files.write',
     'projects.read',
-    'projects.write',
     'locale.read',
     'avatars.read',
     'execution.read',
@@ -27,6 +26,7 @@ $member = [
     'subscribers.write',
     'subscribers.read',
     'assistant.read',
+    'rules.read'
 ];
 
 $admins = [
@@ -49,6 +49,7 @@ $admins = [
     'collections.write',
     'platforms.read',
     'platforms.write',
+    'projects.write',
     'keys.read',
     'keys.write',
     'webhooks.read',
@@ -58,6 +59,10 @@ $admins = [
     'health.read',
     'functions.read',
     'functions.write',
+    'sites.read',
+    'sites.write',
+    'log.read',
+    'log.write',
     'execution.read',
     'execution.write',
     'rules.read',
@@ -75,7 +80,9 @@ $admins = [
     'topics.write',
     'topics.read',
     'subscribers.write',
-    'subscribers.read'
+    'subscribers.read',
+    'tokens.read',
+    'tokens.write',
 ];
 
 return [

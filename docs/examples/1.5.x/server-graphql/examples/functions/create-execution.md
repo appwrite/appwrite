@@ -5,7 +5,8 @@ mutation {
         async: false,
         path: "<PATH>",
         method: "GET",
-        headers: "{}"
+        headers: "{}",
+        scheduledAt: ""
     ) {
         _id
         _createdAt
@@ -29,5 +30,6 @@ mutation {
         logs
         errors
         duration
+        scheduledAt
     }
 }

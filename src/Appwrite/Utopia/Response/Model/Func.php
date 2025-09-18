@@ -55,21 +55,52 @@ class Func extends Model
             ])
             ->addRule('logging', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.',
+                'description' => 'When disabled, executions will exclude logs and errors, and will be slightly faster.',
                 'default' => true,
                 'example' => false,
             ])
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution runtime.',
+                'description' => 'Function execution and build runtime.',
                 'default' => '',
                 'example' => 'python-3.8',
             ])
-            ->addRule('deployment', [
+            ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function\'s active deployment ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('deploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Active deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function\'s latest deployment ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('latestDeploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Latest deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Status of latest deployment. Possible values are "waiting", "processing", "building", "ready", and "failed".',
+                'default' => '',
+                'example' => 'ready',
+            ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Allowed permission scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
             ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,
@@ -87,7 +118,7 @@ class Func extends Model
             ])
             ->addRule('schedule', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution schedult in CRON format.',
+                'description' => 'Function execution schedule in CRON format.',
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
@@ -112,7 +143,7 @@ class Func extends Model
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Version of Open Runtimes used for the function.',
-                'default' => 'v3',
+                'default' => 'v5',
                 'example' => 'v2',
             ])
             ->addRule('installationId', [
@@ -144,6 +175,12 @@ class Func extends Model
                 'description' => 'Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests',
                 'default' => false,
                 'example' => false,
+            ])
+            ->addRule('specification', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Machine specification for builds and executions.',
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])
         ;
     }

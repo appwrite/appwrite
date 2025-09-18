@@ -15,6 +15,7 @@ query {
             logging
             runtime
             deployment
+            scopes
             vars {
                 _id
                 _createdAt
@@ -35,6 +36,7 @@ query {
             providerBranch
             providerRootDirectory
             providerSilentMode
+            specification
         }
     }
 }

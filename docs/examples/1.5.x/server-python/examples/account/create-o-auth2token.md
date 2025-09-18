@@ -1,9 +1,10 @@
 from appwrite.client import Client
+from appwrite.services.account import Account
 from appwrite.enums import OAuthProvider
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
-client.set_project('5df5acd0d48c2') # Your project ID
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
 
 account = Account(client)
 

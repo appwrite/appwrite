@@ -217,6 +217,34 @@ return [
             ],
         ]
     ],
+    'sites' => [
+        '$model' => Response::MODEL_SITE,
+        '$resource' => true,
+        '$description' => 'This event triggers on any sites event.',
+        'deployments' => [
+            '$model' => Response::MODEL_DEPLOYMENT,
+            '$resource' => true,
+            '$description' => 'This event triggers on any deployments event.',
+            'create' => [
+                '$description' => 'This event triggers when a deployment is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a deployment is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a deployment is updated.'
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a site is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a site is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a site is updated.',
+        ]
+    ],
     'functions' => [
         '$model' => Response::MODEL_FUNCTION,
         '$resource' => true,

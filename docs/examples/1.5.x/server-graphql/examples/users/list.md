@@ -33,6 +33,7 @@ query {
                 providerId
                 providerType
                 identifier
+                expired
             }
             accessedAt
         }

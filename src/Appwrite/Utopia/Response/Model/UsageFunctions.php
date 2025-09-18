@@ -52,6 +52,12 @@ class UsageFunctions extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('buildsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of functions build mbSeconds.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('executionsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total  aggregated number of functions execution.',
@@ -61,6 +67,12 @@ class UsageFunctions extends Model
             ->addRule('executionsTimeTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated sum of functions  execution compute time.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('executionsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of functions execution mbSeconds.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -85,6 +97,18 @@ class UsageFunctions extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('buildsSuccessTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of successful function builds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsFailedTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of failed function builds.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('builds', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of functions build per period.',
@@ -106,6 +130,13 @@ class UsageFunctions extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('buildsMbSeconds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated sum of functions build mbSeconds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('executions', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of  functions execution per period.',
@@ -113,10 +144,30 @@ class UsageFunctions extends Model
                 'example' => [],
                 'array' => true
             ])
-
             ->addRule('executionsTime', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of functions execution compute time per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executionsMbSeconds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of functions mbSeconds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsSuccess', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of successful function builds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsFailed', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of failed function builds per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

@@ -1,3 +1,60 @@
+# Change Log
+
+## 17.0.0
+
+* Update `flutter_web_auth_2` dependency to version 4.1.0
+* Update `auth.html` example in README.md to align with `flutter_web_auth_2` documentation
+* Breaking changes:
+  * Minimum iOS version supported is now 17.4 due to the updated requirements of `flutter_web_auth_2` version 4.1.0
+
+## 16.1.0
+
+* Add `setDevKey` method to Client service
+* Add `upsertDocument` method to Databases service
+
+## 16.0.0
+
+* Remove `Gif` from ImageFormat enum
+* Remove `search` param from `listExecutions` method
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Update default `quality` for `getFilePreview` from 0 to -1
+
+## 15.0.2
+
+* Avoid setting empty `User-Agent` header and only encode it when present.
+* Update doc examples to use new multi-region endpoint: `https://<REGION>.cloud.appwrite.io/v1`.
+
+## 15.0.1
+
+* Removed `Content-Type` header from GET and HEAD requests.
+* Add validation for setting endpoint in `setEndpoint` and `setEndPointRealtime` methods.
+* Include Figma in list of available OAuth providers.
+
+## 15.0.0
+
+* Encode `User-Agent` header to fix invalid HTTP header field value error.
+* Breaking changes:
+  * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
+
+## 14.0.0
+
+* Fixed realtime pong response.
+* Fixed issues with `chunkedUpload` method.
+
+## 13.0.0
+
+* Fixed realtime reconnection issues
+* Support for Appwrite 1.6
+* Update dependencies
+* Added `scheduledAt` attribute to `Execution` response model
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
 ## 12.0.4
 
 * Fixed concurrent modification error when closing realtime socket

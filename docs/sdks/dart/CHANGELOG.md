@@ -1,3 +1,54 @@
+# Change Log
+
+## 16.0.0
+
+* Add `<REGION>` to doc examples due to the new multi region endpoints
+* Add doc examples and methods for bulk api transactions: `createDocuments`, `deleteDocuments` etc.
+* Add doc examples, class and methods for new `Sites` service
+* Add doc examples, class and methods for new `Tokens` service
+* Add enums for `BuildRuntime `, `Adapter`, `Framework`, `DeploymentDownloadType` and `VCSDeploymentType`
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Add `queries` and `search` params to `listMemberships` method
+* Update enum for `runtimes` with Pythonml312, Dart219, Flutter327 and Flutter329
+* Remove `search` param from `listExecutions` method
+
+## 14.0.0
+
+* Breaking changes:
+  * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
+
+## 13.0.0
+
+* Fixed realtime pong response.
+* Fixed issues with `chunkedUpload` method.
+* Fixed type mismatch bug where `List<dynamic>` was incorrectly causing runtime type errors.
+* Updated return type of `updateMfaChallenge()` from raw data to properly typed `models.Session` object.
+
+## 12.0.0
+
+* Support for Appwrite 1.6
+* Added `key` attribute to `Runtime` response model.
+* Added `buildSize` attribute to `Deployments` response model.
+* Added `scheduledAt` attribute to `Executions` response model.
+* Added `scopes` attribute to `Functions` response model.
+* Added `specifications` attribute to `Functions` response model.
+* Added new response model for `Specifications`.
+* Added new response model for `Builds`.
+* Added `createJWT()` : Enables creating a JWT using the `userId`.
+* Added `listSpecifications()`: Enables listing available runtime specifications.
+* Added `deleteExecution()` : Enables deleting executions.
+* Added `updateDeploymentBuild()`: Enables cancelling a deployment.
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+  * Added `scopes` parameter for create/update function.
+  * Renamed `templateBranch` to `templateVersion`  in `createFunction()`.
+  * Renamed `downloadDeployment()` to `getDeploymentDownload()`
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
 ## 11.0.3
 
 * Minor bugfixes

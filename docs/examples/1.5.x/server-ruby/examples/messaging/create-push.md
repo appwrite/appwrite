@@ -4,15 +4,15 @@ include Appwrite
 
 client = Client.new
     .set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
-    .set_project('5df5acd0d48c2') # Your project ID
-    .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
 
 messaging = Messaging.new(client)
 
 result = messaging.create_push(
     message_id: '<MESSAGE_ID>',
-    title: '<TITLE>',
-    body: '<BODY>',
+    title: '<TITLE>', # optional
+    body: '<BODY>', # optional
     topics: [], # optional
     users: [], # optional
     targets: [], # optional
@@ -23,7 +23,10 @@ result = messaging.create_push(
     sound: '<SOUND>', # optional
     color: '<COLOR>', # optional
     tag: '<TAG>', # optional
-    badge: '<BADGE>', # optional
+    badge: null, # optional
     draft: false, # optional
-    scheduled_at: '' # optional
+    scheduled_at: '', # optional
+    content_available: false, # optional
+    critical: false, # optional
+    priority: MessagePriority::NORMAL # optional
 )

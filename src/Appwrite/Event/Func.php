@@ -3,23 +3,25 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Func extends Event
 {
+    public const TYPE_ASYNC_WRITE = 'async_write';
+
     protected string $jwt = '';
     protected string $type = '';
     protected string $body = '';
     protected string $path = '';
     protected string $method = '';
     protected array $headers = [];
+    protected ?string $functionId = null;
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
@@ -47,6 +49,28 @@ class Func extends Event
     public function getFunction(): ?Document
     {
         return $this->function;
+    }
+
+    /**
+     * Sets function id for the function event.
+     *
+     * @param string $functionId
+     */
+    public function setFunctionId(string $functionId): self
+    {
+        $this->functionId = $functionId;
+
+        return $this;
+    }
+
+    /**
+     * Returns set function id for the function event.
+     *
+     * @return string|null
+     */
+    public function getFunctionId(): ?string
+    {
+        return $this->functionId;
     }
 
     /**
@@ -148,13 +172,13 @@ class Func extends Event
     }
 
     /**
-     * Returns set custom data for the function event.
+     * Returns set JWT for the function event.
      *
      * @return string
      */
-    public function getData(): string
+    public function getJWT(): string
     {
-        return $this->data;
+        return $this->jwt;
     }
 
     /**
@@ -166,40 +190,24 @@ class Func extends Event
     public function setJWT(string $jwt): self
     {
         $this->jwt = $jwt;
-
         return $this;
     }
 
     /**
-     * Returns set JWT for the function event.
+     * Prepare payload for the function event.
      *
-     * @return string
+     * @return array
      */
-    public function getJWT(): string
+    protected function preparePayload(): array
     {
-        return $this->jwt;
-    }
-
-    /**
-     * Executes the function event and sends it to the functions worker.
-     *
-     * @return string|bool
-     * @throws \InvalidArgumentException
-     */
-    public function trigger(): string|bool
-    {
-        if ($this->paused) {
-            return false;
-        }
-
-        $client = new Client($this->queue, $this->connection);
-
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
 
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'function' => $this->function,
+            'functionId' => $this->functionId,
             'execution' => $this->execution,
             'type' => $this->type,
             'jwt' => $this->jwt,
@@ -209,24 +217,6 @@ class Func extends Event
             'path' => $this->path,
             'headers' => $this->headers,
             'method' => $this->method,
-        ]);
-    }
-
-    /**
-     * Generate a function event from a base event
-     *
-     * @param Event $event
-     *
-     * @return self
-     *
-     */
-    public function from(Event $event): self
-    {
-        $this->project = $event->getProject();
-        $this->user = $event->getUser();
-        $this->payload = $event->getPayload();
-        $this->event = $event->getEvent();
-        $this->params = $event->getParams();
-        return $this;
+        ];
     }
 }

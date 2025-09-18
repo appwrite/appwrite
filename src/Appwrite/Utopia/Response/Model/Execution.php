@@ -4,6 +4,8 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 
 class Execution extends Model
@@ -83,7 +85,6 @@ class Execution extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
                 'default' => '',
-                'example' => 'Developers are awesome.',
             ])
             ->addRule('responseHeaders', [
                 'type' => Response::MODEL_HEADERS,
@@ -97,18 +98,27 @@ class Execution extends Model
                 'description' => 'Function logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
+                'sensitive' => true,
             ])
             ->addRule('errors', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function errors. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
+                'sensitive' => true,
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Function execution duration in seconds.',
+                'description' => 'Resource(function/site) execution duration in seconds.',
                 'default' => 0,
                 'example' => 0.400,
+            ])
+            ->addRule('scheduledAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The scheduled time for execution. If left empty, execution will be queued immediately.',
+                'required' => false,
+                'default' => DateTime::now(),
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
     }
@@ -131,5 +141,19 @@ class Execution extends Model
     public function getType(): string
     {
         return Response::MODEL_EXECUTION;
+    }
+
+
+    /**
+     * Convert DB structure to response model
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        $document->removeAttribute('resourceType');
+        $document->setAttribute('functionId', $document->getAttribute('resourceId', ''));
+        $document->removeAttribute('resourceId');
+        return $document;
     }
 }

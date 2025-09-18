@@ -1,0 +1,17 @@
+import { Client, Users, MessagingProviderType } from "https://deno.land/x/appwrite/mod.ts";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const users = new Users(client);
+
+const response = await users.createTarget(
+    '<USER_ID>', // userId
+    '<TARGET_ID>', // targetId
+    MessagingProviderType.Email, // providerType
+    '<IDENTIFIER>', // identifier
+    '<PROVIDER_ID>', // providerId (optional)
+    '<NAME>' // name (optional)
+);

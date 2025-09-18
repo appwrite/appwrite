@@ -2,15 +2,15 @@ const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
 
 const messaging = new sdk.Messaging(client);
 
 const result = await messaging.createPush(
     '<MESSAGE_ID>', // messageId
-    '<TITLE>', // title
-    '<BODY>', // body
+    '<TITLE>', // title (optional)
+    '<BODY>', // body (optional)
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
@@ -21,7 +21,10 @@ const result = await messaging.createPush(
     '<SOUND>', // sound (optional)
     '<COLOR>', // color (optional)
     '<TAG>', // tag (optional)
-    '<BADGE>', // badge (optional)
+    null, // badge (optional)
     false, // draft (optional)
-    '' // scheduledAt (optional)
+    '', // scheduledAt (optional)
+    false, // contentAvailable (optional)
+    false, // critical (optional)
+    sdk.MessagePriority.Normal // priority (optional)
 );

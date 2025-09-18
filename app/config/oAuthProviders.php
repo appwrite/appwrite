@@ -11,6 +11,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Amazon',
     ],
     'apple' => [
         'name' => 'Apple',
@@ -21,6 +22,7 @@ return [
         'form' => 'apple.phtml', // Preparation for adding ability to customized OAuth UI forms, currently handled hardcoded.
         'beta' => true,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Apple',
     ],
     'auth0' => [
         'name' => 'Auth0',
@@ -31,6 +33,7 @@ return [
         'form' => 'auth0.phtml',
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Auth0',
     ],
     'authentik' => [
         'name' => 'Authentik',
@@ -41,6 +44,7 @@ return [
         'form' => 'authentik.phtml',
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Authentik',
     ],
     'autodesk' => [
         'name' => 'Autodesk',
@@ -51,6 +55,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Autodesk',
     ],
     'bitbucket' => [
         'name' => 'BitBucket',
@@ -61,6 +66,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Bitbucket',
     ],
     'bitly' => [
         'name' => 'Bitly',
@@ -70,7 +76,8 @@ return [
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Bitly',
     ],
     'box' => [
         'name' => 'Box',
@@ -80,7 +87,8 @@ return [
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Box',
     ],
     'dailymotion' => [
         'name' => 'Dailymotion',
@@ -90,7 +98,8 @@ return [
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Dailymotion',
     ],
     'discord' => [
         'name' => 'Discord',
@@ -101,6 +110,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Discord',
     ],
     'disqus' => [
         'name' => 'Disqus',
@@ -111,6 +121,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Disqus',
     ],
     'dropbox' => [
         'name' => 'Dropbox',
@@ -121,6 +132,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Dropbox',
     ],
     'etsy' => [
         'name' => 'Etsy',
@@ -131,6 +143,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Etsy',
     ],
     'facebook' => [
         'name' => 'Facebook',
@@ -141,6 +154,18 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Facebook',
+    ],
+    'figma' => [
+        'name' => 'Figma',
+        'developers' => 'https://www.figma.com/developers/api#oauth2',
+        'icon' => 'icon-figma',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Figma',
     ],
     'github' => [
         'name' => 'GitHub',
@@ -151,6 +176,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Github',
     ],
     'gitlab' => [
         'name' => 'GitLab',
@@ -161,6 +187,7 @@ return [
         'form' => 'gitlab.phtml',
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Gitlab',
     ],
     'google' => [
         'name' => 'Google',
@@ -171,6 +198,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Google',
     ],
     'linkedin' => [
         'name' => 'LinkedIn',
@@ -181,6 +209,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Linkedin',
     ],
     'microsoft' => [
         'name' => 'Microsoft',
@@ -191,6 +220,7 @@ return [
         'form' => 'microsoft.phtml',
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Microsoft',
     ],
     'notion' => [
         'name' => 'Notion',
@@ -201,6 +231,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Notion',
     ],
     'oidc' => [
         'name' => 'OpenID Connect',
@@ -211,6 +242,7 @@ return [
         'form' => 'oidc.phtml',
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Oidc',
     ],
     'okta' => [
         'name' => 'Okta',
@@ -221,6 +253,7 @@ return [
         'form' => 'okta.phtml',
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Okta',
     ],
     'paypal' => [
         'name' => 'PayPal',
@@ -230,7 +263,8 @@ return [
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Paypal',
     ],
     'paypalSandbox' => [
         'name' => 'PayPal Sandbox',
@@ -240,7 +274,8 @@ return [
         'sandbox' => true,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Paypal',
     ],
     'podio' => [
         'name' => 'Podio',
@@ -251,6 +286,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Podio',
     ],
     'salesforce' => [
         'name' => 'Salesforce',
@@ -261,6 +297,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Salesforce',
     ],
     'slack' => [
         'name' => 'Slack',
@@ -271,6 +308,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Slack',
     ],
     'spotify' => [
         'name' => 'Spotify',
@@ -281,6 +319,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Spotify',
     ],
     'stripe' => [
         'name' => 'Stripe',
@@ -290,7 +329,8 @@ return [
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Stripe',
     ],
     'tradeshift' => [
         'name' => 'Tradeshift',
@@ -301,6 +341,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Tradeshift',
     ],
     'tradeshiftBox' => [
         'name' => 'Tradeshift Sandbox',
@@ -311,6 +352,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Tradeshift',
     ],
     'twitch' => [
         'name' => 'Twitch',
@@ -321,6 +363,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Twitch',
     ],
     'wordpress' => [
         'name' => 'WordPress',
@@ -330,7 +373,8 @@ return [
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Wordpress',
     ],
     'yahoo' => [
         'name' => 'Yahoo',
@@ -341,6 +385,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Yahoo',
     ],
     'yammer' => [
         'name' => 'Yammer',
@@ -351,6 +396,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Yammer',
     ],
     'yandex' => [
         'name' => 'Yandex',
@@ -361,6 +407,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Yandex',
     ],
     'zoho' => [
         'name' => 'Zoho',
@@ -371,6 +418,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Zoho',
     ],
     'zoom' => [
         'name' => 'Zoom',
@@ -381,6 +429,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Zoom',
     ],
     // 'instagram' => [
     //     'name' => 'Instagram',
@@ -389,6 +438,7 @@ return [
     //     'enabled' => false,
     //     'beta' => false,
     //     'mock' => false,
+    //     'class' => 'Appwrite\\Auth\\OAuth2\\Instagram',
     // ],
     // 'twitter' => [
     //     'name' => 'twitter',
@@ -397,6 +447,7 @@ return [
     //     'enabled' => false,
     //     'beta' => false,
     //     'mock' => false,
+    //     'class' => 'Appwrite\\Auth\\OAuth2\\Twitter',
     // ],
 
     // Keep Last
@@ -409,5 +460,6 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Mock',
     ],
 ];

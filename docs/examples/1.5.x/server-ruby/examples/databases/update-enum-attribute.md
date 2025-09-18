@@ -4,8 +4,8 @@ include Appwrite
 
 client = Client.new
     .set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
-    .set_project('5df5acd0d48c2') # Your project ID
-    .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
 
 databases = Databases.new(client)
 
@@ -15,5 +15,6 @@ result = databases.update_enum_attribute(
     key: '',
     elements: [],
     required: false,
-    default: '<DEFAULT>'
+    default: '<DEFAULT>',
+    new_key: '' # optional
 )

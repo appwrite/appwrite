@@ -44,6 +44,13 @@ class Auth
     public const USER_ROLE_SYSTEM = 'system';
 
     /**
+     * Activity associated with user or the app.
+     */
+    public const ACTIVITY_TYPE_APP = 'app';
+    public const ACTIVITY_TYPE_USER = 'user';
+    public const ACTIVITY_TYPE_GUEST = 'guest';
+
+    /**
      * Token Types.
      */
     public const TOKEN_TYPE_LOGIN = 1; // Deprecated
@@ -95,6 +102,11 @@ class Auth
      * @var string
      */
     public static $cookieName = 'a_session';
+
+    /**
+     * @var string
+     */
+    public static $cookieNamePreview = 'a_jwt_console';
 
     /**
      * User Unique ID.

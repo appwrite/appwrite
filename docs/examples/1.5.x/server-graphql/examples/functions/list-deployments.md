@@ -14,6 +14,7 @@ query {
             resourceType
             entrypoint
             size
+            buildSize
             buildId
             activate
             status

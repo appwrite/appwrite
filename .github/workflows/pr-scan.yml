@@ -1,17 +1,22 @@
 name: PR Security Scan
-on:
-  pull_request:
+on: 
+  pull_request_target:
     types: [opened, synchronize, reopened]
-  workflow_dispatch:
+ 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-    - name: Check out code
+    - name: Check out code 
       uses: actions/checkout@v4
       with:
+        ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
         submodules: 'recursive'
+
     - name: Build the Docker image
       uses: docker/build-push-action@v5
       with: 
@@ -19,6 +24,7 @@ jobs:
         push: false
         load: true
         tags: pr_image:${{ github.sha }}
+
     - name: Run Trivy vulnerability scanner on image
       uses: aquasecurity/trivy-action@0.20.0
       with:
@@ -26,6 +32,7 @@ jobs:
         format: 'json'
         output: 'trivy-image-results.json'
         severity: 'CRITICAL,HIGH'
+
     - name: Run Trivy vulnerability scanner on source code
       uses: aquasecurity/trivy-action@0.20.0
       with:
@@ -34,10 +41,11 @@ jobs:
         format: 'json'
         output: 'trivy-fs-results.json'
         severity: 'CRITICAL,HIGH'
-    - name: Process and post Trivy scan results
+
+    - name: Process Trivy scan results
+      id: process-results
       uses: actions/github-script@v7
       with:
-        github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const fs = require('fs');
           let commentBody = '## Security Scan Results for PR\n\n';
@@ -79,9 +87,19 @@ jobs:
             commentBody += 'Please contact the core team for assistance.';
           }
           
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: commentBody
-          });
+          core.setOutput('comment-body', commentBody);
+    - name: Find Comment
+      uses: peter-evans/find-comment@v3
+      id: fc
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: 'github-actions[bot]'
+        body-includes: Security Scan Results for PR
+
+    - name: Create or update comment
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-id: ${{ steps.fc.outputs.comment-id }}
+        body: ${{ steps.process-results.outputs.comment-body }}
+        edit-mode: replace
