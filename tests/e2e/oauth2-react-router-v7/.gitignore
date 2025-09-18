@@ -1,0 +1,34 @@
+node_modules
+.env
+.env.local
+.env.*.local
+build
+dist
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+.eslintcache
+
+# Test artifacts
+coverage/
+.nyc_output/
+playwright-report/
+playwright/.cache/
+.cache/
+test-results/
+blob-report/
+
+# Env tooling
+.envrc
