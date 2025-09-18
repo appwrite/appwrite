@@ -1,4 +1,4 @@
-> We just announced inversion queries for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-inversion-queries)
+> We just announced API for spatial columns for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-spatial-columns)
 
 > Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
