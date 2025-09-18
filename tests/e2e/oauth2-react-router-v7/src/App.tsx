@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useSearchParams } from 'react-router-dom'
-import { Client, Account, Models } from 'appwrite'
+import { Client, Account, Models, OAuthProvider } from 'appwrite'
 
 // Configure Appwrite client
 const client = new Client()
@@ -9,12 +9,8 @@ const client = new Client()
 
 const account = new Account(client)
 
-// Get the OAuth callback URL from environment
-const OAUTH_CALLBACK_URL = import.meta.env.VITE_APPWRITE_OAUTH2_CALLBACK_URL
-
 // Login component
 function Login() {
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,24 +19,13 @@ function Login() {
       setLoading(true)
       setError(null)
       
-      console.log('Using OAuth callback URL:', OAUTH_CALLBACK_URL)
-      
       // Use the callback URL from environment (.env file)
       const successUrl = `${window.location.origin}/auth/success`
       const failureUrl = `${window.location.origin}/auth/failure`
       
-      console.log('Success URL:', successUrl)
-      console.log('Failure URL:', failureUrl)
-      console.log('Expected Google redirect should go to:', OAUTH_CALLBACK_URL)
-      
-     
-      
-      // Add a small delay to help with debugging
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // The OAUTH_CALLBACK_URL will be used automatically by Appwrite for the OAuth flow
-      // We just need to specify where to redirect after the OAuth callback is processed
-      ;(account as any).createOAuth2Session('google', successUrl, failureUrl)
+      // Appwrite handles provider callback; we only pass post-callback redirects.
+      // No need to await; this triggers a navigation.
+      void account.createOAuth2Session('google' as OAuthProvider, successUrl, failureUrl)
     } catch (error) {
       console.error('OAuth2 session creation error:', error)
       setError('Failed to initiate Google login')
