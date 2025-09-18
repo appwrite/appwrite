@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useSearchParams } from 'react-router-dom'
-import { Client, Account, Models, OAuthProvider } from 'appwrite'
+import { Client, Account, Models, AppwriteException, OAuthProvider } from 'appwrite'
 
-// Configure Appwrite client
-const client = new Client()
-  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT )
-  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID )
-
+const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT
+const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID
+if (!endpoint || !projectId) {
+  throw new Error('Missing VITE_APPWRITE_ENDPOINT or VITE_APPWRITE_PROJECT_ID')
+}
+const client = new Client().setEndpoint(endpoint).setProject(projectId)
 const account = new Account(client)
 
-// Login component
 function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -91,25 +91,29 @@ function AuthSuccess() {
       // Try to get user account
       const userData = await account.get()
       
-      console.log('✅ OAuth2 authentication successful:', userData)
+      console.log('OAuth2 authentication successful:', userData)
       setUser(userData)
       setLoading(false)
       
       // Navigate to dashboard after short delay
-      setTimeout(() => navigate('/dashboard'), 1000)
+      setTimeout(() => navigate('/dashboard', { replace: true }), 1000)
       
-    } catch (error: any) {
-      console.error(`❌ Attempt ${attempt + 1} failed:`, error)
+    } catch (error) {
+      console.error(` Attempt ${attempt + 1} failed:`, error)
       
-      if (error.code === 401 && attempt < maxRetries) {
-        console.log(`🔄 Retrying in ${delay}ms... (${attempt + 1}/${maxRetries})`)
+      if (error instanceof AppwriteException && error.code === 401 && attempt < maxRetries) {
+        console.log(` Retrying in ${delay}ms... (${attempt + 1}/${maxRetries})`)
         setRetryCount(attempt + 1)
         setTimeout(() => handleAuthSuccess(attempt + 1), delay)
       } else {
-        setError(`Authentication failed after ${attempt + 1} attempts: ${error.message}`)
+        setError(
+          `Authentication failed after ${attempt + 1} attempts: ${
+            error instanceof AppwriteException ? error.message : String(error)
+          }`
+        )
         setLoading(false)
         // Navigate back to login after delay
-        setTimeout(() => navigate('/'), 3000)
+        setTimeout(() => navigate('/', { replace: true }), 3000)
       }
     }
   }
@@ -131,7 +135,6 @@ function AuthSuccess() {
               borderRadius: '50%',
               width: '40px',
               height: '40px',
-              animation: 'spin 2s linear infinite',
               margin: '0 auto'
             }}></div>
           </div>
@@ -141,7 +144,7 @@ function AuthSuccess() {
       
       {user && (
         <div style={{ color: 'green' }}>
-          <h3>✅ Authentication Successful!</h3>
+          <h3>Authentication Successful!</h3>
           <p>Welcome, {user.name}!</p>
           <p>Email: {user.email}</p>
           <p>Redirecting to dashboard...</p>
@@ -150,7 +153,7 @@ function AuthSuccess() {
       
       {error && (
         <div style={{ color: 'red' }}>
-          <h3>❌ Authentication Failed</h3>
+          <h3> Authentication Failed</h3>
           <p>{error}</p>
           <p>Redirecting to login page...</p>
         </div>
@@ -165,7 +168,7 @@ function AuthFailure() {
   const [searchParams] = useSearchParams()
   
   useEffect(() => {
-    setTimeout(() => navigate('/'), 3000)
+    setTimeout(() => navigate('/', { replace: true }), 3000)
   }, [navigate])
 
   return (
@@ -190,7 +193,7 @@ function Dashboard() {
         setUser(userData)
       } catch (error) {
         console.error('Not authenticated:', error)
-        navigate('/')
+        navigate('/', { replace: true })
       } finally {
         setLoading(false)
       }
@@ -202,7 +205,7 @@ function Dashboard() {
   const handleLogout = async () => {
     try {
       await account.deleteSession('current')
-      navigate('/')
+      navigate('/', { replace: true })
     } catch (error) {
       console.error('Logout error:', error)
     }
@@ -213,7 +216,7 @@ function Dashboard() {
   }
 
   if (!user) {
-    return null // Will redirect to login
+    return null 
   }
 
   return (
@@ -246,7 +249,6 @@ function Dashboard() {
   )
 }
 
-// Main App component
 function App() {
   return (
     <div>

@@ -11,6 +11,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+*.tsbuildinfo
 
 # Logs
 npm-debug.log*
@@ -18,6 +19,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.log
+.eslintcache
 
 # Test artifacts
 coverage/
@@ -25,6 +27,8 @@ coverage/
 playwright-report/
 playwright/.cache/
 .cache/
+test-results/
+blob-report/
 
 # Env tooling
 .envrc
