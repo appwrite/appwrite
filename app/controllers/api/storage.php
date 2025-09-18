@@ -88,10 +88,16 @@ App::post('/v1/storage/buckets')
     ->param('cacheControl', '', new Text(1024), 'Default Cache-Control header for files in this bucket. Example: public, max-age=604800, immutable', true)
     ->param('etagMode', 'hash', new WhiteList(['static', 'hash', 'date'], true), 'Default ETag mode for files in this bucket. One of static, hash, date.', true)
     ->param('etagStatic', '', new Text(1024), 'Default static ETag value if etagMode is static.', true)
+    ->param('maxAge', null, new Range(0, 31536000), 'Default Max-Age value in seconds for files in this bucket. Maximum 1 year (31536000 seconds).', true)
+    ->param('expires', '', new Text(64), 'Default Expires header value for files in this bucket. Must be a valid HTTP date format.', true)
+    ->param('lastModifiedMode', 'date', new WhiteList(['static', 'date', 'file'], true), 'Default Last-Modified mode for files in this bucket. One of static, date, file.', true)
+    ->param('lastModifiedStatic', '', new Text(64), 'Default static Last-Modified value if lastModifiedMode is static. Must be a valid HTTP date format.', true)
+    ->param('vary', '', new Text(512), 'Default Vary header value for files in this bucket. Example: Accept-Encoding, User-Agent', true)
+    ->param('pragma', '', new Text(256), 'Default Pragma header value for files in this bucket. Example: no-cache', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, string $cacheControl, string $etagMode, string $etagStatic, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, string $cacheControl, string $etagMode, string $etagStatic, ?int $maxAge, string $expires, string $lastModifiedMode, string $lastModifiedStatic, string $vary, string $pragma, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -147,6 +153,12 @@ App::post('/v1/storage/buckets')
                 'cacheControl' => $cacheControl,
                 'etagMode' => $etagMode,
                 'etagStatic' => $etagStatic,
+                'maxAge' => $maxAge,
+                'expires' => $expires,
+                'lastModifiedMode' => $lastModifiedMode,
+                'lastModifiedStatic' => $lastModifiedStatic,
+                'vary' => $vary,
+                'pragma' => $pragma,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
@@ -304,10 +316,16 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('cacheControl', '', new Text(1024), 'Default Cache-Control header for files in this bucket. Example: public, max-age=604800, immutable', true)
     ->param('etagMode', 'hash', new WhiteList(['static', 'hash', 'date'], true), 'Default ETag mode for files in this bucket. One of static, hash, date.', true)
     ->param('etagStatic', '', new Text(1024), 'Default static ETag value if etagMode is static.', true)
+    ->param('maxAge', null, new Range(0, 31536000), 'Default Max-Age value in seconds for files in this bucket. Maximum 1 year (31536000 seconds).', true)
+    ->param('expires', '', new Text(64), 'Default Expires header value for files in this bucket. Must be a valid HTTP date format.', true)
+    ->param('lastModifiedMode', 'date', new WhiteList(['static', 'date', 'file'], true), 'Default Last-Modified mode for files in this bucket. One of static, date, file.', true)
+    ->param('lastModifiedStatic', '', new Text(64), 'Default static Last-Modified value if lastModifiedMode is static. Must be a valid HTTP date format.', true)
+    ->param('vary', '', new Text(512), 'Default Vary header value for files in this bucket. Example: Accept-Encoding, User-Agent', true)
+    ->param('pragma', '', new Text(256), 'Default Pragma header value for files in this bucket. Example: no-cache', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, string $cacheControl, string $etagMode, string $etagStatic, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, string $cacheControl, string $etagMode, string $etagStatic, ?int $maxAge, string $expires, string $lastModifiedMode, string $lastModifiedStatic, string $vary, string $pragma, Response $response, Database $dbForProject, Event $queueForEvents) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -324,6 +342,12 @@ App::put('/v1/storage/buckets/:bucketId')
         $cacheControl = $cacheControl === '' ? $bucket->getAttribute('cacheControl', '') : $cacheControl;
         $etagMode = $etagMode === '' ? $bucket->getAttribute('etagMode', 'hash') : $etagMode;
         $etagStatic = $etagStatic === '' ? $bucket->getAttribute('etagStatic', '') : $etagStatic;
+        $maxAge = $maxAge === null ? $bucket->getAttribute('maxAge', null) : $maxAge;
+        $expires = $expires === '' ? $bucket->getAttribute('expires', '') : $expires;
+        $lastModifiedMode = $lastModifiedMode === '' ? $bucket->getAttribute('lastModifiedMode', 'date') : $lastModifiedMode;
+        $lastModifiedStatic = $lastModifiedStatic === '' ? $bucket->getAttribute('lastModifiedStatic', '') : $lastModifiedStatic;
+        $vary = $vary === '' ? $bucket->getAttribute('vary', '') : $vary;
+        $pragma = $pragma === '' ? $bucket->getAttribute('pragma', '') : $pragma;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
@@ -340,7 +364,13 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setAttribute('antivirus', $antivirus)
             ->setAttribute('cacheControl', $cacheControl)
             ->setAttribute('etagMode', $etagMode)
-            ->setAttribute('etagStatic', $etagStatic));
+            ->setAttribute('etagStatic', $etagStatic)
+            ->setAttribute('maxAge', $maxAge)
+            ->setAttribute('expires', $expires)
+            ->setAttribute('lastModifiedMode', $lastModifiedMode)
+            ->setAttribute('lastModifiedStatic', $lastModifiedStatic)
+            ->setAttribute('vary', $vary)
+            ->setAttribute('pragma', $pragma));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 
@@ -434,6 +464,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('cacheControl', '', new Text(1024), 'Cache-Control header override for this file. Example: public, max-age=86400', true)
     ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'ETag mode for this file. One of static, hash, date.', true)
     ->param('etagStatic', '', new Text(1024), 'Static ETag value when etagMode is static.', true)
+    ->param('maxAge', null, new Range(0, 31536000), 'Max-Age value in seconds for this file. Maximum 1 year (31536000 seconds).', true)
+    ->param('expires', '', new Text(64), 'Expires header value for this file. Must be a valid HTTP date format.', true)
+    ->param('lastModifiedMode', '', new WhiteList(['static', 'date', 'file'], true), 'Last-Modified mode for this file. One of static, date, file.', true)
+    ->param('lastModifiedStatic', '', new Text(64), 'Static Last-Modified value when lastModifiedMode is static. Must be a valid HTTP date format.', true)
+    ->param('vary', '', new Text(512), 'Vary header value for this file. Example: Accept-Encoding, User-Agent', true)
+    ->param('pragma', '', new Text(256), 'Pragma header value for this file. Example: no-cache', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -442,7 +478,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, string $cacheControl, string $etagMode, string $etagStatic, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, string $cacheControl, string $etagMode, string $etagStatic, ?int $maxAge, string $expires, string $lastModifiedMode, string $lastModifiedStatic, string $vary, string $pragma, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -691,6 +727,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'cacheControl' => empty($cacheControl) ? null : $cacheControl,
                     'etagMode' => empty($etagMode) ? null : $etagMode,
                     'etagStatic' => empty($etagStatic) ? null : $etagStatic,
+                    'maxAge' => $maxAge,
+                    'expires' => empty($expires) ? null : $expires,
+                    'lastModifiedMode' => empty($lastModifiedMode) ? null : $lastModifiedMode,
+                    'lastModifiedStatic' => empty($lastModifiedStatic) ? null : $lastModifiedStatic,
+                    'vary' => empty($vary) ? null : $vary,
+                    'pragma' => empty($pragma) ? null : $pragma,
                 ]);
 
                 $file = $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
@@ -715,6 +757,24 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 }
                 if (!empty($etagStatic)) {
                     $file = $file->setAttribute('etagStatic', $etagStatic);
+                }
+                if ($maxAge !== null) {
+                    $file = $file->setAttribute('maxAge', $maxAge);
+                }
+                if (!empty($expires)) {
+                    $file = $file->setAttribute('expires', $expires);
+                }
+                if (!empty($lastModifiedMode)) {
+                    $file = $file->setAttribute('lastModifiedMode', $lastModifiedMode);
+                }
+                if (!empty($lastModifiedStatic)) {
+                    $file = $file->setAttribute('lastModifiedStatic', $lastModifiedStatic);
+                }
+                if (!empty($vary)) {
+                    $file = $file->setAttribute('vary', $vary);
+                }
+                if (!empty($pragma)) {
+                    $file = $file->setAttribute('pragma', $pragma);
                 }
 
                 /**
@@ -751,6 +811,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'cacheControl' => empty($cacheControl) ? null : $cacheControl,
                     'etagMode' => empty($etagMode) ? null : $etagMode,
                     'etagStatic' => empty($etagStatic) ? null : $etagStatic,
+                    'maxAge' => $maxAge,
+                    'expires' => empty($expires) ? null : $expires,
+                    'lastModifiedMode' => empty($lastModifiedMode) ? null : $lastModifiedMode,
+                    'lastModifiedStatic' => empty($lastModifiedStatic) ? null : $lastModifiedStatic,
+                    'vary' => empty($vary) ? null : $vary,
+                    'pragma' => empty($pragma) ? null : $pragma,
                 ]);
 
                 try {
@@ -770,6 +836,24 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 }
                 if (!empty($etagStatic)) {
                     $file = $file->setAttribute('etagStatic', $etagStatic);
+                }
+                if ($maxAge !== null) {
+                    $file = $file->setAttribute('maxAge', $maxAge);
+                }
+                if (!empty($expires)) {
+                    $file = $file->setAttribute('expires', $expires);
+                }
+                if (!empty($lastModifiedMode)) {
+                    $file = $file->setAttribute('lastModifiedMode', $lastModifiedMode);
+                }
+                if (!empty($lastModifiedStatic)) {
+                    $file = $file->setAttribute('lastModifiedStatic', $lastModifiedStatic);
+                }
+                if (!empty($vary)) {
+                    $file = $file->setAttribute('vary', $vary);
+                }
+                if (!empty($pragma)) {
+                    $file = $file->setAttribute('pragma', $pragma);
                 }
 
                 /**
@@ -1233,13 +1317,22 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->param('fileId', '', new UID(), 'File ID.')
     // NOTE: this is only for the sdk generator and is not used in the action below and is utilised in `resources.php` for `resourceToken`.
     ->param('token', '', new Text(512), 'File token for accessing this file.', true)
+    ->param('cacheControl', '', new Text(1024), 'Override Cache-Control header for this response.', true)
+    ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'Override ETag mode for this response.', true)
+    ->param('etagStatic', '', new Text(1024), 'Override static ETag value when etagMode is static.', true)
+    ->param('maxAge', null, new Range(0, 31536000), 'Override Max-Age value in seconds for this response. Maximum 1 year (31536000 seconds).', true)
+    ->param('expires', '', new Text(64), 'Override Expires header value for this response. Must be a valid HTTP date format.', true)
+    ->param('lastModifiedMode', '', new WhiteList(['static', 'date', 'file'], true), 'Override Last-Modified mode for this response. One of static, date, file.', true)
+    ->param('lastModifiedStatic', '', new Text(64), 'Override static Last-Modified value when lastModifiedMode is static. Must be a valid HTTP date format.', true)
+    ->param('vary', '', new Text(512), 'Override Vary header value for this response. Example: Accept-Encoding, User-Agent', true)
+    ->param('pragma', '', new Text(256), 'Override Pragma header value for this response. Example: no-cache', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('resourceToken')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, ?string $token, string $cacheControl, string $etagMode, string $etagStatic, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
+    ->action(function (string $bucketId, string $fileId, ?string $token, string $cacheControl, string $etagMode, string $etagStatic, ?int $maxAge, string $expires, string $lastModifiedMode, string $lastModifiedStatic, string $vary, string $pragma, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
         /* @type Document $bucket */
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1305,6 +1398,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $resolvedCacheControl = $cacheControl !== '' ? $cacheControl : ($file->getAttribute('cacheControl') ?: $bucket->getAttribute('cacheControl') ?: 'private, max-age=3888000');
         $resolvedEtagMode = $etagMode !== '' ? $etagMode : ($file->getAttribute('etagMode') ?: $bucket->getAttribute('etagMode') ?: 'hash');
         $resolvedEtagStatic = $etagStatic !== '' ? $etagStatic : ($file->getAttribute('etagStatic') ?: $bucket->getAttribute('etagStatic') ?: '');
+        $resolvedMaxAge = $maxAge !== null ? $maxAge : ($file->getAttribute('maxAge') ?: $bucket->getAttribute('maxAge') ?: null);
+        $resolvedExpires = $expires !== '' ? $expires : ($file->getAttribute('expires') ?: $bucket->getAttribute('expires') ?: '');
+        $resolvedLastModifiedMode = $lastModifiedMode !== '' ? $lastModifiedMode : ($file->getAttribute('lastModifiedMode') ?: $bucket->getAttribute('lastModifiedMode') ?: 'date');
+        $resolvedLastModifiedStatic = $lastModifiedStatic !== '' ? $lastModifiedStatic : ($file->getAttribute('lastModifiedStatic') ?: $bucket->getAttribute('lastModifiedStatic') ?: '');
+        $resolvedVary = $vary !== '' ? $vary : ($file->getAttribute('vary') ?: $bucket->getAttribute('vary') ?: '');
+        $resolvedPragma = $pragma !== '' ? $pragma : ($file->getAttribute('pragma') ?: $bucket->getAttribute('pragma') ?: '');
 
         $etag = '';
         switch ($resolvedEtagMode) {
@@ -1329,12 +1428,52 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             }
         }
 
+        // Build cache headers
+        $cacheHeaders = [];
+        if (!empty($resolvedCacheControl)) {
+            $cacheHeaders['Cache-Control'] = $resolvedCacheControl;
+        }
+        if ($resolvedMaxAge !== null) {
+            $cacheHeaders['Max-Age'] = (string)$resolvedMaxAge;
+        }
+        if (!empty($resolvedExpires)) {
+            $cacheHeaders['Expires'] = $resolvedExpires;
+        }
+        if (!empty($resolvedVary)) {
+            $cacheHeaders['Vary'] = $resolvedVary;
+        }
+        if (!empty($resolvedPragma)) {
+            $cacheHeaders['Pragma'] = $resolvedPragma;
+        }
+
+        // Handle Last-Modified header
+        $lastModified = '';
+        switch ($resolvedLastModifiedMode) {
+            case 'static':
+                $lastModified = $resolvedLastModifiedStatic;
+                break;
+            case 'file':
+                $lastModified = $file->getAttribute('transformedAt') ?: $file->getAttribute('$createdAt');
+                break;
+            case 'date':
+            default:
+                $lastModified = DateTime::now();
+                break;
+        }
+        if (!empty($lastModified)) {
+            $cacheHeaders['Last-Modified'] = $lastModified;
+        }
+
         $response
             ->setContentType($file->getAttribute('mimeType'))
-            ->addHeader('Cache-Control', $resolvedCacheControl) // default 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
         ;
+
+        // Add all cache headers
+        foreach ($cacheHeaders as $header => $value) {
+            $response->addHeader($header, $value);
+        }
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
@@ -1806,12 +1945,18 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('cacheControl', '', new Text(1024), 'Cache-Control header override for this file. Example: public, max-age=86400', true)
     ->param('etagMode', '', new WhiteList(['static', 'hash', 'date'], true), 'ETag mode for this file. One of static, hash, date.', true)
     ->param('etagStatic', '', new Text(1024), 'Static ETag value when etagMode is static.', true)
+    ->param('maxAge', null, new Range(0, 31536000), 'Max-Age value in seconds for this file. Maximum 1 year (31536000 seconds).', true)
+    ->param('expires', '', new Text(64), 'Expires header value for this file. Must be a valid HTTP date format.', true)
+    ->param('lastModifiedMode', '', new WhiteList(['static', 'date', 'file'], true), 'Last-Modified mode for this file. One of static, date, file.', true)
+    ->param('lastModifiedStatic', '', new Text(64), 'Static Last-Modified value when lastModifiedMode is static. Must be a valid HTTP date format.', true)
+    ->param('vary', '', new Text(512), 'Vary header value for this file. Example: Accept-Encoding, User-Agent', true)
+    ->param('pragma', '', new Text(256), 'Pragma header value for this file. Example: no-cache', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, string $cacheControl, string $etagMode, string $etagStatic, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, string $cacheControl, string $etagMode, string $etagStatic, ?int $maxAge, string $expires, string $lastModifiedMode, string $lastModifiedStatic, string $vary, string $pragma, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1882,6 +2027,24 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
         if ($etagStatic !== '') {
             $file->setAttribute('etagStatic', $etagStatic);
+        }
+        if ($maxAge !== null) {
+            $file->setAttribute('maxAge', $maxAge);
+        }
+        if ($expires !== '') {
+            $file->setAttribute('expires', $expires);
+        }
+        if ($lastModifiedMode !== '') {
+            $file->setAttribute('lastModifiedMode', $lastModifiedMode);
+        }
+        if ($lastModifiedStatic !== '') {
+            $file->setAttribute('lastModifiedStatic', $lastModifiedStatic);
+        }
+        if ($vary !== '') {
+            $file->setAttribute('vary', $vary);
+        }
+        if ($pragma !== '') {
+            $file->setAttribute('pragma', $pragma);
         }
 
         try {
