@@ -2315,6 +2315,7 @@ App::post('/v1/users/:userId/tokens')
         }
 
         $proofForToken = new Token($length);
+        $proofForToken->setHash(new Sha());
         $secret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 

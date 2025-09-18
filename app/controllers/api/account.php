@@ -2490,7 +2490,11 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
-    ->action(fn ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store) => $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, new ProofsToken(TOKEN_LENGTH_MAGIC_URL)));
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store) use ($createSession) {
+        $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
+        $proofForToken->setHash(new Sha());
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken);
+    });
 
 App::put('/v1/account/sessions/phone')
     ->desc('Update phone session')
