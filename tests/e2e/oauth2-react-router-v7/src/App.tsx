@@ -70,99 +70,6 @@ function Login() {
   )
 }
 
-// OAuth callback handler
-function OAuthCallback() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleOAuthCallback = async (userId: string, secret: string) => {
-    try {
-      console.log('Creating session with OAuth2 token...')
-      
-      // Create a session using the OAuth2 token
-      await account.createSession(userId, secret)
-      
-      // Test the fix - this should work without 401 errors with your PR
-      const user = await account.get()
-      console.log('✅ OAuth2 Token flow successful:', user)
-      
-      // Redirect to dashboard
-      navigate('/dashboard')
-    } catch (error: any) {
-      console.error('❌ OAuth2 Token flow failed:', error)
-      setError(`Authentication failed: ${error.message}`)
-      setTimeout(() => navigate('/'), 3000)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    const userId = searchParams.get('userId')
-    const secret = searchParams.get('secret')
-
-    if (userId && secret) {
-      console.log('OAuth2 callback received - userId:', userId, 'secret length:', secret.length)
-      handleOAuthCallback(userId, secret)
-    } else {
-      console.error('Missing OAuth2 parameters')
-      setError('Invalid OAuth2 callback parameters')
-      setLoading(false)
-      setTimeout(() => navigate('/?error=oauth_failed'), 3000)
-    }
-  }, [searchParams, navigate])
-
-  if (loading) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>Processing OAuth2 Token...</h2>
-        <div style={{
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #3498db',
-          borderRadius: '50%',
-          width: '40px',
-          height: '40px',
-          animation: 'spin 2s linear infinite',
-          margin: '20px auto'
-        }}></div>
-        <p>Creating session from OAuth2 token...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2 style={{ color: 'red' }}>OAuth2 Token Flow Failed</h2>
-        <p>{error}</p>
-        <p>Redirecting to login page...</p>
-      </div>
-    )
-  }
-
-  return null
-}
-
-// OAuth failure handler
-function OAuthFailure() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  
-  useEffect(() => {
-    setTimeout(() => navigate('/'), 3000)
-  }, [navigate])
-
-  return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <h2 style={{ color: 'red' }}>OAuth2 Authentication Failed</h2>
-      <p>Error: {searchParams.get('error') || 'Unknown error occurred'}</p>
-      <p>Redirecting to login page in 3 seconds...</p>
-    </div>
-  )
-}
-
 // Auth success handler
 function AuthSuccess() {
   const navigate = useNavigate()
@@ -345,8 +252,6 @@ function App() {
     <div>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/oauth/callback" element={<OAuthCallback />} />
-        <Route path="/oauth/failure" element={<OAuthFailure />} />
         <Route path="/auth/success" element={<AuthSuccess />} />
         <Route path="/auth/failure" element={<AuthFailure />} />
         <Route path="/dashboard" element={<Dashboard />} />

@@ -2,6 +2,29 @@ node_modules
 .env
 .env.local
 .env.*.local
-/build
-
+build
 dist
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Test artifacts
+coverage/
+.nyc_output/
+playwright-report/
+playwright/.cache/
+.cache/
+
+# Env tooling
+.envrc
