@@ -500,7 +500,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($deployment['body']['$id'], $function['body']['deploymentId']);
         $this->assertEquals($deployment['body']['$createdAt'], $function['body']['deploymentCreatedAt']);
 
-        $function = $this->cleanupFunction($functionId);
+        $this->cleanupFunction($functionId);
     }
 
     public function testCreateFunctionAndDeploymentFromTemplateBranch()
@@ -565,7 +565,7 @@ class FunctionsCustomServerTest extends Scope
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
         $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
-        $function = $this->cleanupFunction($functionId);
+        $this->cleanupFunction($functionId);
     }
 
     public function testCreateFunctionAndDeploymentFromTemplateCommit()
@@ -637,7 +637,7 @@ class FunctionsCustomServerTest extends Scope
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
         $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
-        $function = $this->cleanupFunction($functionId);
+        $this->cleanupFunction($functionId);
     }
 
     /**
