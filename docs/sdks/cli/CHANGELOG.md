@@ -1,5 +1,14 @@
 # Change Log
 
+## 10.0.0
+
+* **Breaking:** Removed Avatars CLI command and all related subcommands; corresponding examples deleted
+* **Feat:** Geo defaults now accept coordinate arrays for Databases and Tables DB, with automatic normalization
+* **Feat:** Pull command skips deprecated resources by default and shows clearer totals/messages
+* **Feat:** Updated CLI descriptions: Databases marked legacy; added tables-db, projects, and project
+* Fix TypeScript type generation now quotes invalid property names to produce valid typings
+* Update documentation: Removed Avatars CLI examples and updated help text to reflect new geo defaults and terminology
+
 ## 8.3.0
 
 * **Feat:** Add support for `appwrite.config.json` file
