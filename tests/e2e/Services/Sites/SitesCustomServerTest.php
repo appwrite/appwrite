@@ -1684,9 +1684,12 @@ class SitesCustomServerTest extends Scope
         $template = $this->getTemplate('playground-for-astro');
         $this->assertEquals(200, $template['headers']['status-code']);
 
-        // Ensure we have the latest commit
-        $this->assertArrayHasKey('latestCommit', $template['body']);
-        $latestCommit = $template['body']['latestCommit'];
+        // Get latest commit using helper function
+        $latestCommit = $this->helperGetLatestCommit(
+            $template['body']['providerOwner'],
+            $template['body']['providerRepositoryId']
+        );
+        $this->assertNotNull($latestCommit);
 
         $template = $template['body'];
 

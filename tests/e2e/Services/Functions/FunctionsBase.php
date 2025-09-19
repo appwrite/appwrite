@@ -268,35 +268,30 @@ trait FunctionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        // Fetch latest commit from GitHub API if template has provider info
-        if (
-            isset($template['body']['providerOwner']) &&
-            isset($template['body']['providerRepositoryId'])
-        ) {
-            $owner = $template['body']['providerOwner'];
-            $repo = $template['body']['providerRepositoryId'];
+        return $template;
+    }
 
-            // GitHub API to get latest commit from main branch
-            $ch = curl_init("https://api.github.com/repos/{$owner}/{$repo}/commits/main");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'User-Agent: Appwrite',
-                'Accept: application/vnd.github.v3+json'
-            ]);
+    protected function helperGetLatestCommit(string $owner, string $repository): ?string
+    {
+        $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'User-Agent: Appwrite',
+            'Accept: application/vnd.github.v3+json'
+        ]);
 
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-            if ($httpCode === 200) {
-                $commitData = json_decode($response, true);
-                if (isset($commitData['sha'])) {
-                    $template['body']['latestCommit'] = $commitData['sha'];
-                }
+        if ($httpCode === 200) {
+            $commitData = json_decode($response, true);
+            if (isset($commitData['sha'])) {
+                return $commitData['sha'];
             }
         }
 
-        return $template;
+        return null;
     }
 
     protected function createExecution(string $functionId, mixed $params = []): mixed
