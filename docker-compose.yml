@@ -89,9 +89,11 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
+      - mongodb
       # - clamav
     entrypoint:
       - php
@@ -268,6 +270,7 @@ services:
     depends_on:
       - mariadb
       - redis
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -300,6 +303,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -329,6 +333,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
       - request-catcher-sms
       - request-catcher-webhook
     environment:
@@ -359,6 +364,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -368,6 +374,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -422,9 +429,11 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -460,6 +469,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -527,6 +537,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -570,6 +581,7 @@ services:
       - redis
       - mariadb
       - openruntimes-executor
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -612,6 +624,7 @@ services:
     depends_on:
       - redis
       - maildev
+      - mongodb
       # - smtp
     environment:
       - _APP_ENV
@@ -703,6 +716,7 @@ services:
       - ./tests:/usr/src/code/tests
     depends_on:
       - mariadb
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -740,6 +754,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -784,6 +799,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -815,6 +831,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -846,6 +863,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -877,6 +895,7 @@ services:
     depends_on:
       - mariadb
       - redis
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -905,6 +924,7 @@ services:
     depends_on:
       - mariadb
       - redis
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -932,6 +952,7 @@ services:
     depends_on:
       - mariadb
       - redis
+      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1052,6 +1073,45 @@ services:
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
+  
+  mongodb:
+    image: mongo:8.0.10
+    container_name: appwrite-mongodb
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db
+      # we need to run the mongo-init.js file to create the user and the database
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    # healthcheck:
+    #   test: ["CMD", "mongosh", "--username", "root", "--password", "${_APP_DB_ROOT_PASS}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+    #   interval: 1s
+    #   timeout: 5s
+    #   retries: 10
+    #   start_period: 30s
+
+  appwrite-mongo-express:
+    image: mongo-express
+    container_name: appwrite-mongo-express
+    networks:
+      - appwrite
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: appwrite-mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${_APP_DB_ROOT_PASS}
+      ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
 
   redis:
     image: redis:7.2.4-alpine
@@ -1151,6 +1211,7 @@ networks:
 
 volumes:
   appwrite-mariadb:
+  appwrite-mongodb:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:

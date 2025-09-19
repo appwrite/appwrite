@@ -60,6 +60,8 @@ use Utopia\Validator\Hostname;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
+use function Swoole\Coroutine\Http\request;
+
 // Runtime Execution
 App::setResource('log', fn () => new Log());
 App::setResource('logger', function ($register) {
@@ -349,9 +351,47 @@ App::setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
+App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
+    $adapter = new DatabasePool($pools->get('console'));
+    $database = new Database($adapter, $cache);
+
+    $database
+        ->setNamespace('_console')
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', 'console')
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+    return $database;
+}, ['pools', 'cache']);
+
+App::setResource('dbForDocuments', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
+    }
+
+    $adapter = new DatabasePool($pools->get('documentsDb'));
+    $database = new Database($adapter, $cache);
+    $database
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId())
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES)
+        ->setSharedTables(false)
+        ->setTenant(null)
+        ->setNamespace('_' . $project->getSequence());
+
+    return $database;
+}, ['pools', 'dbForPlatform', 'cache', 'project']);
+
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Database $dbForDocuments, Cache $cache, Document $project, Request $request) {
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForPlatform;
+    }
+
+    $uri = $request->getURI();
+    if (str_starts_with($uri, '/v1/documentsdb')) {
+        return $dbForDocuments;
     }
 
     try {
@@ -385,21 +425,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     }
 
     return $database;
-}, ['pools', 'dbForPlatform', 'cache', 'project']);
-
-App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
-    $adapter = new DatabasePool($pools->get('console'));
-    $database = new Database($adapter, $cache);
-
-    $database
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', 'console')
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-    return $database;
-}, ['pools', 'cache']);
+}, ['pools', 'dbForPlatform', 'dbForDocuments', 'cache', 'project', 'request']);
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = [];

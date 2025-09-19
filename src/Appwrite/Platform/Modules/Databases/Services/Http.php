@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Services;
 use Appwrite\Platform\Modules\Databases\Http\Init\Timeout;
 use Appwrite\Platform\Modules\Databases\Services\Registry\Collections as CollectionsRegistry;
 use Appwrite\Platform\Modules\Databases\Services\Registry\Databases as DatabasesRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\DocumentsDB as DocumentsDBRegistry;
 use Appwrite\Platform\Modules\Databases\Services\Registry\Tables as TablesRegistry;
 use Utopia\Platform\Service;
 
@@ -20,6 +21,7 @@ class Http extends Service
             DatabasesRegistry::class,
             CollectionsRegistry::class,
             TablesRegistry::class,
+            DocumentsDBRegistry::class
         ] as $registrar) {
             new $registrar($this);
         }

@@ -382,6 +382,15 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 ->setTenant(null)
                 ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
 
+            $adapterForDocumentsDB = new DatabasePool($pools->get('documentsDb'));
+            $dbForDocuments = new Database($adapterForDocumentsDB, $cache);
+
+            $dbForDocuments
+                ->setDatabase('appwrite')
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+
             try {
                 Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                 $dbForProject->create();
@@ -408,6 +417,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 Console::success('[Setup] - Creating project collection: ' . $collection['$id'] . '...');
 
                 $dbForProject->createCollection($key, $attributes, $indexes);
+                $dbForDocuments->createCollection($key, $attributes, $indexes);
             }
         }
 
