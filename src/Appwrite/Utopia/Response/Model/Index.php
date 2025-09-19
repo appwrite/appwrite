@@ -41,10 +41,11 @@ class Index extends Model
                 'example' => 'primary',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Index status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
                 'default' => '',
                 'example' => 'available',
+                'enum' => ['available', 'processing', 'deleting', 'stuck', 'failed'],
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,

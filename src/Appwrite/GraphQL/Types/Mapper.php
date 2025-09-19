@@ -58,7 +58,8 @@ class Mapper
             'json' => Types::json(),
             'none' => Types::json(),
             'any' => Types::json(),
-            'array' => Types::json()
+            'array' => Types::json(),
+            'enum' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {
@@ -452,6 +453,7 @@ class Mapper
                 'ip' => static::model("{$prefix}Ip"),
                 default => static::model("{$prefix}String"),
             },
+            'enum' => static::model("{$prefix}String"), // TODO: Add enum type (breaking change if added)
             'integer' => static::model("{$prefix}Integer"),
             'double' => static::model("{$prefix}Float"),
             'boolean' => static::model("{$prefix}Boolean"),

@@ -16,6 +16,7 @@ abstract class Model
     public const TYPE_RELATIONSHIP = 'relationship';
     public const TYPE_PAYLOAD = 'payload';
     public const TYPE_ARRAY = 'array';
+    public const TYPE_ENUM = 'enum';
 
     /**
      * @var bool
