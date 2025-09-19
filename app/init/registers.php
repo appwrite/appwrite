@@ -101,7 +101,7 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
+        'scheme' => System::getEnv('_APP_DB_SCHEME', 'mariadb'),
         'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => System::getEnv('_APP_DB_PORT', '3306'),
         'user' => System::getEnv('_APP_DB_USER', ''),
