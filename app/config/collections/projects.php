@@ -2345,7 +2345,7 @@ return [
                 '$id' => ID::custom('errors'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 65535,
+                'size' => 131070,
                 'signed' => true,
                 'required' => true,
                 'default' => null,
