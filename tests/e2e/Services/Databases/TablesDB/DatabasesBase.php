@@ -5197,8 +5197,8 @@ trait DatabasesBase
         $this->assertEquals(2, count($response['body']['rows']));
         $this->assertEquals(null, $response['body']['rows'][0]['fullName']);
         $this->assertArrayNotHasKey("libraries", $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$databaseId', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$tableId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$databaseId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$tableId', $response['body']['rows'][0]);
     }
 
     /**
@@ -5218,8 +5218,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('libraries', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$databaseId', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$tableId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$databaseId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$tableId', $response['body']['rows'][0]);
 
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -5232,8 +5232,8 @@ trait DatabasesBase
         $row = $response['body']['rows'][0];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $row);
-        $this->assertArrayNotHasKey('$databaseId', $row);
-        $this->assertArrayNotHasKey('$tableId', $row);
+        $this->assertArrayHasKey('$databaseId', $row);
+        $this->assertArrayHasKey('$tableId', $row);
 
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows/' . $row['$id'], array_merge([
             'content-type' => 'application/json',

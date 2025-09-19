@@ -5270,8 +5270,8 @@ trait DatabasesBase
         $this->assertEquals(2, count($response['body']['documents']));
         $this->assertEquals(null, $response['body']['documents'][0]['fullName']);
         $this->assertArrayNotHasKey("libraries", $response['body']['documents'][0]);
-        $this->assertArrayNotHasKey('$databaseId', $response['body']['documents'][0]);
-        $this->assertArrayNotHasKey('$collectionId', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$databaseId', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$collectionId', $response['body']['documents'][0]);
     }
 
     /**
@@ -5291,8 +5291,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('libraries', $response['body']['documents'][0]);
-        $this->assertArrayNotHasKey('$databaseId', $response['body']['documents'][0]);
-        $this->assertArrayNotHasKey('$collectionId', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$databaseId', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$collectionId', $response['body']['documents'][0]);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5305,8 +5305,8 @@ trait DatabasesBase
         $document = $response['body']['documents'][0];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $document);
-        $this->assertArrayNotHasKey('$databaseId', $document);
-        $this->assertArrayNotHasKey('$collectionId', $document);
+        $this->assertArrayHasKey('$databaseId', $document);
+        $this->assertArrayHasKey('$collectionId', $document);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',
