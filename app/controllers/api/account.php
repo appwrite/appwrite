@@ -165,7 +165,8 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->setVariables($emailVariables)
         ->setRecipient($email)
         ->trigger();
-};
+}
+;
 
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
@@ -838,7 +839,7 @@ App::patch('/v1/account/sessions/:sessionId')
             $session
                 ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')));
         }
 
         // Save changes
@@ -982,9 +983,11 @@ App::post('/v1/account/sessions/email')
         ;
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            if ($dbForProject->count('sessions', [
-                Query::equal('userId', [$user->getId()]),
-            ]) !== 1) {
+            if (
+                $dbForProject->count('sessions', [
+                    Query::equal('userId', [$user->getId()]),
+                ]) !== 1
+            ) {
                 sendSessionAlert($locale, $user, $project, $session, $queueForMails);
             }
         }
@@ -1098,7 +1101,7 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
+        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
@@ -1659,13 +1662,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerEmail' => $email,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
             ]));
         } else {
             $identity
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
             $dbForProject->updateDocument('identities', $identity->getId(), $identity);
         }
 
@@ -1735,7 +1738,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
@@ -2295,6 +2298,10 @@ App::post('/v1/account/tokens/email')
         $preview = $locale->getText("emails.otpSession.preview");
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
 
+        $customEmails = $project->getAttribute('customEmails', false);
+        $bodyTemplate = '';
+        $heading = '';
+
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
         $agentClient = $detector->getClient();
@@ -2310,8 +2317,10 @@ App::post('/v1/account/tokens/email')
 
         if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.otpSession.securityPhrase"));
+            $message->setParam('{{securityPhraseDividerDisplay}}', 'block');
         } else {
             $message->setParam('{{securityPhrase}}', '');
+            $message->setParam('{{securityPhraseDividerDisplay}}', 'none');
         }
 
         $body = $message->render();
@@ -2360,6 +2369,23 @@ App::post('/v1/account/tokens/email')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
+        } elseif ($customEmails && !empty($customTemplate)) {
+            $subject = $customTemplate['subject'];
+            $preview = $customTemplate['preview'];
+            $heading = $customTemplate['heading'];
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
+            $message
+                ->setParam('{{hello}}', $customTemplate['hello'])
+                ->setParam('{{description}}', $customTemplate['body'], escapeHtml: false)
+                ->setParam('{{thanks}}', $customTemplate['thanks'])
+                ->setParam('{{signature}}', $customTemplate['signature'])
+                ->setParam('{{clientInfo}}', '')
+                ->setParam('{{securityPhrase}}', '')
+                ->setParam('{{securityPhraseDividerDisplay}}', 'none');
+
+            $body = $message->render();
+            $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
         }
 
         $emailVariables = [
@@ -2374,12 +2400,21 @@ App::post('/v1/account/tokens/email')
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
+            'heading' => $heading,
+            'accentColor' => APP_EMAIL_ACCENT_COLOR,
+            'logoUrl' => APP_EMAIL_LOGO_URL,
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body)
+            ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
             ->setRecipient($email)
             ->trigger();
@@ -2732,10 +2767,12 @@ App::post('/v1/account/jwts')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document(['jwt' => $jwt->encode([
-                'userId' => $user->getId(),
-                'sessionId' => $current->getId(),
-            ])]), Response::MODEL_JWT);
+            ->dynamic(new Document([
+                'jwt' => $jwt->encode([
+                    'userId' => $user->getId(),
+                    'sessionId' => $current->getId(),
+                ])
+            ]), Response::MODEL_JWT);
     });
 
 App::get('/v1/account/prefs')
@@ -3480,12 +3517,12 @@ App::put('/v1/account/recovery')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', $newPassword)
-                ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now())
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('emailVerification', true));
+            ->setAttribute('password', $newPassword)
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordUpdate', DateTime::now())
+            ->setAttribute('hash', Auth::DEFAULT_ALGO)
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+            ->setAttribute('emailVerification', true));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -3602,6 +3639,10 @@ App::post('/v1/account/verification')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
+        $customEmails = $project->getAttribute('customEmails', false);
+        $bodyTemplate = '';
+        $heading = '';
+
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
@@ -3639,6 +3680,22 @@ App::post('/v1/account/verification')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
+        } elseif ($customEmails && !empty($customTemplate)) {
+            $subject = $customTemplate['subject'];
+            $preview = $customTemplate['preview'];
+            $heading = $customTemplate['heading'];
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-verification.tpl');
+            $message
+                ->setParam('{{hello}}', $customTemplate['hello'])
+                ->setParam('{{body}}', $customTemplate['body'], escapeHtml: false)
+                ->setParam('{{buttonText}}', $customTemplate['buttonText'])
+                ->setParam('{{footer}}', $customTemplate['footer'])
+                ->setParam('{{thanks}}', $customTemplate['thanks'])
+                ->setParam('{{signature}}', $customTemplate['signature']);
+
+            $body = $message->render();
+            $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
         }
 
         $emailVariables = [
@@ -3649,12 +3706,21 @@ App::post('/v1/account/verification')
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
             'team' => '',
+            'heading' => $heading,
+            'accentColor' => APP_EMAIL_ACCENT_COLOR,
+            'logoUrl' => APP_EMAIL_LOGO_URL,
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
 
         $queueForMails
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body)
+            ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name') ?? '')
@@ -4684,6 +4750,10 @@ App::post('/v1/account/mfa/challenge')
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
 
+                $customEmails = $project->getAttribute('customEmails', false);
+                $bodyTemplate = '';
+                $heading = '';
+
                 if ($smtpEnabled) {
                     if (!empty($smtp['senderEmail'])) {
                         $senderEmail = $smtp['senderEmail'];
@@ -4721,6 +4791,21 @@ App::post('/v1/account/mfa/challenge')
                         ->setSmtpReplyTo($replyTo)
                         ->setSmtpSenderEmail($senderEmail)
                         ->setSmtpSenderName($senderName);
+                } elseif ($customEmails && !empty($customTemplate)) {
+                    $subject = $customTemplate['subject'];
+                    $preview = $customTemplate['preview'];
+                    $heading = $customTemplate['heading'];
+
+                    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-challenge.tpl');
+                    $message
+                        ->setParam('{{hello}}', $customTemplate['hello'])
+                        ->setParam('{{description}}', $customTemplate['body'], escapeHtml: false)
+                        ->setParam('{{thanks}}', $customTemplate['thanks'])
+                        ->setParam('{{signature}}', $customTemplate['signature'])
+                        ->setParam('{{clientInfo}}', '');
+
+                    $body = $message->render();
+                    $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
                 }
 
                 $emailVariables = [
@@ -4731,13 +4816,22 @@ App::post('/v1/account/mfa/challenge')
                     'otp' => $code,
                     'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+                    'heading' => $heading,
+                    'accentColor' => APP_EMAIL_ACCENT_COLOR,
+                    'logoUrl' => APP_EMAIL_LOGO_URL,
+                    'twitterUrl' => APP_SOCIAL_TWITTER,
+                    'discordUrl' => APP_SOCIAL_DISCORD,
+                    'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+                    'termsUrl' => APP_EMAIL_TERMS_URL,
+                    'privacyUrl' => APP_EMAIL_PRIVACY_URL,
                 ];
 
                 $queueForMails
                     ->setSubject($subject)
                     ->setPreview($preview)
                     ->setBody($body)
+                    ->setBodyTemplate($bodyTemplate)
                     ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))
                     ->trigger();
@@ -4860,8 +4954,8 @@ App::put('/v1/account/mfa/challenge')
         $dbForProject->updateDocument('sessions', $session->getId(), $session);
 
         $queueForEvents
-                    ->setParam('userId', $user->getId())
-                    ->setParam('sessionId', $session->getId());
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -4924,7 +5018,7 @@ App::post('/v1/account/targets/push')
                 ],
                 'providerId' => !empty($providerId) ? $providerId : null,
                 'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
-                'providerType' =>  MESSAGE_TYPE_PUSH,
+                'providerType' => MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'sessionId' => $session->getId(),
@@ -5099,8 +5193,8 @@ App::get('/v1/account/identities')
         $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 
         /**
-            * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-            */
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
