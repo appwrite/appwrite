@@ -109,7 +109,7 @@ class Delete extends Action
                 $site->getId(),
                 $site
                 ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt())
-                ->setAttribute('latestDeploymentInternalId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence())
+                ->setAttribute('latestDeploymentInternalId', $latestDeployment->getSequence())
                 ->setAttribute('latestDeploymentId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getId())
                 ->setAttribute('latestDeploymentStatus', $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''))
             );
@@ -118,7 +118,7 @@ class Delete extends Action
         if ($site->getAttribute('deploymentId') === $deployment->getId()) { // Reset site deployment
             $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
                 'deploymentId' => '',
-                'deploymentInternalId' => '',
+                'deploymentInternalId' => null,
                 'deploymentScreenshotDark' => '',
                 'deploymentScreenshotLight' => '',
                 'deploymentCreatedAt' => '',

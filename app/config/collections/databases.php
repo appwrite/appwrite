@@ -11,10 +11,10 @@ return [
         'attributes' => [
             [
                 '$id' => ID::custom('databaseInternalId'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_ID,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
+                'size' => 0,
+                'signed' => false,
                 'required' => true,
                 'default' => null,
                 'array' => false,
