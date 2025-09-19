@@ -2,10 +2,11 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
+use Utopia\Auth\Proofs\Password;
+use Utopia\Auth\Proofs\Token;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Platform\Action;
@@ -157,12 +158,14 @@ class Install extends Action
                 }
 
                 if ($var['filter'] === 'token') {
-                    $input[$var['name']] = Auth::tokenGenerator();
+                    $token = new Token();
+                    $input[$var['name']] = $token->generate();
                     continue;
                 }
 
                 if ($var['filter'] === 'password') {
-                    $input[$var['name']] = Auth::passwordGenerator();
+                    $password = new Password();
+                    $input[$var['name']] = $password->generate();
                     continue;
                 }
             }

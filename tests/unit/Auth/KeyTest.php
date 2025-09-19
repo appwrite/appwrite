@@ -3,7 +3,6 @@
 namespace Tests\Unit\Auth;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
@@ -21,7 +20,7 @@ class KeyTest extends TestCase
             'collections.read',
             'documents.read',
         ];
-        $roleScopes = Config::getParam('roles', [])[Auth::USER_ROLE_APPS]['scopes'];
+        $roleScopes = Config::getParam('roles', [])[USER_ROLE_APPS]['scopes'];
 
         $key = static::generateKey($projectId, $usage, $scopes);
         $project = new Document(['$id' => $projectId,]);
@@ -29,7 +28,7 @@ class KeyTest extends TestCase
 
         $this->assertEquals($projectId, $decoded->getProjectId());
         $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
-        $this->assertEquals(Auth::USER_ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(USER_ROLE_APPS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
     }
 
