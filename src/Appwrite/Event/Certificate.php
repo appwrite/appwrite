@@ -7,9 +7,14 @@ use Utopia\Queue\Publisher;
 
 class Certificate extends Event
 {
+    public const ACTION_VERIFICATION = 'verification';
+    public const ACTION_GENERATION = 'generation';
+
     protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;
-    protected ?string $validationDomain = null;
+    protected ?string $verificationDomainFunction = null; // For example: fra.cloud.appwrite.io
+    protected ?string $verificationDomainAPI = null; // For example: fra.appwrite.run
+    protected string $action = self::ACTION_GENERATION;
 
     public function __construct(protected Publisher $publisher)
     {
@@ -58,26 +63,49 @@ class Certificate extends Event
 
 
     /**
-     * Set override for main domain used for validation
+     * Set verification domain function.
      *
-     * @param string|null $validationDomain
+     * @param ?string $verificationDomainFunction
      * @return self
      */
-    public function setValidationDomain(?string $validationDomain): self
+    public function setVerificationDomainFunction(?string $verificationDomainFunction): self
     {
-        $this->validationDomain = $validationDomain;
+        $this->verificationDomainFunction = $verificationDomainFunction;
 
         return $this;
     }
 
     /**
-     * Get validation domain
+     * Get verification domain function.
      *
-     * @return string|null
+     * @return ?string
      */
-    public function getValidationDomain(): ?string
+    public function getVerificationDomainFunction(): ?string
     {
-        return $this->validationDomain;
+        return $this->verificationDomainFunction;
+    }
+
+    /**
+     * Set verification domain api.
+     *
+     * @param ?string $verificationDomainAPI
+     * @return self
+     */
+    public function setVerificationDomainAPI(?string $verificationDomainAPI): self
+    {
+        $this->verificationDomainAPI = $verificationDomainAPI;
+
+        return $this;
+    }
+
+    /**
+     * Get verification domain api.
+     *
+     * @return ?string
+     */
+    public function getVerificationDomainAPI(): ?string
+    {
+        return $this->verificationDomainAPI;
     }
 
     /**
@@ -90,6 +118,28 @@ class Certificate extends Event
         return $this->skipRenewCheck;
     }
 
+    /**
+     * Set action for this certificate event.
+     *
+     * @param string $action
+     * @return self
+     */
+    public function setAction(string $action): self
+    {
+        $this->action = $action;
+
+        return $this;
+    }
+
+    /**
+     * Get action for this certificate event.
+     *
+     * @return string
+     */
+    public function getAction(): string
+    {
+        return $this->action;
+    }
 
     /**
      * Prepare the payload for the event
@@ -102,7 +152,9 @@ class Certificate extends Event
             'project' => $this->project,
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck,
-            'validationDomain' => $this->validationDomain
+            'verificationDomainFunction' => $this->verificationDomainFunction,
+            'verificationDomainAPI' => $this->verificationDomainAPI,
+            'action' => $this->action
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -10,7 +11,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
 class Get extends Action
@@ -64,9 +64,22 @@ class Get extends Action
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
+        // Fill response model
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+
+        $certificateHasUpdatedAt = $certificate->getUpdatedAt() !== null;
+        $ruleHasUpdatedAt = $rule->getUpdatedAt() !== null;
+        if ($certificateHasUpdatedAt) {
+            if ($ruleHasUpdatedAt) {
+                if (new \DateTime($certificate->getUpdatedAt()) > new \DateTime($rule->getUpdatedAt())) {
+                    $rule->setAttribute('$updatedAt', $certificate->getUpdatedAt());
+                }
+            } else {
+                $rule->setAttribute('$updatedAt', $certificate->getUpdatedAt());
+            }
+        }
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     }
