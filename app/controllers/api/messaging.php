@@ -10,6 +10,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Permission;
+use Appwrite\Platform\Tasks\ScheduleMessages;
 use Appwrite\Role;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -3102,7 +3103,7 @@ App::post('/v1/messaging/messages/email')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => 'message',
+                    'resourceType' => ScheduleMessages::getSupportedResource(),
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3244,7 +3245,7 @@ App::post('/v1/messaging/messages/sms')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => 'message',
+                    'resourceType' => ScheduleMessages::getSupportedResource(),
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3462,7 +3463,7 @@ App::post('/v1/messaging/messages/push')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => 'message',
+                    'resourceType' => ScheduleMessages::getSupportedResource(),
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3863,7 +3864,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'message',
+                'resourceType' => ScheduleMessages::getSupportedResource(),
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -4084,7 +4085,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'message',
+                'resourceType' => ScheduleMessages::getSupportedResource(),
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -4258,7 +4259,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'message',
+                'resourceType' => ScheduleMessages::getSupportedResource(),
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),

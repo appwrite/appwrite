@@ -11,6 +11,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
+use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -235,7 +236,7 @@ class Create extends Base
         $schedule = Authorization::skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'function',
+                'resourceType' => ScheduleFunctions::getSupportedResource(),
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
