@@ -36,7 +36,7 @@ class Create extends DatabaseCreate
                 namespace: 'documentsdb',
                 group: 'documentsdb',
                 name: 'create',
-                description: '/docs/references/createDocuments/create.md',
+                description: '/docs/references/documentsdb/create.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

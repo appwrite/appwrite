@@ -1106,6 +1106,8 @@ services:
       - appwrite
     ports:
       - "8082:8081"
+    depends_on:
+      - mongodb
     environment:
       ME_CONFIG_MONGODB_SERVER: appwrite-mongodb
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
