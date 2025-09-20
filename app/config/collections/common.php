@@ -1528,7 +1528,7 @@ return [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('cacheControl'),                '$id' => ID::custom('cacheControl'),
+                '$id' => ID::                '$id' => ID::custom('cacheControl'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => 512,
