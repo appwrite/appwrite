@@ -108,7 +108,24 @@ class Create extends Action
             throw new Exception($this->getDuplicateException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException());
-        } catch (NotFoundException) {
+        } catch (NotFoundException $e) {
+            echo "Message: " . $e->getMessage() . PHP_EOL;
+            echo "File: " . $e->getFile() . PHP_EOL;
+            echo "Line: " . $e->getLine() . PHP_EOL;
+        
+            echo "Stack trace:" . PHP_EOL;
+        
+            foreach ($e->getTrace() as $index => $frame) {
+                $file = $frame['file'] ?? '[internal function]';
+                $line = $frame['line'] ?? '';
+                $class = $frame['class'] ?? '';
+                $type = $frame['type'] ?? '';
+                $function = $frame['function'] ?? '';
+                $args = isset($frame['args']) ? json_encode($frame['args']) : '';
+        
+                echo "#$index $file($line): $class$type$function($args)" . PHP_EOL;
+            }
+        
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
