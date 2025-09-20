@@ -13,6 +13,7 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
@@ -23,6 +24,7 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Mongo\Client as MongoClient;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
@@ -108,6 +110,14 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
+    $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => 'mongodb',
+        'host' => System::getEnv('_APP_DOCUMENTS_DB_HOST', 'mongodb'),
+        'port' => System::getEnv('_APP_DOCUMENTS_DB_PORT', '27017'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
@@ -128,6 +138,12 @@ $register->set('pools', function () {
             'dsns' => $fallbackForDB,
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
+        ],
+        'documentsDb' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_DOCUMENTS', $fallbackForDocumentsDB),
+            'multiple' => false,
+            'schemes' => ['mongodb'],
         ],
         'logs' => [
             'type' => 'database',
@@ -226,6 +242,16 @@ $register->set('pools', function () {
                         ]);
                     });
                 },
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    try {
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
+                        @$mongo->connect();
+
+                        return $mongo;
+                    } catch (\Throwable $e) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+                    }
+                },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
@@ -246,10 +272,13 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
+                            'mongodb' => new Mongo($resource()),
                             default => null
                         };
 
-                        $adapter->setDatabase($dsn->getPath());
+                        if ($dsn->getScheme() !== 'mongodb') {
+                            $adapter->setDatabase($dsn->getPath());
+                        }
                         return $adapter;
                     case 'pubsub':
                         return match ($dsn->getScheme()) {
