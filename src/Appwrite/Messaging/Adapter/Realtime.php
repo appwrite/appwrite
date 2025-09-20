@@ -246,6 +246,26 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Parses an event string into a structured object with named properties.
+     *
+     * @param string $event The event string to parse
+     * @return object An object with named properties for different parts
+     */
+    private static function parseEvent(string $event): object
+    {
+        $parts = explode('.', $event);
+        
+        return (object) [
+            'service' => $parts[0] ?? '',
+            'resourceId' => $parts[1] ?? '',
+            'action' => $parts[2] ?? '',
+            'subResourceId' => $parts[3] ?? '',
+            'subAction' => $parts[4] ?? '',
+            'parts' => $parts // Keep original parts for edge cases
+        ];
+    }
+
+    /**
      * Create channels array based on the event name and payload.
      *
      * @param string $event
@@ -263,14 +283,13 @@ class Realtime extends MessagingAdapter
         $roles = [];
         $permissionsChanged = false;
         $projectId = null;
-        // TODO: add method here to remove all the magic index accesses
-        $parts = explode('.', $event);
+        $eventData = self::parseEvent($event);
 
-        switch ($parts[0]) {
+        switch ($eventData->service) {
             case 'users':
                 $channels[] = 'account';
-                $channels[] = 'account.' . $parts[1];
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                $channels[] = 'account.' . $eventData->resourceId;
+                $roles = [Role::user(ID::custom($eventData->resourceId))->toString()];
                 break;
             case 'rules':
                 $channels[] = 'console';
@@ -280,29 +299,29 @@ class Realtime extends MessagingAdapter
                 break;
             case 'projects':
                 $channels[] = 'console';
-                $channels[] = 'projects.' . $parts[1];
+                $channels[] = 'projects.' . $eventData->resourceId;
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
             case 'teams':
-                if ($parts[2] === 'memberships') {
-                    $permissionsChanged = $parts[4] ?? false;
+                if ($eventData->action === 'memberships') {
+                    $permissionsChanged = $eventData->subAction ?? false;
                     $channels[] = 'memberships';
-                    $channels[] = 'memberships.' . $parts[3];
+                    $channels[] = 'memberships.' . $eventData->subResourceId;
                 } else {
-                    $permissionsChanged = $parts[2] === 'create';
+                    $permissionsChanged = $eventData->action === 'create';
                     $channels[] = 'teams';
-                    $channels[] = 'teams.' . $parts[1];
+                    $channels[] = 'teams.' . $eventData->resourceId;
                 }
-                $roles = [Role::team(ID::custom($parts[1]))->toString()];
+                $roles = [Role::team(ID::custom($eventData->resourceId))->toString()];
                 break;
             case 'databases':
-                if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
+                if (in_array($eventData->subAction, ['attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
-                } elseif (($parts[4] ?? '') === 'documents') {
+                } elseif ($eventData->subAction === 'documents') {
                     if ($database->isEmpty()) {
                         throw new \Exception('Database needs to be passed to Realtime for Document events in the Database.');
                     }
@@ -320,7 +339,7 @@ class Realtime extends MessagingAdapter
                 }
                 break;
             case 'buckets':
-                if ($parts[2] === 'files') {
+                if ($eventData->action === 'files') {
                     if ($bucket->isEmpty()) {
                         throw new \Exception('Bucket needs to be passed to Realtime for File events in the Storage.');
                     }
@@ -336,7 +355,7 @@ class Realtime extends MessagingAdapter
                 break;
 
             case 'functions':
-                if ($parts[2] === 'executions') {
+                if ($eventData->action === 'executions') {
                     if (!empty($payload->getRead())) {
                         $channels[] = 'console';
                         $channels[] = 'projects.' . $project->getId();
@@ -345,7 +364,7 @@ class Realtime extends MessagingAdapter
                         $channels[] = 'functions.' . $payload->getAttribute('functionId');
                         $roles = $payload->getRead();
                     }
-                } elseif ($parts[2] === 'deployments') {
+                } elseif ($eventData->action === 'deployments') {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
@@ -354,7 +373,7 @@ class Realtime extends MessagingAdapter
 
                 break;
             case 'sites':
-                if ($parts[2] === 'deployments') {
+                if ($eventData->action === 'deployments') {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
