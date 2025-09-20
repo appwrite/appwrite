@@ -328,4 +328,100 @@ class MessagingTest extends TestCase
         $this->assertContains(Role::any()->toString(), $result['roles']);
         $this->assertContains(Role::team('123abc')->toString(), $result['roles']);
     }
+
+    //To test the new parseEvent functionality (indirectly through fromPayload)
+    //This test verifies that the TODO fix for magic index accesses works correctly
+    public function testParseEventFunctionality(): void
+    {
+        // Test users event parsing
+        $result = Realtime::fromPayload(
+            // switch(eventdata->service)
+            event: 'users.123.create',
+            payload: new Document(['$id' => 'user123'])
+        );
+        // check if it matches (users channel)
+        $this->assertContains('account', $result['channels']);
+        $this->assertContains('account.123', $result['channels']);
+        $this->assertContains(Role::user(ID::custom('123'))->toString(), $result['roles']);
+
+        // Test teams.memberships event parsing 
+        $mockProject = new Document(['$id' => 'test-project', 'teamId' => 'team123']);
+        $result = Realtime::fromPayload(
+            event: 'teams.abc.memberships.def.update',
+            payload: new Document(['$id' => 'membership123']),
+            project: $mockProject
+        );
+        
+        // check if it matches
+        $this->assertContains('memberships', $result['channels']);
+        $this->assertContains('memberships.def', $result['channels']);
+        // For memberships, permissionsChanged is set to eventData->subAction 
+        $this->assertEquals('update', $result['permissionsChanged']);
+
+        // Test database documents event parsing
+        $mockDatabase = new Document(['$id' => 'db123']);
+        $mockCollection = new Document([
+            '$id' => 'collection123',
+            'documentSecurity' => false,
+            '$read' => [Role::any()->toString()]
+        ]);
+        $mockPayload = new Document([
+            '$id' => 'doc123',
+            '$collectionId' => 'collection123'
+        ]);
+        
+        $result = Realtime::fromPayload(
+            event: 'databases.db123.collections.collection123.documents.doc123.create',
+            payload: $mockPayload,
+            database: $mockDatabase,
+            collection: $mockCollection
+        );
+        
+        $this->assertContains('documents', $result['channels']);
+        $this->assertContains('databases.db123.collections.collection123.documents', $result['channels']);
+        $this->assertContains('databases.db123.collections.collection123.documents.doc123', $result['channels']);
+
+        // Test functions executions event parsing
+        $mockProject = new Document(['$id' => 'test-project', 'teamId' => 'team123']);
+        $mockPayload = new Document([
+            '$id' => 'exec123',
+            'functionId' => 'func123',
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any())
+            ]
+        ]);
+        
+        $result = Realtime::fromPayload(
+            event: 'functions.func123.executions.exec123.create',
+            payload: $mockPayload,
+            project: $mockProject
+        );
+        
+        $this->assertContains('console', $result['channels']);
+        $this->assertContains('executions', $result['channels']);
+        $this->assertContains('executions.exec123', $result['channels']);
+        $this->assertContains('functions.func123', $result['channels']);
+
+        // Test buckets files event parsing
+        $mockBucket = new Document([
+            '$id' => 'bucket123',
+            'fileSecurity' => false,
+            '$read' => [Role::any()->toString()]
+        ]);
+        $mockPayload = new Document([
+            '$id' => 'file123',
+            'bucketId' => 'bucket123'
+        ]);
+        
+        $result = Realtime::fromPayload(
+            event: 'buckets.bucket123.files.file123.create',
+            payload: $mockPayload,
+            bucket: $mockBucket
+        );
+        
+        $this->assertContains('files', $result['channels']);
+        $this->assertContains('buckets.bucket123.files', $result['channels']);
+        $this->assertContains('buckets.bucket123.files.file123', $result['channels']);
+    }
 }
