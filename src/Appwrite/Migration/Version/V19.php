@@ -3,6 +3,7 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -730,8 +731,8 @@ class V19 extends Migration
 
                 if (empty($document->getAttribute('scheduleId', null))) {
                     $schedule = $this->dbForPlatform->createDocument('schedules', new Document([
-                        'region' => $project->getAttribute('region'),
-                        'resourceType' => 'function',
+                        'region' => $this->project->getAttribute('region'),
+                        'resourceType' => ScheduleFunctions::getSupportedResource(),
                         'resourceId' => $document->getId(),
                         'resourceInternalId' => $document->getSequence(),
                         'resourceUpdatedAt' => DateTime::now(),

@@ -7,8 +7,13 @@ use Cron\CronExpression;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Pools\Group;
 
+/**
+ * ScheduleFunctions
+ *
+ * Handles cron job related executions by processing cron expressions
+ * and scheduling function executions based on recurring schedules.
+ */
 class ScheduleFunctions extends ScheduleBase
 {
     public const UPDATE_TIMER = 10; // seconds

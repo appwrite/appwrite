@@ -6,6 +6,12 @@ use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 
+/**
+ * ScheduleExecutions
+ *
+ * Handles delayed executions by processing one-time scheduled tasks
+ * that are executed at a specific future time.
+ */
 class ScheduleExecutions extends ScheduleBase
 {
     public const UPDATE_TIMER = 3; // seconds
