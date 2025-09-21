@@ -57,4 +57,24 @@ class AlgoArgon2 extends Model
     {
         return Response::MODEL_ALGO_ARGON2;
     }
+
+    /**
+     * Convert internal hash options to API format
+     * This handles the conversion from snake_case to camelCase for API responses
+     *
+     * @param array $options Internal hash options (snake_case)
+     * @return array API format options (camelCase)
+     */
+    public static function convertToApiFormat(array $options): array
+    {
+        $apiOptions = [];
+        
+        // Convert snake_case to camelCase for API response
+        $apiOptions['type'] = 'argon2';
+        $apiOptions['memoryCost'] = $options['memory_cost'] ?? $options['memoryCost'] ?? 65536;
+        $apiOptions['timeCost'] = $options['time_cost'] ?? $options['timeCost'] ?? 4;
+        $apiOptions['threads'] = $options['threads'] ?? 3;
+        
+        return $apiOptions;
+    }
 }

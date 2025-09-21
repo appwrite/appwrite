@@ -34,6 +34,23 @@ class V17 extends Filter
     {
         unset($content['targets']);
         unset($content['mfa']);
+        
+        // Convert hash options to API format if they exist
+        if (isset($content['hashOptions']) && is_array($content['hashOptions'])) {
+            $hashOptions = $content['hashOptions'];
+            $hash = $content['hash'] ?? 'argon2';
+            
+            // Convert Argon2 options from snake_case to camelCase for API response
+            if ($hash === 'argon2') {
+                $content['hashOptions'] = [
+                    'type' => 'argon2',
+                    'memoryCost' => $hashOptions['memory_cost'] ?? $hashOptions['memoryCost'] ?? 65536,
+                    'timeCost' => $hashOptions['time_cost'] ?? $hashOptions['timeCost'] ?? 4,
+                    'threads' => $hashOptions['threads'] ?? 3,
+                ];
+            }
+        }
+        
         return $content;
     }
 
