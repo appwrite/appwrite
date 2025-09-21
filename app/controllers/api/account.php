@@ -1070,7 +1070,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$sequence');
-    
+
         $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
@@ -1288,11 +1288,11 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         } elseif ($protocol === 'http' && $port !== '80') {
             $callbackBase .= ':' . $port;
         }
-        
+
         $params = $request->getParams();
         $params['project'] = $projectId;
         unset($params['projectId']);
-      
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
@@ -1453,14 +1453,14 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $accessToken = '';
         $refreshToken = '';
         $accessTokenExpiry = 0;
-         
+
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         } catch (OAuth2Exception $ex) {
-    
+
             $failureRedirect(
                 $ex->getType(),
                 'Failed to obtain access token. The ' . $providerName . ' OAuth2 provider returned an error: ' . $ex->getMessage(),

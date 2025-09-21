@@ -294,7 +294,7 @@ trait DatabasesBase
             'max' => 99,
         ]);
 
-       // to meet mongodb duplicate attributes index limit
+        // to meet mongodb duplicate attributes index limit
         $integers2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -363,14 +363,14 @@ trait DatabasesBase
         $this->assertEquals($integers['body']['type'], 'integer');
         $this->assertArrayNotHasKey('size', $integers['body']);
         $this->assertEquals($integers['body']['required'], false);
-        $this->assertEquals($integers['body']['array'], true);  
+        $this->assertEquals($integers['body']['array'], true);
 
         $this->assertEquals(202, $integers2['headers']['status-code']);
         $this->assertEquals($integers2['body']['key'], 'integers2');
         $this->assertEquals($integers2['body']['type'], 'integer');
         $this->assertArrayNotHasKey('size', $integers2['body']);
         $this->assertEquals($integers2['body']['required'], false);
-        $this->assertEquals($integers2['body']['array'], true);  
+        $this->assertEquals($integers2['body']['array'], true);
 
         // wait for database worker to create attributes
         sleep(2);
@@ -486,7 +486,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'size' => 2000, // updated to exceed index maximum length also for mongodb
-             'required' => true,
+            'required' => true,
             'default' => null,
         ]);
 
@@ -1524,8 +1524,8 @@ trait DatabasesBase
         $this->assertEquals(400, $create['headers']['status-code']);
 
         // Test case for lengths exceeding total of 768/1024(mongodb)
-       $indexLength =256;
-        if($this->isMongoDB()) {
+        $indexLength = 256;
+        if ($this->isMongoDB()) {
             $indexLength = 500;
         }
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
@@ -4192,7 +4192,7 @@ trait DatabasesBase
         ]);
 
         // other2 has no collection permissions and document permissions are disabled
-       // $this->assertEquals(404, $document3GetWithDocumentRead['headers']['status-code']);
+        // $this->assertEquals(404, $document3GetWithDocumentRead['headers']['status-code']);
 
         $documentsUser2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
             'origin' => 'http://localhost',
@@ -5910,7 +5910,7 @@ trait DatabasesBase
     public function testSpatialPointAttributes(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -6053,7 +6053,7 @@ trait DatabasesBase
     public function testSpatialLineAttributes(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -6195,7 +6195,7 @@ trait DatabasesBase
     public function testSpatialPolygonAttributes(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -6335,7 +6335,7 @@ trait DatabasesBase
     public function testSpatialAttributesMixedCollection(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -6494,7 +6494,7 @@ trait DatabasesBase
     public function testUpdateSpatialAttributes(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -6658,7 +6658,7 @@ trait DatabasesBase
     public function testSpatialQuery(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -7073,7 +7073,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToOne(): void
     {
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -7215,7 +7215,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToMany(): void
     {
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -7354,7 +7354,7 @@ trait DatabasesBase
     public function testSpatialRelationshipManyToOne(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -7483,7 +7483,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipManyToMany(): void
     {
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -7613,7 +7613,7 @@ trait DatabasesBase
     public function testSpatialIndex(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -7728,7 +7728,7 @@ trait DatabasesBase
     public function testSpatialDistanceInMeter(): void
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 

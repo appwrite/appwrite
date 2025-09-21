@@ -227,10 +227,10 @@ class DatabasesCustomClientTest extends Scope
         return [];
     }
 
-     public function testUpdateTwoWayRelationship(): void
-     {
+    public function testUpdateTwoWayRelationship(): void
+    {
 
-        if($this->isMongoDB()){
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -320,12 +320,12 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals($relation['body']['twoWayKey'], $table1RelationAttribute['twoWayKey']);
         $this->assertEquals($relation['body']['relatedTable'], $table1RelationAttribute['relatedTable']);
         $this->assertEquals('restrict', $table1RelationAttribute['onDelete']);
-     }
+    }
 
     public function testRelationshipSameTwoWayKey(): void
     {
 
-        if($this->isMongoDB()){
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -489,7 +489,7 @@ class DatabasesCustomClientTest extends Scope
     public function testUpdateWithoutRelationPermission(): void
     {
 
-        if($this->isMongoDB()){
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 

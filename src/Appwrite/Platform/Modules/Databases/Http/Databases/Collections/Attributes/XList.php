@@ -119,7 +119,7 @@ class XList extends Action
 
             $cursor->setValue($cursorDocument);
         }
-       
+
         try {
             $attributes = $dbForProject->find('attributes', $queries);
             $total = $dbForProject->count('attributes', $queries, APP_LIMIT_COUNT);

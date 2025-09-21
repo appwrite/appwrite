@@ -1340,8 +1340,8 @@ class DatabasesCustomServerTest extends Scope
 
     public function testAttributeRowWidthLimit()
     {
-       
-        if($this->isMongoDB()) {
+
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('Attribute row width limit is not supported for MongoDB');
         }
 
@@ -3302,7 +3302,7 @@ class DatabasesCustomServerTest extends Scope
     public function testAttributeUpdateStringResize(array $data)
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('Attribute row width limit is not supported for MongoDB');
         }
 
@@ -3737,7 +3737,7 @@ class DatabasesCustomServerTest extends Scope
 
     public function testAttributeRenameRelationshipOneToMany()
     {
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('This test is not supported for MongoDB');
         }
 
@@ -3855,7 +3855,7 @@ class DatabasesCustomServerTest extends Scope
 
     public function testAttributeRenameRelationshipOneToOne()
     {
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('This test is not supported for MongoDB');
         }
 
@@ -3974,7 +3974,7 @@ class DatabasesCustomServerTest extends Scope
     public function testAttributeRenameRelationshipManyToOne()
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('This test is not supported for MongoDB');
         }
 
@@ -4097,7 +4097,7 @@ class DatabasesCustomServerTest extends Scope
     public function testAttributeRenameRelationshipManyToMany()
     {
 
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('This test is not supported for MongoDB');
         }
 
@@ -6203,7 +6203,7 @@ class DatabasesCustomServerTest extends Scope
 
     public function testSpatialBulkOperations(): void
     {
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 
@@ -6608,7 +6608,7 @@ class DatabasesCustomServerTest extends Scope
 
     public function testSpatialBulkOperationsWithLineStrings(): void
     {
-        if($this->isMongoDB()) {
+        if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
 

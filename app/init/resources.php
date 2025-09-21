@@ -255,7 +255,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
                 $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
 
-               // var_dump(['Authorization users start::$status' =>  Authorization::$status]);
+                // var_dump(['Authorization users start::$status' =>  Authorization::$status]);
                 $user = $dbForProject->getDocument('users', Auth::$unique);
                 //var_dump(['Authorization users end::$status' =>  Authorization::$status]);
 
